@@ -403,6 +403,75 @@ function loadDashboard() {
     loadMaintenanceAlerts();
 }
 
+function loadRecentOrders() {
+    fetch('/ordenes/api?limit=5')
+        .then(response => response.json())
+        .then(ordenes => {
+            const tbody = document.getElementById('ordenes-recientes-tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (!ordenes || ordenes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay órdenes recientes</td></tr>';
+                return;
+            }
+
+            // Tomar solo las 5 más recientes
+            const ordenesRecientes = ordenes.slice(0, 5);
+
+            ordenesRecientes.forEach(orden => {
+                const row = document.createElement('tr');
+
+                // Determinar clase de prioridad
+                let prioridadClass = 'bg-secondary';
+                switch (orden.prioridad) {
+                    case 'Crítica': prioridadClass = 'bg-danger'; break;
+                    case 'Alta': prioridadClass = 'bg-warning text-dark'; break;
+                    case 'Media': prioridadClass = 'bg-info'; break;
+                    case 'Baja': prioridadClass = 'bg-secondary'; break;
+                }
+
+                // Determinar clase de estado
+                let estadoClass = 'bg-secondary';
+                switch (orden.estado) {
+                    case 'Pendiente': estadoClass = 'bg-warning text-dark'; break;
+                    case 'En Proceso': estadoClass = 'bg-info'; break;
+                    case 'Completada': estadoClass = 'bg-success'; break;
+                    case 'Cancelada': estadoClass = 'bg-danger'; break;
+                }
+
+                row.innerHTML = `
+                    <td><strong>#${orden.id}</strong></td>
+                    <td>${orden.activo_nombre || 'No asignado'}</td>
+                    <td>${orden.tipo || 'N/A'}</td>
+                    <td><span class="badge ${prioridadClass}">${orden.prioridad || 'N/A'}</span></td>
+                    <td><span class="badge ${estadoClass}">${orden.estado || 'N/A'}</span></td>
+                    <td>${orden.tecnico_nombre || 'Sin asignar'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="verDetalleOrden(${orden.id})" title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error cargando órdenes recientes:', error);
+            const tbody = document.getElementById('ordenes-recientes-tbody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Error al cargar órdenes</td></tr>';
+            }
+        });
+}
+
+function verDetalleOrden(ordenId) {
+    // Redirigir a la página de órdenes con foco en esa orden específica
+    window.location.href = `/ordenes/?orden=${ordenId}`;
+}
+
 function updateDashboardStats(data) {
     // Actualizar contadores con animación
     animateCounter('stat-ordenes-activas', data.ordenes_por_estado['En Proceso'] || 0);

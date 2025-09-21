@@ -45,7 +45,8 @@ def listar_ordenes_api():
     """API para listar órdenes de trabajo"""
     try:
         estado = request.args.get("estado")
-        ordenes = listar_ordenes(estado)
+        limit = request.args.get("limit")
+        ordenes = listar_ordenes(estado, limit)
         return jsonify(ordenes)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

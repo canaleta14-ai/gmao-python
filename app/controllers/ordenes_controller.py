@@ -7,14 +7,22 @@ import csv
 import io
 
 
-def listar_ordenes(estado=None):
-    """Listar órdenes de trabajo con filtro opcional por estado"""
+def listar_ordenes(estado=None, limit=None):
+    """Listar órdenes de trabajo con filtro opcional por estado y límite"""
     query = OrdenTrabajo.query
 
     if estado:
         query = query.filter_by(estado=estado)
 
-    ordenes = query.order_by(OrdenTrabajo.fecha_creacion.desc()).all()
+    query = query.order_by(OrdenTrabajo.fecha_creacion.desc())
+
+    if limit:
+        try:
+            query = query.limit(int(limit))
+        except ValueError:
+            pass  # Ignorar límite inválido
+
+    ordenes = query.all()
 
     return [
         {
