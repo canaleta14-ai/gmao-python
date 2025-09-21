@@ -1,0 +1,210 @@
+let perPage = 10;
+let currentPage = 1;
+
+function cargarUsuarios(page = 1) {
+    currentPage = page;
+    const username = document.getElementById('filtro-username').value;
+    const email = document.getElementById('filtro-email').value;
+    const rol = document.getElementById('filtro-rol').value;
+    const activo = document.getElementById('filtro-activo').value;
+
+    let url = `/usuarios/api?page=${page}&per_page=${perPage}`;
+    if (username) url += `&username=${encodeURIComponent(username)}`;
+    if (email) url += `&email=${encodeURIComponent(email)}`;
+    if (rol) url += `&rol=${encodeURIComponent(rol)}`;
+    if (activo) url += `&activo=${encodeURIComponent(activo)}`;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('tabla-usuarios');
+            tbody.innerHTML = '';
+
+            data.usuarios.forEach(u => {
+                const badgeClass = u.activo ? 'bg-success' : 'bg-secondary';
+                const badgeText = u.activo ? 'Activo' : 'Inactivo';
+                const btnClass = u.activo ? 'btn-outline-warning' : 'btn-outline-success';
+                const btnIcon = u.activo ? 'bi-toggle-off' : 'bi-toggle-on';
+                const btnText = u.activo ? 'Desactivar' : 'Activar';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge bg-light text-dark">${u.id}</span></td>
+                        <td><strong>${u.username}</strong></td>
+                        <td>${u.email}</td>
+                        <td>${u.nombre || '<em class="text-muted">Sin especificar</em>'}</td>
+                        <td><span class="badge bg-primary">${u.rol}</span></td>
+                        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="editarUsuario(${u.id})" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn ${btnClass}" onclick="toggleActivo(${u.id}, ${!u.activo})" title="${btnText}">
+                                    <i class="bi ${btnIcon}"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            renderPaginacion(data.page, data.per_page, data.total);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarAlerta('Error al cargar usuarios', 'danger');
+        });
+}
+
+function renderPaginacion(page, perPage, total) {
+    const paginacion = document.getElementById('paginacion');
+    paginacion.innerHTML = '';
+
+    const totalPages = Math.ceil(total / perPage);
+
+    if (totalPages <= 1) return;
+
+    // Botón anterior
+    const prevClass = page === 1 ? 'disabled' : '';
+    paginacion.innerHTML += `
+        <li class="page-item ${prevClass}">
+            <a class="page-link" href="#" onclick="cargarUsuarios(${page - 1})">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+    // Números de página
+    for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === page ? 'active' : '';
+        paginacion.innerHTML += `
+            <li class="page-item ${activeClass}">
+                <a class="page-link" href="#" onclick="cargarUsuarios(${i})">${i}</a>
+            </li>
+        `;
+    }
+
+    // Botón siguiente
+    const nextClass = page === totalPages ? 'disabled' : '';
+    paginacion.innerHTML += `
+        <li class="page-item ${nextClass}">
+            <a class="page-link" href="#" onclick="cargarUsuarios(${page + 1})">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    `;
+}
+
+function toggleActivo(id, estado) {
+    fetch(`/usuarios/api/${id}/estado`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activo: estado })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarAlerta(`Usuario ${estado ? 'activado' : 'desactivado'} exitosamente`, 'success');
+                cargarUsuarios(currentPage);
+            } else {
+                mostrarAlerta('Error al cambiar estado del usuario', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarAlerta('Error al cambiar estado del usuario', 'danger');
+        });
+}
+
+function mostrarModalNuevoUsuario() {
+    const modal = new bootstrap.Modal(document.getElementById('modalNuevoUsuario'));
+    document.getElementById('formNuevoUsuario').reset();
+    modal.show();
+}
+
+function crearUsuario() {
+    const username = document.getElementById('nuevo-username').value;
+    const email = document.getElementById('nuevo-email').value;
+    const nombre = document.getElementById('nuevo-nombre').value;
+    const password = document.getElementById('nuevo-password').value;
+    const rol = document.getElementById('nuevo-rol').value;
+
+    if (!username || !email || !password || !rol) {
+        mostrarAlerta('Por favor complete todos los campos requeridos', 'warning');
+        return;
+    }
+
+    fetch('/usuarios/api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: username,
+            email: email,
+            nombre: nombre,
+            password: password,
+            rol: rol
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoUsuario'));
+                modal.hide();
+                mostrarAlerta('Usuario creado exitosamente', 'success');
+                cargarUsuarios(1);
+            } else {
+                mostrarAlerta('Error al crear usuario', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarAlerta('Error al crear usuario', 'danger');
+        });
+}
+
+function editarUsuario(id) {
+    // Función para editar usuario (por implementar)
+    mostrarAlerta('Función de edición en desarrollo', 'info');
+}
+
+function mostrarAlerta(mensaje, tipo) {
+    // Crear alerta de Bootstrap
+    const alertContainer = document.createElement('div');
+    alertContainer.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+    alertContainer.style.top = '20px';
+    alertContainer.style.right = '20px';
+    alertContainer.style.zIndex = '9999';
+    alertContainer.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(alertContainer);
+
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (alertContainer.parentNode) {
+            alertContainer.remove();
+        }
+    }, 5000);
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function () {
+    cargarUsuarios(1);
+
+    // Permitir buscar con Enter en los campos de filtro
+    ['filtro-username', 'filtro-email'].forEach(id => {
+        document.getElementById(id).addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                cargarUsuarios(1);
+            }
+        });
+    });
+});
+
+// Prevenir envío de formularios por defecto
+document.addEventListener('submit', function (e) {
+    e.preventDefault();
+});

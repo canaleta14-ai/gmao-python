@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block section_title %}Gestión de Proveedores{% endblock %}
+{% set section = 'proveedores' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/proveedores.css') }}">
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Header con botones de acción -->
+    <div class="row align-items-center mb-4">
+        <div class="col-12 col-md-8 mb-2 mb-md-0">
+            <h5 class="mb-1"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h5>
+            <small class="text-muted">Registro y administración de proveedores</small>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                    onclick="exportarCSV()">
+                    <i class="bi bi-download me-1"></i>
+                    <span class="d-none d-sm-inline">Exportar </span>CSV
+                </button>
+                <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                    onclick="mostrarModalNuevoProveedor()">
+                    <i class="bi bi-plus-circle me-1"></i>Nuevo Proveedor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="filtro-buscar" class="form-label">Buscar</label>
+                    <input type="text" class="form-control" id="filtro-buscar" placeholder="Nombre, NIF o contacto">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtro-estado" class="form-label">Estado</label>
+                    <select class="form-select" id="filtro-estado">
+                        <option value="">Todos</option>
+                        <option value="activo" selected>Activos</option>
+                        <option value="inactivo">Inactivos</option>
+                    </select>
+                </div>
+                <div
+                    class="col-12 col-md-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-end">
+                    <button class="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                        onclick="filtrarProveedores()">
+                        <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                    <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                        onclick="limpiarFiltros()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de proveedores -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Proveedores</h6>
+            <small class="text-muted" id="contador-proveedores">0 proveedores</small>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="bi bi-building me-1"></i>Nombre</th>
+                            <th><i class="bi bi-card-text me-1"></i>NIF</th>
+                            <th><i class="bi bi-bank me-1"></i>Cuenta Contable</th>
+                            <th><i class="bi bi-person me-1"></i>Contacto</th>
+                            <th><i class="bi bi-telephone me-1"></i>Teléfono</th>
+                            <th><i class="bi bi-envelope me-1"></i>Email</th>
+                            <th><i class="bi bi-circle me-1"></i>Estado</th>
+                            <th><i class="bi bi-three-dots me-1"></i>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-proveedores">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Proveedor -->
+<div class="modal fade" id="modalProveedor" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalProveedorTitulo">
+                    <i class="bi bi-plus-circle me-2"></i>Nuevo Proveedor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formProveedor">
+                    <input type="hidden" id="proveedor-id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="proveedor-nombre" class="form-label">Nombre <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="proveedor-nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="proveedor-nif" class="form-label">NIF <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="proveedor-nif" required onblur="validarNIF()">
+                        </div>
+                        <div class="col-12">
+                            <label for="proveedor-cuenta-contable" class="form-label">Cuenta Contable <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="proveedor-cuenta-contable" required
+                                placeholder="Ej: 400001">
+                        </div>
+                        <div class="col-12">
+                            <label for="proveedor-direccion" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="proveedor-direccion"
+                                placeholder="Dirección completa">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="proveedor-contacto" class="form-label">Persona de Contacto</label>
+                            <input type="text" class="form-control" id="proveedor-contacto"
+                                placeholder="Nombre del contacto">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="proveedor-telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="proveedor-telefono"
+                                placeholder="Ej: +34 912 345 678">
+                        </div>
+                        <div class="col-12">
+                            <label for="proveedor-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="proveedor-email"
+                                placeholder="contacto@proveedor.com">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarProveedor()">
+                    <i class="bi bi-check-lg me-1"></i>
+                    <span id="boton-guardar-texto">Crear Proveedor</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmación Eliminar -->
+<div class="modal fade" id="modalEliminarProveedor" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea eliminar el proveedor <strong id="nombre-proveedor-eliminar"></strong>?</p>
+                <p class="text-muted">Esta acción marcará el proveedor como inactivo.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminarProveedor()">
+                    <i class="bi bi-trash me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/proveedores.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block section_title %}Gestión de Inventario{% endblock %}
+{% set section = 'inventario' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5>Gestión de Inventario</h5>
+    <div>
+        <button class="btn btn-success me-2" onclick="openEntradaModal()">
+            <i class="bi bi-box-arrow-in-down"></i> Entrada
+        </button>
+        <button class="btn btn-danger me-2" onclick="openSalidaModal()">
+            <i class="bi bi-box-arrow-up"></i> Salida
+        </button>
+        <button class="btn btn-primary" onclick="openItemModal()">
+            <i class="bi bi-plus-circle"></i> Nuevo Item
+        </button>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Total Items</h6>
+                <h3 id="total-items">0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Valor Total</h6>
+                <h3 id="valor-total">$0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Stock Bajo</h6>
+                <h3 class="text-warning" id="stock-bajo">0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Sin Stock</h6>
+                <h3 class="text-danger" id="sin-stock">0</h3>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Stock Actual</th>
+                        <th>Stock Mínimo</th>
+                        <th>Ubicación</th>
+                        <th>Precio Unit.</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="inventarioTableBody">
+                    <!-- Se llenará dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- Modales de Inventario (ejemplo: Entrada, Salida, Nuevo Item) -->
+<!-- Aquí puedes agregar los modales específicos de inventario -->
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/inventario.js"></script>
+{% endblock %}

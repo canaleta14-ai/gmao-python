@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block section_title %}Gestión de Personal{% endblock %}
+{% set section = 'personal' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h6>
+            <button class="btn btn-primary btn-sm" onclick="mostrarModalNuevoUsuario()">
+                <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="filtro-username" class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="filtro-username" placeholder="Buscar por usuario">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtro-email" class="form-label">Email</label>
+                    <input type="text" class="form-control" id="filtro-email" placeholder="Buscar por email">
+                </div>
+                <div class="col-md-2">
+                    <label for="filtro-rol" class="form-label">Rol</label>
+                    <select class="form-select" id="filtro-rol">
+                        <option value="">Todos los roles</option>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Técnico">Técnico</option>
+                        <option value="Supervisor">Supervisor</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filtro-activo" class="form-label">Estado</label>
+                    <select class="form-select" id="filtro-activo">
+                        <option value="">Todos</option>
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-primary w-100" onclick="cargarUsuarios(1)">
+                        <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Usuarios -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h6 class="mb-0"><i class="bi bi-people me-2"></i>Lista de Usuarios</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="bi bi-hash me-1"></i>ID</th>
+                            <th><i class="bi bi-person me-1"></i>Usuario</th>
+                            <th><i class="bi bi-envelope me-1"></i>Email</th>
+                            <th><i class="bi bi-person-badge me-1"></i>Nombre</th>
+                            <th><i class="bi bi-shield me-1"></i>Rol</th>
+                            <th><i class="bi bi-toggle-on me-1"></i>Estado</th>
+                            <th><i class="bi bi-gear me-1"></i>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-usuarios">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <nav aria-label="Paginación de usuarios">
+                <ul class="pagination pagination-sm justify-content-center mb-0" id="paginacion">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Usuario -->
+<div class="modal fade" id="modalNuevoUsuario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoUsuario">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nuevo-username" class="form-label">Usuario</label>
+                            <input type="text" class="form-control" id="nuevo-username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="nuevo-email" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="nuevo-nombre" class="form-label">Nombre Completo</label>
+                            <input type="text" class="form-control" id="nuevo-nombre">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-password" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="nuevo-password" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-rol" class="form-label">Rol</label>
+                            <select class="form-select" id="nuevo-rol" required>
+                                <option value="">Seleccionar rol</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Supervisor">Supervisor</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="crearUsuario()">
+                    <i class="bi bi-check-lg me-1"></i>Crear Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

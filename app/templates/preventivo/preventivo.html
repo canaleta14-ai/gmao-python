@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block section_title %}Planes de Mantenimiento Preventivo{% endblock %}
+{% set section = 'preventivo' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5>Planes de Mantenimiento Preventivo</h5>
+    <button class="btn btn-primary" onclick="openPlanModal()">
+        <i class="bi bi-plus-circle"></i> Nuevo Plan
+    </button>
+</div>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary" id="planes-activos">0</h3>
+                <p class="text-muted">Planes Activos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning" id="planes-proximos">0</h3>
+                <p class="text-muted">Próximos 7 días</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-danger" id="planes-vencidos">0</h3>
+                <p class="text-muted">Vencidos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">92%</h3>
+                <p class="text-muted">Cumplimiento</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Código Plan</th>
+                        <th>Nombre</th>
+                        <th>Equipo</th>
+                        <th>Frecuencia</th>
+                        <th>Última Ejecución</th>
+                        <th>Próxima Ejecución</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="planesTableBody">
+                    <!-- Se llenará dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- Modal Nuevo Plan -->
+<div class="modal fade" id="planModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Plan</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPlan">
+                    <!-- Aquí van los campos del formulario de plan -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarPlan()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/preventivo.js"></script>
+{% endblock %}

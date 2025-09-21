@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block no_sidebar %}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center">
+    <div class="login-container">
+        <div class="login-left">
+            <div class="logo">
+                <i class="bi bi-gear-fill"></i>
+            </div>
+            <h2 class="mb-4">Sistema GMAO</h2>
+            <p class="mb-4">Gestión de Mantenimiento Asistido por Ordenador</p>
+            <div class="features">
+                <div class="feature">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Control total de activos</span>
+                </div>
+                <div class="feature">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Órdenes de trabajo automatizadas</span>
+                </div>
+                <div class="feature">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Mantenimiento preventivo</span>
+                </div>
+                <div class="feature">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Reportes en tiempo real</span>
+                </div>
+            </div>
+        </div>
+        <div class="login-right">
+            <h3 class="mb-4">Bienvenido de nuevo</h3>
+            <p class="text-muted mb-4">Por favor, ingresa tus credenciales para continuar</p>
+            <div id="alertContainer"></div>
+            <form class="login-form" id="loginForm" action="/login" method="post" autocomplete="on">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Usuario</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" id="username" name="username"
+                            placeholder="Ingresa tu usuario" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Ingresa tu contraseña" required>
+                    </div>
+                </div>
+                <div class="mb-4 d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember">
+                        <label class="form-check-label" for="remember">Recordarme</label>
+                    </div>
+                    <a href="#" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+                </div>
+                <button type="submit" class="btn btn-login">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                </button>
+            </form>
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Conexión segura SSL
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const alertContainer = document.getElementById('alertContainer');
+        alertContainer.innerHTML = '';
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando sesión...';
+        btn.disabled = true;
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alertContainer.innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Login exitoso. Redirigiendo...
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    throw new Error(data.message || 'Credenciales incorrectas');
+                }
+            })
+            .catch(error => {
+                alertContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    ${error.message || 'Error al iniciar sesión'}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            });
+    });
+    // Mensaje demo eliminado por seguridad
+</script>
+{% endblock %}

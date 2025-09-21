@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GMAO - Sistema de Gestión de Mantenimiento{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body{% if login_bg %} class="login-bg" {% endif %}>
+    {% if not no_sidebar %}
+    <!-- Sidebar -->
+    <div class="sidebar position-fixed" style="width: 250px; height: 100vh;">
+        <div class="p-3">
+            <h4 class="text-center mb-4">
+                <i class="bi bi-gear-fill"></i> GMAO System
+            </h4>
+            <hr class="bg-white">
+            <nav class="nav flex-column">
+                <a class="nav-link {% if section=='dashboard' %}active{% endif %}"
+                    href="{{ url_for('web.dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a class="nav-link {% if section=='activos' %}active{% endif %}"
+                    href="{{ url_for('activos.activos_page') }}">
+                    <i class="bi bi-cpu"></i> Activos
+                </a>
+                <a class="nav-link {% if section=='proveedores' %}active{% endif %}"
+                    href="{{ url_for('proveedores.proveedores_page') }}">
+                    <i class="bi bi-truck"></i> Proveedores
+                </a>
+                <a class="nav-link {% if section=='ordenes' %}active{% endif %}" href="/ordenes">
+                    <i class="bi bi-clipboard-check"></i> Órdenes de Trabajo
+                </a>
+                <a class="nav-link {% if section=='preventivo' %}active{% endif %}" href="/planes">
+                    <i class="bi bi-calendar-check"></i> Mantenimiento Preventivo
+                </a>
+                <a class="nav-link {% if section=='inventario' %}active{% endif %}" href="/inventario">
+                    <i class="bi bi-box-seam"></i> Inventario
+                </a>
+                <a class="nav-link {% if section=='personal' %}active{% endif %}" href="/usuarios">
+                    <i class="bi bi-people"></i> Personal
+                </a>
+                <a class="nav-link {% if section=='reportes' %}active{% endif %}" href="#">
+                    <i class="bi bi-graph-up"></i> Reportes
+                </a>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Main Content -->
+    <div class="main-content">
+        {% if not no_sidebar %}
+        <!-- Header -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+            <div class="container-fluid">
+                <button class="navbar-toggler d-lg-none" type="button" onclick="toggleSidebar()">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <h5 class="mb-0" id="section-title">{% block section_title %}{% endblock %}</h5>
+                <div class="d-flex align-items-center">
+                    <div class="notification-bell me-3">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span class="notification-count">3</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-dark dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle fs-5"></i> Admin
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Perfil</a></li>
+                            <li><a class="dropdown-item" href="#">Configuración</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/logout">Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+        <div id="main-content-wrapper">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+    </body>
+
+</html>

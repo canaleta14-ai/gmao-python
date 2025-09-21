@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% block section_title %}Gestión de Activos{% endblock %}
+{% set section = 'activos' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/activos.css') }}">
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Header con botones de acción -->
+    <div class="row align-items-center mb-4">
+        <div class="col-12 col-md-8 mb-2 mb-md-0">
+            <h5 class="mb-1"><i class="bi bi-cpu me-2"></i>Gestión de Activos</h5>
+            <small class="text-muted">Sistema de codificación por departamentos</small>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                    onclick="exportarCSV()">
+                    <i class="bi bi-download me-1"></i>
+                    <span class="d-none d-sm-inline">Exportar </span>CSV
+                </button>
+                <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                    onclick="mostrarModalNuevoActivo()">
+                    <i class="bi bi-plus-circle me-1"></i>Nuevo Activo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="filtro-buscar" class="form-label">Buscar</label>
+                    <input type="text" class="form-control" id="filtro-buscar"
+                        placeholder="Código, nombre o descripción">
+                </div>
+                <div class="col-md-2">
+                    <label for="filtro-departamento" class="form-label">Departamento</label>
+                    <select class="form-select" id="filtro-departamento">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filtro-tipo" class="form-label">Tipo</label>
+                    <select class="form-select" id="filtro-tipo">
+                        <option value="">Todos</option>
+                        <option value="Máquina">Máquina</option>
+                        <option value="Equipo">Equipo</option>
+                        <option value="Herramienta">Herramienta</option>
+                        <option value="Vehículo">Vehículo</option>
+                        <option value="Instrumentos">Instrumentos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filtro-estado" class="form-label">Estado</label>
+                    <select class="form-select" id="filtro-estado">
+                        <option value="">Todos</option>
+                        <option value="Operativo">Operativo</option>
+                        <option value="En Mantenimiento">En Mantenimiento</option>
+                        <option value="Fuera de Servicio">Fuera de Servicio</option>
+                        <option value="En Reparación">En Reparación</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filtro-prioridad" class="form-label">Prioridad</label>
+                    <select class="form-select" id="filtro-prioridad">
+                        <option value="">Todas</option>
+                        <option value="Baja">Baja</option>
+                        <option value="Media">Media</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Crítica">Crítica</option>
+                    </select>
+                </div>
+                <div
+                    class="col-12 col-md-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-end">
+                    <button class="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                        onclick="filtrarActivos()">
+                        <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                    <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                        onclick="limpiarFiltros()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de activos -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Activos</h6>
+            <small class="text-muted" id="contador-activos">0 activos</small>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="bi bi-upc me-1"></i>Código</th>
+                            <th><i class="bi bi-building me-1"></i>Departamento</th>
+                            <th><i class="bi bi-tag me-1"></i>Nombre</th>
+                            <th><i class="bi bi-gear me-1"></i>Tipo</th>
+                            <th><i class="bi bi-geo-alt me-1"></i>Ubicación</th>
+                            <th><i class="bi bi-truck me-1"></i>Proveedor</th>
+                            <th><i class="bi bi-circle me-1"></i>Estado</th>
+                            <th><i class="bi bi-exclamation-triangle me-1"></i>Prioridad</th>
+                            <th><i class="bi bi-wrench me-1"></i>Último Mant.</th>
+                            <th><i class="bi bi-three-dots me-1"></i>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-activos">
+                        <!-- Indicador de carga inicial -->
+                        <tr id="loading-initial">
+                            <td colspan="10" class="text-center py-4">
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <span>Cargando activos...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Activo -->
+<div class="modal fade" id="modalNuevoActivo" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Nuevo Activo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoActivo">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nuevo-departamento" class="form-label">Departamento <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="nuevo-departamento" required onchange="generarCodigo()">
+                                <option value="">Seleccionar departamento</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-codigo" class="form-label">Código <span
+                                    class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="nuevo-codigo" required readonly>
+                                <button class="btn btn-outline-secondary" type="button"
+                                    onclick="habilitarEdicionCodigo()">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Formato: 123A45678 (generado automáticamente)</small>
+                        </div>
+                        <div class="col-12">
+                            <label for="nuevo-nombre" class="form-label">Nombre del Activo <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nuevo-nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="nuevo-tipo">
+                                <option value="">Seleccionar tipo</option>
+                                <option value="Máquina">Máquina</option>
+                                <option value="Equipo">Equipo</option>
+                                <option value="Herramienta">Herramienta</option>
+                                <option value="Vehículo">Vehículo</option>
+                                <option value="Instrumentos">Instrumentos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-ubicacion" class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" id="nuevo-ubicacion"
+                                placeholder="Ej: Planta 1, Línea A">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-estado" class="form-label">Estado</label>
+                            <select class="form-select" id="nuevo-estado">
+                                <option value="Operativo">Operativo</option>
+                                <option value="En Mantenimiento">En Mantenimiento</option>
+                                <option value="Fuera de Servicio">Fuera de Servicio</option>
+                                <option value="En Reparación">En Reparación</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-prioridad" class="form-label">Prioridad</label>
+                            <select class="form-select" id="nuevo-prioridad">
+                                <option value="Baja">Baja</option>
+                                <option value="Media" selected>Media</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Crítica">Crítica</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-modelo" class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="nuevo-modelo">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-numero-serie" class="form-label">Número de Serie</label>
+                            <input type="text" class="form-control" id="nuevo-numero-serie">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-fabricante" class="form-label">Fabricante</label>
+                            <input type="text" class="form-control" id="nuevo-fabricante">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-proveedor" class="form-label">Proveedor</label>
+                            <select class="form-select" id="nuevo-proveedor">
+                                <option value="">Seleccionar proveedor...</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="nuevo-descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="nuevo-descripcion" rows="3"></textarea>
+                        </div>
+
+                        <!-- Sección de Manuales -->
+                        <div class="col-12">
+                            <hr class="my-3">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-file-earmark-pdf me-2"></i>Manuales y Documentación
+                            </h6>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="archivos-manuales" class="form-label">Subir Manuales</label>
+                            <input type="file" class="form-control" id="archivos-manuales"
+                                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" multiple>
+                            <div class="form-text">
+                                Formatos permitidos: PDF, DOC, DOCX, TXT, PNG, JPG. Máximo 5MB por archivo.
+                            </div>
+                        </div>
+
+                        <div class="col-12" id="lista-archivos-preview" style="display: none;">
+                            <div class="mt-2">
+                                <small class="text-muted">Archivos seleccionados:</small>
+                                <div id="archivos-preview" class="mt-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="crearActivo()">
+                    <i class="bi bi-check-lg me-1"></i>Crear Activo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Gestión de Manuales -->
+<div class="modal fade" id="modalManuales" tabindex="-1" aria-labelledby="modalManualesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalManualesLabel">
+                    <i class="bi bi-files me-2"></i>Manuales del Activo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Documentos Disponibles</h6>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="mostrarSubirManual()">
+                                <i class="bi bi-plus me-1"></i>Agregar Manual
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario para subir nuevo manual -->
+                <div id="form-subir-manual" class="card mb-3" style="display: none;">
+                    <div class="card-body">
+                        <form id="formSubirManual">
+                            <input type="hidden" id="activo-id-manual">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label for="archivo-manual" class="form-label">Archivo</label>
+                                    <input type="file" class="form-control" id="archivo-manual"
+                                        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="tipo-manual" class="form-label">Tipo</label>
+                                    <select class="form-select" id="tipo-manual" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Manual de Usuario">Manual de Usuario</option>
+                                        <option value="Manual Técnico">Manual Técnico</option>
+                                        <option value="Manual de Mantenimiento">Manual de Mantenimiento</option>
+                                        <option value="Especificaciones">Especificaciones</option>
+                                        <option value="Diagrama">Diagrama</option>
+                                        <option value="Certificado">Certificado</option>
+                                        <option value="Otros">Otros</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="descripcion-manual" class="form-label">Descripción</label>
+                                    <input type="text" class="form-control" id="descripcion-manual"
+                                        placeholder="Descripción del documento">
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="subirManual()">
+                                        <i class="bi bi-upload me-1"></i>Subir
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                        onclick="ocultarSubirManual()">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Lista de manuales -->
+                <div id="lista-manuales">
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-file-earmark display-4"></i>
+                        <p class="mt-2">No hay manuales disponibles</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/activos.js') }}"></script>
+{% endblock %}
