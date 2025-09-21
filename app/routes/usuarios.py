@@ -27,6 +27,13 @@ def obtener_usuarios():
         filtros["rol"] = request.args["rol"]
     if "activo" in request.args:
         filtros["activo"] = request.args.get("activo", "").lower() == "true"
+    if "nombre" in request.args:
+        filtros["nombre"] = request.args["nombre"]
+    if "q" in request.args:
+        filtros["q"] = request.args["q"]
+    if "limit" in request.args:
+        filtros["limit"] = request.args["limit"]
+
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
     usuarios, total = listar_usuarios(filtros, page, per_page)

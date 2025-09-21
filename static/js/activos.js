@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     inicializarEventos();
 
+    // Inicializar autocompletado después de cargar datos
+    setTimeout(() => {
+        inicializarAutocompletado();
+    }, 200);
+
     // Event listener para preview de archivos en el formulario principal
     const inputArchivos = document.getElementById('archivos-manuales');
     if (inputArchivos) {
@@ -739,6 +744,99 @@ function inicializarEventos() {
             filtro.addEventListener('change', filtrarActivos);
         }
     });
+}
+
+// Inicializar autocompletado en formularios de activos
+function inicializarAutocompletado() {
+    console.log('Inicializando autocompletado en activos...');
+
+    if (!window.AutoComplete) {
+        console.log('AutoComplete no disponible');
+        return;
+    }
+
+    // Autocompletado para filtro de búsqueda general
+    const filtroBuscar = document.getElementById('filtro-buscar');
+    if (filtroBuscar) {
+        new AutoComplete({
+            element: filtroBuscar,
+            apiUrl: '/activos/api',
+            searchKey: 'q',
+            displayKey: item => `${item.nombre} (${item.codigo}) - ${item.ubicacion || 'Sin ubicación'}`,
+            valueKey: 'nombre',
+            placeholder: 'Buscar activo por nombre, código o ubicación...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Activo seleccionado para filtro:', item);
+                filtrarActivos();
+            }
+        });
+    }
+
+    // Autocompletado para ubicaciones en formulario de nuevo activo
+    const ubicacionInput = document.getElementById('nuevo-ubicacion');
+    if (ubicacionInput) {
+        // Obtener ubicaciones únicas de activos existentes
+        const ubicacionesUnicas = [...new Set(activos
+            .filter(activo => activo.ubicacion && activo.ubicacion.trim())
+            .map(activo => activo.ubicacion))];
+
+        new AutoComplete({
+            element: ubicacionInput,
+            localData: ubicacionesUnicas.map(ubicacion => ({ ubicacion })),
+            displayKey: 'ubicacion',
+            valueKey: 'ubicacion',
+            placeholder: 'Ubicación del activo...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Ubicación seleccionada:', item);
+            }
+        });
+    }
+
+    // Autocompletado para fabricantes
+    const fabricanteInput = document.getElementById('nuevo-fabricante');
+    if (fabricanteInput) {
+        // Obtener fabricantes únicos de activos existentes
+        const fabricantesUnicos = [...new Set(activos
+            .filter(activo => activo.fabricante && activo.fabricante.trim())
+            .map(activo => activo.fabricante))];
+
+        new AutoComplete({
+            element: fabricanteInput,
+            localData: fabricantesUnicos.map(fabricante => ({ fabricante })),
+            displayKey: 'fabricante',
+            valueKey: 'fabricante',
+            placeholder: 'Fabricante del activo...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Fabricante seleccionado:', item);
+            }
+        });
+    }
+
+    // Autocompletado para modelos
+    const modeloInput = document.getElementById('nuevo-modelo');
+    if (modeloInput) {
+        // Obtener modelos únicos de activos existentes
+        const modelosUnicos = [...new Set(activos
+            .filter(activo => activo.modelo && activo.modelo.trim())
+            .map(activo => activo.modelo))];
+
+        new AutoComplete({
+            element: modeloInput,
+            localData: modelosUnicos.map(modelo => ({ modelo })),
+            displayKey: 'modelo',
+            valueKey: 'modelo',
+            placeholder: 'Modelo del activo...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Modelo seleccionado:', item);
+            }
+        });
+    }
+
+    console.log('Autocompletado inicializado en activos');
 }
 
 // Mostrar mensaje de notificación

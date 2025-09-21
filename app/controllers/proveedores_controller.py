@@ -5,9 +5,42 @@ import csv
 from io import StringIO
 
 
-def listar_proveedores():
-    """Retorna todos los proveedores activos"""
-    proveedores = Proveedor.query.filter_by(activo=True).all()
+def listar_proveedores(filtros=None):
+    """Retorna proveedores activos con soporte para filtros de búsqueda"""
+    query = Proveedor.query.filter_by(activo=True)
+
+    # Aplicar filtros de búsqueda si se proporcionan
+    if filtros:
+        if "nombre" in filtros and filtros["nombre"]:
+            query = query.filter(Proveedor.nombre.ilike(f"%{filtros['nombre']}%"))
+
+        if "nif" in filtros and filtros["nif"]:
+            query = query.filter(Proveedor.nif.ilike(f"%{filtros['nif']}%"))
+
+        if "contacto" in filtros and filtros["contacto"]:
+            query = query.filter(Proveedor.contacto.ilike(f"%{filtros['contacto']}%"))
+
+        if "q" in filtros and filtros["q"]:
+            # Búsqueda general en múltiples campos
+            search_term = f"%{filtros['q']}%"
+            query = query.filter(
+                db.or_(
+                    Proveedor.nombre.ilike(search_term),
+                    Proveedor.nif.ilike(search_term),
+                    Proveedor.contacto.ilike(search_term),
+                    Proveedor.email.ilike(search_term),
+                )
+            )
+
+    # Limitar resultados si se especifica
+    if filtros and "limit" in filtros:
+        try:
+            limit = int(filtros["limit"])
+            query = query.limit(limit)
+        except (ValueError, TypeError):
+            pass
+
+    proveedores = query.all()
     return [
         {
             "id": p.id,

@@ -37,6 +37,30 @@ def listar_usuarios(filtros=None, page=1, per_page=10):
             query = query.filter(Usuario.rol == filtros["rol"])
         if "activo" in filtros:
             query = query.filter(Usuario.activo == filtros["activo"])
+        if "nombre" in filtros:
+            query = query.filter(Usuario.nombre.ilike(f"%{filtros['nombre']}%"))
+        if "q" in filtros and filtros["q"]:
+            # Búsqueda general en múltiples campos
+            search_term = f"%{filtros['q']}%"
+            query = query.filter(
+                db.or_(
+                    Usuario.nombre.ilike(search_term),
+                    Usuario.username.ilike(search_term),
+                    Usuario.email.ilike(search_term),
+                    Usuario.rol.ilike(search_term),
+                )
+            )
+
+    # Limitar resultados si se especifica
+    if filtros and "limit" in filtros:
+        try:
+            limit = int(filtros["limit"])
+            query = query.limit(limit)
+            # Si hay límite, no usar paginación
+            return query.all(), query.count()
+        except (ValueError, TypeError):
+            pass
+
     paginacion = query.order_by(Usuario.id).paginate(
         page=page, per_page=per_page, error_out=False
     )

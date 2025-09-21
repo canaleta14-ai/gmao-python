@@ -324,6 +324,9 @@ async function cargarDatosIniciales() {
         console.log('Iniciando carga de datos...');
         await Promise.all([cargarActivos(), cargarTecnicos()]);
         console.log('Datos iniciales cargados exitosamente');
+
+        // Inicializar autocompletado después de cargar datos
+        inicializarAutocompletado();
     } catch (error) {
         console.error('Error cargando datos iniciales:', error);
         mostrarToast('Error al cargar datos iniciales', 'error');
@@ -337,7 +340,8 @@ async function cargarActivos() {
         if (response.ok) {
             const data = await response.json();
             activos = data;
-            llenarSelectActivos();
+            // Ya no necesitamos llenar select, usaremos autocompletado
+            console.log(`Cargados ${activos.length} activos para autocompletado`);
         } else {
             console.error('Error al cargar activos');
         }
@@ -366,7 +370,8 @@ async function cargarTecnicos() {
 
             console.log('Técnicos filtrados:', tecnicos);
 
-            llenarSelectTecnicos();
+            // Ya no necesitamos llenar select, usaremos autocompletado
+            console.log(`Cargados ${tecnicos.length} técnicos para autocompletado`);
 
             if (tecnicos.length === 0) {
                 mostrarToast('No hay técnicos disponibles para asignar órdenes', 'warning');
@@ -424,6 +429,80 @@ function llenarSelectTecnicos() {
 
     console.log(`Cargados ${tecnicos.length} técnicos en el select`);
     console.log('Select final HTML:', selectTecnico.innerHTML);
+}
+
+// Inicializar autocompletado en formularios
+function inicializarAutocompletado() {
+    console.log('Inicializando autocompletado en órdenes...');
+
+    // Autocompletado para activos
+    const activoInput = document.getElementById('orden-activo');
+    if (activoInput && window.AutoComplete) {
+        new AutoComplete({
+            element: activoInput,
+            localData: activos,
+            displayKey: item => `${item.nombre} - ${item.ubicacion || 'Sin ubicación'} (${item.codigo})`,
+            valueKey: 'id',
+            placeholder: 'Buscar activo...',
+            allowFreeText: false,
+            customFilter: (item, query) => {
+                const q = query.toLowerCase();
+                return item.nombre.toLowerCase().includes(q) ||
+                    item.codigo.toLowerCase().includes(q) ||
+                    (item.ubicacion && item.ubicacion.toLowerCase().includes(q));
+            },
+            onSelect: (item) => {
+                console.log('Activo seleccionado:', item);
+            }
+        });
+    }
+
+    // Autocompletado para técnicos
+    const tecnicoInput = document.getElementById('orden-tecnico');
+    if (tecnicoInput && window.AutoComplete) {
+        new AutoComplete({
+            element: tecnicoInput,
+            localData: tecnicos,
+            displayKey: item => `${item.nombre} - ${item.rol}`,
+            valueKey: 'id',
+            placeholder: 'Buscar técnico...',
+            allowFreeText: false,
+            customFilter: (item, query) => {
+                const q = query.toLowerCase();
+                return item.nombre.toLowerCase().includes(q) ||
+                    item.username.toLowerCase().includes(q) ||
+                    item.rol.toLowerCase().includes(q);
+            },
+            onSelect: (item) => {
+                console.log('Técnico seleccionado:', item);
+            }
+        });
+    }
+
+    // Autocompletado para filtros de búsqueda
+    const filtroBuscar = document.getElementById('filtro-buscar');
+    if (filtroBuscar && window.AutoComplete) {
+        new AutoComplete({
+            element: filtroBuscar,
+            localData: ordenes,
+            displayKey: item => `#${item.id} - ${item.descripcion}`,
+            valueKey: 'descripcion',
+            placeholder: 'Buscar orden por descripción...',
+            allowFreeText: true,
+            customFilter: (item, query) => {
+                const q = query.toLowerCase();
+                return item.descripcion.toLowerCase().includes(q) ||
+                    item.id.toString().includes(q) ||
+                    (item.activo_nombre && item.activo_nombre.toLowerCase().includes(q));
+            },
+            onSelect: (item) => {
+                console.log('Orden filtrada:', item);
+                aplicarFiltros(); // Aplicar filtros después de selección
+            }
+        });
+    }
+
+    console.log('Autocompletado inicializado en órdenes');
 }
 
 // Mostrar modal para nueva orden

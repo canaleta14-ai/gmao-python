@@ -39,9 +39,16 @@ def proveedores_page():
 
 @proveedores_bp.route("/api", methods=["GET"])
 def proveedores_list_api():
-    """API para listar proveedores"""
+    """API para listar proveedores con soporte para filtros de búsqueda"""
     try:
-        return jsonify(listar_proveedores())
+        filtros = {}
+
+        # Recoger parámetros de filtro de la URL
+        for param in ["nombre", "nif", "contacto", "q", "limit"]:
+            if param in request.args:
+                filtros[param] = request.args[param]
+
+        return jsonify(listar_proveedores(filtros if filtros else None))
     except Exception as e:
         return jsonify({"error": "Error al obtener proveedores"}), 500
 

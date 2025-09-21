@@ -32,8 +32,24 @@ def activos_page():
 
 @activos_bp.route("/api", methods=["GET"])
 def activos_list_api():
-    """API para listar activos"""
-    return jsonify(listar_activos())
+    """API para listar activos con soporte para filtros de búsqueda"""
+    filtros = {}
+
+    # Recoger parámetros de filtro de la URL
+    for param in [
+        "nombre",
+        "codigo",
+        "ubicacion",
+        "fabricante",
+        "departamento",
+        "tipo",
+        "q",
+        "limit",
+    ]:
+        if param in request.args:
+            filtros[param] = request.args[param]
+
+    return jsonify(listar_activos(filtros if filtros else None))
 
 
 @activos_bp.route("/api/<int:id>", methods=["GET", "PUT", "DELETE"])

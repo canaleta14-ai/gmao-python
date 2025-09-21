@@ -202,7 +202,77 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // Inicializar autocompletado después de cargar página
+    setTimeout(() => {
+        inicializarAutocompletado();
+    }, 500);
 });
+
+// Inicializar autocompletado en formularios de usuarios
+function inicializarAutocompletado() {
+    console.log('Inicializando autocompletado en usuarios...');
+
+    if (!window.AutoComplete) {
+        console.log('AutoComplete no disponible');
+        return;
+    }
+
+    // Autocompletado para filtro de username
+    const filtroUsername = document.getElementById('filtro-username');
+    if (filtroUsername) {
+        new AutoComplete({
+            element: filtroUsername,
+            apiUrl: '/usuarios/api',
+            searchKey: 'q',
+            displayKey: item => `${item.username} (${item.nombre || 'Sin nombre'})`,
+            valueKey: 'username',
+            placeholder: 'Buscar por usuario...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Usuario seleccionado para filtro:', item);
+                cargarUsuarios(1);
+            }
+        });
+    }
+
+    // Autocompletado para filtro de email
+    const filtroEmail = document.getElementById('filtro-email');
+    if (filtroEmail) {
+        new AutoComplete({
+            element: filtroEmail,
+            apiUrl: '/usuarios/api',
+            searchKey: 'q',
+            displayKey: item => `${item.email} - ${item.nombre || item.username}`,
+            valueKey: 'email',
+            placeholder: 'Buscar por email...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Email seleccionado para filtro:', item);
+                cargarUsuarios(1);
+            }
+        });
+    }
+
+    // Autocompletado para campo nombre en formulario de nuevo usuario
+    const nuevoNombre = document.getElementById('nuevo-nombre');
+    if (nuevoNombre) {
+        new AutoComplete({
+            element: nuevoNombre,
+            apiUrl: '/usuarios/api',
+            searchKey: 'nombre',
+            displayKey: 'nombre',
+            valueKey: 'nombre',
+            placeholder: 'Nombre completo...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Nombre seleccionado:', item);
+            }
+        });
+    }
+
+    console.log('Autocompletado inicializado en usuarios');
+}
 
 // Prevenir envío de formularios por defecto
 document.addEventListener('submit', function (e) {

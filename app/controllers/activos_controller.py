@@ -5,8 +5,50 @@ import csv
 from io import StringIO
 
 
-def listar_activos():
-    activos = Activo.query.all()
+def listar_activos(filtros=None):
+    query = Activo.query
+
+    # Aplicar filtros de búsqueda si se proporcionan
+    if filtros:
+        if "nombre" in filtros and filtros["nombre"]:
+            query = query.filter(Activo.nombre.ilike(f"%{filtros['nombre']}%"))
+
+        if "codigo" in filtros and filtros["codigo"]:
+            query = query.filter(Activo.codigo.ilike(f"%{filtros['codigo']}%"))
+
+        if "ubicacion" in filtros and filtros["ubicacion"]:
+            query = query.filter(Activo.ubicacion.ilike(f"%{filtros['ubicacion']}%"))
+
+        if "fabricante" in filtros and filtros["fabricante"]:
+            query = query.filter(Activo.fabricante.ilike(f"%{filtros['fabricante']}%"))
+
+        if "departamento" in filtros and filtros["departamento"]:
+            query = query.filter(Activo.departamento == filtros["departamento"])
+
+        if "tipo" in filtros and filtros["tipo"]:
+            query = query.filter(Activo.tipo.ilike(f"%{filtros['tipo']}%"))
+
+        if "q" in filtros and filtros["q"]:
+            # Búsqueda general en múltiples campos
+            search_term = f"%{filtros['q']}%"
+            query = query.filter(
+                db.or_(
+                    Activo.nombre.ilike(search_term),
+                    Activo.codigo.ilike(search_term),
+                    Activo.ubicacion.ilike(search_term),
+                    Activo.fabricante.ilike(search_term),
+                )
+            )
+
+    # Limitar resultados si se especifica
+    if filtros and "limit" in filtros:
+        try:
+            limit = int(filtros["limit"])
+            query = query.limit(limit)
+        except (ValueError, TypeError):
+            pass
+
+    activos = query.all()
     departamentos = Activo.get_departamentos()
     return [
         {

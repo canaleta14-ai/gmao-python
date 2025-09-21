@@ -367,6 +367,86 @@ function inicializarEventos() {
     document.getElementById('proveedor-nif').addEventListener('input', function () {
         this.value = this.value.toUpperCase();
     });
+
+    // Inicializar autocompletado después de cargar datos
+    setTimeout(() => {
+        inicializarAutocompletado();
+    }, 500);
+}
+
+// Inicializar autocompletado en formularios de proveedores
+function inicializarAutocompletado() {
+    console.log('Inicializando autocompletado en proveedores...');
+
+    if (!window.AutoComplete) {
+        console.log('AutoComplete no disponible');
+        return;
+    }
+
+    // Autocompletado para filtro de búsqueda general
+    const filtroBuscar = document.getElementById('filtro-buscar');
+    if (filtroBuscar) {
+        new AutoComplete({
+            element: filtroBuscar,
+            apiUrl: '/proveedores/api',
+            searchKey: 'q',
+            displayKey: item => `${item.nombre} (${item.nif}) - ${item.contacto || 'Sin contacto'}`,
+            valueKey: 'nombre',
+            placeholder: 'Buscar proveedor por nombre, NIF o contacto...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Proveedor seleccionado para filtro:', item);
+                filtrarProveedores();
+            }
+        });
+    }
+
+    // Autocompletado para campo nombre en formulario de nuevo proveedor
+    const proveedorNombre = document.getElementById('proveedor-nombre');
+    if (proveedorNombre) {
+        new AutoComplete({
+            element: proveedorNombre,
+            localData: proveedores,
+            displayKey: 'nombre',
+            valueKey: 'nombre',
+            placeholder: 'Nombre del proveedor...',
+            allowFreeText: true,
+            customFilter: (item, query) => {
+                const q = query.toLowerCase();
+                return item.nombre.toLowerCase().includes(q);
+            },
+            onSelect: (item) => {
+                console.log('Nombre de proveedor seleccionado:', item);
+                // Rellenar otros campos si están disponibles
+                if (item.nif) document.getElementById('proveedor-nif').value = item.nif;
+                if (item.contacto) document.getElementById('proveedor-contacto').value = item.contacto;
+                if (item.direccion) document.getElementById('proveedor-direccion').value = item.direccion;
+            }
+        });
+    }
+
+    // Autocompletado para campo contacto
+    const proveedorContacto = document.getElementById('proveedor-contacto');
+    if (proveedorContacto) {
+        // Obtener contactos únicos de proveedores existentes
+        const contactosUnicos = [...new Set(proveedores
+            .filter(proveedor => proveedor.contacto && proveedor.contacto.trim())
+            .map(proveedor => proveedor.contacto))];
+
+        new AutoComplete({
+            element: proveedorContacto,
+            localData: contactosUnicos.map(contacto => ({ contacto })),
+            displayKey: 'contacto',
+            valueKey: 'contacto',
+            placeholder: 'Persona de contacto...',
+            allowFreeText: true,
+            onSelect: (item) => {
+                console.log('Contacto seleccionado:', item);
+            }
+        });
+    }
+
+    console.log('Autocompletado inicializado en proveedores');
 }
 
 // Mostrar mensaje al usuario
