@@ -1,5 +1,13 @@
-from flask import Blueprint, request, jsonify, render_template, make_response
-from flask_login import login_required
+from flask import (
+    Blueprint,
+    request,
+    jsonify,
+    render_template,
+    make_response,
+    send_file,
+    current_app,
+)
+from flask_login import login_required, current_user
 from app.controllers.ordenes_controller import (
     listar_ordenes,
     obtener_orden,
@@ -12,6 +20,14 @@ from app.controllers.ordenes_controller import (
     obtener_estadisticas_ordenes,
     exportar_ordenes_csv,
 )
+from app.controllers.archivos_controller import (
+    subir_archivo,
+    listar_archivos_orden,
+    eliminar_archivo,
+    descargar_archivo,
+    agregar_enlace,
+)
+import os
 
 ordenes_bp = Blueprint("ordenes", __name__, url_prefix="/ordenes")
 
@@ -172,5 +188,69 @@ def exportar_csv():
         )
 
         return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Rutas para gestión de archivos adjuntos
+
+
+@ordenes_bp.route("/api/<int:orden_id>/archivos", methods=["POST"])
+@login_required
+def subir_archivo_orden(orden_id):
+    """Subir archivo adjunto a una orden de trabajo"""
+    try:
+        resultado = subir_archivo(orden_id, current_user.id)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@ordenes_bp.route("/api/<int:orden_id>/archivos", methods=["GET"])
+@login_required
+def obtener_archivos_orden(orden_id):
+    """Obtener lista de archivos adjuntos de una orden"""
+    try:
+        archivos = listar_archivos_orden(orden_id)
+        return jsonify(archivos)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@ordenes_bp.route("/api/<int:orden_id>/enlaces", methods=["POST"])
+@login_required
+def agregar_enlace_orden(orden_id):
+    """Agregar enlace externo a una orden de trabajo"""
+    try:
+        data = request.get_json()
+        if not data.get("url"):
+            return jsonify({"error": "La URL es requerida"}), 400
+
+        resultado = agregar_enlace(orden_id, data, current_user.id)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@ordenes_bp.route("/api/archivos/<int:archivo_id>", methods=["DELETE"])
+@login_required
+def eliminar_archivo_adjunto(archivo_id):
+    """Eliminar archivo adjunto"""
+    try:
+        eliminar_archivo(archivo_id)
+        return jsonify({"mensaje": "Archivo eliminado exitosamente"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@ordenes_bp.route("/api/archivos/<int:archivo_id>/download", methods=["GET"])
+@login_required
+def descargar_archivo_adjunto(archivo_id):
+    """Descargar archivo adjunto"""
+    try:
+        archivo_path, nombre_original = descargar_archivo(archivo_id)
+        return send_file(
+            archivo_path, as_attachment=True, download_name=nombre_original
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500

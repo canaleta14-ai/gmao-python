@@ -11,6 +11,7 @@ from .inventario import Inventario
 from .movimiento_inventario import MovimientoInventario
 from .usuario import Usuario
 from .manual import Manual
+from .archivo_adjunto import ArchivoAdjunto
 
 # Exportar para fácil importación
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "MovimientoInventario",
     "Usuario",
     "Manual",
+    "ArchivoAdjunto",
 ]

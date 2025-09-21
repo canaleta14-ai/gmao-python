@@ -132,6 +132,9 @@ async function editarOrden(id) {
         document.getElementById('modalOrdenTitulo').innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Orden de Trabajo';
         document.getElementById('boton-guardar-texto').textContent = 'Actualizar Orden';
 
+        // Inicializar manejo de archivos para edición
+        inicializarArchivos(orden.id);
+
         const modal = new bootstrap.Modal(document.getElementById('modalOrden'));
         modal.show();
         mostrarToast(`Editar orden #${id}`, 'info');
@@ -437,6 +440,9 @@ function mostrarModalNuevaOrden() {
     cargarActivos();
     cargarTecnicos();
 
+    // Inicializar manejo de archivos
+    inicializarArchivos(null);
+
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('modalOrden'));
     modal.show();
@@ -493,6 +499,20 @@ async function guardarOrden() {
         });
 
         if (response.ok) {
+            const resultado = await response.json();
+            const ordenIdFinal = esEdicion ? ordenId : resultado.id;
+
+            // Subir archivos pendientes si es una orden nueva o si hay archivos pendientes
+            if (archivosTemporales.length > 0) {
+                try {
+                    await subirArchivosPendientes(ordenIdFinal);
+                    mostrarToast('Archivos adjuntos procesados', 'info');
+                } catch (error) {
+                    console.error('Error al subir archivos:', error);
+                    mostrarToast('Orden guardada, pero algunos archivos no se pudieron subir', 'warning');
+                }
+            }
+
             const mensaje = esEdicion ? 'Orden actualizada exitosamente' : 'Orden de trabajo creada exitosamente';
             mostrarToast(mensaje, 'success');
 
@@ -506,6 +526,10 @@ async function guardarOrden() {
             // Limpiar formulario
             form.reset();
             form.classList.remove('was-validated');
+
+            // Limpiar archivos temporales
+            archivosTemporales = [];
+            limpiarListaArchivos();
 
         } else {
             const error = await response.json();
@@ -551,3 +575,378 @@ window.debugDOM = function () {
         console.log('Opciones:', selectTecnico.options.length);
     }
 };
+
+// ================================
+// GESTIÓN DE ARCHIVOS ADJUNTOS
+// ================================
+
+// Variables globales para archivos
+let archivosTemporales = [];
+let ordenIdActual = null;
+
+// Inicializar funcionalidad de archivos cuando se abre el modal
+function inicializarArchivos(ordenId = null) {
+    ordenIdActual = ordenId;
+    archivosTemporales = [];
+
+    // Configurar eventos de drag & drop
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const browseFiles = document.getElementById('browse-files');
+
+    if (uploadArea && fileInput && browseFiles) {
+        // Eventos de drag & drop
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Evento para seleccionar archivos
+        browseFiles.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        // Evento cuando se seleccionan archivos
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+
+    // Cargar archivos existentes si estamos editando
+    if (ordenId) {
+        cargarArchivosExistentes(ordenId);
+    } else {
+        limpiarListaArchivos();
+    }
+}
+
+// Eventos de drag & drop
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragover');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragover');
+
+    const files = Array.from(e.dataTransfer.files);
+    procesarArchivos(files);
+}
+
+// Manejar selección de archivos
+function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    procesarArchivos(files);
+    e.target.value = ''; // Limpiar input para permitir seleccionar el mismo archivo
+}
+
+// Procesar archivos seleccionados
+function procesarArchivos(files) {
+    files.forEach(file => {
+        if (validarArchivo(file)) {
+            const archivoTemporal = {
+                id: Date.now() + Math.random(),
+                archivo: file,
+                nombre: file.name,
+                tamaño: file.size,
+                tipo: determinarTipoArchivo(file),
+                progreso: 0,
+                estado: 'preparado' // preparado, subiendo, completado, error
+            };
+
+            archivosTemporales.push(archivoTemporal);
+            añadirArchivoALista(archivoTemporal, true);
+        }
+    });
+}
+
+// Validar archivo
+function validarArchivo(file) {
+    const tiposPermitidos = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp',
+        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain', 'text/csv'
+    ];
+
+    const tamañoMaximo = 10 * 1024 * 1024; // 10MB
+
+    if (!tiposPermitidos.includes(file.type)) {
+        mostrarToast(`Tipo de archivo no permitido: ${file.name}`, 'error');
+        return false;
+    }
+
+    if (file.size > tamañoMaximo) {
+        mostrarToast(`Archivo muy grande: ${file.name} (máx. 10MB)`, 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Determinar tipo de archivo
+function determinarTipoArchivo(file) {
+    if (file.type.startsWith('image/')) {
+        return 'imagen';
+    } else if (file.type.includes('pdf') || file.type.includes('document') || file.type.includes('sheet') || file.type.includes('text')) {
+        return 'documento';
+    } else {
+        return 'archivo';
+    }
+}
+
+// Añadir archivo a la lista visual
+function añadirArchivoALista(archivo, esNuevo = false) {
+    const listaArchivos = document.getElementById('lista-archivos');
+    if (!listaArchivos) return;
+
+    const archivoDiv = document.createElement('div');
+    archivoDiv.className = `archivo-item archivo-${archivo.tipo}`;
+    archivoDiv.setAttribute('data-archivo-id', archivo.id);
+
+    let icono = 'bi-file-earmark';
+    if (archivo.tipo === 'imagen') {
+        icono = 'bi-image';
+    } else if (archivo.tipo === 'documento') {
+        icono = 'bi-file-text';
+    } else if (archivo.tipo === 'enlace') {
+        icono = 'bi-link-45deg';
+    }
+
+    archivoDiv.innerHTML = `
+        <div class="archivo-info">
+            <i class="bi ${icono} archivo-icono"></i>
+            <div class="archivo-detalles">
+                <h6>${archivo.nombre || archivo.nombre_original}</h6>
+                <small>${formatearTamaño(archivo.tamaño || archivo.tamaño)} ${archivo.descripcion ? '- ' + archivo.descripcion : ''}</small>
+                ${esNuevo && archivo.estado === 'preparado' ? '<div class="upload-progress"><div class="upload-progress-bar" style="width: 0%"></div></div>' : ''}
+            </div>
+        </div>
+        <div class="archivo-acciones">
+            ${!esNuevo && archivo.tipo !== 'enlace' ? `<button class="btn btn-sm btn-outline-primary" onclick="descargarArchivo(${archivo.id})"><i class="bi bi-download"></i></button>` : ''}
+            ${archivo.tipo === 'enlace' ? `<button class="btn btn-sm btn-outline-info" onclick="abrirEnlace('${archivo.url_enlace}')"><i class="bi bi-box-arrow-up-right"></i></button>` : ''}
+            <button class="btn btn-sm btn-outline-danger" onclick="eliminarArchivo(${archivo.id}, ${esNuevo})"><i class="bi bi-trash"></i></button>
+        </div>
+    `;
+
+    listaArchivos.appendChild(archivoDiv);
+}
+
+// Formatear tamaño de archivo
+function formatearTamaño(bytes) {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// Agregar enlace externo
+async function agregarEnlace() {
+    const urlInput = document.getElementById('enlace-url');
+    const descripcionInput = document.getElementById('enlace-descripcion');
+
+    if (!urlInput || !descripcionInput) return;
+
+    const url = urlInput.value.trim();
+    const descripcion = descripcionInput.value.trim();
+
+    if (!url) {
+        mostrarToast('Por favor ingresa una URL', 'error');
+        return;
+    }
+
+    if (!validarURL(url)) {
+        mostrarToast('URL no válida', 'error');
+        urlInput.classList.add('enlace-invalido');
+        return;
+    }
+
+    urlInput.classList.remove('enlace-invalido');
+    urlInput.classList.add('enlace-valido');
+
+    try {
+        if (ordenIdActual) {
+            // Si estamos editando una orden existente, guardar inmediatamente
+            const response = await fetch(`/ordenes/api/${ordenIdActual}/enlaces`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    descripcion: descripcion
+                })
+            });
+
+            if (response.ok) {
+                const resultado = await response.json();
+                añadirArchivoALista(resultado.enlace, false);
+                mostrarToast('Enlace agregado exitosamente', 'success');
+            } else {
+                throw new Error('Error al agregar enlace');
+            }
+        } else {
+            // Si es una orden nueva, agregar a lista temporal
+            const enlaceTemp = {
+                id: Date.now() + Math.random(),
+                nombre: `Enlace: ${url}`,
+                url_enlace: url,
+                descripcion: descripcion,
+                tipo: 'enlace',
+                tamaño: 0
+            };
+
+            archivosTemporales.push(enlaceTemp);
+            añadirArchivoALista(enlaceTemp, true);
+            mostrarToast('Enlace agregado a la lista', 'success');
+        }
+
+        // Limpiar campos
+        urlInput.value = '';
+        descripcionInput.value = '';
+        urlInput.classList.remove('enlace-valido');
+
+    } catch (error) {
+        console.error('Error al agregar enlace:', error);
+        mostrarToast('Error al agregar enlace', 'error');
+    }
+}
+
+// Validar URL
+function validarURL(url) {
+    try {
+        new URL(url);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// Eliminar archivo
+async function eliminarArchivo(archivoId, esNuevo = false) {
+    try {
+        if (esNuevo) {
+            // Eliminar de lista temporal
+            archivosTemporales = archivosTemporales.filter(a => a.id !== archivoId);
+        } else {
+            // Eliminar del servidor
+            const response = await fetch(`/ordenes/api/archivos/${archivoId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al eliminar archivo');
+            }
+
+            mostrarToast('Archivo eliminado exitosamente', 'success');
+        }
+
+        // Eliminar del DOM
+        const archivoElement = document.querySelector(`[data-archivo-id="${archivoId}"]`);
+        if (archivoElement) {
+            archivoElement.remove();
+        }
+
+    } catch (error) {
+        console.error('Error al eliminar archivo:', error);
+        mostrarToast('Error al eliminar archivo', 'error');
+    }
+}
+
+// Descargar archivo
+function descargarArchivo(archivoId) {
+    window.open(`/ordenes/api/archivos/${archivoId}/download`, '_blank');
+}
+
+// Abrir enlace externo
+function abrirEnlace(url) {
+    window.open(url, '_blank');
+}
+
+// Cargar archivos existentes
+async function cargarArchivosExistentes(ordenId) {
+    try {
+        const response = await fetch(`/ordenes/api/${ordenId}/archivos`);
+        if (response.ok) {
+            const archivos = await response.json();
+
+            limpiarListaArchivos();
+
+            archivos.forEach(archivo => {
+                añadirArchivoALista(archivo, false);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar archivos:', error);
+    }
+}
+
+// Limpiar lista de archivos
+function limpiarListaArchivos() {
+    const listaArchivos = document.getElementById('lista-archivos');
+    if (listaArchivos) {
+        listaArchivos.innerHTML = '';
+    }
+}
+
+// Subir archivos pendientes (cuando se guarda la orden)
+async function subirArchivosPendientes(ordenId) {
+    const archivosPendientes = archivosTemporales.filter(a => a.archivo && a.estado === 'preparado');
+
+    for (const archivo of archivosPendientes) {
+        try {
+            archivo.estado = 'subiendo';
+            await subirArchivo(archivo, ordenId);
+            archivo.estado = 'completado';
+        } catch (error) {
+            archivo.estado = 'error';
+            console.error('Error al subir archivo:', error);
+        }
+    }
+
+    // Enlaces también se procesan aquí
+    const enlacesPendientes = archivosTemporales.filter(a => a.tipo === 'enlace');
+    for (const enlace of enlacesPendientes) {
+        try {
+            await fetch(`/ordenes/api/${ordenId}/enlaces`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: enlace.url_enlace,
+                    descripcion: enlace.descripcion
+                })
+            });
+        } catch (error) {
+            console.error('Error al guardar enlace:', error);
+        }
+    }
+}
+
+// Subir archivo individual
+async function subirArchivo(archivoTemp, ordenId) {
+    const formData = new FormData();
+    formData.append('archivo', archivoTemp.archivo);
+    formData.append('descripcion', archivoTemp.descripcion || '');
+
+    const response = await fetch(`/ordenes/api/${ordenId}/archivos`, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al subir archivo');
+    }
+
+    return await response.json();
+}

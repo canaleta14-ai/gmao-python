@@ -18,3 +18,11 @@ class OrdenTrabajo(db.Model):
 
     activo_id = db.Column(db.Integer, db.ForeignKey("activo.id"))
     tecnico_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
+
+    # Relación con archivos adjuntos
+    archivos_adjuntos = db.relationship(
+        "ArchivoAdjunto",
+        backref="orden_trabajo",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )

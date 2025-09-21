@@ -362,3 +362,175 @@
 .modal-header.bg-danger {
     background-color: var(--danger-color) !important;
 }
+
+/* Estilos para archivos adjuntos */
+.upload-area {
+    background-color: #f8f9fa;
+    border-color: #dee2e6 !important;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    background-color: #e9ecef;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-2px);
+}
+
+.upload-area.dragover {
+    border-color: var(--success-color) !important;
+    background-color: rgba(39, 174, 96, 0.1);
+}
+
+.archivos-adjuntos {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+}
+
+.archivo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+}
+
+.archivo-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.archivo-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.archivo-icono {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+    color: var(--primary-color);
+}
+
+.archivo-detalles h6 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.archivo-detalles small {
+    color: var(--text-muted);
+    display: block;
+}
+
+.archivo-acciones {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.archivo-acciones .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Progress bar para subida de archivos */
+.upload-progress {
+    position: relative;
+    background-color: #e9ecef;
+    border-radius: 0.375rem;
+    height: 0.5rem;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    border-radius: 0.375rem;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.upload-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-image: linear-gradient(-45deg,
+            rgba(255, 255, 255, .2) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255, 255, 255, .2) 50%,
+            rgba(255, 255, 255, .2) 75%,
+            transparent 75%,
+            transparent);
+    background-size: 1rem 1rem;
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+    0% {
+        background-position-x: 1rem;
+    }
+}
+
+/* Tipos de archivo con iconos específicos */
+.archivo-imagen .archivo-icono {
+    color: var(--success-color);
+}
+
+.archivo-documento .archivo-icono {
+    color: var(--danger-color);
+}
+
+.archivo-enlace .archivo-icono {
+    color: var(--info-color);
+}
+
+/* Vista previa de imágenes */
+.imagen-preview {
+    max-width: 60px;
+    max-height: 60px;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    margin-right: 0.75rem;
+    border: 2px solid #dee2e6;
+}
+
+/* Estados de validación para enlaces */
+.enlace-valido {
+    border-color: var(--success-color) !important;
+}
+
+.enlace-invalido {
+    border-color: var(--danger-color) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .archivo-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .archivo-acciones {
+        margin-top: 0.5rem;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .archivos-adjuntos {
+        max-height: 200px;
+    }
+}
