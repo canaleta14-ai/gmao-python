@@ -269,9 +269,11 @@
                                 <label class="form-label">Agregar Enlaces</label>
                                 <div class="input-group">
                                     <input type="url" class="form-control" id="enlace-url"
-                                        placeholder="https://ejemplo.com/manual.pdf">
+                                        placeholder="https://ejemplo.com/manual.pdf"
+                                        onkeypress="if(event.key==='Enter'){ event.preventDefault(); agregarEnlace(); }">
                                     <input type="text" class="form-control" id="enlace-descripcion"
-                                        placeholder="Descripción del enlace">
+                                        placeholder="Descripción del enlace"
+                                        onkeypress="if(event.key==='Enter'){ event.preventDefault(); agregarEnlace(); }">
                                     <button class="btn btn-outline-primary" type="button" onclick="agregarEnlace()">
                                         <i class="bi bi-plus"></i>
                                     </button>

@@ -487,7 +487,7 @@ async function guardarOrden() {
         const ordenId = document.getElementById('orden-id').value;
         const esEdicion = ordenId && ordenId !== '';
 
-        const url = esEdicion ? `/ordenes/${ordenId}` : '/ordenes';
+        const url = esEdicion ? `/ordenes/api/${ordenId}` : '/ordenes';
         const method = esEdicion ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -586,6 +586,7 @@ let ordenIdActual = null;
 
 // Inicializar funcionalidad de archivos cuando se abre el modal
 function inicializarArchivos(ordenId = null) {
+    console.log('Inicializando archivos para orden:', ordenId);
     ordenIdActual = ordenId;
     archivosTemporales = [];
 
@@ -595,14 +596,19 @@ function inicializarArchivos(ordenId = null) {
     const browseFiles = document.getElementById('browse-files');
 
     if (uploadArea && fileInput && browseFiles) {
-        // Eventos de drag & drop
-        uploadArea.addEventListener('dragover', handleDragOver);
-        uploadArea.addEventListener('dragleave', handleDragLeave);
-        uploadArea.addEventListener('drop', handleDrop);
-        uploadArea.addEventListener('click', () => fileInput.click());
+        // Limpiar eventos previos para evitar duplicados
+        uploadArea.replaceWith(uploadArea.cloneNode(true));
+        const newUploadArea = document.getElementById('upload-area');
 
-        // Evento para seleccionar archivos
-        browseFiles.addEventListener('click', (e) => {
+        // Eventos de drag & drop
+        newUploadArea.addEventListener('dragover', handleDragOver);
+        newUploadArea.addEventListener('dragleave', handleDragLeave);
+        newUploadArea.addEventListener('drop', handleDrop);
+        newUploadArea.addEventListener('click', () => fileInput.click());
+
+        // Limpiar eventos del botón browse
+        const newBrowseFiles = document.getElementById('browse-files');
+        newBrowseFiles.addEventListener('click', (e) => {
             e.preventDefault();
             fileInput.click();
         });
@@ -611,15 +617,24 @@ function inicializarArchivos(ordenId = null) {
         fileInput.addEventListener('change', handleFileSelect);
     }
 
+    // Limpiar campos de enlace
+    const urlInput = document.getElementById('enlace-url');
+    const descripcionInput = document.getElementById('enlace-descripcion');
+    if (urlInput) {
+        urlInput.value = '';
+        urlInput.classList.remove('enlace-valido', 'enlace-invalido');
+    }
+    if (descripcionInput) {
+        descripcionInput.value = '';
+    }
+
     // Cargar archivos existentes si estamos editando
     if (ordenId) {
         cargarArchivosExistentes(ordenId);
     } else {
         limpiarListaArchivos();
     }
-}
-
-// Eventos de drag & drop
+}// Eventos de drag & drop
 function handleDragOver(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -754,22 +769,29 @@ async function agregarEnlace() {
     const urlInput = document.getElementById('enlace-url');
     const descripcionInput = document.getElementById('enlace-descripcion');
 
-    if (!urlInput || !descripcionInput) return;
+    if (!urlInput || !descripcionInput) {
+        console.warn('Elementos de enlace no encontrados');
+        return;
+    }
 
     const url = urlInput.value.trim();
     const descripcion = descripcionInput.value.trim();
 
+    // Validación mejorada
     if (!url) {
         mostrarToast('Por favor ingresa una URL', 'error');
+        urlInput.focus();
         return;
     }
 
     if (!validarURL(url)) {
-        mostrarToast('URL no válida', 'error');
+        mostrarToast('URL no válida. Debe incluir http:// o https://', 'error');
         urlInput.classList.add('enlace-invalido');
+        urlInput.focus();
         return;
     }
 
+    // Remover clases de validación previas
     urlInput.classList.remove('enlace-invalido');
     urlInput.classList.add('enlace-valido');
 
@@ -792,7 +814,8 @@ async function agregarEnlace() {
                 añadirArchivoALista(resultado.enlace, false);
                 mostrarToast('Enlace agregado exitosamente', 'success');
             } else {
-                throw new Error('Error al agregar enlace');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al agregar enlace');
             }
         } else {
             // Si es una orden nueva, agregar a lista temporal
@@ -810,23 +833,38 @@ async function agregarEnlace() {
             mostrarToast('Enlace agregado a la lista', 'success');
         }
 
-        // Limpiar campos
+        // Limpiar campos solo si todo fue exitoso
         urlInput.value = '';
         descripcionInput.value = '';
         urlInput.classList.remove('enlace-valido');
 
     } catch (error) {
         console.error('Error al agregar enlace:', error);
-        mostrarToast('Error al agregar enlace', 'error');
+        mostrarToast('Error al agregar enlace: ' + error.message, 'error');
+        urlInput.classList.add('enlace-invalido');
     }
 }
 
 // Validar URL
 function validarURL(url) {
     try {
-        new URL(url);
-        return true;
-    } catch {
+        // Verificar que la URL no esté vacía
+        if (!url || url.trim() === '') {
+            return false;
+        }
+
+        // Si no tiene protocolo, añadir https por defecto
+        let urlToValidate = url.trim();
+        if (!urlToValidate.startsWith('http://') && !urlToValidate.startsWith('https://')) {
+            urlToValidate = 'https://' + urlToValidate;
+        }
+
+        const urlObj = new URL(urlToValidate);
+
+        // Verificar que tenga un dominio válido
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    } catch (e) {
+        console.warn('URL inválida:', url, e);
         return false;
     }
 }
@@ -900,35 +938,55 @@ function limpiarListaArchivos() {
 
 // Subir archivos pendientes (cuando se guarda la orden)
 async function subirArchivosPendientes(ordenId) {
+    console.log('Procesando archivos temporales:', archivosTemporales);
+
+    // Procesar archivos
     const archivosPendientes = archivosTemporales.filter(a => a.archivo && a.estado === 'preparado');
+    console.log('Archivos a subir:', archivosPendientes.length);
 
     for (const archivo of archivosPendientes) {
         try {
             archivo.estado = 'subiendo';
             await subirArchivo(archivo, ordenId);
             archivo.estado = 'completado';
+            console.log('Archivo subido exitosamente:', archivo.nombre);
         } catch (error) {
             archivo.estado = 'error';
-            console.error('Error al subir archivo:', error);
+            console.error('Error al subir archivo:', archivo.nombre, error);
         }
     }
 
-    // Enlaces también se procesan aquí
-    const enlacesPendientes = archivosTemporales.filter(a => a.tipo === 'enlace');
+    // Procesar enlaces válidos
+    const enlacesPendientes = archivosTemporales.filter(a =>
+        a.tipo === 'enlace' &&
+        a.url_enlace &&
+        a.url_enlace.trim() !== '' &&
+        validarURL(a.url_enlace)
+    );
+    console.log('Enlaces a procesar:', enlacesPendientes.length);
+
     for (const enlace of enlacesPendientes) {
         try {
-            await fetch(`/ordenes/api/${ordenId}/enlaces`, {
+            console.log('Procesando enlace:', enlace.url_enlace);
+            const response = await fetch(`/ordenes/api/${ordenId}/enlaces`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     url: enlace.url_enlace,
-                    descripcion: enlace.descripcion
+                    descripcion: enlace.descripcion || ''
                 })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al guardar enlace');
+            }
+
+            console.log('Enlace guardado exitosamente:', enlace.url_enlace);
         } catch (error) {
-            console.error('Error al guardar enlace:', error);
+            console.error('Error al guardar enlace:', enlace.url_enlace, error);
         }
     }
 }
