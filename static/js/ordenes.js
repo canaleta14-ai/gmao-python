@@ -326,3 +326,228 @@ async function cargarDatosIniciales() {
         mostrarToast('Error al cargar datos iniciales', 'error');
     }
 }
+
+// Cargar activos
+async function cargarActivos() {
+    try {
+        const response = await fetch('/activos/api');
+        if (response.ok) {
+            const data = await response.json();
+            activos = data;
+            llenarSelectActivos();
+        } else {
+            console.error('Error al cargar activos');
+        }
+    } catch (error) {
+        console.error('Error cargando activos:', error);
+    }
+}
+
+// Cargar técnicos
+async function cargarTecnicos() {
+    try {
+        console.log('Iniciando carga de técnicos...');
+        const response = await fetch('/usuarios/api?per_page=100');
+        console.log('Respuesta usuarios API:', await response.clone().json());
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Usuarios extraídos:', data.usuarios);
+
+            // Filtrar solo usuarios activos con roles apropiados
+            tecnicos = data.usuarios.filter(usuario => {
+                const esActivo = usuario.activo === true;
+                const rolValido = ['Técnico', 'Administrador'].includes(usuario.rol);
+                return esActivo && rolValido;
+            });
+
+            console.log('Técnicos filtrados:', tecnicos);
+
+            llenarSelectTecnicos();
+
+            if (tecnicos.length === 0) {
+                mostrarToast('No hay técnicos disponibles para asignar órdenes', 'warning');
+            }
+        } else {
+            console.error('Error al cargar técnicos');
+        }
+    } catch (error) {
+        console.error('Error cargando técnicos:', error);
+    }
+}
+
+// Llenar select de activos
+function llenarSelectActivos() {
+    const selectActivo = document.getElementById('orden-activo');
+    if (!selectActivo) return;
+
+    // Limpiar opciones existentes (excepto la primera)
+    selectActivo.innerHTML = '<option value="">Seleccionar activo...</option>';
+
+    activos.forEach(activo => {
+        const option = document.createElement('option');
+        option.value = activo.id;
+        option.textContent = `${activo.nombre} - ${activo.ubicacion || 'Sin ubicación'}`;
+        selectActivo.appendChild(option);
+    });
+
+    console.log(`Cargados ${activos.length} activos en el select`);
+}
+
+// Llenar select de técnicos
+function llenarSelectTecnicos() {
+    const selectTecnico = document.getElementById('orden-tecnico');
+    if (!selectTecnico) {
+        console.log('Select de técnico no encontrado');
+        return;
+    }
+
+    console.log('Llenando select con técnicos:', tecnicos);
+
+    // Limpiar opciones existentes (excepto la primera)
+    selectTecnico.innerHTML = '<option value="">Asignar técnico...</option>';
+
+    tecnicos.forEach((tecnico, index) => {
+        console.log(`Agregando técnico ${index}:`, tecnico);
+        const option = document.createElement('option');
+        option.value = tecnico.id;
+
+        // Usar solo nombre y rol (sin apellido)
+        const nombre = tecnico.nombre || 'Sin nombre';
+        const rol = tecnico.rol || 'Sin rol';
+        option.textContent = `${nombre} - ${rol}`;
+        selectTecnico.appendChild(option);
+    });
+
+    console.log(`Cargados ${tecnicos.length} técnicos en el select`);
+    console.log('Select final HTML:', selectTecnico.innerHTML);
+}
+
+// Mostrar modal para nueva orden
+function mostrarModalNuevaOrden() {
+    // Resetear formulario
+    document.getElementById('formOrden').reset();
+    document.getElementById('orden-id').value = '';
+
+    // Cambiar título del modal
+    document.getElementById('modalOrdenTitulo').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Nueva Orden de Trabajo';
+    document.getElementById('boton-guardar-texto').textContent = 'Crear Orden';
+
+    // Cargar datos actuales
+    cargarActivos();
+    cargarTecnicos();
+
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalOrden'));
+    modal.show();
+}
+
+// Exportar CSV
+async function exportarCSV() {
+    try {
+        if (typeof descargarCSVMejorado === 'function') {
+            await descargarCSVMejorado('/ordenes/exportar-csv', 'ordenes_trabajo_{fecha}', 'CSV');
+        } else {
+            // Fallback simple
+            window.open('/ordenes/exportar-csv', '_blank');
+        }
+    } catch (error) {
+        console.error('Error exportando CSV:', error);
+        mostrarToast('Error al exportar CSV', 'error');
+    }
+}
+
+// Guardar orden de trabajo
+async function guardarOrden() {
+    const form = document.getElementById('formOrden');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+
+    try {
+        // Recopilar datos del formulario
+        const ordenData = {
+            tipo: document.getElementById('orden-tipo').value,
+            prioridad: document.getElementById('orden-prioridad').value,
+            activo_id: document.getElementById('orden-activo').value || null,
+            tecnico_id: document.getElementById('orden-tecnico').value || null,
+            fecha_programada: document.getElementById('orden-fecha-programada').value || null,
+            tiempo_estimado: parseFloat(document.getElementById('orden-tiempo-estimado').value) || null,
+            descripcion: document.getElementById('orden-descripcion').value,
+            observaciones: document.getElementById('orden-observaciones').value || null
+        };
+
+        const ordenId = document.getElementById('orden-id').value;
+        const esEdicion = ordenId && ordenId !== '';
+
+        const url = esEdicion ? `/ordenes/${ordenId}` : '/ordenes';
+        const method = esEdicion ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(ordenData)
+        });
+
+        if (response.ok) {
+            const mensaje = esEdicion ? 'Orden actualizada exitosamente' : 'Orden de trabajo creada exitosamente';
+            mostrarToast(mensaje, 'success');
+
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalOrden'));
+            modal.hide();
+
+            // Recargar datos
+            cargarOrdenes();
+
+            // Limpiar formulario
+            form.reset();
+            form.classList.remove('was-validated');
+
+        } else {
+            const error = await response.json();
+            throw new Error(error.mensaje || 'Error al guardar la orden');
+        }
+
+    } catch (error) {
+        console.error('Error guardando orden:', error);
+        const mensajeError = error?.message || error?.toString() || 'Error al guardar la orden de trabajo';
+        mostrarToast(mensajeError, 'error');
+    }
+}
+
+// Función de debug para probar la carga de técnicos
+window.debugTecnicos = async function () {
+    console.log('=== DEBUG: Probando carga de técnicos ===');
+    try {
+        const response = await fetch('/usuarios/api?per_page=100');
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Data completa:', data);
+        console.log('Usuarios:', data.usuarios);
+
+        if (data.usuarios) {
+            const tecnicosActivos = data.usuarios.filter(u => u.activo === true);
+            console.log('Técnicos activos:', tecnicosActivos);
+
+            const tecnicosValidos = tecnicosActivos.filter(u => ['Técnico', 'Administrador'].includes(u.rol));
+            console.log('Técnicos válidos:', tecnicosValidos);
+        }
+    } catch (error) {
+        console.error('Error en debug:', error);
+    }
+};
+
+// Función de debug para revisar el DOM
+window.debugDOM = function () {
+    console.log('=== DEBUG: Revisando DOM ===');
+    const selectTecnico = document.getElementById('orden-tecnico');
+    console.log('Select técnico encontrado:', !!selectTecnico);
+    if (selectTecnico) {
+        console.log('HTML del select:', selectTecnico.innerHTML);
+        console.log('Opciones:', selectTecnico.options.length);
+    }
+};
