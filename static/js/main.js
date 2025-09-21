@@ -316,13 +316,14 @@ function setupAutoRefresh() {
 
 // ========== GESTIÓN DE SESIÓN ==========
 function loadUserInfo() {
-    fetch('/api/user/info')
-        .then(response => response.json())
-        .then(data => {
-            currentUser = data;
-            updateUserInterface(data);
-        })
-        .catch(error => console.error('Error cargando info de usuario:', error));
+    // TODO: Implementar endpoint /api/user/info cuando esté disponible
+    // Por ahora usamos datos por defecto para evitar errores 404
+    currentUser = {
+        nombre: 'Usuario',
+        username: 'usuario',
+        rol: 'tecnico'
+    };
+    updateUserInterface(currentUser);
 }
 
 function updateUserInterface(user) {
@@ -334,16 +335,10 @@ function updateUserInterface(user) {
 
 // ========== SISTEMA DE NOTIFICACIONES ==========
 function checkNotifications() {
-    fetch('/api/notificaciones')
-        .then(response => response.json())
-        .then(data => {
-            notifications = data;
-            updateNotificationBadge(data.length);
-            if (data.length > 0) {
-                showNotificationToast(data[0]);
-            }
-        })
-        .catch(error => console.error('Error:', error));
+    // TODO: Implementar endpoint /api/notificaciones cuando esté disponible
+    // Por ahora inicializamos con array vacío para evitar errores 404
+    notifications = [];
+    updateNotificationBadge(0);
 }
 
 function updateNotificationBadge(count) {
