@@ -130,6 +130,10 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Paginación -->
+            <div class="card-footer">
+                <div id="paginacion-activos"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -343,5 +347,6 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script src="{{ url_for('static', filename='js/activos.js') }}"></script>
 {% endblock %}

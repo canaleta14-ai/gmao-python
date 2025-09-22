@@ -169,25 +169,64 @@ function editarUsuario(id) {
 }
 
 function mostrarAlerta(mensaje, tipo) {
-    // Crear alerta de Bootstrap
-    const alertContainer = document.createElement('div');
-    alertContainer.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
-    alertContainer.style.top = '20px';
-    alertContainer.style.right = '20px';
-    alertContainer.style.zIndex = '9999';
-    alertContainer.innerHTML = `
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+    if (!mensaje || mensaje === 'undefined' || mensaje === null) {
+        mensaje = 'Operación realizada';
+    }
 
-    document.body.appendChild(alertContainer);
+    // Mapear tipos de Bootstrap a tipos de toast
+    const tipoMap = {
+        'danger': 'error',
+        'success': 'success',
+        'warning': 'warning',
+        'info': 'info'
+    };
 
-    // Auto-remover después de 5 segundos
-    setTimeout(() => {
-        if (alertContainer.parentNode) {
-            alertContainer.remove();
-        }
-    }, 5000);
+    const tipoToast = tipoMap[tipo] || 'info';
+
+    // Solo mostrar en consola si es error o si estamos en desarrollo
+    if (tipoToast === 'error' || window.location.hostname === 'localhost') {
+        console.log(`${tipoToast.toUpperCase()}: ${mensaje}`);
+    }
+
+    // Usar el sistema de toasts global si está disponible
+    if (typeof showNotificationToast === 'function') {
+        showNotificationToast({
+            titulo: getTituloSegunTipo(tipoToast),
+            mensaje: mensaje,
+            tipo: tipoToast,
+            tiempo: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+        });
+    } else {
+        // Fallback al sistema de alertas
+        const alertContainer = document.createElement('div');
+        alertContainer.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+        alertContainer.style.top = '20px';
+        alertContainer.style.right = '20px';
+        alertContainer.style.zIndex = '9999';
+        alertContainer.innerHTML = `
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(alertContainer);
+
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            if (alertContainer.parentNode) {
+                alertContainer.remove();
+            }
+        }, 5000);
+    }
+}
+
+function getTituloSegunTipo(tipo) {
+    const titulos = {
+        'success': '✅ Éxito',
+        'error': '❌ Error',
+        'warning': '⚠️ Advertencia',
+        'info': 'ℹ️ Información'
+    };
+    return titulos[tipo] || 'Información';
 }
 
 // Event listeners

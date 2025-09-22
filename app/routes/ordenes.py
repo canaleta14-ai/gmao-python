@@ -10,6 +10,7 @@ from flask import (
 from flask_login import login_required, current_user
 from app.controllers.ordenes_controller import (
     listar_ordenes,
+    listar_ordenes_paginado,
     obtener_orden,
     crear_orden,
     actualizar_orden,
@@ -46,8 +47,21 @@ def listar_ordenes_api():
     try:
         estado = request.args.get("estado")
         limit = request.args.get("limit")
-        ordenes = listar_ordenes(estado, limit)
-        return jsonify(ordenes)
+
+        # Si se solicita paginación, usar la función paginada
+        page = request.args.get("page", type=int)
+        per_page = request.args.get("per_page", type=int)
+        q = request.args.get("q")
+
+        if page is not None:
+            # Usar paginación
+            per_page = per_page or 10
+            resultado = listar_ordenes_paginado(page, per_page, q, estado)
+            return jsonify(resultado)
+        else:
+            # Usar listado tradicional sin paginación
+            ordenes = listar_ordenes(estado, limit)
+            return jsonify(ordenes)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

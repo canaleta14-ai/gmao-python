@@ -246,25 +246,32 @@ function toggleSidebar() {
                     // Cerrar sidebar al hacer click en overlay
                     overlay.addEventListener('click', () => {
                         sidebar.classList.remove('show');
-                        overlay.remove();
+                        overlay.classList.remove('show');
+                        setTimeout(() => {
+                            if (overlay.parentNode) {
+                                overlay.remove();
+                            }
+                        }, 300);
                     });
                 }
-                overlay.classList.add('show');
+                // Pequeño delay para activar la animación
+                setTimeout(() => {
+                    overlay.classList.add('show');
+                }, 10);
             } else {
                 if (overlay) {
-                    overlay.remove();
+                    overlay.classList.remove('show');
+                    setTimeout(() => {
+                        if (overlay.parentNode) {
+                            overlay.remove();
+                        }
+                    }, 300);
                 }
             }
         } else {
             // En pantallas grandes, usar clase 'collapsed'
             sidebar.classList.toggle('collapsed');
-
-            // Ajustar el margen del contenido principal
-            if (sidebar.classList.contains('collapsed')) {
-                mainContent.style.marginLeft = '0';
-            } else {
-                mainContent.style.marginLeft = '250px';
-            }
+            // El CSS se encarga de los ajustes del main-content
         }
     }
 }
@@ -314,23 +321,257 @@ function setupAutoRefresh() {
     setInterval(checkNotifications, 60000);
 }
 
-// ========== GESTIÓN DE SESIÓN ==========
+// ========== GESTIÓN DE SESIÓN Y USUARIO ==========
 function loadUserInfo() {
     // TODO: Implementar endpoint /api/user/info cuando esté disponible
     // Por ahora usamos datos por defecto para evitar errores 404
     currentUser = {
-        nombre: 'Usuario',
-        username: 'usuario',
-        rol: 'tecnico'
+        nombre: 'Usuario Administrador',
+        username: 'admin',
+        rol: 'administrador',
+        email: 'admin@gmao.com'
     };
     updateUserInterface(currentUser);
 }
 
 function updateUserInterface(user) {
-    const userNameElements = document.querySelectorAll('.user-name');
+    const userNameElements = document.querySelectorAll('.user-name, #current-user');
     userNameElements.forEach(el => {
         el.textContent = user.nombre || user.username;
     });
+
+    // Actualizar información adicional si existen los elementos
+    const emailElements = document.querySelectorAll('.user-email');
+    emailElements.forEach(el => {
+        el.textContent = user.email || '';
+    });
+
+    const roleElements = document.querySelectorAll('.user-role');
+    roleElements.forEach(el => {
+        el.textContent = user.rol || '';
+    });
+}
+
+// Función para cerrar sesión
+function logout() {
+    // Mostrar confirmación
+    if (!confirm('¿Está seguro que desea cerrar sesión?')) {
+        return;
+    }
+
+    // Mostrar loading
+    showNotificationToast('Cerrando sesión...', 'info');
+
+    // Realizar logout
+    fetch('/logout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+        .then(response => {
+            if (response.ok || response.redirected) {
+                // Limpiar datos locales
+                currentUser = null;
+                notifications = [];
+
+                // Mostrar mensaje de éxito
+                showNotificationToast('Sesión cerrada exitosamente', 'success');
+
+                // Redirigir después de un breve delay
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1000);
+            } else {
+                throw new Error('Error al cerrar sesión');
+            }
+        })
+        .catch(error => {
+            console.error('Error en logout:', error);
+            showNotificationToast('Error al cerrar sesión', 'error');
+
+            // Como fallback, redirigir de todas formas
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        });
+}
+
+// Función para abrir modal de perfil/configuración
+function openProfileModal() {
+    // Verificar si el modal ya existe
+    let modal = document.getElementById('profileModal');
+
+    if (!modal) {
+        // Crear el modal dinámicamente
+        const modalHTML = `
+            <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="profileModalLabel">
+                                <i class="bi bi-person-gear me-2"></i>Configuración de Usuario
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="profileForm">
+                                <div class="text-center mb-4">
+                                    <i class="bi bi-person-circle fs-1 text-primary"></i>
+                                    <h6 class="mt-2">${currentUser?.nombre || 'Usuario'}</h6>
+                                    <small class="text-muted">${currentUser?.rol || 'Usuario'}</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="userName" class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="userName" 
+                                           value="${currentUser?.nombre || ''}" readonly>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="userEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="userEmail" 
+                                           value="${currentUser?.email || ''}" readonly>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="userRole" class="form-label">Rol</label>
+                                    <input type="text" class="form-control" id="userRole" 
+                                           value="${currentUser?.rol || ''}" readonly>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Para modificar estos datos, contacte al administrador del sistema.
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="openChangePasswordModal()">
+                                <i class="bi bi-key"></i> Cambiar Contraseña
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('profileModal');
+    }
+
+    // Mostrar el modal
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+}
+
+// Función para cambiar contraseña
+function openChangePasswordModal() {
+    // Cerrar modal de perfil primero
+    const profileModal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+    if (profileModal) {
+        profileModal.hide();
+    }
+
+    // Crear modal de cambio de contraseña
+    const modalHTML = `
+        <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="changePasswordModalLabel">
+                            <i class="bi bi-key me-2"></i>Cambiar Contraseña
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="changePasswordForm">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Contraseña Actual</label>
+                                <input type="password" class="form-control" id="currentPassword" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                <div class="form-text">Mínimo 6 caracteres</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirmar Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="changePassword()">
+                            <i class="bi bi-check-lg"></i> Cambiar Contraseña
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    const existingModal = document.getElementById('changePasswordModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+    modal.show();
+}
+
+function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    // Validaciones
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showNotificationToast('Todos los campos son obligatorios', 'warning');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showNotificationToast('Las contraseñas no coinciden', 'error');
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        showNotificationToast('La nueva contraseña debe tener al menos 6 caracteres', 'warning');
+        return;
+    }
+
+    // Enviar solicitud
+    fetch('/api/change-password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotificationToast('Contraseña cambiada exitosamente', 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+                modal.hide();
+            } else {
+                showNotificationToast(data.message || 'Error al cambiar contraseña', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotificationToast('Error al cambiar contraseña', 'error');
+        });
 }
 
 // ========== SISTEMA DE NOTIFICACIONES ==========
@@ -349,17 +590,43 @@ function updateNotificationBadge(count) {
     }
 }
 
-function showNotificationToast(notification) {
+function showNotificationToast(message, type = 'info') {
+    // Soporte para ambos formatos: objeto o string
+    let notification;
+    if (typeof message === 'string') {
+        notification = {
+            titulo: getTypeTitle(type),
+            mensaje: message,
+            tipo: type
+        };
+    } else {
+        notification = message;
+    }
+
+    // Mapear tipos de notificación a clases de Bootstrap
+    const tipoIconMap = {
+        'success': { icon: 'bi-check-circle-fill', class: 'text-success', bgClass: 'bg-success' },
+        'error': { icon: 'bi-exclamation-triangle-fill', class: 'text-danger', bgClass: 'bg-danger' },
+        'warning': { icon: 'bi-exclamation-triangle-fill', class: 'text-warning', bgClass: 'bg-warning' },
+        'info': { icon: 'bi-info-circle-fill', class: 'text-info', bgClass: 'bg-info' }
+    };
+
+    const tipoConfig = tipoIconMap[notification.tipo] || tipoIconMap['info'];
+
+    // Determinar duración basada en el tipo
+    const duracion = notification.tipo === 'error' ? 8000 : 4000;
+
     const toastHTML = `
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <i class="bi bi-bell-fill text-primary me-2"></i>
-                <strong class="me-auto">${notification.titulo}</strong>
-                <small>${notification.tiempo}</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body">
-                ${notification.mensaje}
+        <div class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${duracion}" data-tipo="${notification.tipo}">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center">
+                    <i class="bi ${tipoConfig.icon} ${tipoConfig.class} me-2"></i>
+                    <div>
+                        <strong>${notification.titulo}</strong><br>
+                        <span class="text-muted small">${notification.mensaje}</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     `;
@@ -368,14 +635,34 @@ function showNotificationToast(notification) {
     toastContainer.insertAdjacentHTML('beforeend', toastHTML);
 
     const toastElement = toastContainer.lastElementChild;
-    const toast = new bootstrap.Toast(toastElement);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: duracion
+    });
+
     toast.show();
+
+    // Limpiar toasts antiguos después de que se oculten
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function getTypeTitle(type) {
+    const titles = {
+        'success': 'Éxito',
+        'error': 'Error',
+        'warning': 'Advertencia',
+        'info': 'Información'
+    };
+    return titles[type] || 'Notificación';
 }
 
 function createToastContainer() {
     const container = document.createElement('div');
     container.id = 'toastContainer';
     container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    container.style.zIndex = '9999';
     document.body.appendChild(container);
     return container;
 }

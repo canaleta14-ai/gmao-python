@@ -14,13 +14,17 @@
 
 <body{% if login_bg %} class="login-bg" {% endif %}>
     {% if not no_sidebar %}
-    <!-- Sidebar -->
-    <div class="sidebar position-fixed" style="width: 250px; height: 100vh;">
-        <div class="p-3">
-            <h4 class="text-center mb-4">
+    <!-- Sidebar Mejorado -->
+    <div class="sidebar position-fixed d-flex flex-column" style="width: 250px; height: 100vh;">
+        <!-- Header del Sidebar -->
+        <div class="sidebar-header p-3 text-center border-bottom border-light">
+            <h4 class="text-white mb-0">
                 <i class="bi bi-gear-fill"></i> GMAO System
             </h4>
-            <hr class="bg-white">
+        </div>
+
+        <!-- Navegación Principal -->
+        <div class="sidebar-nav flex-grow-1 p-3">
             <nav class="nav flex-column">
                 <a class="nav-link {% if section=='dashboard' %}active{% endif %}"
                     href="{{ url_for('web.dashboard') }}">
@@ -51,41 +55,56 @@
                 </a>
             </nav>
         </div>
-    </div>
-    {% endif %}
-    <!-- Main Content -->
-    <div class="main-content">
-        {% if not no_sidebar %}
-        <!-- Header -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
-            <div class="container-fluid">
-                <button class="navbar-toggler d-lg-none" type="button" onclick="toggleSidebar()">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <h5 class="mb-0" id="section-title">{% block section_title %}{% endblock %}</h5>
-                <div class="d-flex align-items-center">
-                    <div class="notification-bell me-3">
+
+        <!-- Footer del Sidebar con Usuario y Notificaciones -->
+        <div class="sidebar-footer border-top border-light">
+            <!-- Notificaciones -->
+            <div class="px-3 py-2 border-bottom border-light">
+                <div class="d-flex align-items-center justify-content-between text-white">
+                    <span class="small">Notificaciones</span>
+                    <div class="notification-indicator">
                         <i class="bi bi-bell fs-5"></i>
                         <span class="notification-count">3</span>
                     </div>
-                    <div class="dropdown">
-                        <button class="btn btn-link text-dark dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle fs-5"></i> Admin
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Perfil</a></li>
-                            <li><a class="dropdown-item" href="#">Configuración</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="/logout">Cerrar Sesión</a></li>
-                        </ul>
-                    </div>
                 </div>
             </div>
-        </nav>
-        {% endif %}
-        <div id="main-content-wrapper">
+
+            <!-- Usuario y Logout -->
+            <div class="p-3">
+                <div class="d-flex align-items-center text-white mb-2">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small" id="current-user">Admin</div>
+                        <div class="text-light small opacity-75">Administrador</div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-1">
+                    <button class="btn btn-sm btn-outline-light" onclick="openProfileModal()">
+                        <i class="bi bi-gear"></i> Configuración
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header de página simplificado -->
+        <div class="content-header bg-white shadow-sm mb-4 p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <h5 class="mb-0" id="section-title">{% block section_title %}{% endblock %}</h5>
+                <button class="btn btn-outline-secondary d-lg-none" type="button" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="main-content-wrapper" class="px-3">
             {% block content %}{% endblock %}
         </div>
     </div>

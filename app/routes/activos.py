@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, Response
 from app.controllers.activos_controller import (
     listar_activos,
+    listar_activos_paginado,
     crear_activo,
     actualizar_activo,
     eliminar_activo,
@@ -32,24 +33,40 @@ def activos_page():
 
 @activos_bp.route("/api", methods=["GET"])
 def activos_list_api():
-    """API para listar activos con soporte para filtros de búsqueda"""
-    filtros = {}
+    """API para listar activos con soporte para filtros de búsqueda y paginación"""
+    try:
+        # Parámetros de paginación
+        page = request.args.get("page", type=int)
+        per_page = request.args.get("per_page", type=int)
+        q = request.args.get("q")
+        departamento = request.args.get("departamento")
+        estado = request.args.get("estado")
 
-    # Recoger parámetros de filtro de la URL
-    for param in [
-        "nombre",
-        "codigo",
-        "ubicacion",
-        "fabricante",
-        "departamento",
-        "tipo",
-        "q",
-        "limit",
-    ]:
-        if param in request.args:
-            filtros[param] = request.args[param]
+        if page is not None:
+            # Usar paginación
+            per_page = per_page or 10
+            resultado = listar_activos_paginado(page, per_page, q, departamento, estado)
+            return jsonify(resultado)
+        else:
+            # Usar listado tradicional sin paginación
+            filtros = {}
+            # Recoger parámetros de filtro de la URL
+            for param in [
+                "nombre",
+                "codigo",
+                "ubicacion",
+                "fabricante",
+                "departamento",
+                "tipo",
+                "q",
+                "limit",
+            ]:
+                if param in request.args:
+                    filtros[param] = request.args[param]
 
-    return jsonify(listar_activos(filtros if filtros else None))
+            return jsonify(listar_activos(filtros if filtros else None))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @activos_bp.route("/api/<int:id>", methods=["GET", "PUT", "DELETE"])

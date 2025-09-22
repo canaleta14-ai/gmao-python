@@ -6,9 +6,22 @@ let activos = [];
 let tecnicos = [];
 let ordenEditando = null;
 
+// Variables de paginación
+let currentPage = 1;
+let perPage = 10;
+let paginacionOrdenes;
+
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Módulo de órdenes cargado');
+
+    // Crear instancia de paginación
+    paginacionOrdenes = createPagination('paginacion-ordenes', cargarOrdenes, {
+        perPage: 10,
+        showInfo: true,
+        showSizeSelector: true
+    });
+
     if (document.getElementById('modalOrden')) {
         console.log('Modal de orden encontrado, cargando datos...');
         cargarDatosIniciales();
@@ -16,14 +29,24 @@ document.addEventListener('DOMContentLoaded', function () {
     cargarOrdenes();
 });
 
-// Cargar lista de órdenes
-async function cargarOrdenes() {
+// Cargar lista de órdenes con paginación
+async function cargarOrdenes(page = 1) {
     try {
-        const response = await fetch('/ordenes/api');
+        currentPage = page;
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        const response = await fetch(`/ordenes/api?${params}`);
         if (response.ok) {
-            ordenes = await response.json();
+            const data = await response.json();
+            ordenes = data.items || [];
             mostrarOrdenes();
             actualizarEstadisticas();
+
+            // Renderizar paginación
+            paginacionOrdenes.render(data.page, data.per_page, data.total);
         } else {
             throw new Error('Error al cargar órdenes');
         }
@@ -243,7 +266,7 @@ async function actualizarEstado() {
             mostrarToast(`Estado actualizado a: ${nuevoEstado}`, 'success');
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEstado'));
             modal.hide();
-            await cargarOrdenes();
+            await cargarOrdenes(currentPage);
             document.getElementById('formEstado').reset();
         } else {
             const error = await response.json();
@@ -600,7 +623,7 @@ async function guardarOrden() {
             modal.hide();
 
             // Recargar datos
-            cargarOrdenes();
+            cargarOrdenes(currentPage);
 
             // Limpiar formulario
             form.reset();

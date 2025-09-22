@@ -4,21 +4,44 @@
 let proveedores = [];
 let proveedorEditando = null;
 
+// Variables de paginación
+let currentPage = 1;
+let perPage = 10;
+let paginacionProveedores;
+
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function () {
+    // Crear instancia de paginación
+    paginacionProveedores = createPagination('paginacion-proveedores', cargarProveedores, {
+        perPage: 10,
+        showInfo: true,
+        showSizeSelector: true
+    });
+
     cargarProveedores();
     inicializarEventos();
 });
 
-// Cargar proveedores desde el servidor
-async function cargarProveedores() {
+// Cargar proveedores desde el servidor con paginación
+async function cargarProveedores(page = 1) {
     try {
+        currentPage = page;
         mostrarCargando(true);
-        const response = await fetch('/proveedores/api');
+
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        const response = await fetch(`/proveedores/api?${params}`);
         if (response.ok) {
-            proveedores = await response.json();
+            const data = await response.json();
+            proveedores = data.items || [];
             mostrarProveedores(proveedores);
-            actualizarContadorProveedores(proveedores.length);
+            actualizarContadorProveedores(data.total || proveedores.length);
+
+            // Renderizar paginación
+            paginacionProveedores.render(data.page, data.per_page, data.total);
         } else {
             console.error('Error al cargar proveedores');
             mostrarMensaje('Error al cargar proveedores', 'danger');
@@ -228,7 +251,7 @@ async function guardarProveedor() {
             modal.hide();
 
             // Recargar lista
-            cargarProveedores();
+            cargarProveedores(currentPage);
         } else {
             const error = await response.json();
             mostrarMensaje(error.message || 'Error al guardar proveedor', 'danger');
@@ -310,7 +333,7 @@ async function confirmarEliminarProveedor() {
             modalInstance.hide();
 
             // Recargar lista
-            cargarProveedores();
+            cargarProveedores(currentPage);
         } else {
             const error = await response.json();
             mostrarMensaje(error.message || 'Error al eliminar proveedor', 'danger');

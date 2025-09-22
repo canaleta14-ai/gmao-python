@@ -22,22 +22,92 @@ body {
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.sidebar-header {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-nav {
+    overflow-y: auto;
+}
+
 .sidebar .nav-link {
     color: rgba(255, 255, 255, 0.8);
-    transition: all 0.3s;
-    border-radius: 5px;
-    margin: 5px 10px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 3px 0;
+    padding: 12px 16px;
+    font-weight: 500;
 }
 
 .sidebar .nav-link:hover {
     color: white;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.15);
     transform: translateX(5px);
 }
 
 .sidebar .nav-link.active {
     background-color: var(--secondary-color);
     color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+/* Footer del Sidebar */
+.sidebar-footer {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.notification-indicator {
+    position: relative;
+}
+
+.notification-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Header de contenido simplificado */
+.content-header {
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Estilos para botones del sidebar */
+.sidebar-footer .btn {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-width: 1px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-footer .btn:hover {
+    transform: translateY(-1px);
+}
+
+.sidebar-footer .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-footer .btn-danger:hover {
+    background-color: #dc3545;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
 /* Botones personalizados */
@@ -177,6 +247,168 @@ body {
     font-size: 12px;
 }
 
+/* ========== TOAST NOTIFICATIONS MEJORADAS ========== */
+.toast-container {
+    max-width: 400px;
+}
+
+.toast {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    margin-bottom: 12px;
+    min-width: 320px;
+    max-width: 400px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.toast:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    transform: translateY(-2px) scale(1.02);
+}
+
+.toast .toast-body {
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.toast .toast-body i {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.toast .toast-body strong {
+    font-weight: 600;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.toast .toast-body .text-muted {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.toast .btn-close {
+    padding: 12px;
+    margin: 8px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.toast .btn-close:hover {
+    opacity: 1;
+}
+
+.toast.showing,
+.toast.show {
+    animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast.hide {
+    animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%) rotate(5deg);
+        opacity: 0;
+        scale: 0.9;
+    }
+
+    to {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+        scale: 1;
+    }
+
+    to {
+        transform: translateX(100%) rotate(-5deg);
+        opacity: 0;
+        scale: 0.9;
+    }
+}
+
+/* Variantes de color para diferentes tipos */
+.toast[data-tipo="success"] {
+    border-left: 4px solid var(--success-color);
+    background: linear-gradient(135deg, rgba(39, 174, 96, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.toast[data-tipo="error"] {
+    border-left: 4px solid var(--danger-color);
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.toast[data-tipo="warning"] {
+    border-left: 4px solid var(--warning-color);
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.toast[data-tipo="info"] {
+    border-left: 4px solid #17a2b8;
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+/* Efectos adicionales para estados específicos */
+.toast[data-tipo="success"]:hover {
+    border-left-color: var(--success-color);
+    border-left-width: 6px;
+}
+
+.toast[data-tipo="error"]:hover {
+    border-left-color: var(--danger-color);
+    border-left-width: 6px;
+}
+
+.toast[data-tipo="warning"]:hover {
+    border-left-color: var(--warning-color);
+    border-left-width: 6px;
+}
+
+.toast[data-tipo="info"]:hover {
+    border-left-color: #17a2b8;
+    border-left-width: 6px;
+}
+
+/* Responsive para dispositivos móviles */
+@media (max-width: 576px) {
+    .toast-container {
+        max-width: calc(100vw - 20px);
+        left: 10px !important;
+        right: 10px !important;
+    }
+
+    .toast {
+        min-width: 280px;
+        max-width: 100%;
+    }
+
+    .toast .toast-body {
+        padding: 14px 16px;
+        font-size: 13px;
+    }
+
+    .toast .toast-body i {
+        font-size: 16px;
+    }
+}
+
 /* ========== RESPONSIVE SIDEBAR TOGGLE ========== */
 .sidebar {
     transition: margin-left 0.3s ease;
@@ -191,21 +423,26 @@ body {
     transition: margin-left 0.3s ease;
 }
 
-/* En pantallas pequeñas, sidebar siempre colapsado por defecto */
+/* Responsive para móvil */
 @media (max-width: 991.98px) {
     .sidebar {
-        margin-left: -250px;
+        position: fixed !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1045;
+        margin-left: 0;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+        margin-left: 0 !important;
     }
 
     .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
     }
 
-    .sidebar.show {
-        margin-left: 0 !important;
-    }
-
-    /* Overlay para cerrar sidebar en móvil */
     .sidebar-overlay {
         position: fixed;
         top: 0;
@@ -214,10 +451,48 @@ body {
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         z-index: 1040;
-        display: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
     }
 
     .sidebar-overlay.show {
+        opacity: 1;
+        visibility: visible;
         display: block;
+    }
+}
+
+/* Ajustes para pantallas grandes */
+@media (min-width: 992px) {
+    .main-content {
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.collapsed {
+        width: 80px !important;
+    }
+
+    .sidebar.collapsed .sidebar-header h4,
+    .sidebar.collapsed .nav-link span,
+    .sidebar.collapsed .sidebar-footer .small,
+    .sidebar.collapsed .sidebar-footer .fw-semibold,
+    .sidebar.collapsed .sidebar-footer .btn {
+        display: none;
+    }
+
+    .sidebar.collapsed .nav-link {
+        text-align: center;
+        padding: 12px 8px;
+    }
+
+    .sidebar.collapsed .nav-link i {
+        margin: 0;
+        font-size: 1.2em;
+    }
+
+    .sidebar.collapsed+.main-content {
+        margin-left: 80px;
     }
 }

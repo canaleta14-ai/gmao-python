@@ -16,6 +16,20 @@
         </button>
     </div>
 </div>
+
+<!-- Filtros y búsqueda -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control" id="search-inventario"
+                placeholder="Buscar por código, descripción o categoría...">
+        </div>
+    </div>
+</div>
+
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card">
@@ -28,8 +42,8 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="text-muted">Valor Total</h6>
-                <h3 id="valor-total">$0</h3>
+                <h6 class="text-muted">Disponibles</h6>
+                <h3 class="text-success" id="items-disponibles">0</h3>
             </div>
         </div>
     </div>
@@ -37,7 +51,7 @@
         <div class="card">
             <div class="card-body">
                 <h6 class="text-muted">Stock Bajo</h6>
-                <h3 class="text-warning" id="stock-bajo">0</h3>
+                <h3 class="text-warning" id="items-bajo-stock">0</h3>
             </div>
         </div>
     </div>
@@ -45,7 +59,7 @@
         <div class="card">
             <div class="card-body">
                 <h6 class="text-muted">Sin Stock</h6>
-                <h3 class="text-danger" id="sin-stock">0</h3>
+                <h3 class="text-danger" id="items-sin-stock">0</h3>
             </div>
         </div>
     </div>
@@ -72,11 +86,15 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Contenedor de paginación -->
+        <div id="paginacion-inventario" class="mt-3"></div>
     </div>
 </div>
 <!-- Modales de Inventario (ejemplo: Entrada, Salida, Nuevo Item) -->
 <!-- Aquí puedes agregar los modales específicos de inventario -->
 {% endblock %}
 {% block scripts %}
+<script src="/static/js/pagination.js"></script>
 <script src="/static/js/inventario.js"></script>
 {% endblock %}

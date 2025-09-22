@@ -57,6 +57,56 @@ def listar_proveedores(filtros=None):
     ]
 
 
+def listar_proveedores_paginado(page=1, per_page=10, q=None):
+    """Listar proveedores con paginación y filtros"""
+    query = Proveedor.query.filter_by(activo=True)
+
+    # Filtro de búsqueda general
+    if q:
+        search_term = f"%{q}%"
+        query = query.filter(
+            db.or_(
+                Proveedor.nombre.ilike(search_term),
+                Proveedor.nif.ilike(search_term),
+                Proveedor.contacto.ilike(search_term),
+                Proveedor.email.ilike(search_term),
+                Proveedor.direccion.ilike(search_term),
+                Proveedor.telefono.ilike(search_term),
+            )
+        )
+
+    # Ordenamiento por nombre
+    query = query.order_by(Proveedor.nombre.asc())
+
+    # Paginación
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    proveedores_data = [
+        {
+            "id": p.id,
+            "nombre": p.nombre,
+            "nif": p.nif,
+            "cuenta_contable": p.cuenta_contable,
+            "direccion": p.direccion,
+            "telefono": p.telefono,
+            "email": p.email,
+            "contacto": p.contacto,
+            "activo": p.activo,
+        }
+        for p in pagination.items
+    ]
+
+    return {
+        "items": proveedores_data,
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total": pagination.total,
+        "pages": pagination.pages,
+        "has_next": pagination.has_next,
+        "has_prev": pagination.has_prev,
+    }
+
+
 def crear_proveedor(data):
     """Crea un nuevo proveedor"""
     # Validaciones básicas

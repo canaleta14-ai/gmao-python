@@ -58,6 +58,82 @@ def listar_ordenes(estado=None, limit=None):
     ]
 
 
+def listar_ordenes_paginado(page=1, per_page=10, q=None, estado=None):
+    """Listar órdenes de trabajo con paginación y filtros"""
+    query = OrdenTrabajo.query
+
+    # Filtro por estado
+    if estado:
+        query = query.filter_by(estado=estado)
+
+    # Filtro de búsqueda general
+    if q:
+        search_term = f"%{q}%"
+        query = query.join(Activo, OrdenTrabajo.activo_id == Activo.id, isouter=True)
+        query = query.join(Usuario, OrdenTrabajo.tecnico_id == Usuario.id, isouter=True)
+        query = query.filter(
+            db.or_(
+                OrdenTrabajo.numero_orden.ilike(search_term),
+                OrdenTrabajo.descripcion.ilike(search_term),
+                OrdenTrabajo.tipo.ilike(search_term),
+                OrdenTrabajo.estado.ilike(search_term),
+                OrdenTrabajo.prioridad.ilike(search_term),
+                Activo.nombre.ilike(search_term),
+                Activo.codigo.ilike(search_term),
+                Usuario.nombre.ilike(search_term),
+            )
+        )
+
+    # Ordenamiento por fecha de creación descendente
+    query = query.order_by(OrdenTrabajo.fecha_creacion.desc())
+
+    # Paginación
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    ordenes_data = [
+        {
+            "id": o.id,
+            "numero_orden": o.numero_orden,
+            "fecha_creacion": (
+                o.fecha_creacion.strftime("%d/%m/%Y %H:%M")
+                if o.fecha_creacion
+                else None
+            ),
+            "fecha_programada": (
+                o.fecha_programada.strftime("%d/%m/%Y") if o.fecha_programada else None
+            ),
+            "fecha_completada": (
+                o.fecha_completada.strftime("%d/%m/%Y %H:%M")
+                if o.fecha_completada
+                else None
+            ),
+            "tipo": o.tipo,
+            "prioridad": o.prioridad,
+            "estado": o.estado,
+            "descripcion": o.descripcion,
+            "observaciones": o.observaciones,
+            "tiempo_estimado": o.tiempo_estimado,
+            "tiempo_real": o.tiempo_real,
+            "activo_id": o.activo_id,
+            "activo_nombre": o.activo.nombre if o.activo else None,
+            "activo_codigo": o.activo.codigo if o.activo else None,
+            "tecnico_id": o.tecnico_id,
+            "tecnico_nombre": o.tecnico.nombre if o.tecnico else None,
+        }
+        for o in pagination.items
+    ]
+
+    return {
+        "items": ordenes_data,
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total": pagination.total,
+        "pages": pagination.pages,
+        "has_next": pagination.has_next,
+        "has_prev": pagination.has_prev,
+    }
+
+
 def obtener_orden(id):
     """Obtener una orden de trabajo específica"""
     orden = OrdenTrabajo.query.get_or_404(id)

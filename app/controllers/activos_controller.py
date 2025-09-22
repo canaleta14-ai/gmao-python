@@ -75,6 +75,78 @@ def listar_activos(filtros=None):
     ]
 
 
+def listar_activos_paginado(
+    page=1, per_page=10, q=None, departamento=None, estado=None
+):
+    """Listar activos con paginación y filtros"""
+    query = Activo.query
+
+    # Filtro por departamento
+    if departamento:
+        query = query.filter_by(departamento=departamento)
+
+    # Filtro por estado
+    if estado:
+        query = query.filter_by(estado=estado)
+
+    # Filtro de búsqueda general
+    if q:
+        search_term = f"%{q}%"
+        query = query.filter(
+            db.or_(
+                Activo.nombre.ilike(search_term),
+                Activo.codigo.ilike(search_term),
+                Activo.ubicacion.ilike(search_term),
+                Activo.fabricante.ilike(search_term),
+                Activo.tipo.ilike(search_term),
+                Activo.proveedor.ilike(search_term),
+                Activo.modelo.ilike(search_term),
+                Activo.numero_serie.ilike(search_term),
+            )
+        )
+
+    # Ordenamiento por código
+    query = query.order_by(Activo.codigo.asc())
+
+    # Paginación
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    departamentos = Activo.get_departamentos()
+    activos_data = [
+        {
+            "id": a.id,
+            "codigo": a.codigo,
+            "departamento": a.departamento,
+            "departamento_nombre": departamentos.get(a.departamento, "Desconocido"),
+            "nombre": a.nombre,
+            "tipo": a.tipo,
+            "ubicacion": a.ubicacion,
+            "estado": a.estado,
+            "prioridad": a.prioridad,
+            "modelo": a.modelo,
+            "numero_serie": a.numero_serie,
+            "fabricante": a.fabricante,
+            "proveedor": a.proveedor,
+            "ultimo_mantenimiento": (
+                a.ultimo_mantenimiento.strftime("%d/%m/%Y")
+                if a.ultimo_mantenimiento
+                else None
+            ),
+        }
+        for a in pagination.items
+    ]
+
+    return {
+        "items": activos_data,
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total": pagination.total,
+        "pages": pagination.pages,
+        "has_next": pagination.has_next,
+        "has_prev": pagination.has_prev,
+    }
+
+
 def crear_activo(data):
     # Validar que se proporcione el departamento
     if "departamento" not in data:

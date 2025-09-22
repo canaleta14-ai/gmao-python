@@ -5,8 +5,20 @@ let activos = [];
 let departamentos = {};
 let codigoEditableActivo = false;
 
+// Variables de paginación
+let currentPage = 1;
+let perPage = 10;
+let paginacionActivos;
+
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function () {
+    // Crear instancia de paginación
+    paginacionActivos = createPagination('paginacion-activos', cargarActivos, {
+        perPage: 10,
+        showInfo: true,
+        showSizeSelector: true
+    });
+
     // Solo cargar datos esenciales al inicio
     cargarDepartamentos();
 
@@ -127,15 +139,26 @@ function llenarSelectProveedores(proveedores) {
     }
 }
 
-// Cargar activos desde el servidor
-async function cargarActivos() {
+// Cargar activos desde el servidor con paginación
+async function cargarActivos(page = 1) {
     try {
+        currentPage = page;
         mostrarCargando(true);
-        const response = await fetch('/activos/api');
+
+        const params = new URLSearchParams({
+            page: page,
+            per_page: perPage
+        });
+
+        const response = await fetch(`/activos/api?${params}`);
         if (response.ok) {
-            activos = await response.json();
+            const data = await response.json();
+            activos = data.items || [];
             mostrarActivos(activos);
-            actualizarContadorActivos(activos.length);
+            actualizarContadorActivos(data.total || activos.length);
+
+            // Renderizar paginación
+            paginacionActivos.render(data.page, data.per_page, data.total);
         } else {
             console.error('Error al cargar activos');
             mostrarMensaje('Error al cargar activos', 'danger');
@@ -490,7 +513,7 @@ async function crearActivo() {
             limpiarFormularioActivo();
 
             // Recargar lista
-            cargarActivos();
+            cargarActivos(currentPage);
         } else {
             const error = await response.json();
             mostrarMensaje(error.mensaje || 'Error al procesar activo', 'danger');
@@ -587,7 +610,7 @@ async function eliminarActivo(id) {
 
             if (response.ok) {
                 mostrarMensaje('Activo eliminado exitosamente', 'success');
-                cargarActivos(); // Recargar la lista
+                cargarActivos(currentPage); // Recargar la lista
             } else {
                 const error = await response.json();
                 mostrarMensaje(error.error || 'Error al eliminar activo', 'danger');

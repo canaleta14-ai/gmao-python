@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, Response
 from app.controllers.proveedores_controller import (
     listar_proveedores,
+    listar_proveedores_paginado,
     crear_proveedor,
     actualizar_proveedor,
     eliminar_proveedor,
@@ -39,16 +40,27 @@ def proveedores_page():
 
 @proveedores_bp.route("/api", methods=["GET"])
 def proveedores_list_api():
-    """API para listar proveedores con soporte para filtros de búsqueda"""
+    """API para listar proveedores con soporte para filtros de búsqueda y paginación"""
     try:
-        filtros = {}
+        # Parámetros de paginación
+        page = request.args.get("page", type=int)
+        per_page = request.args.get("per_page", type=int)
+        q = request.args.get("q")
 
-        # Recoger parámetros de filtro de la URL
-        for param in ["nombre", "nif", "contacto", "q", "limit"]:
-            if param in request.args:
-                filtros[param] = request.args[param]
+        if page is not None:
+            # Usar paginación
+            per_page = per_page or 10
+            resultado = listar_proveedores_paginado(page, per_page, q)
+            return jsonify(resultado)
+        else:
+            # Usar listado tradicional sin paginación
+            filtros = {}
+            # Recoger parámetros de filtro de la URL
+            for param in ["nombre", "nif", "contacto", "q", "limit"]:
+                if param in request.args:
+                    filtros[param] = request.args[param]
 
-        return jsonify(listar_proveedores(filtros if filtros else None))
+            return jsonify(listar_proveedores(filtros if filtros else None))
     except Exception as e:
         return jsonify({"error": "Error al obtener proveedores"}), 500
 
