@@ -32,7 +32,7 @@ function cargarInventario(page = 1, per_page = null) {
         params.append('q', searchInput.value.trim());
     }
 
-    fetch(`/api/inventario?${params}`)
+    fetch(`/inventario/api?${params}`)
         .then(response => response.json())
         .then(data => {
             inventarioData = data.items || data;
@@ -136,18 +136,15 @@ function setupInventarioSearch() {
     });
 }
 
-// Configurar búsqueda cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function () {
-    setupInventarioSearch();
-});
-
 // Función toast para notificaciones
 function mostrarToast(mensaje, tipo = 'info') {
     showNotificationToast(mensaje, tipo);
 }
+
 function openEntradaModal() { /* ... */ }
 function openSalidaModal() { /* ... */ }
 function openItemModal() { /* ... */ }
+
 // Utilidad para mostrar badge de estado
 function getEstadoInventarioBadge(estado) {
     if (estado === 'Disponible') return '<span class="badge bg-success">Disponible</span>';
@@ -155,7 +152,8 @@ function getEstadoInventarioBadge(estado) {
     if (estado === 'Sin Stock') return '<span class="badge bg-danger">Sin Stock</span>';
     return '<span class="badge bg-secondary">Desconocido</span>';
 }
-// Inicialización
+
+// Inicialización única
 document.addEventListener('DOMContentLoaded', function () {
     // Configurar paginación
     paginacionInventario = new Pagination('paginacion-inventario', cargarInventario, {
@@ -165,9 +163,9 @@ document.addEventListener('DOMContentLoaded', function () {
         pageSizes: [10, 25, 50, 100]
     });
 
-    // Cargar datos iniciales
-    cargarInventario(1);
-
     // Configurar búsqueda
     setupInventarioSearch();
+
+    // Cargar datos iniciales
+    cargarInventario(1);
 });

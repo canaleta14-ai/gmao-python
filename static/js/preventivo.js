@@ -35,7 +35,7 @@ function cargarPlanes(page = 1, per_page = null) {
         params.append('q', searchInput.value.trim());
     }
 
-    fetch(`/api/planes?${params}`)
+    fetch(`/planes/api?${params}`)
         .then(response => response.json())
         .then(data => {
             planesData = data.items || data;
