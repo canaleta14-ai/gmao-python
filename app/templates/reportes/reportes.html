@@ -1,11 +1,393 @@
-{% extends 'base.html' %}
-{% block section_title %}Reportes y Análisis{% endblock %}
-{% set section = 'reportes' %}
+{% extends "base.html" %}
+
+{% block title %}Reportes de Mantenimiento - GMAO{% endblock %}
+
 {% block content %}
-<h5>Reportes y Análisis</h5>
-<div class="card">
-    <div class="card-body">
-        <p>Módulo de reportes en desarrollo...</p>
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-graph-up me-2"></i>Reportes de Mantenimiento</h2>
+                    <p class="text-muted mb-0">Estadísticas y análisis del sistema de mantenimiento preventivo</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i>Imprimir Reporte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title" id="total-planes">0</h4>
+                            <p class="card-text">Total de Planes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-list-check fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title" id="planes-activos">0</h4>
+                            <p class="card-text">Planes Activos</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title" id="planes-proximos">0</h4>
+                            <p class="card-text">Próximos</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-clock fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title" id="planes-vencidos">0</h4>
+                            <p class="card-text">Vencidos</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-exclamation-triangle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-pie-chart me-1"></i>Estado de Planes</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="estadosChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-bar-chart me-1"></i>Tipos de Mantenimiento</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="tiposChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tablas de Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-calendar-event me-1"></i>Próximas Ejecuciones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Equipo</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="proximas-ejecuciones">
+                                <!-- Datos cargados dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-exclamation-circle me-1"></i>Planes Vencidos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Equipo</th>
+                                    <th>Vencimiento</th>
+                                    <th>Días</th>
+                                </tr>
+                            </thead>
+                            <tbody id="planes-vencidos-tabla">
+                                <!-- Datos cargados dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análisis por Frecuencia -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-calendar3 me-1"></i>Análisis por Frecuencia</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Frecuencia</th>
+                                    <th>Cantidad de Planes</th>
+                                    <th>Planes Activos</th>
+                                    <th>Próximos</th>
+                                    <th>Vencidos</th>
+                                    <th>Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analisis-frecuencia">
+                                <!-- Datos cargados dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Script para gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let estadosChart, tiposChart;
+
+    // Cargar datos de reportes al cargar la página
+    document.addEventListener('DOMContentLoaded', function () {
+        cargarDatosReportes();
+    });
+
+    async function cargarDatosReportes() {
+        try {
+            const response = await fetch('/planes/api');
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const planes = result.data;
+
+                // Actualizar estadísticas generales
+                actualizarEstadisticasGenerales(planes);
+
+                // Crear gráficos
+                crearGraficoEstados(planes);
+                crearGraficoTipos(planes);
+
+                // Llenar tablas
+                llenarProximasEjecuciones(planes);
+                llenarPlanesVencidos(planes);
+                llenarAnalisisFrecuencia(planes);
+
+            } else {
+                console.error('Error al cargar datos:', result.error);
+            }
+        } catch (error) {
+            console.error('Error al cargar datos de reportes:', error);
+        }
+    }
+
+    function actualizarEstadisticasGenerales(planes) {
+        const total = planes.length;
+        const activos = planes.filter(p => p.estado === 'Activo').length;
+        const proximos = planes.filter(p => p.estado === 'Próximo').length;
+        const vencidos = planes.filter(p => p.estado === 'Vencido').length;
+
+        document.getElementById('total-planes').textContent = total;
+        document.getElementById('planes-activos').textContent = activos;
+        document.getElementById('planes-proximos').textContent = proximos;
+        document.getElementById('planes-vencidos').textContent = vencidos;
+    }
+
+    function crearGraficoEstados(planes) {
+        const estados = {};
+        planes.forEach(plan => {
+            estados[plan.estado] = (estados[plan.estado] || 0) + 1;
+        });
+
+        const ctx = document.getElementById('estadosChart').getContext('2d');
+        estadosChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(estados),
+                datasets: [{
+                    data: Object.values(estados),
+                    backgroundColor: [
+                        '#28a745', // Activo - Verde
+                        '#ffc107', // Próximo - Amarillo
+                        '#dc3545', // Vencido - Rojo
+                        '#6c757d'  // Otros - Gris
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    function crearGraficoTipos(planes) {
+        const tipos = {};
+        planes.forEach(plan => {
+            tipos[plan.tipo] = (tipos[plan.tipo] || 0) + 1;
+        });
+
+        const ctx = document.getElementById('tiposChart').getContext('2d');
+        tiposChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(tipos),
+                datasets: [{
+                    label: 'Cantidad de Planes',
+                    data: Object.values(tipos),
+                    backgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function llenarProximasEjecuciones(planes) {
+        const proximos = planes
+            .filter(p => p.proxima_ejecucion && new Date(p.proxima_ejecucion) > new Date())
+            .sort((a, b) => new Date(a.proxima_ejecucion) - new Date(b.proxima_ejecucion))
+            .slice(0, 10);
+
+        const tbody = document.getElementById('proximas-ejecuciones');
+        tbody.innerHTML = proximos.map(plan => `
+        <tr>
+            <td>${plan.codigo}</td>
+            <td>${plan.equipo}</td>
+            <td>${formatearFechaCorta(plan.proxima_ejecucion)}</td>
+            <td>${getEstadoPlanBadge(plan.estado)}</td>
+        </tr>
+    `).join('');
+    }
+
+    function llenarPlanesVencidos(planes) {
+        const vencidos = planes
+            .filter(p => p.estado === 'Vencido')
+            .slice(0, 10);
+
+        const tbody = document.getElementById('planes-vencidos-tabla');
+        tbody.innerHTML = vencidos.map(plan => {
+            const diasVencido = plan.proxima_ejecucion ?
+                Math.floor((new Date() - new Date(plan.proxima_ejecucion)) / (1000 * 60 * 60 * 24)) : 0;
+
+            return `
+            <tr>
+                <td>${plan.codigo}</td>
+                <td>${plan.equipo}</td>
+                <td>${formatearFechaCorta(plan.proxima_ejecucion)}</td>
+                <td><span class="badge bg-danger">${diasVencido} días</span></td>
+            </tr>
+        `;
+        }).join('');
+    }
+
+    function llenarAnalisisFrecuencia(planes) {
+        const frecuencias = {};
+        planes.forEach(plan => {
+            if (!frecuencias[plan.frecuencia]) {
+                frecuencias[plan.frecuencia] = { total: 0, activos: 0, proximos: 0, vencidos: 0 };
+            }
+            frecuencias[plan.frecuencia].total++;
+            if (plan.estado === 'Activo') frecuencias[plan.frecuencia].activos++;
+            if (plan.estado === 'Próximo') frecuencias[plan.frecuencia].proximos++;
+            if (plan.estado === 'Vencido') frecuencias[plan.frecuencia].vencidos++;
+        });
+
+        const total = planes.length;
+        const tbody = document.getElementById('analisis-frecuencia');
+
+        tbody.innerHTML = Object.entries(frecuencias).map(([frecuencia, datos]) => {
+            const porcentaje = ((datos.total / total) * 100).toFixed(1);
+            return `
+            <tr>
+                <td>${frecuencia}</td>
+                <td><strong>${datos.total}</strong></td>
+                <td><span class="badge bg-success">${datos.activos}</span></td>
+                <td><span class="badge bg-warning">${datos.proximos}</span></td>
+                <td><span class="badge bg-danger">${datos.vencidos}</span></td>
+                <td>${porcentaje}%</td>
+            </tr>
+        `;
+        }).join('');
+    }
+
+    function formatearFechaCorta(fechaStr) {
+        if (!fechaStr) return 'N/A';
+        try {
+            const fecha = new Date(fechaStr);
+            return fecha.toLocaleDateString('es-ES');
+        } catch (error) {
+            return fechaStr;
+        }
+    }
+
+    // Funciones auxiliares (reutilizadas)
+    function getEstadoPlanBadge(estado) {
+        if (estado === 'Activo') return '<span class="badge bg-success">Activo</span>';
+        if (estado === 'Vencido') return '<span class="badge bg-danger">Vencido</span>';
+        if (estado === 'Próximo') return '<span class="badge bg-warning">Próximo</span>';
+        return '<span class="badge bg-secondary">Desconocido</span>';
+    }
+</script>
 {% endblock %}

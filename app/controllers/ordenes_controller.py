@@ -220,16 +220,28 @@ def actualizar_orden(id, data):
     orden = OrdenTrabajo.query.get_or_404(id)
 
     # Validar que el activo existe si se proporciona
-    if data.get("activo_id") and data["activo_id"] != orden.activo_id:
-        activo = Activo.query.get(data["activo_id"])
-        if not activo:
-            raise ValueError("El activo especificado no existe")
+    if data.get("activo_id") is not None and data["activo_id"] != orden.activo_id:
+        if data["activo_id"]:  # Solo validar si no es None o 0
+            activo = Activo.query.get(data["activo_id"])
+            if not activo:
+                raise ValueError(f"El activo con ID {data['activo_id']} no existe")
 
     # Validar que el técnico existe si se proporciona
-    if data.get("tecnico_id") and data["tecnico_id"] != orden.tecnico_id:
-        tecnico = Usuario.query.get(data["tecnico_id"])
-        if not tecnico:
-            raise ValueError("El técnico especificado no existe")
+    if data.get("tecnico_id") is not None and data["tecnico_id"] != orden.tecnico_id:
+        if data["tecnico_id"]:  # Solo validar si no es None o 0
+            tecnico = Usuario.query.get(data["tecnico_id"])
+            if not tecnico:
+                raise ValueError(f"El técnico con ID {data['tecnico_id']} no existe")
+
+    # Validar campos requeridos
+    if not data.get("tipo"):
+        raise ValueError("El tipo de orden es requerido")
+
+    if not data.get("prioridad"):
+        raise ValueError("La prioridad es requerida")
+
+    if not data.get("descripcion") or data.get("descripcion").strip() == "":
+        raise ValueError("La descripción es requerida")
 
     # Actualizar campos
     orden.tipo = data.get("tipo", orden.tipo)
@@ -241,9 +253,12 @@ def actualizar_orden(id, data):
 
     # Actualizar tiempo estimado
     if data.get("tiempo_estimado") is not None:
-        orden.tiempo_estimado = (
-            float(data["tiempo_estimado"]) if data["tiempo_estimado"] else None
-        )
+        try:
+            orden.tiempo_estimado = (
+                float(data["tiempo_estimado"]) if data["tiempo_estimado"] else None
+            )
+        except (ValueError, TypeError):
+            raise ValueError("El tiempo estimado debe ser un número válido")
 
     # Procesar fecha programada
     if data.get("fecha_programada") is not None:
@@ -257,8 +272,12 @@ def actualizar_orden(id, data):
         else:
             orden.fecha_programada = None
 
-    db.session.commit()
-    return orden
+    try:
+        db.session.commit()
+        return orden
+    except Exception as e:
+        db.session.rollback()
+        raise ValueError(f"Error al guardar en la base de datos: {str(e)}")
 
 
 def actualizar_estado_orden(id, data):

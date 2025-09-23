@@ -1,0 +1,348 @@
+<!-- asientos.html - Template para gestión de asientos contables -->
+{% extends "base.html" %}
+
+{% block title %}Asientos Contables - Inventario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
+<style>
+    .debe-cell {
+        background-color: #e8f5e8;
+    }
+
+    .haber-cell {
+        background-color: #ffe8e8;
+    }
+
+    .asiento-header {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .balance-ok {
+        color: #198754;
+    }
+
+    .balance-error {
+        color: #dc3545;
+    }
+
+    .num-asiento {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-calculator"></i> Asientos Contables</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('web.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('inventario.index') }}">Inventario</a></li>
+                            <li class="breadcrumb-item active">Asientos Contables</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="nuevoAsiento()">
+                        <i class="fas fa-plus"></i> Nuevo Asiento
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="exportarAsientos()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-filter"></i> Filtros</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Período</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" id="fecha-desde" placeholder="Desde">
+                                <input type="date" class="form-control" id="fecha-hasta" placeholder="Hasta">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Número</label>
+                            <input type="text" class="form-control" id="filtro-numero" placeholder="Número asiento">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Cuenta</label>
+                            <input type="text" class="form-control" id="filtro-cuenta" placeholder="Cuenta contable">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="filtro-estado">
+                                <option value="">Todos</option>
+                                <option value="borrador">Borrador</option>
+                                <option value="confirmado">Confirmado</option>
+                                <option value="cerrado">Cerrado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Acciones</label>
+                            <div class="d-grid gap-2 d-md-flex">
+                                <button class="btn btn-primary" onclick="aplicarFiltros()">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+                                    <i class="fas fa-eraser"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h4 class="text-primary" id="total-asientos">-</h4>
+                    <small class="text-muted">Total Asientos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h4 class="text-success" id="total-debe">-</h4>
+                    <small class="text-muted">Total Debe</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h4 class="text-danger" id="total-haber">-</h4>
+                    <small class="text-muted">Total Haber</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h4 class="text-info" id="balance-general">-</h4>
+                    <small class="text-muted">Balance</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Asientos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-list"></i> Asientos Contables</h6>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="alternarVista()">
+                            <i class="fas fa-eye" id="icono-vista"></i> <span id="texto-vista">Vista Detallada</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Loading -->
+                    <div id="loading-asientos" class="text-center p-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando asientos contables...</p>
+                    </div>
+
+                    <!-- Tabla Asientos -->
+                    <div id="tabla-asientos" class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Fecha</th>
+                                    <th>Concepto</th>
+                                    <th>Total Debe</th>
+                                    <th>Total Haber</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-asientos">
+                                <!-- Los asientos se cargan aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Vista Detallada -->
+                    <div id="vista-detallada" style="display: none;">
+                        <!-- El contenido detallado se carga aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <nav>
+                <ul class="pagination justify-content-center" id="paginacion-asientos">
+                    <!-- La paginación se genera dinámicamente -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Asiento -->
+<div class="modal fade" id="modal-asiento" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="titulo-modal-asiento">Nuevo Asiento Contable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-asiento">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Número *</label>
+                            <input type="text" class="form-control" id="asiento-numero" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha *</label>
+                            <input type="date" class="form-control" id="asiento-fecha" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Concepto *</label>
+                            <input type="text" class="form-control" id="asiento-concepto" required maxlength="200">
+                        </div>
+                    </div>
+
+                    <!-- Líneas del Asiento -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6><i class="fas fa-list-ul"></i> Líneas del Asiento</h6>
+                            <button type="button" class="btn btn-sm btn-success" onclick="agregarLinea()">
+                                <i class="fas fa-plus"></i> Agregar Línea
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="tabla-lineas">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th width="20%">Cuenta</th>
+                                        <th width="40%">Concepto</th>
+                                        <th width="15%">Debe</th>
+                                        <th width="15%">Haber</th>
+                                        <th width="10%">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lineas-asiento">
+                                    <!-- Las líneas se agregan dinámicamente -->
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-info">
+                                        <td colspan="2"><strong>TOTALES</strong></td>
+                                        <td><strong id="total-debe-modal">0.00</strong></td>
+                                        <td><strong id="total-haber-modal">0.00</strong></td>
+                                        <td>
+                                            <span id="balance-modal" class="badge bg-secondary">0.00</span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Nota:</strong> El asiento debe estar cuadrado (Total Debe = Total Haber) para poder
+                            guardarlo.
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarAsiento()" id="btn-guardar-asiento"
+                    disabled>
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Asiento -->
+<div class="modal fade" id="modal-ver-asiento" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle del Asiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contenido-ver-asiento">
+                <!-- El contenido se carga dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="imprimirAsiento()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para línea de asiento -->
+<template id="template-linea-asiento">
+    <tr>
+        <td>
+            <select class="form-select form-select-sm cuenta-select" required onchange="validarLinea(this)">
+                <option value="">Seleccionar cuenta...</option>
+                <option value="600000000">600000000 - Compras</option>
+                <option value="622000000">622000000 - Servicios Profesionales</option>
+                <option value="400000000">400000000 - Proveedores</option>
+                <option value="570000000">570000000 - Caja</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" placeholder="Concepto de la línea" maxlength="100">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm debe-input" step="0.01" min="0" placeholder="0.00"
+                onchange="calcularTotales()">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm haber-input" step="0.01" min="0" placeholder="0.00"
+                onchange="calcularTotales()">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger" onclick="eliminarLinea(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/asientos.js') }}"></script>
+{% endblock %}

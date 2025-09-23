@@ -5,88 +5,141 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/activos.css') }}">
 {% endblock %}
 {% block content %}
+<!-- Encabezado con estadísticas -->
 <div class="container-fluid">
-    <!-- Header con botones de acción -->
-    <div class="row align-items-center mb-4">
-        <div class="col-12 col-md-8 mb-2 mb-md-0">
-            <h5 class="mb-1"><i class="bi bi-cpu me-2"></i>Gestión de Activos</h5>
-            <small class="text-muted">Sistema de codificación por departamentos</small>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-                    onclick="exportarCSV()">
-                    <i class="bi bi-download me-1"></i>
-                    <span class="d-none d-sm-inline">Exportar </span>CSV
-                </button>
-                <button class="btn btn-primary d-flex align-items-center justify-content-center"
-                    onclick="mostrarModalNuevoActivo()">
-                    <i class="bi bi-plus-circle me-1"></i>Nuevo Activo
-                </button>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-cpu me-2"></i>Gestión de Activos</h5>
+                    <small class="text-muted">Sistema de codificación por departamentos</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+                        <i class="bi bi-download me-1"></i>Exportar CSV
+                    </button>
+                    <button class="btn btn-primary" onclick="mostrarModalNuevoActivo()">
+                        <i class="bi bi-plus-circle me-1"></i>Nuevo Activo
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="card mb-4">
-        <div class="card-header bg-white">
-            <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h6>
+    <!-- Tarjetas de estadísticas modernizadas -->
+    <div class="row mb-4" id="estadisticas-cards">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <i class="bi bi-cpu stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="total-activos">0</div>
+                    <div class="stats-label">Total Activos</div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="filtro-buscar" class="form-label">Buscar</label>
-                    <input type="text" class="form-control" id="filtro-buscar"
-                        placeholder="Código, nombre o descripción">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <i class="bi bi-check-circle stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="activos-operativos">0</div>
+                    <div class="stats-label">Operativos</div>
                 </div>
-                <div class="col-md-2">
-                    <label for="filtro-departamento" class="form-label">Departamento</label>
-                    <select class="form-select" id="filtro-departamento">
-                        <option value="">Todos</option>
-                    </select>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <i class="bi bi-gear stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="activos-mantenimiento">0</div>
+                    <div class="stats-label">En Mantenimiento</div>
                 </div>
-                <div class="col-md-2">
-                    <label for="filtro-tipo" class="form-label">Tipo</label>
-                    <select class="form-select" id="filtro-tipo">
-                        <option value="">Todos</option>
-                        <option value="Máquina">Máquina</option>
-                        <option value="Equipo">Equipo</option>
-                        <option value="Herramienta">Herramienta</option>
-                        <option value="Vehículo">Vehículo</option>
-                        <option value="Instrumentos">Instrumentos</option>
-                    </select>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card danger">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle stats-icon text-danger"></i>
+                    <div class="stats-number text-danger" id="activos-fuera-servicio">0</div>
+                    <div class="stats-label">Fuera de Servicio</div>
                 </div>
-                <div class="col-md-2">
-                    <label for="filtro-estado" class="form-label">Estado</label>
-                    <select class="form-select" id="filtro-estado">
-                        <option value="">Todos</option>
-                        <option value="Operativo">Operativo</option>
-                        <option value="En Mantenimiento">En Mantenimiento</option>
-                        <option value="Fuera de Servicio">Fuera de Servicio</option>
-                        <option value="En Reparación">En Reparación</option>
-                        <option value="Inactivo">Inactivo</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="filtro-prioridad" class="form-label">Prioridad</label>
-                    <select class="form-select" id="filtro-prioridad">
-                        <option value="">Todas</option>
-                        <option value="Baja">Baja</option>
-                        <option value="Media">Media</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Crítica">Crítica</option>
-                    </select>
-                </div>
-                <div
-                    class="col-12 col-md-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-end">
-                    <button class="btn btn-outline-primary d-flex align-items-center justify-content-center"
-                        onclick="filtrarActivos()">
-                        <i class="bi bi-search me-1"></i>Buscar
-                    </button>
-                    <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-                        onclick="limpiarFiltros()">
-                        <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
-                    </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros modernos colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtros-collapse" class="collapse">
+            <div class="filtros-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="filtro-buscar" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="filtro-buscar"
+                                placeholder="Código, nombre o descripción">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-departamento" class="form-label">Departamento</label>
+                            <select class="form-select" id="filtro-departamento">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="filtro-tipo">
+                                <option value="">Todos</option>
+                                <option value="Máquina">Máquina</option>
+                                <option value="Equipo">Equipo</option>
+                                <option value="Herramienta">Herramienta</option>
+                                <option value="Vehículo">Vehículo</option>
+                                <option value="Instrumentos">Instrumentos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-estado" class="form-label">Estado</label>
+                            <select class="form-select" id="filtro-estado">
+                                <option value="">Todos</option>
+                                <option value="Operativo">Operativo</option>
+                                <option value="En Mantenimiento">En Mantenimiento</option>
+                                <option value="Fuera de Servicio">Fuera de Servicio</option>
+                                <option value="En Reparación">En Reparación</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-prioridad" class="form-label">Prioridad</label>
+                            <select class="form-select" id="filtro-prioridad">
+                                <option value="">Todas</option>
+                                <option value="Baja">Baja</option>
+                                <option value="Media">Media</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Crítica">Crítica</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <div class="form-group">
+                            <label class="form-label">Acciones</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" onclick="filtrarActivos()">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

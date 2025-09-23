@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario - Repuestos{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="inventario-container">
+    <!-- Header moderno -->
+    <div class="inventario-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h2><i class="fas fa-boxes me-3"></i>Inventario de Repuestos</h2>
+                    <p class="mb-0 opacity-75">Gestión completa de stock y artículos</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-light" onclick="mostrarModalNuevoArticulo()">
+                            <i class="fas fa-plus me-2"></i>Nuevo Artículo
+                        </button>
+                        <button type="button" class="btn btn-outline-light" onclick="mostrarMovimientos()">
+                            <i class="fas fa-exchange-alt me-2"></i>Movimientos
+                        </button>
+                        <a href="{{ url_for('inventario.conteos_page') }}" class="btn btn-outline-light">
+                            <i class="fas fa-clipboard-check me-2"></i>Conteos
+                        </a>
+                        <a href="{{ url_for('inventario.reportes_page') }}" class="btn btn-outline-light">
+                            <i class="fas fa-chart-bar me-2"></i>Reportes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- Tarjetas de estadísticas modernizadas -->
+        <div class="row mb-4" id="estadisticas-cards">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stats-card primary">
+                    <div class="card-body">
+                        <i class="fas fa-cubes stats-icon text-primary"></i>
+                        <div class="stats-number text-primary" id="total-articulos">-</div>
+                        <div class="stats-label">Total Artículos</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stats-card success">
+                    <div class="card-body">
+                        <i class="fas fa-euro-sign stats-icon text-success"></i>
+                        <div class="stats-number text-success" id="valor-stock">-</div>
+                        <div class="stats-label">Valor del Stock</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stats-card warning">
+                    <div class="card-body">
+                        <i class="fas fa-exclamation-triangle stats-icon text-warning"></i>
+                        <div class="stats-number text-warning" id="stock-bajo">-</div>
+                        <div class="stats-label">Stock Bajo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stats-card danger">
+                    <div class="card-body">
+                        <i class="fas fa-exclamation-circle stats-icon text-danger"></i>
+                        <div class="stats-number text-danger" id="articulos-criticos">-</div>
+                        <div class="stats-label">Artículos Críticos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros modernos -->
+        <div class="filtros-container">
+            <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
+                <h6><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
+            </div>
+            <div id="filtros-collapse" class="collapse">
+                <div class="filtros-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filtro-codigo" class="form-label">Código del Artículo</label>
+                                <input type="text" class="form-control" id="filtro-codigo" placeholder="Ej: REP001">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filtro-descripcion" class="form-label">Descripción</label>
+                                <input type="text" class="form-control" id="filtro-descripcion"
+                                    placeholder="Buscar descripción...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="filtro-categoria" class="form-label">Categoría</label>
+                                <select class="form-select" id="filtro-categoria">
+                                    <option value="">Todas</option>
+                                    <option value="Mecánicos">Mecánicos</option>
+                                    <option value="Eléctricos">Eléctricos</option>
+                                    <option value="Hidráulicos">Hidráulicos</option>
+                                    <option value="Neumáticos">Neumáticos</option>
+                                    <option value="Lubricantes">Lubricantes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="filtro-ubicacion" class="form-label">Ubicación</label>
+                                <input type="text" class="form-control" id="filtro-ubicacion"
+                                    placeholder="Almacén, estante...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">Acciones</label>
+                                <div class="filter-actions">
+                                    <button class="btn btn-primary btn-filter" onclick="aplicarFiltros()">
+                                        <i class="fas fa-search me-1"></i>Buscar
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-filter" onclick="limpiarFiltros()">
+                                        <i class="fas fa-eraser me-1"></i>Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros adicionales -->
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-8">
+                            <div class="form-check-group d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro-bajo-minimo">
+                                    <label class="form-check-label" for="filtro-bajo-minimo">
+                                        Solo stock bajo mínimo
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro-critico">
+                                    <label class="form-check-label" for="filtro-critico">
+                                        Solo artículos críticos
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro-sin-stock">
+                                    <label class="form-check-label" for="filtro-sin-stock">
+                                        Sin stock
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-muted">Mostrando <span id="total-resultados">0</span> artículos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla moderna de inventario -->
+        <div class="table-container">
+            <div class="table-header">
+                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Listado de Artículos</h6>
+                <div class="d-flex align-items-center gap-3">
+                    <small class="text-muted">Mostrando <span id="articulos-mostrados">0</span> de <span
+                            id="total-articulos-filtrados">0</span></small>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" onclick="exportarExcel()">
+                            <i class="fas fa-file-excel me-1"></i>Excel
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="imprimirListado()">
+                            <i class="fas fa-print me-1"></i>Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table" id="tabla-inventario">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Ubicación</th>
+                            <th>Precio Unit.</th>
+                            <th>Valor Stock</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-inventario-body">
+                        <!-- Loading inicial -->
+                        <tr id="loading-row">
+                            <td colspan="10" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Cargando artículos...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación moderna -->
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                <div class="text-muted">
+                    <small>Artículos por página:
+                        <select class="form-select form-select-sm d-inline-block w-auto" id="items-per-page">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </small>
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" id="paginacion-inventario">
+                        <!-- La paginación se genera dinámicamente -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Artículo -->
+<div class="modal fade modal-modern" id="modalNuevoArticulo" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Nuevo Artículo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoArticulo">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nuevo-codigo" class="form-label">Código del Artículo *</label>
+                            <input type="text" class="form-control" id="nuevo-codigo" required placeholder="Ej: REP001">
+                            <div class="form-text">Código único para identificar el artículo</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-categoria" class="form-label">Categoría</label>
+                            <select class="form-select" id="nuevo-categoria">
+                                <option value="">Seleccionar categoría...</option>
+                                <option value="Mecánicos">Mecánicos</option>
+                                <option value="Eléctricos">Eléctricos</option>
+                                <option value="Hidráulicos">Hidráulicos</option>
+                                <option value="Neumáticos">Neumáticos</option>
+                                <option value="Lubricantes">Lubricantes</option>
+                                <option value="Herramientas">Herramientas</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="nuevo-descripcion" class="form-label">Descripción *</label>
+                            <input type="text" class="form-control" id="nuevo-descripcion" required
+                                placeholder="Descripción detallada del artículo">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="nuevo-ubicacion" class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" id="nuevo-ubicacion" placeholder="Ej: Almacén A-1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="nuevo-unidad" class="form-label">Unidad de Medida</label>
+                            <select class="form-select" id="nuevo-unidad">
+                                <option value="UNI">Unidad</option>
+                                <option value="KG">Kilogramos</option>
+                                <option value="LT">Litros</option>
+                                <option value="MT">Metros</option>
+                                <option value="M2">Metros²</option>
+                                <option value="M3">Metros³</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="nuevo-proveedor" class="form-label">Proveedor Principal</label>
+                            <input type="text" class="form-control" id="nuevo-proveedor"
+                                placeholder="Nombre del proveedor">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-stock-actual" class="form-label">Stock Actual</label>
+                            <input type="number" class="form-control" id="nuevo-stock-actual" value="0" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-stock-minimo" class="form-label">Stock Mínimo</label>
+                            <input type="number" class="form-control" id="nuevo-stock-minimo" value="0" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-stock-maximo" class="form-label">Stock Máximo</label>
+                            <input type="number" class="form-control" id="nuevo-stock-maximo" value="0" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="nuevo-precio-unitario" class="form-label">Precio Unitario (€)</label>
+                            <input type="number" class="form-control" id="nuevo-precio-unitario" value="0" min="0"
+                                step="0.01">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-cuenta-contable" class="form-label">Cuenta Contable</label>
+                            <input type="text" class="form-control" id="nuevo-cuenta-contable" value="622000000"
+                                placeholder="Ej: 622000000">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nuevo-grupo-contable" class="form-label">Grupo Contable</label>
+                            <select class="form-select" id="nuevo-grupo-contable">
+                                <option value="">Sin grupo específico</option>
+                                <option value="60">Grupo 60 (Materias primas/envases)</option>
+                                <option value="62">Grupo 62 (Repuestos y accesorios)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="nuevo-critico">
+                                <label class="form-check-label" for="nuevo-critico">
+                                    Artículo crítico
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="nuevo-activo" checked>
+                                <label class="form-check-label" for="nuevo-activo">
+                                    Artículo activo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label for="nuevo-observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="nuevo-observaciones" rows="3"
+                                placeholder="Observaciones adicionales..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="guardarNuevoArticulo()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Movimiento -->
+<div class="modal fade" id="modalMovimiento" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Movimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formMovimiento">
+                    <input type="hidden" id="movimiento-articulo-id">
+                    <div class="mb-3">
+                        <label class="form-label">Artículo</label>
+                        <input type="text" class="form-control" id="movimiento-articulo-info" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="movimiento-tipo" class="form-label">Tipo de Movimiento</label>
+                        <select class="form-select" id="movimiento-tipo" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="entrada">Entrada</option>
+                            <option value="salida">Salida</option>
+                            <option value="ajuste">Ajuste</option>
+                            <option value="regularizacion">Regularización</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="movimiento-cantidad" class="form-label">Cantidad</label>
+                        <input type="number" class="form-control" id="movimiento-cantidad" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="movimiento-motivo" class="form-label">Motivo</label>
+                        <textarea class="form-control" id="movimiento-motivo" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarMovimiento()">
+                    <i class="fas fa-save"></i> Registrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
+{% endblock %}

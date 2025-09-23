@@ -5,59 +5,139 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
 {% endblock %}
 {% block content %}
+<!-- Encabezado con estadísticas -->
 <div class="container-fluid">
-    <!-- Filtros -->
-    <div class="card mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h6>
-            <button class="btn btn-primary btn-sm" onclick="mostrarModalNuevoUsuario()">
-                <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="filtro-username" class="form-label">Usuario</label>
-                    <input type="text" class="form-control" id="filtro-username" placeholder="Buscar por usuario">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-people me-2"></i>Gestión de Personal</h5>
+                    <small class="text-muted">Administración de usuarios y permisos</small>
                 </div>
-                <div class="col-md-3">
-                    <label for="filtro-email" class="form-label">Email</label>
-                    <input type="text" class="form-control" id="filtro-email" placeholder="Buscar por email">
-                </div>
-                <div class="col-md-2">
-                    <label for="filtro-rol" class="form-label">Rol</label>
-                    <select class="form-select" id="filtro-rol">
-                        <option value="">Todos los roles</option>
-                        <option value="Administrador">Administrador</option>
-                        <option value="Técnico">Técnico</option>
-                        <option value="Supervisor">Supervisor</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="filtro-activo" class="form-label">Estado</label>
-                    <select class="form-select" id="filtro-activo">
-                        <option value="">Todos</option>
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-outline-primary w-100" onclick="cargarUsuarios(1)">
-                        <i class="bi bi-search me-1"></i>Buscar
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+                        <i class="bi bi-download me-1"></i>Exportar CSV
+                    </button>
+                    <button class="btn btn-primary" onclick="mostrarModalNuevoUsuario()">
+                        <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tabla de Usuarios -->
-    <div class="card">
-        <div class="card-header bg-white">
-            <h6 class="mb-0"><i class="bi bi-people me-2"></i>Lista de Usuarios</h6>
+    <!-- Tarjetas de estadísticas modernizadas -->
+    <div class="row mb-4" id="estadisticas-cards">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <i class="bi bi-people stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="stat-total-usuarios">0</div>
+                    <div class="stats-label">Total Usuarios</div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <i class="bi bi-person-check stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="stat-usuarios-activos">0</div>
+                    <div class="stats-label">Usuarios Activos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <i class="bi bi-shield-check stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="stat-administradores">0</div>
+                    <div class="stats-label">Administradores</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <i class="bi bi-tools stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="stat-tecnicos">0</div>
+                    <div class="stats-label">Técnicos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros modernos colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtros-collapse" class="collapse">
+            <div class="filtros-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="filtro-username" class="form-label">Usuario</label>
+                            <input type="text" class="form-control" id="filtro-username"
+                                placeholder="Buscar por usuario">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="filtro-email" class="form-label">Email</label>
+                            <input type="text" class="form-control" id="filtro-email" placeholder="Buscar por email">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-rol" class="form-label">Rol</label>
+                            <select class="form-select" id="filtro-rol">
+                                <option value="">Todos los roles</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Supervisor">Supervisor</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-activo" class="form-label">Estado</label>
+                            <select class="form-select" id="filtro-activo">
+                                <option value="">Todos</option>
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Acciones</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" onclick="cargarUsuarios(1)" title="Buscar">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltrosUsuarios()"
+                                    title="Limpiar filtros">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Usuarios</h6>
+                <small class="text-muted" id="contador-usuarios">0 usuarios</small>
+            </div>
+        </div>
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
                             <th><i class="bi bi-hash me-1"></i>ID</th>
@@ -66,7 +146,7 @@
                             <th><i class="bi bi-person-badge me-1"></i>Nombre</th>
                             <th><i class="bi bi-shield me-1"></i>Rol</th>
                             <th><i class="bi bi-toggle-on me-1"></i>Estado</th>
-                            <th><i class="bi bi-gear me-1"></i>Acciones</th>
+                            <th><i class="bi bi-three-dots me-1"></i>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-usuarios">
@@ -75,12 +155,9 @@
                 </table>
             </div>
         </div>
-        <div class="card-footer bg-white">
-            <nav aria-label="Paginación de usuarios">
-                <ul class="pagination pagination-sm justify-content-center mb-0" id="paginacion">
-                    <!-- Se llenará dinámicamente -->
-                </ul>
-            </nav>
+        <!-- Paginación -->
+        <div class="card-footer">
+            <div id="paginacion-usuarios"></div>
         </div>
     </div>
 </div>
@@ -121,6 +198,14 @@
                                 <option value="Supervisor">Supervisor</option>
                             </select>
                         </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="nuevo-activo" checked>
+                                <label class="form-check-label" for="nuevo-activo">
+                                    Usuario activo
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -128,6 +213,89 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="crearUsuario()">
                     <i class="bi bi-check-lg me-1"></i>Crear Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Usuario -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-gear me-2"></i>Editar Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarUsuario">
+                    <input type="hidden" id="editar-id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editar-username" class="form-label">Usuario</label>
+                            <input type="text" class="form-control" id="editar-username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editar-email" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="editar-nombre" class="form-label">Nombre Completo</label>
+                            <input type="text" class="form-control" id="editar-nombre">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar-password" class="form-label">Nueva Contraseña (opcional)</label>
+                            <input type="password" class="form-control" id="editar-password"
+                                placeholder="Dejar vacío para mantener actual">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar-rol" class="form-label">Rol</label>
+                            <select class="form-select" id="editar-rol" required>
+                                <option value="">Seleccionar rol</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Supervisor">Supervisor</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editar-activo">
+                                <label class="form-check-label" for="editar-activo">
+                                    Usuario activo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="actualizarUsuario()">
+                    <i class="bi bi-check-lg me-1"></i>Actualizar Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmación Eliminar -->
+<div class="modal fade" id="modalEliminarUsuario" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar Eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-person-x display-1 text-danger mb-3"></i>
+                <p>¿Está seguro de que desea eliminar al usuario <strong id="usuario-a-eliminar"></strong>?</p>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                <input type="hidden" id="id-usuario-eliminar">
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminarUsuario()">
+                    <i class="bi bi-trash me-1"></i>Eliminar
                 </button>
             </div>
         </div>

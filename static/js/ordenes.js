@@ -515,7 +515,7 @@ function inicializarAutocompletado() {
             customFilter: (item, query) => {
                 const q = query.toLowerCase();
                 return item.descripcion.toLowerCase().includes(q) ||
-                    item.id.toString().includes(q) ||
+                    item.id.toString().toLowerCase().includes(q) ||
                     (item.activo_nombre && item.activo_nombre.toLowerCase().includes(q));
             },
             onSelect: (item) => {
@@ -526,6 +526,114 @@ function inicializarAutocompletado() {
     }
 
     console.log('Autocompletado inicializado en órdenes');
+
+    // Configurar filtros en tiempo real
+    configurarFiltrosOrdenes();
+}
+
+// Configurar event listeners para filtros
+function configurarFiltrosOrdenes() {
+    console.log('🔍 Configurando filtros de órdenes...');
+
+    // Campo de búsqueda
+    const filtroBuscar = document.getElementById('filtro-buscar');
+    if (filtroBuscar) {
+        filtroBuscar.addEventListener('input', aplicarFiltros);
+        console.log('✅ Filtro de búsqueda configurado');
+    }
+
+    // Selectores de filtro
+    const filtros = ['filtro-estado', 'filtro-tipo', 'filtro-prioridad'];
+    filtros.forEach(filtroId => {
+        const elemento = document.getElementById(filtroId);
+        if (elemento) {
+            elemento.addEventListener('change', aplicarFiltros);
+            console.log(`✅ Filtro ${filtroId} configurado`);
+        }
+    });
+}
+
+// Aplicar filtros a la lista de órdenes
+function aplicarFiltros() {
+    console.log('🔍 Aplicando filtros...');
+
+    const textoBusqueda = document.getElementById('filtro-buscar')?.value.toLowerCase() || '';
+    const filtroEstado = document.getElementById('filtro-estado')?.value || '';
+    const filtroTipo = document.getElementById('filtro-tipo')?.value || '';
+    const filtroPrioridad = document.getElementById('filtro-prioridad')?.value || '';
+
+    let ordenesFiltradas = [...ordenes];
+
+    // Filtro por texto de búsqueda
+    if (textoBusqueda) {
+        ordenesFiltradas = ordenesFiltradas.filter(orden => {
+            return orden.descripcion.toLowerCase().includes(textoBusqueda) ||
+                orden.id.toString().toLowerCase().includes(textoBusqueda) ||
+                (orden.activo_nombre && orden.activo_nombre.toLowerCase().includes(textoBusqueda)) ||
+                (orden.tecnico_nombre && orden.tecnico_nombre.toLowerCase().includes(textoBusqueda));
+        });
+    }
+
+    // Filtro por estado
+    if (filtroEstado) {
+        ordenesFiltradas = ordenesFiltradas.filter(orden => orden.estado === filtroEstado);
+    }
+
+    // Filtro por tipo
+    if (filtroTipo) {
+        ordenesFiltradas = ordenesFiltradas.filter(orden => orden.tipo === filtroTipo);
+    }
+
+    // Filtro por prioridad
+    if (filtroPrioridad) {
+        ordenesFiltradas = ordenesFiltradas.filter(orden => orden.prioridad === filtroPrioridad);
+    }
+
+    // Mostrar órdenes filtradas
+    mostrarOrdenesFiltradas(ordenesFiltradas);
+
+    console.log(`🔍 Filtros aplicados: ${ordenesFiltradas.length} de ${ordenes.length} órdenes`);
+}
+
+// Mostrar órdenes filtradas (versión específica para filtros)
+function mostrarOrdenesFiltradas(ordenesFiltradas) {
+    const tbody = document.getElementById('tabla-ordenes');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (ordenesFiltradas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">No se encontraron órdenes con los filtros aplicados</td></tr>';
+        return;
+    }
+
+    ordenesFiltradas.forEach(orden => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>#${orden.id}</td>
+            <td>${orden.fecha_creacion || 'N/A'}</td>
+            <td>${orden.activo_nombre || 'Sin asignar'}</td>
+            <td>${orden.tipo}</td>
+            <td>${orden.descripcion}</td>
+            <td><span class="badge bg-${getBadgeColor(orden.prioridad)}">${orden.prioridad}</span></td>
+            <td><span class="badge bg-${getEstadoBadgeColor(orden.estado)}">${orden.estado}</span></td>
+            <td>${orden.tecnico_nombre || 'Sin asignar'}</td>
+            <td>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="verOrden(${orden.id})" title="Ver detalles">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarOrden(${orden.id})" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="mostrarModalEstado(${orden.id})" title="Cambiar estado">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 // Mostrar modal para nueva orden
@@ -586,11 +694,29 @@ async function guardarOrden() {
             observaciones: document.getElementById('orden-observaciones').value || null
         };
 
+        // Validar y limpiar datos antes de enviar
+        if (ordenData.activo_id === '' || ordenData.activo_id === 'null') {
+            ordenData.activo_id = null;
+        } else if (ordenData.activo_id) {
+            ordenData.activo_id = parseInt(ordenData.activo_id);
+        }
+
+        if (ordenData.tecnico_id === '' || ordenData.tecnico_id === 'null') {
+            ordenData.tecnico_id = null;
+        } else if (ordenData.tecnico_id) {
+            ordenData.tecnico_id = parseInt(ordenData.tecnico_id);
+        }
+
+        // Log para debug
+        console.log('Datos de orden a enviar:', ordenData);
+
         const ordenId = document.getElementById('orden-id').value;
         const esEdicion = ordenId && ordenId !== '';
 
         const url = esEdicion ? `/ordenes/api/${ordenId}` : '/ordenes';
         const method = esEdicion ? 'PUT' : 'POST';
+
+        console.log(`Enviando ${method} a ${url}`);
 
         const response = await fetch(url, {
             method: method,
@@ -634,8 +760,23 @@ async function guardarOrden() {
             limpiarListaArchivos();
 
         } else {
-            const error = await response.json();
-            throw new Error(error.mensaje || 'Error al guardar la orden');
+            let errorMessage = 'Error al guardar la orden';
+            try {
+                const error = await response.json();
+                errorMessage = error.mensaje || error.message || error.error || 'Error al guardar la orden';
+
+                // Log detallado para debug
+                console.error('Detalles del error del servidor:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData: error,
+                    ordenData: ordenData
+                });
+            } catch (parseError) {
+                console.error('Error al parsear respuesta de error:', parseError);
+                errorMessage = `Error del servidor (${response.status}): ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
 
     } catch (error) {
@@ -1109,4 +1250,29 @@ async function subirArchivo(archivoTemp, ordenId) {
     }
 
     return await response.json();
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    console.log('🧹 Limpiando filtros...');
+
+    // Limpiar campos de filtro
+    const filtros = [
+        'filtro-buscar',
+        'filtro-estado',
+        'filtro-tipo',
+        'filtro-prioridad'
+    ];
+
+    filtros.forEach(filtroId => {
+        const elemento = document.getElementById(filtroId);
+        if (elemento) {
+            elemento.value = '';
+            console.log(`✅ Filtro ${filtroId} limpiado`);
+        }
+    });
+
+    // Aplicar filtros (mostrará todas las órdenes sin filtros)
+    aplicarFiltros();
+    console.log('✅ Filtros limpiados y vista actualizada');
 }

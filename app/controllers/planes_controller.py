@@ -2,6 +2,214 @@ from app.models.plan_mantenimiento import PlanMantenimiento
 from app.extensions import db
 from datetime import datetime, timedelta
 from flask import request
+from sqlalchemy import func
+import calendar
+
+
+def calcular_proxima_ejecucion(data, fecha_base=None):
+    """
+    Calcula la próxima ejecución basada en la configuración de frecuencia
+    """
+    if fecha_base is None:
+        fecha_base = datetime.now()
+
+    tipo_frecuencia = data.get("tipo_frecuencia", "mensual")
+
+    if tipo_frecuencia == "mensual":
+        tipo_mensual = data.get("tipo_mensual", "dia_semana_mes")
+        intervalo_meses = int(data.get("intervalo_meses", 1))
+
+        if tipo_mensual == "dia_mes":
+            # Día específico del mes (ej: día 15 de cada mes)
+            dia_mes = int(data.get("dia_mes", 1))
+
+            # Calcular el próximo mes
+            fecha_objetivo = fecha_base.replace(day=1) + timedelta(days=32)
+            fecha_objetivo = fecha_objetivo.replace(day=1)  # Primer día del próximo mes
+
+            # Ajustar el día específico
+            ultimo_dia_mes = calendar.monthrange(
+                fecha_objetivo.year, fecha_objetivo.month
+            )[1]
+            dia_final = min(dia_mes, ultimo_dia_mes)
+
+            proxima_ejecucion = fecha_objetivo.replace(day=dia_final)
+
+        elif tipo_mensual == "dia_semana_mes":
+            # Día específico de una semana específica (ej: primer sábado de cada mes)
+            semana_mes = int(data.get("semana_mes", 1))  # 1-4
+            dia_semana_mes = data.get("dia_semana_mes", "sabado")
+
+            # Mapeo de días de la semana
+            dias_semana_map = {
+                "lunes": 0,
+                "martes": 1,
+                "miercoles": 2,
+                "jueves": 3,
+                "viernes": 4,
+                "sabado": 5,
+                "domingo": 6,
+            }
+
+            dia_semana_num = dias_semana_map.get(
+                dia_semana_mes.lower(), 5
+            )  # Default: sábado
+
+            # Calcular el próximo mes
+            if fecha_base.month == 12:
+                año_objetivo = fecha_base.year + 1
+                mes_objetivo = 1
+            else:
+                año_objetivo = fecha_base.year
+                mes_objetivo = fecha_base.month + intervalo_meses
+
+            # Encontrar el primer día del mes objetivo
+            primer_dia_mes = datetime(año_objetivo, mes_objetivo, 1)
+
+            # Encontrar el primer día de la semana deseada en ese mes
+            dias_hasta_target = (dia_semana_num - primer_dia_mes.weekday()) % 7
+            primera_ocurrencia = primer_dia_mes + timedelta(days=dias_hasta_target)
+
+            # Calcular la semana específica (1-4)
+            semanas_adicionales = (semana_mes - 1) * 7
+            proxima_ejecucion = primera_ocurrencia + timedelta(days=semanas_adicionales)
+
+            # Verificar que la fecha esté dentro del mes
+            if proxima_ejecucion.month != mes_objetivo:
+                # Si nos pasamos del mes, usar la última ocurrencia válida
+                proxima_ejecucion = primera_ocurrencia + timedelta(
+                    days=(semana_mes - 2) * 7
+                )
+                if proxima_ejecucion.month != mes_objetivo:
+                    proxima_ejecucion = primera_ocurrencia
+
+    elif tipo_frecuencia == "semanal":
+        # Lógica para frecuencia semanal con días específicos
+        intervalo_semanas = int(data.get("intervalo_semanas", 1))
+        dias_semana = data.get("dias_semana", [])
+
+        if not dias_semana:
+            # Si no hay días específicos, usar la lógica simple de sumar semanas
+            proxima_ejecucion = fecha_base + timedelta(weeks=intervalo_semanas)
+        else:
+            # Mapeo de días de la semana (el frontend envía nombres en español)
+            dias_semana_map = {
+                "lunes": 0,
+                "martes": 1,
+                "miercoles": 2,
+                "jueves": 3,
+                "viernes": 4,
+                "sabado": 5,
+                "domingo": 6,
+            }
+
+            # Convertir nombres a números
+            dias_numericos = []
+            for dia in dias_semana:
+                if isinstance(dia, str):
+                    dia_num = dias_semana_map.get(dia.lower())
+                    if dia_num is not None:
+                        dias_numericos.append(dia_num)
+
+            if not dias_numericos:
+                # Fallback si no se pueden convertir los días
+                proxima_ejecucion = fecha_base + timedelta(weeks=intervalo_semanas)
+            else:
+                # Encontrar el próximo día de la semana especificado
+                dia_actual = fecha_base.weekday()
+                print(
+                    f"DEBUG semanal - dia_actual: {dia_actual}, fecha_base: {fecha_base}"
+                )
+                print(f"DEBUG semanal - dias_numericos: {dias_numericos}")
+
+                # Buscar el próximo día de la lista que es ESTRICTAMENTE mayor al día actual
+                # Para asegurar que siempre sea en el futuro
+                proximos_dias = [d for d in dias_numericos if d > dia_actual]
+                print(f"DEBUG semanal - proximos_dias: {proximos_dias}")
+
+                if proximos_dias:
+                    # Hay un día en esta semana que aún no ha pasado
+                    proximo_dia = min(proximos_dias)
+                    dias_hasta_proximo = proximo_dia - dia_actual
+                    print(
+                        f"DEBUG semanal - ESTA SEMANA: proximo_dia={proximo_dia}, dias_hasta={dias_hasta_proximo}"
+                    )
+                    proxima_ejecucion = fecha_base + timedelta(days=dias_hasta_proximo)
+                else:
+                    # No hay días en esta semana que no hayan pasado, ir a la próxima semana
+                    proximo_dia = min(dias_numericos)
+                    # Calcular días hasta el mismo día de la próxima semana
+                    dias_hasta_proximo = (7 - dia_actual) + proximo_dia
+                    print(
+                        f"DEBUG semanal - PROXIMA SEMANA: proximo_dia={proximo_dia}, dias_hasta={dias_hasta_proximo}"
+                    )
+                    proxima_ejecucion = fecha_base + timedelta(days=dias_hasta_proximo)
+
+                # Si se especificó intervalo de semanas > 1, ajustar
+                if intervalo_semanas > 1:
+                    semanas_adicionales = (intervalo_semanas - 1) * 7
+                    proxima_ejecucion = proxima_ejecucion + timedelta(
+                        days=semanas_adicionales
+                    )
+
+                # IMPORTANTE: Limpiar la hora para que sea medianoche del día calculado
+                proxima_ejecucion = proxima_ejecucion.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+
+    elif tipo_frecuencia == "diaria":
+        # Lógica para frecuencia diaria
+        proxima_ejecucion = fecha_base + timedelta(days=1)
+
+    else:
+        # Fallback a lógica simple
+        frecuencias_dias = {
+            "Diario": 1,
+            "Semanal": 7,
+            "Quincenal": 15,
+            "Mensual": 30,
+            "Trimestral": 90,
+            "Anual": 365,
+        }
+        dias = frecuencias_dias.get(data.get("frecuencia", "Mensual"), 30)
+        proxima_ejecucion = fecha_base + timedelta(days=dias)
+
+    return proxima_ejecucion
+
+
+def generar_codigo_plan():
+    """Generar código único para plan de mantenimiento en formato PM-YYYY-NNNN"""
+    año_actual = datetime.now().year
+    prefijo = f"PM-{año_actual}-"
+
+    # Buscar el último código del año actual
+    ultimo_plan = (
+        PlanMantenimiento.query.filter(
+            PlanMantenimiento.codigo_plan.like(f"{prefijo}%")
+        )
+        .order_by(PlanMantenimiento.codigo_plan.desc())
+        .first()
+    )
+
+    if ultimo_plan:
+        # Extraer el número secuencial del último código
+        try:
+            ultimo_numero = int(ultimo_plan.codigo_plan.split("-")[-1])
+            siguiente_numero = ultimo_numero + 1
+        except (ValueError, IndexError):
+            siguiente_numero = 1
+    else:
+        siguiente_numero = 1
+
+    # Formatear con 4 dígitos
+    codigo = f"{prefijo}{siguiente_numero:04d}"
+
+    # Verificar que el código no exista (por seguridad)
+    while PlanMantenimiento.query.filter_by(codigo_plan=codigo).first():
+        siguiente_numero += 1
+        codigo = f"{prefijo}{siguiente_numero:04d}"
+
+    return codigo
 
 
 def listar_planes():
@@ -58,6 +266,27 @@ def listar_planes():
 
 
 def crear_plan(data):
+    # Debug: Imprimir los datos recibidos
+    print(f"DEBUG crear_plan - Datos recibidos: {data}")
+
+    # Generar código automático si no se proporciona
+    codigo_plan = data.get("codigo", "").strip() if data.get("codigo") else ""
+    if not codigo_plan:
+        codigo_plan = generar_codigo_plan()
+    else:
+        # Verificar que el código no esté duplicado si se proporciona manualmente
+        plan_existente = PlanMantenimiento.query.filter_by(
+            codigo_plan=codigo_plan
+        ).first()
+        if plan_existente:
+            raise ValueError(f"Ya existe un plan con el código '{codigo_plan}'")
+
+    # Calcular la próxima ejecución usando la nueva función
+    print(f"DEBUG crear_plan - Calculando próxima ejecución con: {data}")
+    proxima_ejecucion = calcular_proxima_ejecucion(data)
+    print(f"DEBUG crear_plan - Próxima ejecución calculada: {proxima_ejecucion}")
+
+    # Mantener compatibilidad con el campo frecuencia_dias para frecuencias simples
     frecuencias_dias = {
         "Diario": 1,
         "Semanal": 7,
@@ -66,12 +295,12 @@ def crear_plan(data):
         "Trimestral": 90,
         "Anual": 365,
     }
-    dias = frecuencias_dias.get(data["frecuencia"], 30)
-    proxima_ejecucion = datetime.utcnow() + timedelta(days=dias)
+    dias = frecuencias_dias.get(data.get("frecuencia", "Mensual"), 30)
+
     nuevo_plan = PlanMantenimiento(
-        codigo_plan=data["codigo_plan"],
+        codigo_plan=codigo_plan,
         nombre=data["nombre"],
-        frecuencia=data["frecuencia"],
+        frecuencia=data.get("frecuencia", "Mensual"),
         frecuencia_dias=dias,
         proxima_ejecucion=proxima_ejecucion,
         estado="Activo",
@@ -79,7 +308,101 @@ def crear_plan(data):
         instrucciones=data.get("instrucciones"),
         tiempo_estimado=data.get("tiempo_estimado"),
         activo_id=data.get("activo_id"),
+        # Nuevos campos para configuración específica
+        tipo_frecuencia=data.get("tipo_frecuencia"),
+        intervalo_semanas=data.get("intervalo_semanas"),
+        dias_semana=(
+            str(data.get("dias_semana", [])) if data.get("dias_semana") else None
+        ),
+        tipo_mensual=data.get("tipo_mensual"),
+        dia_mes=data.get("dia_mes"),
+        semana_mes=data.get("semana_mes"),
+        dia_semana_mes=data.get("dia_semana_mes"),
+        intervalo_meses=data.get("intervalo_meses"),
+        frecuencia_personalizada=data.get("frecuencia_personalizada"),
     )
+
     db.session.add(nuevo_plan)
     db.session.commit()
     return nuevo_plan
+
+
+def obtener_plan_por_id(plan_id):
+    """Obtener un plan de mantenimiento por su ID"""
+    plan = PlanMantenimiento.query.get_or_404(plan_id)
+    return {
+        "id": plan.id,
+        "codigo_plan": plan.codigo_plan,
+        "nombre": plan.nombre,
+        "frecuencia": plan.frecuencia,
+        "frecuencia_dias": plan.frecuencia_dias,
+        "descripcion": plan.descripcion,
+        "instrucciones": plan.instrucciones,
+        "tiempo_estimado": plan.tiempo_estimado,
+        "activo_id": plan.activo_id,
+        "activo_nombre": plan.activo.nombre if plan.activo else None,
+        "estado": plan.estado,
+        "ultima_ejecucion": (
+            plan.ultima_ejecucion.strftime("%Y-%m-%d")
+            if plan.ultima_ejecucion
+            else None
+        ),
+        "proxima_ejecucion": (
+            plan.proxima_ejecucion.strftime("%Y-%m-%d")
+            if plan.proxima_ejecucion
+            else None
+        ),
+    }
+
+
+def editar_plan(plan_id, data):
+    """Editar un plan de mantenimiento existente"""
+    plan = PlanMantenimiento.query.get_or_404(plan_id)
+
+    # Verificar código duplicado si se cambió
+    if data.get("codigo") and data["codigo"] != plan.codigo_plan:
+        plan_existente = PlanMantenimiento.query.filter(
+            PlanMantenimiento.codigo_plan == data["codigo"],
+            PlanMantenimiento.id != plan_id,
+        ).first()
+        if plan_existente:
+            raise ValueError(f"Ya existe otro plan con el código '{data['codigo']}'")
+        plan.codigo_plan = data["codigo"]
+
+    # Actualizar campos
+    if "nombre" in data:
+        plan.nombre = data["nombre"]
+    if "frecuencia" in data:
+        plan.frecuencia = data["frecuencia"]
+        # Recalcular frecuencia_dias y próxima ejecución
+        frecuencias_dias = {
+            "Diario": 1,
+            "Semanal": 7,
+            "Quincenal": 15,
+            "Mensual": 30,
+            "Trimestral": 90,
+            "Anual": 365,
+        }
+        plan.frecuencia_dias = frecuencias_dias.get(data["frecuencia"], 30)
+        # Actualizar próxima ejecución basada en la nueva frecuencia
+        plan.proxima_ejecucion = datetime.now() + timedelta(days=plan.frecuencia_dias)
+
+    if "descripcion" in data:
+        plan.descripcion = data["descripcion"]
+    if "instrucciones" in data:
+        plan.instrucciones = data["instrucciones"]
+    if "tiempo_estimado" in data:
+        plan.tiempo_estimado = data["tiempo_estimado"]
+    if "activo_id" in data:
+        plan.activo_id = data["activo_id"]
+
+    db.session.commit()
+    return plan
+
+
+def eliminar_plan(plan_id):
+    """Eliminar un plan de mantenimiento"""
+    plan = PlanMantenimiento.query.get_or_404(plan_id)
+    db.session.delete(plan)
+    db.session.commit()
+    return True

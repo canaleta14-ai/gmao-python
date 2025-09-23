@@ -1,5 +1,119 @@
 /* Estilos específicos para la página de usuarios */
 
+/* Variables necesarias para filtros colapsables */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #3498db;
+    --border-radius: 8px;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+    --light-bg: #ecf0f1;
+    --light-gray: #ecf0f1;
+    --medium-gray: #bdc3c7;
+    --dark-gray: #7f8c8d;
+}
+
+/* Tarjetas de estadísticas modernizadas */
+.stats-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: none;
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.stats-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stats-card .card-body {
+    padding: 1.5rem;
+    position: relative;
+}
+
+.stats-card .stats-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 2.5rem;
+    opacity: 0.3;
+}
+
+.stats-card .stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+.stats-card .stats-label {
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+/* Colores específicos para las tarjetas */
+.stats-card.primary {
+    border-left: 4px solid var(--primary-color);
+}
+
+.stats-card.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.stats-card.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.stats-card.danger {
+    border-left: 4px solid var(--danger-color);
+}
+
+/* Filtros modernos colapsables */
+.filtros-container {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.filtros-header {
+    background: var(--light-bg);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--light-gray);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filtros-header:hover {
+    background: var(--medium-gray);
+}
+
+.filtros-header h6 {
+    margin: 0;
+    color: var(--dark-gray);
+    font-weight: 600;
+}
+
+.filtros-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
 .stats-card {
     transition: transform 0.2s ease-in-out;
     border: none;
@@ -122,6 +236,12 @@
 .form-select {
     border-color: #bdc3c7;
     color: #2c3e50;
+}
+
+/* Override para form-select específicamente */
+.form-select {
+    padding-right: 2.5rem !important;
+    background-position: right 0.75rem center !important;
 }
 
 /* Estilos para el modal */

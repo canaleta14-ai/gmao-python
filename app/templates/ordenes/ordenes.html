@@ -28,114 +28,111 @@
         </div>
     </div>
 
-    <!-- Tarjetas de estadísticas -->
-    <div class="row mb-4">
+    <!-- Tarjetas de estadísticas modernizadas -->
+    <div class="row mb-4" id="estadisticas-cards">
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-warning text-white">
+            <div class="card stats-card warning">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white mb-1">Pendientes</h6>
-                            <h3 class="mb-0" id="stat-pendientes">0</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-clock fs-1"></i>
-                        </div>
-                    </div>
+                    <i class="bi bi-clock stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="stat-pendientes">0</div>
+                    <div class="stats-label">Pendientes</div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-info text-white">
+            <div class="card stats-card primary">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white mb-1">En Proceso</h6>
-                            <h3 class="mb-0" id="stat-en-proceso">0</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-gear fs-1"></i>
-                        </div>
-                    </div>
+                    <i class="bi bi-gear stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="stat-en-proceso">0</div>
+                    <div class="stats-label">En Proceso</div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-success text-white">
+            <div class="card stats-card success">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white mb-1">Completadas</h6>
-                            <h3 class="mb-0" id="stat-completadas">0</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-check-circle fs-1"></i>
-                        </div>
-                    </div>
+                    <i class="bi bi-check-circle stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="stat-completadas">0</div>
+                    <div class="stats-label">Completadas</div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-danger text-white">
+            <div class="card stats-card danger">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white mb-1">Vencidas</h6>
-                            <h3 class="mb-0" id="stat-vencidas">0</h3>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-exclamation-triangle fs-1"></i>
-                        </div>
-                    </div>
+                    <i class="bi bi-exclamation-triangle stats-icon text-danger"></i>
+                    <div class="stats-number text-danger" id="stat-vencidas">0</div>
+                    <div class="stats-label">Vencidas</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="filtro-buscar" class="form-label">Buscar</label>
-                    <input type="text" class="form-control" id="filtro-buscar"
-                        placeholder="Número, descripción, activo...">
-                </div>
-                <div class="col-md-2">
-                    <label for="filtro-estado" class="form-label">Estado</label>
-                    <select class="form-select" id="filtro-estado">
-                        <option value="">Todos</option>
-                        <option value="Pendiente">Pendientes</option>
-                        <option value="En Proceso">En Proceso</option>
-                        <option value="Completada">Completadas</option>
-                        <option value="Cancelada">Canceladas</option>
-                        <option value="En Espera">En Espera</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="filtro-tipo" class="form-label">Tipo</label>
-                    <select class="form-select" id="filtro-tipo">
-                        <option value="">Todos</option>
-                        <option value="Correctivo">Correctivo</option>
-                        <option value="Preventivo">Preventivo</option>
-                        <option value="Predictivo">Predictivo</option>
-                        <option value="Mejorativo">Mejorativo</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="filtro-prioridad" class="form-label">Prioridad</label>
-                    <select class="form-select" id="filtro-prioridad">
-                        <option value="">Todas</option>
-                        <option value="Crítica">Crítica</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Media">Media</option>
-                        <option value="Baja">Baja</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
-                        <i class="bi bi-x-circle me-1"></i>Limpiar
-                    </button>
+    <!-- Filtros modernos colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtros-collapse" class="collapse">
+            <div class="filtros-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="filtro-buscar" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="filtro-buscar"
+                                placeholder="Número, descripción, activo...">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-estado" class="form-label">Estado</label>
+                            <select class="form-select" id="filtro-estado">
+                                <option value="">Todos</option>
+                                <option value="Pendiente">Pendientes</option>
+                                <option value="En Proceso">En Proceso</option>
+                                <option value="Completada">Completadas</option>
+                                <option value="Cancelada">Canceladas</option>
+                                <option value="En Espera">En Espera</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="filtro-tipo">
+                                <option value="">Todos</option>
+                                <option value="Correctivo">Correctivo</option>
+                                <option value="Preventivo">Preventivo</option>
+                                <option value="Predictivo">Predictivo</option>
+                                <option value="Mejorativo">Mejorativo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-prioridad" class="form-label">Prioridad</label>
+                            <select class="form-select" id="filtro-prioridad">
+                                <option value="">Todas</option>
+                                <option value="Crítica">Crítica</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Media">Media</option>
+                                <option value="Baja">Baja</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="form-label">Acciones</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" onclick="aplicarFiltros()">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                                    <i class="bi bi-x-circle me-1"></i>Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

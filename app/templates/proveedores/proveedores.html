@@ -5,57 +5,105 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/proveedores.css') }}">
 {% endblock %}
 {% block content %}
+<!-- Encabezado con estadísticas -->
 <div class="container-fluid">
-    <!-- Header con botones de acción -->
-    <div class="row align-items-center mb-4">
-        <div class="col-12 col-md-8 mb-2 mb-md-0">
-            <h5 class="mb-1"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h5>
-            <small class="text-muted">Registro y administración de proveedores</small>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-                <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-                    onclick="exportarCSV()">
-                    <i class="bi bi-download me-1"></i>
-                    <span class="d-none d-sm-inline">Exportar </span>CSV
-                </button>
-                <button class="btn btn-primary d-flex align-items-center justify-content-center"
-                    onclick="mostrarModalNuevoProveedor()">
-                    <i class="bi bi-plus-circle me-1"></i>Nuevo Proveedor
-                </button>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h5>
+                    <small class="text-muted">Registro y administración de proveedores</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+                        <i class="bi bi-download me-1"></i>Exportar CSV
+                    </button>
+                    <button class="btn btn-primary" onclick="mostrarModalNuevoProveedor()">
+                        <i class="bi bi-plus-circle me-1"></i>Nuevo Proveedor
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="card mb-4">
-        <div class="card-header bg-white">
-            <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h6>
+    <!-- Tarjetas de estadísticas modernizadas -->
+    <div class="row mb-4" id="estadisticas-cards">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <i class="bi bi-truck stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="total-proveedores">0</div>
+                    <div class="stats-label">Total Proveedores</div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="filtro-buscar" class="form-label">Buscar</label>
-                    <input type="text" class="form-control" id="filtro-buscar" placeholder="Nombre, NIF o contacto">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <i class="bi bi-check-circle stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="proveedores-activos">0</div>
+                    <div class="stats-label">Activos</div>
                 </div>
-                <div class="col-md-3">
-                    <label for="filtro-estado" class="form-label">Estado</label>
-                    <select class="form-select" id="filtro-estado">
-                        <option value="">Todos</option>
-                        <option value="activo" selected>Activos</option>
-                        <option value="inactivo">Inactivos</option>
-                    </select>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="proveedores-pendientes">0</div>
+                    <div class="stats-label">Pendientes</div>
                 </div>
-                <div
-                    class="col-12 col-md-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-end">
-                    <button class="btn btn-outline-primary d-flex align-items-center justify-content-center"
-                        onclick="filtrarProveedores()">
-                        <i class="bi bi-search me-1"></i>Buscar
-                    </button>
-                    <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-                        onclick="limpiarFiltros()">
-                        <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
-                    </button>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card danger">
+                <div class="card-body">
+                    <i class="bi bi-x-circle stats-icon text-danger"></i>
+                    <div class="stats-number text-danger" id="proveedores-inactivos">0</div>
+                    <div class="stats-label">Inactivos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros modernos colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtros-collapse" class="collapse">
+            <div class="filtros-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="filtro-buscar" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="filtro-buscar"
+                                placeholder="Nombre, NIF o contacto">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="filtro-estado" class="form-label">Estado</label>
+                            <select class="form-select" id="filtro-estado">
+                                <option value="">Todos</option>
+                                <option value="activo" selected>Activos</option>
+                                <option value="inactivo">Inactivos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label class="form-label">Acciones</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" onclick="filtrarProveedores()">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,13 +111,15 @@
 
     <!-- Tabla de proveedores -->
     <div class="card">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Proveedores</h6>
-            <small class="text-muted" id="contador-proveedores">0 proveedores</small>
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Proveedores</h6>
+                <small class="text-muted" id="contador-proveedores">0 proveedores</small>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
                             <th><i class="bi bi-building me-1"></i>Nombre</th>

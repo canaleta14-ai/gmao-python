@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Alertas - GMAO</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .test-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-test {
+            margin: 5px;
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <div class="test-section">
+            <h1 class="text-center mb-4">
+                <i class="bi bi-bug"></i> Prueba de Alertas de Mantenimiento
+            </h1>
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Objetivo:</strong> Identificar por qué las alertas tardan más de lo esperado.
+                <br>Esta página prueba las alertas con timeout de 5 segundos y logging detallado.
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="bi bi-play-circle"></i> Controles de Prueba</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <button class="btn btn-primary btn-test w-100" onclick="loadMaintenanceAlertsTest()">
+                        <i class="bi bi-exclamation-triangle"></i> Cargar Alertas (con UI)
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-secondary btn-test w-100" onclick="testEndpointDirect()">
+                        <i class="bi bi-globe"></i> Test Directo Endpoint (sin UI)
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <button class="btn btn-success btn-test w-100" onclick="clearConsoleOutput()">
+                        <i class="bi bi-trash"></i> Limpiar Consola
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-warning btn-test w-100" onclick="showTimestamp()">
+                        <i class="bi bi-clock"></i> Mostrar Timestamp
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="bi bi-display"></i> Resultado de Alertas</h3>
+            <div id="maintenanceAlerts">
+                <div class="alert alert-light">
+                    <i class="bi bi-arrow-up"></i> Las alertas aparecerán aquí...
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="bi bi-terminal"></i> Consola de Debug</h3>
+            <div id="consoleOutput" class="console-output">
+                Esperando logs de prueba...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="bi bi-info-circle"></i> Instrucciones</h3>
+            <ol>
+                <li><strong>Cargar Alertas:</strong> Prueba la función completa con UI y timeout de 5 segundos</li>
+                <li><strong>Test Directo:</strong> Prueba solo el endpoint sin manipulación de UI</li>
+                <li><strong>Observar Consola:</strong> Verifica los tiempos de respuesta en la consola de debug</li>
+                <li><strong>Comparar Tiempos:</strong> Si el test directo es rápido pero la UI es lenta, el problema
+                    está en el frontend</li>
+            </ol>
+
+            <div class="alert alert-warning mt-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Expectativa:</strong> El backend debería responder en menos de 50ms según pruebas anteriores.
+                Si tarda más de 5 segundos, hay un problema de red o servidor.
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/alertas-test.js"></script>
+
+    <script>
+        // Capturar console.log y mostrarlo en la página
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addToConsoleOutput(message, type = 'log') {
+            const output = document.getElementById('consoleOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '📝';
+            output.textContent += `\n[${timestamp}] ${prefix} ${message}`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        console.log = function (...args) {
+            originalLog.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'log');
+        };
+
+        console.error = function (...args) {
+            originalError.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'error');
+        };
+
+        console.warn = function (...args) {
+            originalWarn.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'warn');
+        };
+
+        function clearConsoleOutput() {
+            document.getElementById('consoleOutput').textContent = 'Consola limpiada...';
+        }
+
+        function showTimestamp() {
+            const now = new Date();
+            console.log(`⏰ Timestamp actual: ${now.toLocaleString()}`);
+        }
+
+        // Inicialización
+        console.log('🚀 Página de prueba de alertas cargada');
+        console.log('🎯 Listos para probar el rendimiento de las alertas');
+    </script>
+</body>
+
+</html>
