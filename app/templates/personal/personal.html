@@ -1,8 +1,51 @@
 {% extends 'base.html' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/personal.css') }}">
+{% endblock %}
+
 {% block section_title %}Gestión de Personal{% endblock %}
 {% set section = 'personal' %}
 {% block content %}
-<h5>Gestión de Personal</h5>
+<h2 class="mb-3"><i class="bi bi-people me-2"></i>Gestión de Personal</h2>
+
+<!-- Filtro de búsqueda colapsable -->
+<div class="filtros-container">
+    <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtrosPersonal">
+        <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+    </div>
+    <div id="filtrosPersonal" class="collapse">
+        <div class="filtros-body">
+            <form id="filtros-personal-form" class="row g-3">
+                <div class="col-lg-4 col-md-6">
+                    <label for="nombre" class="form-label fw-bold">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" placeholder="Nombre del empleado...">
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label for="departamento" class="form-label fw-bold">Departamento</label>
+                    <input type="text" class="form-control" id="departamento" placeholder="Departamento...">
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label for="cargo" class="form-label fw-bold">Cargo</label>
+                    <input type="text" class="form-control" id="cargo" placeholder="Cargo...">
+                </div>
+                <div class="col-12">
+                    <hr class="mb-3">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i>Buscar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltrosPersonal()">
+                            <i class="bi bi-x-circle me-1"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Card de información/desarrollo -->
 <div class="card">
     <div class="card-body">
         <p>Módulo de personal en desarrollo...</p>

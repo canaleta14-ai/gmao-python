@@ -1,0 +1,49 @@
+/* personal.css - Estilos para el módulo de personal */
+
+/* Variables CSS para consistencia con el diseño base */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --light-gray: #ecf0f1;
+    --medium-gray: #bdc3c7;
+    --dark-gray: #7f8c8d;
+    --light-bg: #f8f9fa;
+    --border-radius: 8px;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease;
+}
+
+/* Filtros modernos colapsables */
+.filtros-container {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.filtros-header {
+    background: var(--light-bg);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--light-gray);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filtros-header:hover {
+    background: var(--medium-gray);
+}
+
+.filtros-header h6 {
+    margin: 0;
+    color: var(--dark-gray);
+    font-weight: 600;
+}
+
+.filtros-body {
+    padding: 1.5rem;
+}
