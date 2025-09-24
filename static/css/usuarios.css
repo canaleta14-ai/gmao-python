@@ -86,28 +86,50 @@
 }
 
 .filtros-header {
-    background: var(--light-bg);
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--light-gray);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1rem 1.25rem;
     cursor: pointer;
     transition: var(--transition);
+    user-select: none;
+    position: relative;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 
 .filtros-header:hover {
-    background: var(--medium-gray);
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
 }
 
 .filtros-header h6 {
     margin: 0;
-    color: var(--dark-gray);
     font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Indicador de estado del collapse */
+.filtros-header::after {
+    content: "\F229";
+    /* bi-chevron-down */
+    font-family: "bootstrap-icons";
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+    transform: rotate(0deg);
+}
+
+.filtros-header.collapsed::after {
+    transform: rotate(-90deg);
+}
+
+.filtros-header[aria-expanded="true"]::after {
+    transform: rotate(180deg);
 }
 
 .filtros-body {
     padding: 1.5rem;
+    background: var(--light-bg);
+    border-top: 1px solid #dee2e6;
 }
 
 .form-group {
