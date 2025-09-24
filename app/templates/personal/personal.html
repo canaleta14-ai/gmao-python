@@ -7,25 +7,31 @@
 {% block content %}
 <h2 class="mb-3"><i class="bi bi-people me-2"></i>Gestión de Personal</h2>
 
-<!-- Filtro de búsqueda colapsable -->
+<!-- Filtros modernos colapsables -->
 <div class="filtros-container">
     <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
         <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
     </div>
     <div id="filtros-collapse" class="collapse">
         <div class="filtros-body">
-            <form id="filtros-personal-form" class="row g-3">
-                <div class="col-lg-4 col-md-6">
-                    <label for="nombre" class="form-label fw-bold">Nombre</label>
-                    <input type="text" class="form-control" id="nombre" placeholder="Nombre del empleado...">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="filtro-nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="filtro-nombre" placeholder="Nombre del empleado...">
+                    </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
-                    <label for="departamento" class="form-label fw-bold">Departamento</label>
-                    <input type="text" class="form-control" id="departamento" placeholder="Departamento...">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="filtro-departamento" class="form-label">Departamento</label>
+                        <input type="text" class="form-control" id="filtro-departamento" placeholder="Departamento...">
+                    </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
-                    <label for="cargo" class="form-label fw-bold">Cargo</label>
-                    <input type="text" class="form-control" id="cargo" placeholder="Cargo...">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="filtro-cargo" class="form-label">Cargo</label>
+                        <input type="text" class="form-control" id="filtro-cargo" placeholder="Cargo...">
+                    </div>
                 </div>
                 <div class="col-12">
                     <hr class="mb-3">
@@ -38,7 +44,7 @@
                         </button>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
@@ -53,21 +59,12 @@
 
 {% block scripts %}
 <script>
-    // Asegurar que Bootstrap esté funcionando correctamente
+    // Inicialización simple de Bootstrap collapse
     document.addEventListener('DOMContentLoaded', function () {
-        // Inicializar manualmente los collapses si es necesario
-        var collapseElementList = [].slice.call(document.querySelectorAll('.collapse'));
-        var collapseList = collapseElementList.map(function (collapseEl) {
-            return new bootstrap.Collapse(collapseEl, {
-                hide: true
-            });
-        });
-
-        // Forzar el estado inicial del filtro
+        // Solo asegurar que el filtro esté colapsado inicialmente
         const filtroCollapse = document.getElementById('filtros-collapse');
         if (filtroCollapse) {
             filtroCollapse.classList.remove('show');
-            filtroCollapse.classList.add('collapse');
         }
     });
 </script>
