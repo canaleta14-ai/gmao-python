@@ -19,31 +19,40 @@
 
 /* Filtros modernos colapsables */
 .filtros-container {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 2rem;
-    overflow: hidden;
+    background: white !important;
+    border-radius: var(--border-radius) !important;
+    box-shadow: var(--shadow-sm) !important;
+    margin-bottom: 2rem !important;
+    overflow: hidden !important;
 }
 
 .filtros-header {
-    background: var(--light-bg);
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--light-gray);
-    cursor: pointer;
-    transition: var(--transition);
+    background: var(--light-bg) !important;
+    padding: 1rem 1.5rem !important;
+    border-bottom: 1px solid var(--light-gray) !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
 }
 
 .filtros-header:hover {
-    background: var(--medium-gray);
+    background: var(--medium-gray) !important;
 }
 
 .filtros-header h6 {
-    margin: 0;
-    color: var(--dark-gray);
-    font-weight: 600;
+    margin: 0 !important;
+    color: var(--dark-gray) !important;
+    font-weight: 600 !important;
 }
 
 .filtros-body {
-    padding: 1.5rem;
+    padding: 1.5rem !important;
+}
+
+/* Asegurar que el collapse funcione */
+.collapse {
+    display: none !important;
+}
+
+.collapse.show {
+    display: block !important;
 }

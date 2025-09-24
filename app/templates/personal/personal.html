@@ -1,20 +1,18 @@
 {% extends 'base.html' %}
-
+{% block section_title %}Gestión de Personal{% endblock %}
+{% set section = 'personal' %}
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/personal.css') }}">
 {% endblock %}
-
-{% block section_title %}Gestión de Personal{% endblock %}
-{% set section = 'personal' %}
 {% block content %}
 <h2 class="mb-3"><i class="bi bi-people me-2"></i>Gestión de Personal</h2>
 
 <!-- Filtro de búsqueda colapsable -->
 <div class="filtros-container">
-    <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtrosPersonal">
+    <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
         <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
     </div>
-    <div id="filtrosPersonal" class="collapse">
+    <div id="filtros-collapse" class="collapse">
         <div class="filtros-body">
             <form id="filtros-personal-form" class="row g-3">
                 <div class="col-lg-4 col-md-6">
@@ -51,4 +49,26 @@
         <p>Módulo de personal en desarrollo...</p>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Asegurar que Bootstrap esté funcionando correctamente
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar manualmente los collapses si es necesario
+        var collapseElementList = [].slice.call(document.querySelectorAll('.collapse'));
+        var collapseList = collapseElementList.map(function (collapseEl) {
+            return new bootstrap.Collapse(collapseEl, {
+                hide: true
+            });
+        });
+
+        // Forzar el estado inicial del filtro
+        const filtroCollapse = document.getElementById('filtros-collapse');
+        if (filtroCollapse) {
+            filtroCollapse.classList.remove('show');
+            filtroCollapse.classList.add('collapse');
+        }
+    });
+</script>
 {% endblock %}
