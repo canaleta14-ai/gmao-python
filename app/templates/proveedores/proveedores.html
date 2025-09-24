@@ -1,534 +1,148 @@
 {% extends 'base.html' %}
 {% block section_title %}Gestión de Proveedores{% endblock %}
 {% set section = 'proveedores' %}
-
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/modules-common.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/proveedores.css') }}">
 {% endblock %}
-
 {% block content %}
-<h2 class="mb-3"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h2>
-
-<!-- Filtro de búsqueda colapsable -->
-<div class="filtros-container">
-    <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtrosProveedores">
-        <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
-    </div>
-    <div id="filtrosProveedores" class="collapse">
-        <div class="filtros-body">
-            <form id="filtros-proveedores-form" class="row g-3">
-                <div class="col-lg-4 col-md-6">
-                    <label for="buscar" class="form-label fw-bold">Buscar</label>
-                    <input type="text" class="form-control" id="buscar" placeholder="Nombre, NIF o contacto...">
+<!-- Encabezado con estadísticas -->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-truck me-2"></i>Gestión de Proveedores</h5>
+                    <small class="text-muted">Registro y administración de proveedores</small>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <label for="categoria" class="form-label fw-bold">Categoría</label>
-                    <select class="form-select" id="categoria">
-                        <option value="">Todas las categorías</option>
-                        <option value="repuestos">Repuestos</option>
-                        <option value="servicios">Servicios</option>
-                        <option value="materiales">Materiales</option>
-                        <option value="equipos">Equipos</option>
-                        <option value="consultoria">Consultoría</option>
-                    </select>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <label for="estado" class="form-label fw-bold">Estado</label>
-                    <select class="form-select" id="estado">
-                        <option value="">Todos los estados</option>
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                        <option value="bloqueado">Bloqueado</option>
-                    </select>
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <label for="pais" class="form-label fw-bold">País</label>
-                    <select class="form-select" id="pais">
-                        <option value="">Todos</option>
-                        <option value="espana">España</option>
-                        <option value="francia">Francia</option>
-                        <option value="alemania">Alemania</option>
-                        <option value="italia">Italia</option>
-                    </select>
-                </div>
-                <div class="col-12">
-                    <hr class="mb-3">
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search me-1"></i>Buscar
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltrosProveedores()">
-                            <i class="bi bi-x-circle me-1"></i>Limpiar
-                        </button>
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                            data-bs-target="#modalProveedor">
-                            <i class="bi bi-plus-circle me-1"></i>Nuevo Proveedor
-                        </button>
-                        <button type="button" class="btn btn-outline-info">
-                            <i class="bi bi-download me-1"></i>Exportar
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Lista de Proveedores -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-truck me-2"></i>Proveedores Registrados
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-modern" id="tabla-proveedores">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Proveedor</th>
-                                <th>Contacto</th>
-                                <th>Categoría</th>
-                                <th>País</th>
-                                <th>Estado</th>
-                                <th>Último Pedido</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-proveedores">
-                            <!-- Datos de ejemplo -->
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm bg-primary rounded-circle me-3">
-                                            <i class="bi bi-building text-white"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold">Suministros Industriales López</div>
-                                            <small class="text-muted">NIF: B-12345678</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <i class="bi bi-person me-1"></i>Juan López<br>
-                                        <small class="text-muted">
-                                            <i class="bi bi-envelope me-1"></i>juan@suministros.com<br>
-                                            <i class="bi bi-telephone me-1"></i>+34 912 345 678
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">Repuestos</span>
-                                </td>
-                                <td>
-                                    <i class="bi bi-flag me-1"></i>España
-                                </td>
-                                <td>
-                                    <span class="badge bg-success">Activo</span>
-                                </td>
-                                <td>
-                                    <small class="text-muted">18/09/2025</small>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary" title="Ver Detalles">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success" title="Nuevo Pedido">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Desactivar">
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm bg-success rounded-circle me-3">
-                                            <i class="bi bi-tools text-white"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold">Servicios Técnicos García</div>
-                                            <small class="text-muted">NIF: B-87654321</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <i class="bi bi-person me-1"></i>María García<br>
-                                        <small class="text-muted">
-                                            <i class="bi bi-envelope me-1"></i>maria@serviciosgarcia.es<br>
-                                            <i class="bi bi-telephone me-1"></i>+34 915 678 901
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-warning text-dark">Servicios</span>
-                                </td>
-                                <td>
-                                    <i class="bi bi-flag me-1"></i>España
-                                </td>
-                                <td>
-                                    <span class="badge bg-success">Activo</span>
-                                </td>
-                                <td>
-                                    <small class="text-muted">22/09/2025</small>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary" title="Ver Detalles">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success" title="Nuevo Pedido">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Desactivar">
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm bg-warning rounded-circle me-3">
-                                            <i class="bi bi-box text-white"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold">Materiales Europa SL</div>
-                                            <small class="text-muted">NIF: B-11223344</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <i class="bi bi-person me-1"></i>Carlos Ruiz<br>
-                                        <small class="text-muted">
-                                            <i class="bi bi-envelope me-1"></i>carlos@materiales-eu.com<br>
-                                            <i class="bi bi-telephone me-1"></i>+34 913 456 789
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary">Materiales</span>
-                                </td>
-                                <td>
-                                    <i class="bi bi-flag me-1"></i>España
-                                </td>
-                                <td>
-                                    <span class="badge bg-warning text-dark">Evaluación</span>
-                                </td>
-                                <td>
-                                    <small class="text-muted">No registra</small>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary" title="Ver Detalles">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success" title="Nuevo Pedido">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Desactivar">
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Paginación -->
-                <nav aria-label="Paginación de proveedores">
-                    <ul class="pagination justify-content-center mt-3">
-                        <li class="page-item disabled">
-                            <span class="page-link">Anterior</span>
-                        </li>
-                        <li class="page-item active">
-                            <span class="page-link">1</span>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">2</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">3</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">Siguiente</a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Estadísticas rápidas -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card stats-card text-center">
-            <div class="card-body">
-                <i class="bi bi-truck display-4 text-primary mb-2"></i>
-                <h5 class="card-title">Total Proveedores</h5>
-                <h3 class="text-primary" id="total-proveedores">3</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stats-card text-center">
-            <div class="card-body">
-                <i class="bi bi-check-circle-fill display-4 text-success mb-2"></i>
-                <h5 class="card-title">Activos</h5>
-                <h3 class="text-success" id="proveedores-activos">2</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stats-card text-center">
-            <div class="card-body">
-                <i class="bi bi-clock-history display-4 text-warning mb-2"></i>
-                <h5 class="card-title">En Evaluación</h5>
-                <h3 class="text-warning" id="proveedores-evaluacion">1</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stats-card text-center">
-            <div class="card-body">
-                <i class="bi bi-tags display-4 text-info mb-2"></i>
-                <h5 class="card-title">Categorías</h5>
-                <h3 class="text-info">3</h3>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Nuevo/Editar Proveedor -->
-<div class="modal fade" id="modalProveedor" tabindex="-1" aria-labelledby="modalProveedorLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalProveedorLabel">
-                    <i class="bi bi-plus-circle me-2"></i>Nuevo Proveedor
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <form id="form-proveedor">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label for="nombre_empresa" class="form-label fw-bold">Nombre de la Empresa *</label>
-                                <input type="text" class="form-control" id="nombre_empresa" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="nif" class="form-label fw-bold">NIF/CIF *</label>
-                                <input type="text" class="form-control" id="nif" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="persona_contacto" class="form-label fw-bold">Persona de Contacto</label>
-                                <input type="text" class="form-control" id="persona_contacto">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="email" class="form-label fw-bold">Email</label>
-                                <input type="email" class="form-control" id="email">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="telefono" class="form-label fw-bold">Teléfono</label>
-                                <input type="tel" class="form-control" id="telefono">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="categoria_modal" class="form-label fw-bold">Categoría *</label>
-                                <select class="form-select" id="categoria_modal" required>
-                                    <option value="">Seleccionar categoría...</option>
-                                    <option value="repuestos">Repuestos</option>
-                                    <option value="servicios">Servicios</option>
-                                    <option value="materiales">Materiales</option>
-                                    <option value="equipos">Equipos</option>
-                                    <option value="consultoria">Consultoría</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="direccion" class="form-label fw-bold">Dirección</label>
-                                <textarea class="form-control" id="direccion" rows="2"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="ciudad" class="form-label fw-bold">Ciudad</label>
-                                <input type="text" class="form-control" id="ciudad">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="codigo_postal" class="form-label fw-bold">Código Postal</label>
-                                <input type="text" class="form-control" id="codigo_postal">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="pais_modal" class="form-label fw-bold">País</label>
-                                <select class="form-select" id="pais_modal">
-                                    <option value="espana">España</option>
-                                    <option value="francia">Francia</option>
-                                    <option value="alemania">Alemania</option>
-                                    <option value="italia">Italia</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+                        <i class="bi bi-download me-1"></i>Exportar CSV
                     </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-1"></i>Guardar
+                    <button class="btn btn-primary" onclick="mostrarModalNuevoProveedor()">
+                        <i class="bi bi-plus-circle me-1"></i>Nuevo Proveedor
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/proveedores.js') }}"></script>
-{% endblock %}
-<div class="card-body">
-    <i class="bi bi-exclamation-triangle stats-icon text-warning"></i>
-    <div class="stats-number text-warning" id="proveedores-pendientes">0</div>
-    <div class="stats-label">Pendientes</div>
-</div>
-</div>
-</div>
-<div class="col-lg-3 col-md-6 mb-3">
-    <div class="card stats-card danger">
-        <div class="card-body">
-            <i class="bi bi-x-circle stats-icon text-danger"></i>
-            <div class="stats-number text-danger" id="proveedores-inactivos">0</div>
-            <div class="stats-label">Inactivos</div>
+    <!-- Tarjetas de estadísticas modernizadas -->
+    <div class="row mb-4" id="estadisticas-cards">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <i class="bi bi-truck stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="total-proveedores">0</div>
+                    <div class="stats-label">Total Proveedores</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <i class="bi bi-check-circle stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="proveedores-activos">0</div>
+                    <div class="stats-label">Activos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="proveedores-pendientes">0</div>
+                    <div class="stats-label">Pendientes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card danger">
+                <div class="card-body">
+                    <i class="bi bi-x-circle stats-icon text-danger"></i>
+                    <div class="stats-number text-danger" id="proveedores-inactivos">0</div>
+                    <div class="stats-label">Inactivos</div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-</div>
 
-<!-- Filtros modernos colapsables -->
-<div class="filtros-container">
-    <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
-        <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
-    </div>
-    <div id="filtros-collapse" class="collapse">
-        <div class="filtros-body">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="filtro-buscar" class="form-label">Buscar</label>
-                        <input type="text" class="form-control" id="filtro-buscar" placeholder="Nombre, NIF o contacto">
+    <!-- Filtros modernos colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtros-collapse" class="collapse">
+            <div class="filtros-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="filtro-buscar" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="filtro-buscar"
+                                placeholder="Nombre, NIF o contacto">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="filtro-estado" class="form-label">Estado</label>
-                        <select class="form-select" id="filtro-estado">
-                            <option value="">Todos</option>
-                            <option value="activo" selected>Activos</option>
-                            <option value="inactivo">Inactivos</option>
-                        </select>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="filtro-estado" class="form-label">Estado</label>
+                            <select class="form-select" id="filtro-estado">
+                                <option value="">Todos</option>
+                                <option value="activo" selected>Activos</option>
+                                <option value="inactivo">Inactivos</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-5">
-                    <div class="form-group">
-                        <label class="form-label">Acciones</label>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-primary btn-sm" onclick="filtrarProveedores()">
-                                <i class="bi bi-search me-1"></i>Buscar
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
-                            </button>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label class="form-label">Acciones</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm" onclick="filtrarProveedores()">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Tabla de proveedores -->
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Proveedores</h6>
-            <small class="text-muted" id="contador-proveedores">0 proveedores</small>
+    <!-- Tabla de proveedores -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Proveedores</h6>
+                <small class="text-muted" id="contador-proveedores">0 proveedores</small>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="bi bi-building me-1"></i>Nombre</th>
+                            <th><i class="bi bi-card-text me-1"></i>NIF</th>
+                            <th><i class="bi bi-bank me-1"></i>Cuenta Contable</th>
+                            <th><i class="bi bi-person me-1"></i>Contacto</th>
+                            <th><i class="bi bi-telephone me-1"></i>Teléfono</th>
+                            <th><i class="bi bi-envelope me-1"></i>Email</th>
+                            <th><i class="bi bi-circle me-1"></i>Estado</th>
+                            <th><i class="bi bi-three-dots me-1"></i>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-proveedores">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Paginación -->
+            <div class="card-footer">
+                <div id="paginacion-proveedores"></div>
+            </div>
         </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th><i class="bi bi-building me-1"></i>Nombre</th>
-                        <th><i class="bi bi-card-text me-1"></i>NIF</th>
-                        <th><i class="bi bi-bank me-1"></i>Cuenta Contable</th>
-                        <th><i class="bi bi-person me-1"></i>Contacto</th>
-                        <th><i class="bi bi-telephone me-1"></i>Teléfono</th>
-                        <th><i class="bi bi-envelope me-1"></i>Email</th>
-                        <th><i class="bi bi-circle me-1"></i>Estado</th>
-                        <th><i class="bi bi-three-dots me-1"></i>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-proveedores">
-                    <!-- Se llenará dinámicamente -->
-                </tbody>
-            </table>
-        </div>
-        <!-- Paginación -->
-        <div class="card-footer">
-            <div id="paginacion-proveedores"></div>
-        </div>
-    </div>
-</div>
 </div>
 
 <!-- Modal Nuevo/Editar Proveedor -->

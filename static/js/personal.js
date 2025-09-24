@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Encontrar elementos del colapso para mejorar UX
     const filtroHeader = document.querySelector('[data-bs-toggle="collapse"]');
-    const filtroCollapse = document.getElementById('filtrosPersonal');
+    const filtroCollapse = document.getElementById('filtros-collapse');
 
     if (filtroHeader && filtroCollapse) {
         // Asegurar que inicie colapsado
@@ -38,10 +38,21 @@ document.addEventListener('DOMContentLoaded', function () {
 // Función para limpiar filtros
 function limpiarFiltrosPersonal() {
     console.log('Limpiando filtros de personal');
-    const form = document.getElementById('filtros-personal-form');
-    if (form) {
-        form.reset();
-    }
+
+    // Limpiar campos individuales
+    document.getElementById('nombre').value = '';
+    document.getElementById('departamento').value = '';
+    document.getElementById('cargo').value = '';
+
+    // Mostrar todas las filas de la tabla
+    const filas = document.querySelectorAll('#tbody-personal tr');
+    filas.forEach(fila => {
+        fila.style.display = '';
+    });
+
+    // Actualizar contador
+    const totalFilas = filas.length;
+    document.getElementById('contador-empleados').textContent = `${totalFilas} empleados`;
 }
 
 // Función para manejar el formulario de personal
@@ -123,5 +134,51 @@ function filtrarTablaPersonal() {
 
     // Actualizar contador de resultados
     const filasVisibles = document.querySelectorAll('#tbody-personal tr:not([style*="display: none"])');
+    document.getElementById('contador-empleados').textContent = `${filasVisibles.length} empleados`;
     console.log(`Mostrando ${filasVisibles.length} empleados de ${filas.length} total`);
+}
+
+// Función para exportar CSV
+function exportarCSVPersonal() {
+    console.log('Exportando datos de personal a CSV...');
+
+    // Obtener datos de la tabla
+    const tabla = document.getElementById('tabla-personal');
+    const filas = tabla.querySelectorAll('tbody tr:not([style*="display: none"])');
+
+    if (filas.length === 0) {
+        alert('No hay datos para exportar');
+        return;
+    }
+
+    // Preparar datos CSV
+    let csvContent = 'ID,Nombre,Departamento,Cargo,Email,Telefono,Estado\n';
+
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        const id = celdas[0].textContent.trim();
+        const nombre = celdas[1].querySelector('.fw-bold').textContent.trim();
+        const departamento = celdas[2].querySelector('.badge').textContent.trim();
+        const cargo = celdas[3].textContent.trim();
+
+        // Extraer email y teléfono del contenido HTML
+        const contactoDiv = celdas[4];
+        const email = contactoDiv.querySelector('div:first-child').textContent.replace('📧', '').trim();
+        const telefono = contactoDiv.querySelector('div:last-child').textContent.replace('📞', '').trim();
+
+        const estado = celdas[5].querySelector('.badge').textContent.trim();
+
+        csvContent += `"${id}","${nombre}","${departamento}","${cargo}","${email}","${telefono}","${estado}"\n`;
+    });
+
+    // Descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `personal_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }

@@ -1,58 +1,174 @@
-// Gestión de Activos - JavaScript
+// activos.js - JavaScript específico para el módulo de activos
 
-// Variables globales
-let activos = [];
-let departamentos = {};
-let codigoEditableActivo = false;
-
-// Variables de paginación
-let currentPage = 1;
-let perPage = 10;
-let paginacionActivos;
-
-// Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function () {
-    // Crear instancia de paginación
-    paginacionActivos = createPagination('paginacion-activos', cargarActivos, {
-        perPage: 10,
-        showInfo: true,
-        showSizeSelector: true
+    console.log('Módulo Activos cargado');
+
+    // Verificar que Bootstrap está disponible
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap no está disponible');
+        return;
+    }
+
+    // Encontrar elementos del colapso para mejorar UX
+    const filtroHeader = document.querySelector('[data-bs-toggle="collapse"]');
+    const filtroCollapse = document.getElementById('filtrosActivos');
+
+    if (filtroHeader && filtroCollapse) {
+        // Asegurar que inicie colapsado
+        if (!filtroCollapse.classList.contains('show')) {
+            filtroHeader.classList.add('collapsed');
+            filtroHeader.setAttribute('aria-expanded', 'false');
+        }
+
+        // Mejorar la indicación visual del estado
+        filtroCollapse.addEventListener('show.bs.collapse', function () {
+            filtroHeader.classList.remove('collapsed');
+        });
+
+        filtroCollapse.addEventListener('hide.bs.collapse', function () {
+            filtroHeader.classList.add('collapsed');
+        });
+    }
+
+    // Inicializar funcionalidades adicionales
+    setupFormActivo();
+    setupFiltrosActivos();
+});
+
+// Función para limpiar filtros
+function limpiarFiltrosActivos() {
+    console.log('Limpiando filtros de activos');
+    const form = document.getElementById('filtros-activos-form');
+    if (form) {
+        form.reset();
+        filtrarTablaActivos(); // Recargar tabla completa
+    }
+}
+
+// Función para manejar el formulario de activos
+function setupFormActivo() {
+    const form = document.getElementById('form-activo');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Obtener datos del formulario
+            const data = {
+                codigo: document.getElementById('codigo').value,
+                nombre: document.getElementById('nombre').value,
+                descripcion: document.getElementById('descripcion').value,
+                departamento: document.getElementById('departamento_modal').value,
+                tipo: document.getElementById('tipo_modal').value,
+                marca: document.getElementById('marca').value,
+                modelo: document.getElementById('modelo').value,
+                numero_serie: document.getElementById('numero_serie').value,
+                fecha_adquisicion: document.getElementById('fecha_adquisicion').value,
+                estado: document.getElementById('estado_modal').value,
+                valor_adquisicion: document.getElementById('valor_adquisicion').value
+            };
+
+            console.log('Datos del nuevo activo:', data);
+
+            // Aquí iría la lógica para enviar al servidor
+            // Por ahora solo mostramos un mensaje
+            alert('Activo guardado correctamente (demo)');
+
+            // Cerrar modal y limpiar formulario
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalActivo'));
+            if (modal) {
+                modal.hide();
+            }
+            form.reset();
+
+            // Recargar tabla (en implementación real)
+            // cargarTablaActivos();
+        });
+    }
+}
+
+// Función para manejar filtros en tiempo real
+function setupFiltrosActivos() {
+    const filtroBuscar = document.getElementById('buscar');
+    const filtroDepartamento = document.getElementById('departamento');
+    const filtroEstado = document.getElementById('estado');
+    const filtroTipo = document.getElementById('tipo');
+
+    [filtroBuscar, filtroDepartamento, filtroEstado, filtroTipo].forEach(filtro => {
+        if (filtro) {
+            filtro.addEventListener('input', function () {
+                filtrarTablaActivos();
+            });
+            filtro.addEventListener('change', function () {
+                filtrarTablaActivos();
+            });
+        }
+    });
+}
+
+// Función para filtrar la tabla de activos
+function filtrarTablaActivos() {
+    const buscarFiltro = document.getElementById('buscar').value.toLowerCase();
+    const departamentoFiltro = document.getElementById('departamento').value.toLowerCase();
+    const estadoFiltro = document.getElementById('estado').value.toLowerCase();
+    const tipoFiltro = document.getElementById('tipo').value.toLowerCase();
+
+    const filas = document.querySelectorAll('#tbody-activos tr');
+
+    filas.forEach(fila => {
+        const codigo = fila.cells[0].textContent.toLowerCase();
+        const nombre = fila.cells[1].textContent.toLowerCase();
+        const departamento = fila.cells[2].textContent.toLowerCase();
+        const tipo = fila.cells[3].textContent.toLowerCase();
+        const estado = fila.cells[4].textContent.toLowerCase();
+
+        const coincideBuscar = !buscarFiltro ||
+            codigo.includes(buscarFiltro) ||
+            nombre.includes(buscarFiltro);
+        const coincideDepartamento = !departamentoFiltro || departamento.includes(departamentoFiltro);
+        const coincideEstado = !estadoFiltro || estado.includes(estadoFiltro);
+        const coincideTipo = !tipoFiltro || tipo.includes(tipoFiltro);
+
+        if (coincideBuscar && coincideDepartamento && coincideEstado && coincideTipo) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
     });
 
-    // Solo cargar datos esenciales al inicio
-    cargarDepartamentos();
+    // Actualizar contador de resultados
+    const filasVisibles = document.querySelectorAll('#tbody-activos tr:not([style*="display: none"])');
+    console.log(`Mostrando ${filasVisibles.length} activos de ${filas.length} total`);
+}
 
-    // Cargar activos de forma diferida
-    setTimeout(() => {
-        cargarActivos();
-    }, 100);
+// Función para actualizar estadísticas
+function actualizarEstadisticas() {
+    const filas = document.querySelectorAll('#tbody-activos tr');
+    let operativos = 0;
+    let mantenimiento = 0;
 
-    inicializarEventos();
+    filas.forEach(fila => {
+        const estadoTexto = fila.cells[4].textContent.toLowerCase();
+        if (estadoTexto.includes('operativo')) {
+            operativos++;
+        } else if (estadoTexto.includes('mantención') || estadoTexto.includes('mantenimiento')) {
+            mantenimiento++;
+        }
+    });
 
-    // Inicializar autocompletado después de cargar datos
-    setTimeout(() => {
-        inicializarAutocompletado();
-    }, 200);
+    // Actualizar contadores en las cards
+    const totalElement = document.getElementById('total-activos');
+    const operativosElement = document.getElementById('activos-operativos');
+    const mantenimientoElement = document.getElementById('activos-mantenimiento');
 
-    // Event listener para preview de archivos en el formulario principal
-    const inputArchivos = document.getElementById('archivos-manuales');
-    if (inputArchivos) {
-        inputArchivos.addEventListener('change', function () {
-            const archivos = this.files;
-            const preview = document.getElementById('archivos-preview');
-            const contenedor = document.getElementById('lista-archivos-preview');
-
-            if (archivos.length > 0) {
-                let html = '';
-                for (let i = 0; i < archivos.length; i++) {
-                    const archivo = archivos[i];
-                    const tamano = formatearTamano(archivo.size);
-                    html += `
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <i class="bi ${obtenerIconoArchivo(archivo.name.split('.').pop())}"></i>
-                            <span class="small">${archivo.name} (${tamano})</span>
-                        </div>
-                    `;
+    if (totalElement) totalElement.textContent = filas.length;
+    if (operativosElement) operativosElement.textContent = operativos;
+    if (mantenimientoElement) mantenimientoElement.textContent = mantenimiento;
+}
+<div class="d-flex align-items-center gap-2 mb-1">
+    <i class="bi ${obtenerIconoArchivo(archivo.name.split('.').pop())}"></i>
+    <span class="small">${archivo.name} (${tamano})</span>
+</div>
+`;
                 }
                 preview.innerHTML = html;
                 contenedor.style.display = 'block';
@@ -98,7 +214,7 @@ function llenarSelectDepartamentos() {
             Object.entries(departamentos).forEach(([codigo, nombre]) => {
                 const option = document.createElement('option');
                 option.value = codigo;
-                option.textContent = `${codigo} - ${nombre}`;
+                option.textContent = `${ codigo } - ${ nombre } `;
                 select.appendChild(option);
             });
         }
@@ -133,7 +249,7 @@ function llenarSelectProveedores(proveedores) {
             .forEach(proveedor => {
                 const option = document.createElement('option');
                 option.value = proveedor.id;
-                option.textContent = `${proveedor.nombre} (${proveedor.nif})`;
+                option.textContent = `${ proveedor.nombre } (${ proveedor.nif })`;
                 select.appendChild(option);
             });
     }
@@ -150,7 +266,7 @@ async function cargarActivos(page = 1) {
             per_page: perPage
         });
 
-        const response = await fetch(`/activos/api?${params}`);
+        const response = await fetch(`/ activos / api ? ${ params } `);
         if (response.ok) {
             const data = await response.json();
             activos = data.items || [];
@@ -180,22 +296,22 @@ function mostrarActivos(activosAMostrar) {
 
     if (activosAMostrar.length === 0) {
         tbody.innerHTML = `
-            <tr>
-                <td colspan="10" class="text-center text-muted py-4">
-                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                    No se encontraron activos
-                </td>
-            </tr>
-        `;
+    < tr >
+    <td colspan="10" class="text-center text-muted py-4">
+        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+        No se encontraron activos
+    </td>
+            </tr >
+    `;
         return;
     }
 
     activosAMostrar.forEach(activo => {
         const fila = document.createElement('tr');
         fila.innerHTML = `
-            <td>
-                <span class="codigo-activo">${activo.codigo || 'Sin código'}</span>
-            </td>
+    < td >
+    <span class="codigo-activo">${activo.codigo || 'Sin código'}</span>
+            </td >
             <td>
                 <span class="fw-medium">${obtenerNombreDepartamento(activo.departamento)}</span>
                 <br>
@@ -240,7 +356,7 @@ function mostrarActivos(activosAMostrar) {
                     </button>
                 </div>
             </td>
-        `;
+`;
         tbody.appendChild(fila);
     });
 }
@@ -288,7 +404,7 @@ function obtenerClasePrioridad(prioridad) {
 function actualizarContadorActivos(cantidad) {
     const contador = document.getElementById('contador-activos');
     if (contador) {
-        contador.textContent = `${cantidad} activo${cantidad !== 1 ? 's' : ''}`;
+        contador.textContent = `${ cantidad } activo${ cantidad !== 1 ? 's' : '' } `;
     }
 }
 
@@ -352,7 +468,7 @@ async function generarCodigo() {
     }
 
     try {
-        const response = await fetch(`/activos/generar-codigo/${departamento}`);
+        const response = await fetch(`/ activos / generar - codigo / ${ departamento } `);
         if (response.ok) {
             const data = await response.json();
             campoInput.value = data.codigo;
@@ -489,7 +605,7 @@ async function crearActivo() {
     try {
         mostrarCargando(true);
 
-        const url = esEdicion ? `/activos/api/${activoId}` : '/activos/';
+        const url = esEdicion ? `/ activos / api / ${ activoId } ` : '/activos/';
         const method = esEdicion ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -572,7 +688,7 @@ async function exportarCSV() {
 // Funciones de gestión de activos
 async function verActivo(id) {
     try {
-        const response = await fetch(`/activos/api/${id}`);
+        const response = await fetch(`/ activos / api / ${ id } `);
         if (response.ok) {
             const activo = await response.json();
             mostrarDetallesActivo(activo);
@@ -587,7 +703,7 @@ async function verActivo(id) {
 
 async function editarActivo(id) {
     try {
-        const response = await fetch(`/activos/api/${id}`);
+        const response = await fetch(`/ activos / api / ${ id } `);
         if (response.ok) {
             const activo = await response.json();
             llenarFormularioEdicion(activo);
@@ -604,7 +720,7 @@ async function editarActivo(id) {
 async function eliminarActivo(id) {
     if (confirm('¿Está seguro de que desea eliminar este activo? Esta acción no se puede deshacer.')) {
         try {
-            const response = await fetch(`/activos/api/${id}`, {
+            const response = await fetch(`/ activos / api / ${ id } `, {
                 method: 'DELETE'
             });
 
@@ -625,7 +741,7 @@ async function eliminarActivo(id) {
 // Mostrar detalles del activo en un modal
 function mostrarDetallesActivo(activo) {
     const detallesHTML = `
-        <div class="row">
+    < div class="row" >
             <div class="col-md-6">
                 <h6 class="text-muted">Información Básica</h6>
                 <p><strong>Código:</strong> ${activo.codigo}</p>
@@ -642,38 +758,40 @@ function mostrarDetallesActivo(activo) {
                 <p><strong>N° Serie:</strong> ${activo.numero_serie || 'No especificado'}</p>
                 <p><strong>Proveedor:</strong> ${activo.proveedor || 'No especificado'}</p>
             </div>
-        </div>
-        ${activo.descripcion ? `
+        </div >
+    ${
+        activo.descripcion ? `
             <div class="mt-3">
                 <h6 class="text-muted">Descripción</h6>
                 <p>${activo.descripcion}</p>
             </div>
-        ` : ''}
-    `;
+        ` : ''
+}
+`;
 
     // Crear modal dinámico para mostrar detalles
     const modalHTML = `
-        <div class="modal fade" id="modalVerActivo" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-eye me-2"></i>Detalles del Activo
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        ${detallesHTML}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-primary" onclick="editarActivo(${activo.id})">
-                            <i class="bi bi-pencil me-1"></i>Editar
-                        </button>
-                    </div>
+    < div class="modal fade" id = "modalVerActivo" tabindex = "-1" >
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-eye me-2"></i>Detalles del Activo
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    ${detallesHTML}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="editarActivo(${activo.id})">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </button>
                 </div>
             </div>
         </div>
+        </div >
     `;
 
     // Remover modal anterior si existe
@@ -785,7 +903,7 @@ function inicializarAutocompletado() {
             element: filtroBuscar,
             apiUrl: '/activos/api',
             searchKey: 'q',
-            displayKey: item => `${item.nombre} (${item.codigo}) - ${item.ubicacion || 'Sin ubicación'}`,
+            displayKey: item => `${ item.nombre } (${ item.codigo }) - ${ item.ubicacion || 'Sin ubicación' } `,
             valueKey: 'nombre',
             placeholder: 'Buscar activo por nombre, código o ubicación...',
             allowFreeText: true,
@@ -866,12 +984,12 @@ function inicializarAutocompletado() {
 function mostrarMensaje(mensaje, tipo = 'info') {
     // Crear elemento de alerta
     const alerta = document.createElement('div');
-    alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+    alerta.className = `alert alert - ${ tipo } alert - dismissible fade show position - fixed`;
     alerta.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
     alerta.innerHTML = `
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+        ${ mensaje }
+<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+`;
 
     document.body.appendChild(alerta);
 
@@ -899,13 +1017,13 @@ function mostrarCargando(mostrar) {
 async function gestionarManuales(activoId) {
     try {
         // Obtener información del activo
-        const response = await fetch(`/activos/api/${activoId}`);
+        const response = await fetch(`/ activos / api / ${ activoId } `);
         if (response.ok) {
             const activo = await response.json();
 
             // Actualizar título del modal
             document.getElementById('modalManualesLabel').innerHTML =
-                `<i class="bi bi-files me-2"></i>Manuales: ${activo.nombre}`;
+                `< i class="bi bi-files me-2" ></i > Manuales: ${ activo.nombre } `;
 
             // Guardar ID del activo
             document.getElementById('activo-id-manual').value = activoId;
@@ -926,17 +1044,17 @@ async function gestionarManuales(activoId) {
 // Cargar lista de manuales
 async function cargarManuales(activoId) {
     try {
-        const response = await fetch(`/activos/api/${activoId}/manuales`);
-        if (response.ok) {
-            const manuales = await response.json();
-            mostrarListaManuales(manuales);
-        } else {
-            mostrarListaManuales([]);
-        }
+        const response = await fetch(`/ activos / api / ${ activoId }/manuales`);
+if (response.ok) {
+    const manuales = await response.json();
+    mostrarListaManuales(manuales);
+} else {
+    mostrarListaManuales([]);
+}
     } catch (error) {
-        console.error('Error al cargar manuales:', error);
-        mostrarListaManuales([]);
-    }
+    console.error('Error al cargar manuales:', error);
+    mostrarListaManuales([]);
+}
 }
 
 // Mostrar lista de manuales en el modal

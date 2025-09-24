@@ -64,7 +64,7 @@ def supervisor_or_admin_required(f):
 @login_required
 def usuarios_page():
     """Página principal de usuarios"""
-    return render_template("personal/personal.html", section="personal")
+    return render_template("usuarios/usuarios.html", section="personal")
 
 
 @usuarios_bp.route("/api", methods=["GET"])
