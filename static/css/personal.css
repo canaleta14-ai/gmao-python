@@ -1,6 +1,6 @@
 /* personal.css - Estilos para el módulo de personal */
 
-/* Variables CSS para consistencia con el diseño base */
+/* Variables CSS para consistencia */
 :root {
     --primary-color: #2c3e50;
     --secondary-color: #34495e;
@@ -17,33 +17,96 @@
     --transition: all 0.3s ease;
 }
 
-/* Filtros modernos colapsables */
+/* Contenedor de filtros */
 .filtros-container {
     background: white;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     overflow: hidden;
 }
 
+/* Header de filtros */
 .filtros-header {
-    background: var(--light-bg);
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--light-gray);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1rem 1.25rem;
     cursor: pointer;
     transition: var(--transition);
+    user-select: none;
 }
 
 .filtros-header:hover {
-    background: var(--medium-gray);
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
 }
 
 .filtros-header h6 {
     margin: 0;
-    color: var(--dark-gray);
     font-weight: 600;
+    font-size: 0.95rem;
 }
 
+/* Body de filtros */
 .filtros-body {
     padding: 1.5rem;
+    background: var(--light-bg);
+    border-top: 1px solid #dee2e6;
+}
+
+/* Estilos de formularios */
+.form-control,
+.form-select {
+    border-radius: 6px;
+    border: 1px solid var(--medium-gray);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+.form-select {
+    padding-right: 2.5rem !important;
+    background-position: right 0.75rem center !important;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark-gray);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Botones */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+    color: var(--dark-gray);
+    border-color: var(--medium-gray);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--dark-gray);
+    border-color: var(--dark-gray);
+    transform: translateY(-1px);
 }
