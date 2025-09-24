@@ -46,6 +46,7 @@ def create_app():
     from app.routes.estadisticas import estadisticas_bp
     from app.routes.usuarios import usuarios_bp
     from app.routes.proveedores import proveedores_bp
+    from app.routes.personal import personal_bp
 
     app.register_blueprint(web_bp)
     app.register_blueprint(activos_bp)
@@ -55,5 +56,6 @@ def create_app():
     app.register_blueprint(estadisticas_bp)
     app.register_blueprint(usuarios_bp)
     app.register_blueprint(proveedores_bp)
+    app.register_blueprint(personal_bp)
 
     return app
