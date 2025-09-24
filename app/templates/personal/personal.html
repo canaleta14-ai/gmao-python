@@ -59,29 +59,12 @@
 
 {% block scripts %}
 <script>
-    // Inicialización agresiva para asegurar colapso inicial
+    // Asegurar que el filtro esté colapsado inicialmente
     document.addEventListener('DOMContentLoaded', function () {
-        // Forzar colapso inicial ignorando localStorage
-        setTimeout(function () {
-            const filtroCollapse = document.getElementById('filtros-collapse');
-            if (filtroCollapse) {
-                filtroCollapse.classList.remove('show');
-                // Remover cualquier estado guardado para esta página
-                const currentPage = window.location.pathname;
-                const storageKey = `filtros_${currentPage}`;
-                localStorage.removeItem(storageKey);
-            }
-        }, 100);
-    });
-
-    // También asegurar después de que se cargue Bootstrap
-    window.addEventListener('load', function () {
-        setTimeout(function () {
-            const filtroCollapse = document.getElementById('filtros-collapse');
-            if (filtroCollapse) {
-                filtroCollapse.classList.remove('show');
-            }
-        }, 200);
+        const filtroCollapse = document.getElementById('filtros-collapse');
+        if (filtroCollapse) {
+            filtroCollapse.classList.remove('show');
+        }
     });
 </script>
 {% endblock %}

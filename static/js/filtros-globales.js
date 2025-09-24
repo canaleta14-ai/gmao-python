@@ -23,8 +23,8 @@ function initFiltrosGlobales() {
     const currentPage = window.location.pathname;
     const storageKey = `filtros_${currentPage}`;
 
-    // Restaurar estado guardado
-    const savedState = localStorage.getItem(storageKey);
+    // NO restaurar estado guardado para la página de personal (usuarios) - debe empezar colapsado
+    const savedState = currentPage === '/usuarios/' ? null : localStorage.getItem(storageKey);
     if (savedState === 'shown') {
         filtrosCollapse.classList.add('show');
         icon.style.transform = 'rotate(180deg)';
