@@ -150,3 +150,73 @@
     border-color: var(--dark-gray);
     transform: translateY(-1px);
 }
+
+/* Avatares para empleados */
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+}
+
+/* Tabla de personal */
+#tabla-personal {
+    font-size: 0.9rem;
+}
+
+#tabla-personal .btn-group .btn {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.4rem;
+}
+
+/* Badges personalizados */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Cards de estadísticas */
+.card .display-4 {
+    font-size: 2.5rem;
+}
+
+/* Modal de personal */
+#modalPersonal .form-label {
+    color: var(--primary-color);
+}
+
+#modalPersonal .form-control:focus,
+#modalPersonal .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+/* Responsive para tabla */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.2rem 0.3rem;
+        font-size: 0.7rem;
+    }
+
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+}
+
+/* Estados de empleados */
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+}
+
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+}
