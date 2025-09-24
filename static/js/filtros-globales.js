@@ -14,17 +14,23 @@ function initFiltrosGlobales() {
 
     if (!filtrosHeader || !filtrosCollapse) return;
 
+    // Recordar estado de filtros por página
+    const currentPage = window.location.pathname;
+
+    // NO aplicar lógica global para la página de personal (usuarios) - dejar que Bootstrap maneje todo
+    if (currentPage === '/usuarios/') {
+        return;
+    }
+
     // Agregar indicador visual de colapso
     const icon = document.createElement('i');
     icon.className = 'fas fa-chevron-down ms-auto filtros-toggle-icon';
     filtrosHeader.appendChild(icon);
 
-    // Recordar estado de filtros por página
-    const currentPage = window.location.pathname;
     const storageKey = `filtros_${currentPage}`;
 
-    // NO restaurar estado guardado para la página de personal (usuarios) - debe empezar colapsado
-    const savedState = currentPage === '/usuarios/' ? null : localStorage.getItem(storageKey);
+    // Restaurar estado guardado
+    const savedState = localStorage.getItem(storageKey);
     if (savedState === 'shown') {
         filtrosCollapse.classList.add('show');
         icon.style.transform = 'rotate(180deg)';
