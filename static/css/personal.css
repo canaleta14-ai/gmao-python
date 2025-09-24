@@ -34,6 +34,10 @@
     cursor: pointer;
     transition: var(--transition);
     user-select: none;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .filtros-header:hover {
@@ -46,11 +50,47 @@
     font-size: 0.95rem;
 }
 
+/* Indicador de estado del collapse */
+.filtros-header::after {
+    content: "\F229";
+    /* bi-chevron-down */
+    font-family: "bootstrap-icons";
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+    transform: rotate(0deg);
+}
+
+.filtros-header.collapsed::after {
+    transform: rotate(-90deg);
+}
+
+.filtros-header[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+}
+
 /* Body de filtros */
 .filtros-body {
     padding: 1.5rem;
     background: var(--light-bg);
     border-top: 1px solid #dee2e6;
+}
+
+/* Mejorar la transición del collapse */
+#filtrosPersonal {
+    transition: all 0.35s ease-in-out;
+}
+
+#filtrosPersonal.collapsing {
+    transition: height 0.35s ease-in-out;
+}
+
+/* Asegurar que el collapse inicie cerrado */
+#filtrosPersonal.collapse:not(.show) {
+    display: none;
+}
+
+#filtrosPersonal.collapse.show {
+    display: block;
 }
 
 /* Estilos de formularios */

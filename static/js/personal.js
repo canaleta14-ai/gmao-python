@@ -9,40 +9,25 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    console.log('Bootstrap está disponible');
-
-    // Verificar elementos del colapso
+    // Encontrar elementos del colapso para mejorar UX
     const filtroHeader = document.querySelector('[data-bs-toggle="collapse"]');
     const filtroCollapse = document.getElementById('filtrosPersonal');
 
-    console.log('Filtro header:', filtroHeader);
-    console.log('Filtro collapse:', filtroCollapse);
-
     if (filtroHeader && filtroCollapse) {
-        console.log('Elementos del colapso encontrados correctamente');
+        // Asegurar que inicie colapsado
+        if (!filtroCollapse.classList.contains('show')) {
+            filtroHeader.classList.add('collapsed');
+            filtroHeader.setAttribute('aria-expanded', 'false');
+        }
 
-        // Agregar event listeners para debug
-        filtroHeader.addEventListener('click', function (e) {
-            console.log('Click en header del filtro detectado');
-        });
-
+        // Mejorar la indicación visual del estado
         filtroCollapse.addEventListener('show.bs.collapse', function () {
-            console.log('Collapse showing...');
-        });
-
-        filtroCollapse.addEventListener('shown.bs.collapse', function () {
-            console.log('Collapse shown');
+            filtroHeader.classList.remove('collapsed');
         });
 
         filtroCollapse.addEventListener('hide.bs.collapse', function () {
-            console.log('Collapse hiding...');
+            filtroHeader.classList.add('collapsed');
         });
-
-        filtroCollapse.addEventListener('hidden.bs.collapse', function () {
-            console.log('Collapse hidden');
-        });
-    } else {
-        console.error('No se encontraron los elementos del colapso');
     }
 });
 
