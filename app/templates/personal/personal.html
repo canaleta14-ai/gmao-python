@@ -58,40 +58,20 @@
 </div>
 
 <script>
-    console.log('🔥 🔥 🔥 PERSONAL.JS INLINE - DEBUGGING FILTROS 🔥 🔥 🔥');
-
     // Asegurar que el filtro esté colapsado inicialmente
     document.addEventListener('DOMContentLoaded', function () {
-        console.log('🎯 Inicializando filtros en personal INLINE - DOMContentLoaded');
-
-        const filtroCollapse = document.getElementById('filtros-collapse');
-        const filtroHeader = document.querySelector('.filtros-header');
-
-        console.log('📦 Elemento collapse:', filtroCollapse);
-        console.log('🎛️ Elemento header:', filtroHeader);
-
-        if (filtroCollapse) {
-            filtroCollapse.classList.remove('show');
-            console.log('✅ Clase show removida del collapse INLINE');
-
-            // Verificar que Bootstrap esté disponible
+        // Esperar a que Bootstrap esté disponible
+        function waitForBootstrap() {
             if (typeof bootstrap !== 'undefined') {
-                console.log('📚 Bootstrap disponible INLINE');
-            } else {
-                console.log('❌ Bootstrap NO disponible INLINE');
+                const filtroCollapse = document.getElementById('filtros-collapse');
+                if (filtroCollapse) {
+                    filtroCollapse.classList.remove('show');
+                }
+                return;
             }
+            setTimeout(waitForBootstrap, 50);
         }
-
-        // Agregar listener para debug
-        if (filtroHeader) {
-            filtroHeader.addEventListener('click', function () {
-                console.log('🖱️ Click en header de filtros INLINE');
-                setTimeout(() => {
-                    const hasShow = filtroCollapse.classList.contains('show');
-                    console.log('📊 Estado después del click INLINE:', hasShow ? 'expandido' : 'colapsado');
-                }, 100);
-            });
-        }
+        waitForBootstrap();
     });
 </script>
 {% endblock %}
