@@ -11,6 +11,22 @@ def create_app():
     static_dir = os.path.join(base_dir, "static")
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config["SECRET_KEY"] = "cambia_esto_por_una_clave_secreta_segura_2025"
+    # Configuración de codificación UTF-8
+    app.config["JSON_AS_ASCII"] = False
+
+    # Middleware para asegurar UTF-8 en todas las respuestas
+    @app.after_request
+    def after_request(response):
+        response.headers["Content-Type"] = response.headers.get(
+            "Content-Type", "text/html"
+        )
+        if "charset" not in response.headers.get("Content-Type", ""):
+            if response.headers["Content-Type"].startswith("application/json"):
+                response.headers["Content-Type"] = "application/json; charset=utf-8"
+            elif response.headers["Content-Type"].startswith("text/html"):
+                response.headers["Content-Type"] = "text/html; charset=utf-8"
+        return response
+
     # Configuración aquí si es necesario
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///../instance/database.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -47,6 +63,7 @@ def create_app():
     from app.routes.usuarios import usuarios_bp
     from app.routes.proveedores import proveedores_bp
     from app.routes.personal import personal_bp
+    from app.routes.categorias import categorias_bp, categorias_web_bp
 
     app.register_blueprint(web_bp)
     app.register_blueprint(activos_bp)
@@ -57,5 +74,7 @@ def create_app():
     app.register_blueprint(usuarios_bp)
     app.register_blueprint(proveedores_bp)
     app.register_blueprint(personal_bp)
+    app.register_blueprint(categorias_bp)
+    app.register_blueprint(categorias_web_bp)
 
     return app

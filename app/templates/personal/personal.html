@@ -14,7 +14,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h5 class="mb-1"><i class="bi bi-people me-2"></i>Gestión de Personal</h5>
-                    <small class="text-muted">Administración de empleados y recursos humanos</small>
+                    <small class="text-muted">Administración de empleados y recursos humanos - PAGINACIÓN ACTUALIZADA</small>
                 </div>
                 <div class="d-flex gap-2">
                     <button class="btn btn-outline-secondary" onclick="exportarCSVPersonal()">
@@ -34,7 +34,7 @@
             <div class="card stats-card primary">
                 <div class="card-body">
                     <i class="bi bi-people stats-icon text-primary"></i>
-                    <div class="stats-number text-primary" id="total-empleados">3</div>
+                    <div class="stats-number text-primary" id="total-empleados">12</div>
                     <div class="stats-label">Total Empleados</div>
                 </div>
             </div>
@@ -43,7 +43,7 @@
             <div class="card stats-card success">
                 <div class="card-body">
                     <i class="bi bi-person-check stats-icon text-success"></i>
-                    <div class="stats-number text-success" id="empleados-activos">2</div>
+                    <div class="stats-number text-success" id="empleados-activos">12</div>
                     <div class="stats-label">Activos</div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-table me-2"></i>Listado de Personal
-                        <span class="badge bg-secondary ms-2" id="contador-empleados">3 empleados</span>
+                        <span class="badge bg-secondary ms-2" id="contador-empleados">12 empleados</span>
                     </h6>
                 </div>
                 <div class="card-body">
@@ -132,13 +132,13 @@
                         <table class="table table-striped table-hover" id="tabla-personal">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Empleado</th>
-                                    <th>Departamento</th>
-                                    <th>Cargo</th>
-                                    <th>Contacto</th>
-                                    <th>Estado</th>
-                                    <th class="text-center">Acciones</th>
+                                    <th><i class="bi bi-hash me-1"></i>ID</th>
+                                    <th><i class="bi bi-person me-1"></i>Empleado</th>
+                                    <th><i class="bi bi-building me-1"></i>Departamento</th>
+                                    <th><i class="bi bi-briefcase me-1"></i>Cargo</th>
+                                    <th><i class="bi bi-telephone me-1"></i>Contacto</th>
+                                    <th><i class="bi bi-circle me-1"></i>Estado</th>
+                                    <th class="text-center"><i class="bi bi-three-dots me-1"></i>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-personal">
@@ -272,29 +272,266 @@
                                         </div>
                                     </td>
                                 </tr>
+                                <!-- Empleados adicionales para probar paginación -->
+                                <tr>
+                                    <td>004</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-warning rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Ana Torres</div>
+                                                <small class="text-muted">Empleada desde: 12/03/2023</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-primary">Administración</span></td>
+                                    <td>Contadora</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>ana.torres@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 789-0123</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>005</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Pedro Morales</div>
+                                                <small class="text-muted">Empleado desde: 08/09/2022</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-success">Operaciones</span></td>
+                                    <td>Supervisor</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>pedro.morales@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 456-7890</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>006</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-info rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Lucía Ramírez</div>
+                                                <small class="text-muted">Empleada desde: 25/11/2023</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-warning">Calidad</span></td>
+                                    <td>Inspectora</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>lucia.ramirez@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 321-6547</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>007</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-danger rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Roberto Silva</div>
+                                                <small class="text-muted">Empleado desde: 30/05/2022</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-danger">Seguridad</span></td>
+                                    <td>Coordinador</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>roberto.silva@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 852-9630</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>008</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-success rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Carmen López</div>
+                                                <small class="text-muted">Empleada desde: 18/07/2023</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-info">Mantenimiento</span></td>
+                                    <td>Técnica Junior</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>carmen.lopez@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 147-2583</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>009</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Fernando Cruz</div>
+                                                <small class="text-muted">Empleado desde: 02/02/2023</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-primary">Administración</span></td>
+                                    <td>Analista</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>fernando.cruz@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 963-7410</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>010</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-warning rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Sofía Mendoza</div>
+                                                <small class="text-muted">Empleada desde: 14/10/2022</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-success">Operaciones</span></td>
+                                    <td>Coordinadora</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>sofia.mendoza@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 741-8520</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>011</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-info rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Miguel Herrera</div>
+                                                <small class="text-muted">Empleado desde: 21/04/2023</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-warning">Calidad</span></td>
+                                    <td>Técnico</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>miguel.herrera@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 159-3570</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>012</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">Valeria Castro</div>
+                                                <small class="text-muted">Empleada desde: 06/12/2022</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-danger">Seguridad</span></td>
+                                    <td>Guardia</td>
+                                    <td>
+                                        <div><i class="bi bi-envelope me-1"></i>valeria.castro@empresa.com</div>
+                                        <div><i class="bi bi-phone me-1"></i>(555) 753-9514</div>
+                                    </td>
+                                    <td><span class="badge bg-success">Activo</span></td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Desactivar"><i class="bi bi-person-dash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <!-- Paginación -->
-                    <nav aria-label="Paginación del personal">
-                        <ul class="pagination justify-content-center mt-3">
-                            <li class="page-item disabled">
-                                <span class="page-link">Anterior</span>
-                            </li>
-                            <li class="page-item active">
-                                <span class="page-link">1</span>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">2</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">3</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">Siguiente</a>
-                            </li>
-                        </ul>
+                    <nav aria-label="Paginación del personal" class="m-2">
+                        <div id="paginacion-personal"></div>
                     </nav>
                 </div>
             </div>
@@ -418,5 +655,6 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script src="{{ url_for('static', filename='js/personal.js') }}"></script>
 {% endblock %}

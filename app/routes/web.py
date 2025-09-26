@@ -137,7 +137,7 @@ def get_user_info():
 @login_required
 def reportes():
     """Página de reportes de mantenimiento"""
-    return render_template("reportes.html")
+    return render_template("reportes/reportes.html")
 
 
 @web_bp.route("/api/alertas-mantenimiento")
@@ -152,7 +152,7 @@ def alertas_mantenimiento():
     logger = logging.getLogger(__name__)
 
     inicio_total = time.time()
-    logger.info("🚀 INICIO: Cargando alertas de mantenimiento")
+    logger.info("🚀 INICIO: Cargando alertas de mantenimiento")
 
     try:
         # Paso 1: Preparar fechas
@@ -160,7 +160,7 @@ def alertas_mantenimiento():
         hoy = datetime.now().date()
         proximos_7_dias = hoy + timedelta(days=7)
         tiempo_fechas = (time.time() - inicio_fechas) * 1000
-        logger.info(f"⏰ Fechas preparadas en {tiempo_fechas:.2f}ms")
+        logger.info(f"‚è∞ Fechas preparadas en {tiempo_fechas:.2f}ms")
 
         # Paso 2: Consulta a base de datos
         inicio_consulta = time.time()
@@ -176,7 +176,7 @@ def alertas_mantenimiento():
         )
         tiempo_consulta = (time.time() - inicio_consulta) * 1000
         logger.info(
-            f"🗄️ Consulta BD completada en {tiempo_consulta:.2f}ms - {len(planes_relevantes)} planes encontrados"
+            f"üóÑ Consulta BD completada en {tiempo_consulta:.2f}ms - {len(planes_relevantes)} planes encontrados"
         )
 
         alertas = []
@@ -266,3 +266,9 @@ def alertas_mantenimiento():
             ),
             500,
         )
+
+
+@web_bp.route("/test-codigo-automatico")
+def test_codigo_automatico():
+    """Página de prueba para generación automática de códigos"""
+    return render_template("test_codigo_automatico.html")

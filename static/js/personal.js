@@ -1,5 +1,11 @@
 // personal.js - JavaScript específico para el módulo de personal
 
+// Variables globales para paginación
+let paginacionPersonal = null;
+let paginaActualPersonal = 1;
+let totalPaginasPersonal = 1;
+let totalEmpleados = 0;
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Personal module loaded');
 
@@ -8,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('Bootstrap no está disponible');
         return;
     }
+
+    // Inicializar paginación
+    inicializarPaginacionPersonal();
 
     // Encontrar elementos del colapso para mejorar UX
     const filtroHeader = document.querySelector('[data-bs-toggle="collapse"]');
@@ -37,25 +46,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Función para limpiar filtros
 function limpiarFiltrosPersonal() {
-    console.log('Limpiando filtros de personal');
+    console.log('🧹 Limpiando filtros de personal');
 
     // Limpiar campos individuales
     document.getElementById('nombre').value = '';
     document.getElementById('departamento').value = '';
     document.getElementById('cargo').value = '';
 
-    // Mostrar todas las filas de la tabla
+    // Limpiar clases de filtrado
     const filas = document.querySelectorAll('#tbody-personal tr');
     filas.forEach(fila => {
-        fila.style.display = '';
+        fila.classList.remove('filtrado-oculto');
     });
 
-    // Actualizar contador
-    const totalFilas = filas.length;
-    document.getElementById('contador-empleados').textContent = `${totalFilas} empleados`;
-}
+    // Re-renderizar paginación con todos los datos
+    if (paginacionPersonal) {
+        const elementosPorPagina = 10;
+        const totalFilas = filas.length;
 
-// Función para manejar el formulario de personal
+        paginaActualPersonal = 1;
+        paginacionPersonal.render(paginaActualPersonal, elementosPorPagina, totalFilas);
+    }
+
+    // Actualizar vista
+    actualizarVistaPersonal();
+}// Función para manejar el formulario de personal
 function setupFormPersonal() {
     const form = document.getElementById('form-personal');
     if (form) {
@@ -108,6 +123,78 @@ function setupFiltrosPersonal() {
     });
 }
 
+// Función para inicializar la paginación de personal
+function inicializarPaginacionPersonal() {
+    console.log('🔧 Inicializando paginación de personal...');
+
+    // Verificar que el módulo de paginación esté disponible
+    if (typeof Pagination === 'undefined') {
+        console.error('❌ Módulo de paginación no está disponible');
+        return;
+    }
+
+    const container = document.getElementById('paginacion-personal');
+    if (!container) {
+        console.error('❌ Contenedor de paginación no encontrado');
+        return;
+    }
+
+    try {
+        // Configurar paginación con los datos actuales de la tabla
+        const filas = document.querySelectorAll('#tbody-personal tr');
+        totalEmpleados = filas.length;
+        const elementosPorPagina = 10;
+        totalPaginasPersonal = Math.ceil(totalEmpleados / elementosPorPagina);
+
+        // Crear instancia de paginación usando el constructor correcto
+        paginacionPersonal = new Pagination('paginacion-personal', function (page, perPage) {
+            console.log(`📄 Cambiando a página ${page}`);
+            paginaActualPersonal = page;
+            actualizarVistaPersonal();
+        }, {
+            perPage: elementosPorPagina,
+            maxVisiblePages: 5
+        });
+
+        // Renderizar la paginación inicial
+        paginacionPersonal.render(paginaActualPersonal, elementosPorPagina, totalEmpleados);
+
+        console.log(`✅ Paginación inicializada: ${totalPaginasPersonal} páginas, ${totalEmpleados} empleados`);
+
+        // Actualizar vista inicial
+        actualizarVistaPersonal();
+
+    } catch (error) {
+        console.error('❌ Error inicializando paginación:', error);
+    }
+}
+
+// Función para actualizar la vista de empleados según la página
+function actualizarVistaPersonal() {
+    const elementosPorPagina = 10;
+    const inicio = (paginaActualPersonal - 1) * elementosPorPagina;
+    const fin = inicio + elementosPorPagina;
+
+    const filas = document.querySelectorAll('#tbody-personal tr');
+
+    // Ocultar todas las filas
+    filas.forEach(fila => {
+        fila.style.display = 'none';
+    });
+
+    // Mostrar solo las filas de la página actual
+    for (let i = inicio; i < fin && i < filas.length; i++) {
+        filas[i].style.display = '';
+    }
+
+    // Actualizar contador
+    const filasVisibles = Math.min(elementosPorPagina, filas.length - inicio);
+    document.getElementById('contador-empleados').textContent =
+        `Mostrando ${filasVisibles} de ${filas.length} empleados (página ${paginaActualPersonal} de ${totalPaginasPersonal})`;
+
+    console.log(`📊 Vista actualizada: página ${paginaActualPersonal}, mostrando filas ${inicio + 1} a ${Math.min(fin, filas.length)}`);
+}
+
 // Función para filtrar la tabla de personal
 function filtrarTablaPersonal() {
     const nombreFiltro = document.getElementById('nombre').value.toLowerCase();
@@ -115,6 +202,7 @@ function filtrarTablaPersonal() {
     const cargoFiltro = document.getElementById('cargo').value.toLowerCase();
 
     const filas = document.querySelectorAll('#tbody-personal tr');
+    let filasVisibles = 0;
 
     filas.forEach(fila => {
         const nombre = fila.cells[1].textContent.toLowerCase();
@@ -127,18 +215,57 @@ function filtrarTablaPersonal() {
 
         if (coincideNombre && coincideDepartamento && coincideCargo) {
             fila.style.display = '';
+            fila.classList.remove('filtrado-oculto');
+            filasVisibles++;
         } else {
+            fila.style.display = 'none';
+            fila.classList.add('filtrado-oculto');
+        }
+    });
+
+    // Re-renderizar paginación con los resultados filtrados
+    if (paginacionPersonal) {
+        const elementosPorPagina = 10;
+        paginaActualPersonal = 1; // Volver a la primera página
+
+        // Re-renderizar paginación con nuevo total
+        paginacionPersonal.render(paginaActualPersonal, elementosPorPagina, filasVisibles);
+
+        // Actualizar vista
+        actualizarVistaPersonalFiltrado();
+    }
+
+    console.log(`🔍 Filtros aplicados: ${filasVisibles} empleados de ${filas.length} total`);
+}
+
+// Función para actualizar la vista con filtros aplicados
+function actualizarVistaPersonalFiltrado() {
+    const elementosPorPagina = 10;
+    const inicio = (paginaActualPersonal - 1) * elementosPorPagina;
+
+    // Obtener solo las filas que no están ocultas por filtros
+    const filasVisibles = Array.from(document.querySelectorAll('#tbody-personal tr:not(.filtrado-oculto)'));
+
+    // Ocultar todas las filas primero
+    document.querySelectorAll('#tbody-personal tr').forEach(fila => {
+        if (!fila.classList.contains('filtrado-oculto')) {
             fila.style.display = 'none';
         }
     });
 
-    // Actualizar contador de resultados
-    const filasVisibles = document.querySelectorAll('#tbody-personal tr:not([style*="display: none"])');
-    document.getElementById('contador-empleados').textContent = `${filasVisibles.length} empleados`;
-    console.log(`Mostrando ${filasVisibles.length} empleados de ${filas.length} total`);
-}
+    // Mostrar solo las filas de la página actual
+    const fin = inicio + elementosPorPagina;
+    for (let i = inicio; i < fin && i < filasVisibles.length; i++) {
+        filasVisibles[i].style.display = '';
+    }
 
-// Función para exportar CSV
+    // Actualizar contador
+    const totalPaginasActual = Math.ceil(filasVisibles.length / elementosPorPagina);
+    const filasEnPagina = Math.min(elementosPorPagina, filasVisibles.length - inicio);
+
+    document.getElementById('contador-empleados').textContent =
+        `Mostrando ${filasEnPagina} de ${filasVisibles.length} empleados${totalPaginasActual > 1 ? ` (página ${paginaActualPersonal} de ${totalPaginasActual})` : ''}`;
+}// Función para exportar CSV
 function exportarCSVPersonal() {
     console.log('Exportando datos de personal a CSV...');
 
