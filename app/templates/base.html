@@ -15,7 +15,7 @@
 <body{% if login_bg %} class="login-bg" {% endif %}{% if no_sidebar %} data-no-sidebar="true" {% endif %}>
     {% if not no_sidebar %}
     <!-- Sidebar Mejorado -->
-    <div class="sidebar position-fixed d-flex flex-column" style="width: 250px; height: 100vh;">
+    <div class="sidebar position-fixed d-flex flex-column" id="sidebar" style="width: 250px; height: 100vh;">
         <!-- Header del Sidebar -->
         <div class="sidebar-header p-3 text-center border-bottom border-light">
             <h4 class="text-white mb-0">
@@ -94,15 +94,17 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Header de página simplificado -->
-        <div class="content-header bg-white shadow-sm mb-4 p-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <h5 class="mb-0" id="section-title">{% block section_title %}{% endblock %}</h5>
-                <button class="btn btn-outline-secondary d-lg-none" type="button" onclick="toggleSidebar()">
-                    <i class="bi bi-list"></i>
+        <!-- Header responsive con hamburguesa -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white d-lg-none border-bottom">
+            <div class="container-fluid">
+                <button class="navbar-toggler border-0" type="button" onclick="toggleSidebar()">
+                    <span class="navbar-toggler-icon"></span>
                 </button>
+                <span class="navbar-brand mb-0 h1">
+                    <i class="bi bi-gear-fill me-2"></i>GMAO System
+                </span>
             </div>
-        </div>
+        </nav>
 
         <div id="main-content-wrapper" class="px-3">
             {% block content %}{% endblock %}

@@ -1,10 +1,29 @@
 from flask import Blueprint, request, jsonify, render_template
-from flask_login import login_required
+from flask_login import login_required, current_user
+from functools import wraps
 from app.controllers.inventario_controller_simple import (
     obtener_estadisticas_inventario,
     listar_articulos_avanzado,
     crear_articulo_simple,
+    exportar_inventario_csv,
+    registrar_movimiento_inventario,
+    obtener_movimientos_articulo,
+    obtener_movimientos_generales,
+    editar_articulo_simple,
 )
+
+
+def api_login_required(f):
+    """Decorador para rutas de API que devuelve JSON en lugar de redirigir"""
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return jsonify({"success": False, "error": "No autenticado"}), 401
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 
 inventario_bp = Blueprint("inventario", __name__, url_prefix="/inventario")
 
@@ -16,7 +35,7 @@ def inventario_page():
 
 
 @inventario_bp.route("/api/estadisticas", methods=["GET"])
-@login_required
+@api_login_required
 def obtener_estadisticas():
     """API para obtener estadísticas del inventario"""
     try:
@@ -30,12 +49,19 @@ def obtener_estadisticas():
 
 
 @inventario_bp.route("/api/articulos", methods=["GET"])
-@login_required
+@api_login_required
 def obtener_articulos():
     """API para listar artículos con filtros avanzados"""
     try:
         filtros = {}
-        # Filtros de búsqueda
+
+        # Búsqueda general (para autocompletado)
+        if "q" in request.args:
+            search_term = request.args["q"]
+            # Aplicar búsqueda general en código, descripción y categoría
+            filtros["busqueda_general"] = search_term
+
+        # Filtros específicos
         if "codigo" in request.args:
             filtros["codigo"] = request.args["codigo"]
         if "descripcion" in request.args:
@@ -96,8 +122,27 @@ def obtener_articulos():
         return jsonify({"success": False, "error": "Error al obtener artículos"}), 500
 
 
-@inventario_bp.route("/api/articulos", methods=["POST"])
+@inventario_bp.route("/exportar-csv", methods=["GET"])
 @login_required
+def exportar_csv():
+    """Exporta los artículos del inventario a CSV"""
+    try:
+        from flask import Response
+
+        csv_data = exportar_inventario_csv()
+
+        response = Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=inventario.csv"},
+        )
+        return response
+    except Exception as e:
+        return jsonify({"success": False, "error": "Error al exportar CSV"}), 500
+
+
+@inventario_bp.route("/api/articulos", methods=["POST"])
+@api_login_required
 def crear_articulo():
     """API para crear un nuevo artículo"""
     try:
@@ -214,3 +259,150 @@ def test_spinner():
 def reportes_page():
     """Página de reportes de inventario"""
     return render_template("inventario/reportes.html", section="inventario")
+
+
+# Rutas de API para movimientos de inventario
+@inventario_bp.route("/api/movimientos", methods=["POST"])
+@api_login_required
+def registrar_movimiento():
+    """API para registrar un nuevo movimiento de inventario"""
+    try:
+        data = request.get_json()
+        movimiento = registrar_movimiento_inventario(data)
+        return jsonify(
+            {
+                "success": True,
+                "message": "Movimiento registrado exitosamente",
+                "movimiento": {
+                    "id": movimiento.id,
+                    "tipo": movimiento.tipo,
+                    "cantidad": movimiento.cantidad,
+                    "fecha": (
+                        movimiento.fecha.strftime("%d/%m/%Y %H:%M")
+                        if movimiento.fecha
+                        else ""
+                    ),
+                },
+            }
+        )
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        return (
+            jsonify({"success": False, "error": "Error al registrar movimiento"}),
+            500,
+        )
+
+
+@inventario_bp.route("/api/articulos/<int:articulo_id>/movimientos", methods=["GET"])
+@api_login_required
+def obtener_historial_articulo(articulo_id):
+    """API para obtener historial de movimientos de un artículo"""
+    try:
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+
+        data = obtener_movimientos_articulo(articulo_id, page, per_page)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"success": False, "error": "Error al obtener historial"}), 500
+
+
+@inventario_bp.route("/api/movimientos", methods=["GET"])
+@api_login_required
+def obtener_movimientos():
+    """API para obtener vista general de movimientos"""
+    try:
+        filtros = {}
+        if "tipo" in request.args:
+            filtros["tipo"] = request.args["tipo"]
+        if "fecha_desde" in request.args:
+            filtros["fecha_desde"] = request.args["fecha_desde"]
+        if "fecha_hasta" in request.args:
+            filtros["fecha_hasta"] = request.args["fecha_hasta"]
+        if "usuario_id" in request.args:
+            filtros["usuario_id"] = request.args["usuario_id"]
+
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+
+        data = obtener_movimientos_generales(filtros, page, per_page)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"success": False, "error": "Error al obtener movimientos"}), 500
+
+
+# Ruta para editar artículo
+@inventario_bp.route("/api/articulos/<int:articulo_id>", methods=["PUT"])
+@api_login_required
+def editar_articulo(articulo_id):
+    """API para editar un artículo existente"""
+    try:
+        data = request.get_json()
+        articulo = editar_articulo_simple(articulo_id, data)
+        return jsonify(
+            {
+                "success": True,
+                "message": "Artículo actualizado exitosamente",
+                "articulo": {
+                    "id": articulo.id,
+                    "codigo": articulo.codigo,
+                    "descripcion": articulo.descripcion,
+                    "categoria": articulo.categoria,
+                    "ubicacion": articulo.ubicacion,
+                    "stock_actual": articulo.stock_actual,
+                    "activo": articulo.activo,
+                },
+            }
+        )
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": "Error al editar artículo"}), 500
+
+
+# Ruta para obtener un artículo individual
+@inventario_bp.route("/api/articulos/<int:articulo_id>", methods=["GET"])
+@api_login_required
+def obtener_articulo(articulo_id):
+    """API para obtener un artículo individual"""
+    try:
+        from app.models.inventario import Inventario
+
+        articulo = Inventario.query.get(articulo_id)
+        if not articulo:
+            return jsonify({"success": False, "error": "Artículo no encontrado"}), 404
+
+        return jsonify(
+            {
+                "id": articulo.id,
+                "codigo": articulo.codigo,
+                "descripcion": articulo.descripcion,
+                "categoria": articulo.categoria,
+                "subcategoria": articulo.subcategoria,
+                "ubicacion": articulo.ubicacion,
+                "stock_actual": articulo.stock_actual,
+                "stock_minimo": articulo.stock_minimo,
+                "stock_maximo": articulo.stock_maximo,
+                "unidad_medida": articulo.unidad_medida,
+                "precio_unitario": articulo.precio_unitario,
+                "proveedor_principal": articulo.proveedor_principal,
+                "cuenta_contable_compra": articulo.cuenta_contable_compra,
+                "grupo_contable": articulo.grupo_contable,
+                "critico": articulo.critico,
+                "activo": articulo.activo,
+                "observaciones": articulo.observaciones,
+                "fecha_creacion": (
+                    articulo.fecha_creacion.strftime("%d/%m/%Y")
+                    if articulo.fecha_creacion
+                    else ""
+                ),
+                "fecha_actualizacion": (
+                    articulo.fecha_actualizacion.strftime("%d/%m/%Y")
+                    if articulo.fecha_actualizacion
+                    else ""
+                ),
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": "Error al obtener artículo"}), 500

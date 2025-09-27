@@ -425,3 +425,54 @@
     color: var(--success-color);
     font-size: 0.875rem;
 }
+
+/* Estilos específicos para botones del filtro de búsqueda */
+.filtros-body .btn {
+    border-radius: 6px;
+    border: 1px solid #bdc3c7;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    height: 38px;
+    /* Altura consistente con inputs para layout horizontal */
+    white-space: nowrap;
+    /* Evitar que el texto se rompa */
+}
+
+.filtros-body .btn i {
+    font-size: 0.8rem;
+    margin-right: 0.25rem;
+}
+
+.filtros-body .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.filtros-body .btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filtros-body .btn-outline-secondary {
+    color: var(--secondary-color);
+    border-color: #bdc3c7;
+    background-color: white;
+}
+
+.filtros-body .btn-outline-secondary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo específico para el botón limpiar del filtro */
+.btn-limpiar-filtro {
+    margin-left: 0.25rem !important;
+}

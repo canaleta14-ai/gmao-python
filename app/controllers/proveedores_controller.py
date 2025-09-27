@@ -6,8 +6,8 @@ from io import StringIO
 
 
 def listar_proveedores(filtros=None):
-    """Retorna proveedores activos con soporte para filtros de búsqueda"""
-    query = Proveedor.query.filter_by(activo=True)
+    """Retorna todos los proveedores con soporte para filtros de búsqueda"""
+    query = Proveedor.query
 
     # Aplicar filtros de búsqueda si se proporcionan
     if filtros:
@@ -59,7 +59,7 @@ def listar_proveedores(filtros=None):
 
 def listar_proveedores_paginado(page=1, per_page=10, q=None):
     """Listar proveedores con paginación y filtros"""
-    query = Proveedor.query.filter_by(activo=True)
+    query = Proveedor.query
 
     # Filtro de búsqueda general
     if q:
@@ -249,3 +249,48 @@ def validar_nif(nif):
     if proveedor_existente:
         return {"valido": False, "mensaje": "El NIF ya existe"}
     return {"valido": True, "mensaje": "NIF disponible"}
+
+
+def obtener_estadisticas_proveedores():
+    """Obtiene estadísticas generales de los proveedores"""
+    from sqlalchemy import func
+
+    # Contar total de proveedores
+    total_proveedores = Proveedor.query.count()
+
+    # Contar por estado (activo/inactivo)
+    estados = (
+        db.session.query(Proveedor.activo, func.count(Proveedor.id).label("count"))
+        .group_by(Proveedor.activo)
+        .all()
+    )
+
+    # Inicializar contadores
+    proveedores_activos = 0
+    proveedores_inactivos = 0
+
+    # Procesar los resultados
+    for activo, count in estados:
+        if activo:
+            proveedores_activos = count
+        else:
+            proveedores_inactivos = count
+
+    # Para "pendientes", asumiremos que son proveedores inactivos que podrían estar en evaluación
+    # Por ahora, pondremos 0 o podríamos agregar un campo adicional al modelo si es necesario
+    proveedores_pendientes = 0
+
+    return {
+        "total_proveedores": total_proveedores,
+        "proveedores_activos": proveedores_activos,
+        "proveedores_pendientes": proveedores_pendientes,
+        "proveedores_inactivos": proveedores_inactivos,
+    }
+
+
+def toggle_proveedor(id):
+    """Activa o desactiva un proveedor"""
+    proveedor = Proveedor.query.get_or_404(id)
+    proveedor.activo = not proveedor.activo
+    db.session.commit()
+    return proveedor

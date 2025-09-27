@@ -8,11 +8,11 @@ import json
 # Crear una sesión para mantener cookies
 session = requests.Session()
 
-print("🔍 Probando el endpoint de alertas de mantenimiento...")
+print("🔍 Probando el endpoint de alertas de mantenimiento...")
 print("=" * 60)
 
 # Paso 1: Hacer login primero
-print("\n1️⃣ Haciendo login...")
+print("\n1. Haciendo login...")
 try:
     login_data = {"username": "admin", "password": "admin123"}
 
@@ -33,7 +33,7 @@ except Exception as e:
     exit(1)
 
 # Paso 2: Probar el endpoint de alertas
-print("\n2️⃣ Probando /api/alertas-mantenimiento...")
+print("\n2. Probando /api/alertas-mantenimiento...")
 try:
     response = session.get("http://127.0.0.1:5000/api/alertas-mantenimiento")
     print(f"   Status: {response.status_code}")
@@ -42,14 +42,14 @@ try:
         try:
             data = response.json()
             print("   ✅ Respuesta JSON válida:")
-            print(f'   • Success: {data.get("success", "N/A")}')
-            print(f'   • Total alertas: {data.get("total", "N/A")}')
-            print(f'   • Vencidos: {data.get("vencidos", "N/A")}')
-            print(f'   • Próximos: {data.get("proximos", "N/A")}')
+            print(f'   ¢ Success: {data.get("success", "N/A")}')
+            print(f'   ¢ Total alertas: {data.get("total", "N/A")}')
+            print(f'   ¢ Vencidos: {data.get("vencidos", "N/A")}')
+            print(f'   ¢ Próximos: {data.get("proximos", "N/A")}')
 
             alertas = data.get("alertas", [])
             if alertas:
-                print("\n   📋 Alertas encontradas:")
+                print("\n   üìã Alertas encontradas:")
                 for i, alerta in enumerate(
                     alertas[:3], 1
                 ):  # Solo mostrar las primeras 3
@@ -60,7 +60,7 @@ try:
                 if len(alertas) > 3:
                     print(f"   ... y {len(alertas) - 3} más")
             else:
-                print("\n   ℹ️ No hay alertas de mantenimiento")
+                print("\n   ‚Ñπ No hay alertas de mantenimiento")
 
         except json.JSONDecodeError as e:
             print(f"   ❌ Error al parsear JSON: {e}")
@@ -73,7 +73,7 @@ except Exception as e:
     print(f"   ❌ Error de conexión: {e}")
 
 # Paso 3: Verificar si hay planes de mantenimiento en la BD
-print("\n3️⃣ Verificando planes de mantenimiento en la base de datos...")
+print("\n3. Verificando planes de mantenimiento en la base de datos...")
 try:
     # Usar el CLI de Python para verificar la BD
     import subprocess

@@ -4,6 +4,7 @@
 let activos = [];
 let departamentos = {};
 let codigoEditableActivo = false;
+let modoEdicionActivo = false; // Nueva variable para trackear modo edición
 
 // Variables de paginación
 let currentPage = 1;
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Solo cargar datos esenciales al inicio
     cargarDepartamentos();
+    cargarEstadisticasActivos();
 
     // Cargar activos de forma diferida
     setTimeout(() => {
@@ -139,6 +141,29 @@ function llenarSelectProveedores(proveedores) {
     }
 }
 
+// Cargar estadísticas de activos
+async function cargarEstadisticasActivos() {
+    try {
+        const response = await fetch('/activos/api/estadisticas');
+        if (response.ok) {
+            const estadisticas = await response.json();
+            actualizarEstadisticasActivos(estadisticas);
+        } else {
+            console.error('Error al cargar estadísticas de activos');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Actualizar las tarjetas de estadísticas
+function actualizarEstadisticasActivos(estadisticas) {
+    document.getElementById('total-activos').textContent = estadisticas.total_activos || 0;
+    document.getElementById('activos-operativos').textContent = estadisticas.activos_operativos || 0;
+    document.getElementById('activos-mantenimiento').textContent = estadisticas.activos_mantenimiento || 0;
+    document.getElementById('activos-fuera-servicio').textContent = estadisticas.activos_fuera_servicio || 0;
+}
+
 // Cargar activos desde el servidor con paginación
 async function cargarActivos(page = 1) {
     try {
@@ -225,17 +250,17 @@ function mostrarActivos(activosAMostrar) {
             }
             </td>
             <td>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" onclick="verActivo(${activo.id})" title="Ver detalles">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-sm btn-outline-primary action-btn view" onclick="verActivo(${activo.id})" title="Ver detalles">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button class="btn btn-outline-info" onclick="gestionarManuales(${activo.id})" title="Manuales">
+                    <button class="btn btn-sm btn-outline-info action-btn info" onclick="gestionarManuales(${activo.id})" title="Manuales">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </button>
-                    <button class="btn btn-outline-secondary" onclick="editarActivo(${activo.id})" title="Editar">
+                    <button class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarActivo(${activo.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-outline-danger" onclick="eliminarActivo(${activo.id})" title="Eliminar">
+                    <button class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarActivo(${activo.id})" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -294,6 +319,7 @@ function actualizarContadorActivos(cantidad) {
 
 // Mostrar modal de nuevo activo
 function mostrarModalNuevoActivo() {
+    modoEdicionActivo = false; // Desactivar modo edición
     limpiarFormularioActivo();
 
     // Cargar proveedores solo cuando se abre el modal
@@ -308,6 +334,7 @@ function mostrarModalNuevoActivo() {
 
 // Limpiar formulario de activo
 function limpiarFormularioActivo() {
+    modoEdicionActivo = false; // Desactivar modo edición
     document.getElementById('formNuevoActivo').reset();
     document.getElementById('nuevo-codigo').value = '';
     document.getElementById('nuevo-codigo').readOnly = true;
@@ -343,6 +370,12 @@ function limpiarFormularioActivo() {
 
 // Generar código automáticamente
 async function generarCodigo() {
+    // No generar código si estamos en modo edición
+    if (modoEdicionActivo) {
+        console.log('Generación de código omitida: modo edición activo');
+        return;
+    }
+
     const departamento = document.getElementById('nuevo-departamento').value;
     const campoInput = document.getElementById('nuevo-codigo');
 
@@ -509,11 +542,17 @@ async function crearActivo() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoActivo'));
             modal.hide();
 
+            // Desactivar modo edición
+            modoEdicionActivo = false;
+
             // Limpiar formulario
             limpiarFormularioActivo();
 
             // Recargar lista
             cargarActivos(currentPage);
+
+            // Actualizar estadísticas
+            cargarEstadisticasActivos();
         } else {
             const error = await response.json();
             mostrarMensaje(error.mensaje || 'Error al procesar activo', 'danger');
@@ -550,9 +589,7 @@ function filtrarActivos() {
 
     mostrarActivos(activosFiltrados);
     actualizarContadorActivos(activosFiltrados.length);
-}
-
-// Limpiar filtros
+}// Limpiar filtros
 function limpiarFiltros() {
     document.getElementById('filtro-buscar').value = '';
     document.getElementById('filtro-departamento').value = '';
@@ -587,17 +624,27 @@ async function verActivo(id) {
 
 async function editarActivo(id) {
     try {
+        modoEdicionActivo = true; // Activar modo edición
         const response = await fetch(`/activos/api/${id}`);
         if (response.ok) {
             const activo = await response.json();
+
+            // Asegurar que los departamentos estén cargados antes de llenar el formulario
+            if (Object.keys(departamentos).length === 0) {
+                console.log('Recargando departamentos...');
+                await cargarDepartamentos();
+            }
+
             llenarFormularioEdicion(activo);
             mostrarModalEdicion();
         } else {
             mostrarMensaje('Error al cargar los datos del activo', 'danger');
+            modoEdicionActivo = false; // Desactivar modo edición si hay error
         }
     } catch (error) {
         console.error('Error:', error);
         mostrarMensaje('Error de conexión al cargar activo', 'danger');
+        modoEdicionActivo = false; // Desactivar modo edición si hay error
     }
 }
 
@@ -611,6 +658,7 @@ async function eliminarActivo(id) {
             if (response.ok) {
                 mostrarMensaje('Activo eliminado exitosamente', 'success');
                 cargarActivos(currentPage); // Recargar la lista
+                cargarEstadisticasActivos(); // Actualizar estadísticas
             } else {
                 const error = await response.json();
                 mostrarMensaje(error.error || 'Error al eliminar activo', 'danger');
@@ -705,7 +753,6 @@ function llenarFormularioEdicion(activo) {
     // Llenar campos del formulario
     document.getElementById('nuevo-codigo').value = activo.codigo;
     document.getElementById('nuevo-nombre').value = activo.nombre;
-    document.getElementById('nuevo-departamento').value = activo.departamento;
     document.getElementById('nuevo-tipo').value = activo.tipo || '';
     document.getElementById('nuevo-ubicacion').value = activo.ubicacion || '';
     document.getElementById('nuevo-estado').value = activo.estado;
@@ -715,6 +762,27 @@ function llenarFormularioEdicion(activo) {
     document.getElementById('nuevo-numero-serie').value = activo.numero_serie || '';
     document.getElementById('nuevo-fabricante').value = activo.fabricante || '';
     document.getElementById('nuevo-proveedor').value = activo.proveedor || '';
+
+    // Establecer departamento - ya no necesitamos interceptar onchange
+    const selectDepartamento = document.getElementById('nuevo-departamento');
+    if (selectDepartamento && activo.departamento) {
+        // Verificar si la opción existe en el select
+        const opcionExistente = selectDepartamento.querySelector(`option[value="${activo.departamento}"]`);
+        if (opcionExistente) {
+            selectDepartamento.value = activo.departamento;
+            console.log(`Departamento establecido: ${activo.departamento}`);
+        } else {
+            console.warn(`Departamento ${activo.departamento} no encontrado en el select, creando opción...`);
+            // Crear la opción si no existe
+            const option = document.createElement('option');
+            option.value = activo.departamento;
+            option.textContent = `${activo.departamento} - ${departamentos[activo.departamento] || 'Departamento desconocido'}`;
+            selectDepartamento.appendChild(option);
+            selectDepartamento.value = activo.departamento;
+        }
+    } else if (!activo.departamento) {
+        console.warn('El activo no tiene departamento asignado');
+    }
 }
 
 // Mostrar modal de edición

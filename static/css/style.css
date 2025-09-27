@@ -20,6 +20,57 @@ body {
     min-height: 100vh;
     color: white;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Estilos responsive para el sidebar */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.sidebar-open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0);
+    }
+}
+
+.main-content {
+    margin-left: 250px;
+    min-height: 100vh;
+}
+
+@media (max-width: 991.98px) {
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/* Estilos para el botón hamburguesa */
+.navbar-toggler {
+    padding: 0.5rem;
+    border: 1px solid var(--primary-color) !important;
+    border-radius: 8px;
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%232c3e50' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    width: 1.5em;
+    height: 1.5em;
 }
 
 .sidebar-header {
@@ -108,6 +159,115 @@ body {
     background-color: #dc3545;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Estilos para tablas de listado - Padding optimizado */
+.table td {
+    padding: 0.4rem 0.6rem !important;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table th {
+    padding: 0.6rem 0.6rem !important;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Asegurar alineación en tablas con layout fijo */
+#tabla-activos-main {
+    width: 100% !important;
+}
+
+#tabla-activos-main th,
+#tabla-activos-main td {
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+/* Botones pequeños en tablas */
+.table .btn-group-sm .btn {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.table .btn-group {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+}
+
+/* Estilos unificados para botones de acciones en tablas */
+.action-btn {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    border-radius: 0.375rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Colores específicos para cada acción */
+.action-btn.view {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+.action-btn.view:hover {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+.action-btn.edit {
+    color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.action-btn.edit:hover {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.action-btn.delete {
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.action-btn.delete:hover {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.action-btn.special {
+    color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.action-btn.special:hover {
+    background-color: #198754 !important;
+    color: white !important;
+}
+
+.action-btn.info {
+    color: #0dcaf0 !important;
+    border-color: #0dcaf0 !important;
+}
+
+.action-btn.info:hover {
+    background-color: #0dcaf0 !important;
+    color: white !important;
 }
 
 /* Botones personalizados */

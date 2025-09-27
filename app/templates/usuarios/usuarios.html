@@ -128,36 +128,42 @@
     </div>
 
     <!-- Tabla de usuarios -->
-    <div class="card">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Usuarios</h6>
-                <small class="text-muted" id="contador-usuarios">0 usuarios</small>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Usuarios</h6>
+                        <span class="badge bg-secondary" id="contador-usuarios">0 usuarios</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0"
+                            style="table-layout: fixed; min-width: 1000px;">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 60px;"><i class="bi bi-hash me-1"></i>ID</th>
+                                    <th style="width: 150px;"><i class="bi bi-person me-1"></i>Usuario</th>
+                                    <th style="width: 200px;"><i class="bi bi-envelope me-1"></i>Email</th>
+                                    <th style="width: 150px;"><i class="bi bi-person-badge me-1"></i>Nombre</th>
+                                    <th style="width: 100px;"><i class="bi bi-shield me-1"></i>Rol</th>
+                                    <th style="width: 100px;"><i class="bi bi-toggle-on me-1"></i>Estado</th>
+                                    <th class="text-center" style="width: 140px;"><i
+                                            class="bi bi-three-dots me-1"></i>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-usuarios">
+                                <!-- Los datos se cargan dinámicamente aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Paginación -->
+                <nav aria-label="Paginación de usuarios" class="m-2">
+                    <div id="paginacion-usuarios"></div>
+                </nav>
             </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th><i class="bi bi-hash me-1"></i>ID</th>
-                            <th><i class="bi bi-person me-1"></i>Usuario</th>
-                            <th><i class="bi bi-envelope me-1"></i>Email</th>
-                            <th><i class="bi bi-person-badge me-1"></i>Nombre</th>
-                            <th><i class="bi bi-shield me-1"></i>Rol</th>
-                            <th><i class="bi bi-toggle-on me-1"></i>Estado</th>
-                            <th><i class="bi bi-three-dots me-1"></i>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-usuarios">
-                        <!-- Se llenará dinámicamente -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- Paginación -->
-        <div class="card-footer">
-            <div id="paginacion-usuarios"></div>
         </div>
     </div>
 </div>

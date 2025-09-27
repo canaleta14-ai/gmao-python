@@ -6,6 +6,7 @@ from app.controllers.planes_controller import (
     obtener_plan_por_id,
     editar_plan,
     eliminar_plan,
+    obtener_estadisticas_planes,
 )
 
 planes_bp = Blueprint("planes", __name__, url_prefix="/planes")
@@ -101,3 +102,17 @@ def plan_individual(plan_id):
         except Exception as e:
             print(f"Error al eliminar plan: {e}")  # Debug
             return jsonify({"success": False, "error": str(e)}), 500
+
+
+@planes_bp.route("/api/estadisticas", methods=["GET"])
+@login_required
+def estadisticas_planes():
+    """Obtener estadísticas de planes de mantenimiento"""
+    try:
+        stats = obtener_estadisticas_planes()
+        return jsonify(stats)
+    except Exception as e:
+        return (
+            jsonify({"success": False, "error": "Error al obtener estadísticas"}),
+            500,
+        )

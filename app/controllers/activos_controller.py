@@ -65,6 +65,7 @@ def listar_activos(filtros=None):
             "numero_serie": a.numero_serie,
             "fabricante": a.fabricante,
             "proveedor": a.proveedor,
+            "activo": a.activo,
             "ultimo_mantenimiento": (
                 a.ultimo_mantenimiento.strftime("%d/%m/%Y")
                 if a.ultimo_mantenimiento
@@ -127,6 +128,7 @@ def listar_activos_paginado(
             "numero_serie": a.numero_serie,
             "fabricante": a.fabricante,
             "proveedor": a.proveedor,
+            "activo": a.activo,
             "ultimo_mantenimiento": (
                 a.ultimo_mantenimiento.strftime("%d/%m/%Y")
                 if a.ultimo_mantenimiento
@@ -319,3 +321,48 @@ def validar_codigo_unico(codigo):
         return {"valido": False, "mensaje": "El código ya existe"}
 
     return {"valido": True, "mensaje": "Código válido"}
+
+
+def obtener_estadisticas_activos():
+    """Obtiene estadísticas generales de los activos"""
+    from app.models.activo import Activo
+    from sqlalchemy import func
+
+    # Contar total de activos
+    total_activos = Activo.query.count()
+
+    # Contar por estado
+    estados = (
+        db.session.query(Activo.estado, func.count(Activo.id).label("count"))
+        .group_by(Activo.estado)
+        .all()
+    )
+
+    # Inicializar contadores
+    activos_operativos = 0
+    activos_mantenimiento = 0
+    activos_fuera_servicio = 0
+
+    # Procesar los resultados
+    for estado, count in estados:
+        if estado == "Operativo":
+            activos_operativos = count
+        elif estado in ["En Mantenimiento", "En Reparación"]:
+            activos_mantenimiento = count
+        elif estado in ["Fuera de Servicio", "Inactivo"]:
+            activos_fuera_servicio = count
+
+    return {
+        "total_activos": total_activos,
+        "activos_operativos": activos_operativos,
+        "activos_mantenimiento": activos_mantenimiento,
+        "activos_fuera_servicio": activos_fuera_servicio,
+    }
+
+
+def toggle_activo(id):
+    """Activa o desactiva un activo"""
+    activo = Activo.query.get_or_404(id)
+    activo.activo = not activo.activo
+    db.session.commit()
+    return activo

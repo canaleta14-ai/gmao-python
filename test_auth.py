@@ -8,11 +8,11 @@ import json
 # Crear una sesión para mantener cookies
 session = requests.Session()
 
-print("🔍 Probando el sistema de autenticación y carga de usuario...")
+print("🔍 Probando el sistema de autenticación y carga de usuario...")
 print("=" * 60)
 
 # Test 1: Intentar acceder al endpoint de información del usuario sin login
-print("\n1️⃣ Probando acceso a /api/user/info sin autenticación...")
+print("\n1. Probando acceso a /api/user/info sin autenticación...")
 try:
     response = session.get("http://127.0.0.1:5000/api/user/info")
     print(f"   Status: {response.status_code}")
@@ -21,7 +21,7 @@ try:
     elif response.status_code == 401:
         print("   ✅ Respuesta 401 correcta (usuario no autenticado)")
     else:
-        print(f"   ⚠️ Respuesta inesperada: {response.status_code}")
+        print(f"   ‚ö† Respuesta inesperada: {response.status_code}")
         try:
             data = response.json()
             print(f"   Datos: {json.dumps(data, indent=2)}")
@@ -31,7 +31,7 @@ except Exception as e:
     print(f"   ❌ Error: {e}")
 
 # Test 2: Hacer login con credenciales válidas
-print("\n2️⃣ Probando login con credenciales admin/admin123...")
+print("\n2. Probando login con credenciales admin/admin123...")
 try:
     login_data = {"username": "admin", "password": "admin123"}
 
@@ -63,7 +63,7 @@ except Exception as e:
     print(f"   ❌ Error: {e}")
 
 # Test 3: Ahora intentar acceder a la información del usuario autenticado
-print("\n3️⃣ Probando acceso a /api/user/info después del login...")
+print("\n3. Probando acceso a /api/user/info después del login...")
 try:
     response = session.get("http://127.0.0.1:5000/api/user/info")
     print(f"   Status: {response.status_code}")
@@ -74,11 +74,11 @@ try:
             print("   ✅ Información del usuario obtenida:")
             if data.get("success"):
                 user = data.get("user", {})
-                print(f'   • Nombre: {user.get("nombre", "N/A")}')
-                print(f'   • Username: {user.get("username", "N/A")}')
-                print(f'   • Email: {user.get("email", "N/A")}')
-                print(f'   • Rol: {user.get("rol", "N/A")}')
-                print(f'   • Activo: {user.get("activo", "N/A")}')
+                print(f'   ¢ Nombre: {user.get("nombre", "N/A")}')
+                print(f'   ¢ Username: {user.get("username", "N/A")}')
+                print(f'   ¢ Email: {user.get("email", "N/A")}')
+                print(f'   ¢ Rol: {user.get("rol", "N/A")}')
+                print(f'   ¢ Activo: {user.get("activo", "N/A")}')
             else:
                 print(
                     f'   ❌ Error en respuesta: {data.get("error", "Error desconocido")}'
@@ -94,7 +94,7 @@ except Exception as e:
 
 print("\n" + "=" * 60)
 print("✅ Pruebas de autenticación completadas")
-print("\n📌 Para probar completamente:")
+print("\nüìå Para probar completamente:")
 print("   1. Abre http://127.0.0.1:5000 en el navegador")
 print("   2. Haz login con admin/admin123")
 print("   3. Verifica que el sidebar muestre el nombre y rol correctos")

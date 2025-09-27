@@ -18,7 +18,7 @@ def insertar_datos_prueba():
 
     with app.app_context():
         try:
-            print("🔄 Insertando datos de prueba en inventario...")
+            print("🔄 Insertando datos de prueba en inventario...")
 
             # Limpiar tabla si tiene datos
             db.session.execute(text("DELETE FROM inventario;"))
@@ -174,9 +174,9 @@ def insertar_datos_prueba():
                 text("SELECT COUNT(*) as total FROM inventario;")
             )
             total = result.fetchone()[0]
-            print(f"📊 Total de artículos en inventario: {total}")
+            print(f"üìä Total de artículos en inventario: {total}")
 
-            print("\n🎯 Categorías insertadas:")
+            print("\nüéØ Categorías insertadas:")
             result = db.session.execute(
                 text(
                     "SELECT categoria, COUNT(*) as total FROM inventario GROUP BY categoria;"

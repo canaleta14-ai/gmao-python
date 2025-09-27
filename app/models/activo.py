@@ -25,6 +25,7 @@ class Activo(db.Model):
     proveedor = db.Column(
         db.String(100)
     )  # Campo para proveedor (temporal hasta crear módulo)
+    activo = db.Column(db.Boolean, default=True)
 
     # Relaciones
     ordenes = db.relationship("OrdenTrabajo", backref="activo", lazy=True)

@@ -9,6 +9,8 @@ from app.controllers.activos_controller import (
     obtener_departamentos,
     exportar_activos_csv,
     validar_codigo_unico,
+    obtener_estadisticas_activos,
+    toggle_activo,
 )
 
 activos_bp = Blueprint("activos", __name__, url_prefix="/activos")
@@ -84,6 +86,7 @@ def activo_detail(id):
                 "tipo": activo.tipo,
                 "ubicacion": activo.ubicacion,
                 "estado": activo.estado,
+                "departamento": activo.departamento,
                 "descripcion": activo.descripcion,
                 "modelo": activo.modelo,
                 "numero_serie": activo.numero_serie,
@@ -218,3 +221,30 @@ def eliminar_manual(manual_id):
         return jsonify(resultado), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@activos_bp.route("/api/estadisticas", methods=["GET"])
+def estadisticas_activos():
+    """Obtener estadísticas de activos"""
+    try:
+        estadisticas = obtener_estadisticas_activos()
+        return jsonify(estadisticas)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@activos_bp.route("/api/<int:id>/toggle", methods=["PUT"])
+def toggle_activo_route(id):
+    """Activar o desactivar un activo"""
+    try:
+        activo = toggle_activo(id)
+        estado = "activado" if activo.activo else "desactivado"
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Activo {estado} exitosamente",
+                "activo": activo.activo,
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500

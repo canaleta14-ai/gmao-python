@@ -92,10 +92,10 @@ function mostrarProveedores(proveedoresAMostrar) {
             </td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-info" onclick="editarProveedor(${proveedor.id})" title="Editar">
+                    <button class="btn btn-outline-secondary action-btn edit" onclick="editarProveedor(${proveedor.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-outline-danger" onclick="eliminarProveedor(${proveedor.id}, '${proveedor.nombre}')" title="Eliminar">
+                    <button class="btn btn-outline-danger action-btn delete" onclick="eliminarProveedor(${proveedor.id}, '${proveedor.nombre}')" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>

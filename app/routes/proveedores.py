@@ -8,6 +8,8 @@ from app.controllers.proveedores_controller import (
     obtener_proveedor,
     exportar_proveedores_csv,
     validar_nif,
+    obtener_estadisticas_proveedores,
+    toggle_proveedor,
 )
 
 proveedores_bp = Blueprint("proveedores", __name__, url_prefix="/proveedores")
@@ -139,3 +141,28 @@ def proveedores_select():
         )
     except Exception as e:
         return jsonify({"error": "Error al obtener proveedores"}), 500
+
+
+@proveedores_bp.route("/api/estadisticas", methods=["GET"])
+def estadisticas_proveedores():
+    """Obtener estadísticas de proveedores"""
+    try:
+        estadisticas = obtener_estadisticas_proveedores()
+        return jsonify(estadisticas)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@proveedores_bp.route("/api/<int:id>/toggle", methods=["PUT"])
+def toggle_proveedor_route(id):
+    """Activar o desactivar un proveedor"""
+    try:
+        proveedor = toggle_proveedor(id)
+        estado = "activado" if proveedor.activo else "desactivado"
+        return jsonify({
+            "success": True,
+            "message": f"Proveedor {estado} exitosamente",
+            "activo": proveedor.activo
+        })
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500

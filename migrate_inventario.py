@@ -18,7 +18,7 @@ def migrate_inventario_tables():
 
     with app.app_context():
         try:
-            print("🔄 Iniciando migración de tablas de inventario...")
+            print("🔄 Iniciando migración de tablas de inventario...")
 
             # Comandos SQL para crear las nuevas tablas de inventario
             migration_commands = [
@@ -118,13 +118,13 @@ def migrate_inventario_tables():
                         "already exists" in str(e).lower()
                         or "duplicate" in str(e).lower()
                     ):
-                        print(f"⚠️  Tabla {i}/5 ya existe")
+                        print(f"‚ö†  Tabla {i}/5 ya existe")
                     else:
                         print(f"❌ Error en tabla {i}/5: {e}")
                         raise e
 
             # Migrar datos existentes si la tabla inventario ya existe
-            print("\n🔄 Verificando migración de datos existentes...")
+            print("\n🔄 Verificando migración de datos existentes...")
 
             try:
                 # Verificar si existe la tabla inventario original
@@ -134,7 +134,7 @@ def migrate_inventario_tables():
                     )
                 )
                 if result.fetchone():
-                    print("📋 Tabla inventario original encontrada")
+                    print("üìã Tabla inventario original encontrada")
 
                     # Verificar si ya hay datos en la nueva tabla
                     count_result = db.session.execute(
@@ -144,7 +144,7 @@ def migrate_inventario_tables():
                     count = count_row[0] if count_row else 0
 
                     if count == 0:
-                        print("🔄 Migrando datos de inventario original...")
+                        print("🔄 Migrando datos de inventario original...")
 
                         # Migrar datos básicos
                         migrate_query = """
@@ -163,15 +163,15 @@ def migrate_inventario_tables():
                         db.session.execute(text(migrate_query))
                         print("✅ Datos migrados correctamente")
                     else:
-                        print("⚠️  La tabla inventario_nuevo ya contiene datos")
+                        print("‚ö†  La tabla inventario_nuevo ya contiene datos")
                 else:
-                    print("ℹ️  No se encontró tabla inventario original")
+                    print("‚Ñπ  No se encontró tabla inventario original")
 
             except Exception as e:
-                print(f"⚠️  Error en migración de datos: {e}")
+                print(f"‚ö†  Error en migración de datos: {e}")
 
             # Crear índices para mejor rendimiento
-            print("\n🔄 Creando índices...")
+            print("\n🔄 Creando índices...")
 
             index_commands = [
                 "CREATE INDEX IF NOT EXISTS idx_inventario_codigo ON inventario_nuevo(codigo);",
@@ -187,23 +187,23 @@ def migrate_inventario_tables():
                 try:
                     db.session.execute(text(idx_command))
                 except Exception as e:
-                    print(f"⚠️  Índice ya existe o error: {e}")
+                    print(f"‚ö†  √çndice ya existe o error: {e}")
 
-            print("✅ Índices creados")
+            print("✅ √çndices creados")
 
             # Confirmar cambios
             db.session.commit()
-            print("\n🎉 ¡Migración de inventario completada exitosamente!")
+            print("\nüéâ ¬°Migración de inventario completada exitosamente!")
 
             # Mostrar resumen
-            print("\n📊 Resumen de tablas creadas:")
+            print("\nüìä Resumen de tablas creadas:")
             print("   - inventario_nuevo: Gestión principal de artículos")
             print("   - conteo_inventario: Conteos físicos")
             print("   - periodo_inventario: Períodos de conteo")
             print("   - asiento_contable: Asientos contables")
             print("   - linea_asiento_contable: Líneas de asientos")
 
-            print("\n🔧 Próximos pasos:")
+            print("\n🔧 Próximos pasos:")
             print("   1. Ejecutar: python run.py")
             print("   2. Navegar a: http://localhost:5000/inventario")
             print("   3. Probar funcionalidades del módulo")

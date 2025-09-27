@@ -196,11 +196,6 @@
 }
 
 /* Estilos para botones de acción */
-.btn-group-sm .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-
 .btn-outline-primary {
     color: #2c3e50;
     border-color: #2c3e50;
@@ -353,11 +348,6 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-    .btn-group-sm .btn {
-        padding: 0.125rem 0.25rem;
-        font-size: 0.7rem;
-    }
-
     .table-responsive {
         font-size: 0.8rem;
     }

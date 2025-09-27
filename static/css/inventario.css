@@ -405,7 +405,7 @@
     }
 }
 
-/* Tabla de inventario */
+/* Tabla de inventario mejorada */
 .tabla-inventario-container {
     background: white;
     border-radius: 10px;
@@ -422,28 +422,73 @@
     margin-bottom: 0;
 }
 
-.table-inventario th {
-    background-color: #343a40;
-    color: white;
-    font-weight: 600;
-    border: none;
-    padding: 1rem 0.75rem;
-    text-align: center;
-    vertical-align: middle;
+/* Tabla de inventario - Solución definitiva para ajuste de ancho */
+
+/* Wrapper principal que controla todo el ancho de inventario */
+.inventario-wrapper {
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
-.table-inventario td {
-    padding: 0.75rem;
-    vertical-align: middle;
-    border-bottom: 1px solid #dee2e6;
+/* Forzar que todo el contenido de inventario use el mismo ancho */
+.inventario-wrapper .container-fluid {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    max-width: 100%;
 }
 
-.table-inventario tbody tr {
-    transition: background-color 0.15s ease-in-out;
+/* Forzar que todos los elementos tengan el mismo comportamiento de ancho */
+.inventario-wrapper .row {
+    margin-left: 0;
+    margin-right: 0;
 }
 
-.table-inventario tbody tr:hover {
-    background-color: #f8f9fa;
+.inventario-wrapper .col-12 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    max-width: 100%;
+}
+
+/* Asegurar que la tabla no exceda nunca el ancho disponible */
+.inventario-wrapper .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.inventario-wrapper .table {
+    width: 100%;
+    margin-bottom: 0;
+    table-layout: auto;
+    max-width: 100%;
+}
+
+/* Forzar que el card tenga el mismo comportamiento que los filtros */
+.inventario-wrapper .card {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0;
+}
+
+/* Responsive general - no específico para inventario */
+/* Sincronización del ancho del contenedor de filtros con la tabla */
+.filtros-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    width: 100%;
+    max-width: none;
+}
+
+.filtros-body {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
 }
 
 /* Badges de estado */
@@ -664,7 +709,9 @@ code {
     }
 
     .table-responsive {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .btn-group-sm .btn {
@@ -674,6 +721,34 @@ code {
 
     .modal-dialog {
         margin: 0.5rem;
+    }
+
+    /* Ajustes específicos para la tabla en móviles */
+    #tabla-inventario td {
+        padding: 0.5rem 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    #tabla-inventario th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Mejoras adicionales para tablet */
+@media (max-width: 992px) and (min-width: 769px) {
+    #tabla-inventario {
+        font-size: 0.9rem;
+    }
+
+    #tabla-inventario td,
+    #tabla-inventario th {
+        padding: 0.6rem;
     }
 }
 

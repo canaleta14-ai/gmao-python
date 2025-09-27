@@ -4,10 +4,10 @@ let paginacionPlanes;
 
 // Inicializar cuando se carga la página
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('🔧 Módulo de mantenimiento preventivo cargado');
+    console.log('🔧 Módulo de mantenimiento preventivo cargado');
 
     // Configurar paginación
-    paginacionPlanes = new Pagination('paginacion-planes', cargarPlanes, {
+    paginacionPlanes = createPagination('paginacion-planes', cargarPlanes, {
         perPage: 10,
         showInfo: true,
         showSizeSelector: true,
@@ -24,11 +24,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Cargar datos iniciales
     cargarPlanes(1);
+
+    // Cargar estadísticas
+    cargarEstadisticasPlanes();
+
+    // Agregar funciones adicionales del segundo DOMContentLoaded
+    if (typeof cargarActivos === 'function') {
+        cargarActivos(); // Cargar activos para el select
+    }
+
+    // Configurar búsqueda adicional
+    if (typeof setupPlanesSearch === 'function') {
+        setupPlanesSearch();
+    }
+
+    // Agregar event listeners para las funciones de frecuencia
+    const tipoFrecuenciaSelect = document.getElementById('tipo_frecuencia');
+    if (tipoFrecuenciaSelect && typeof cambiarTipoFrecuencia === 'function') {
+        tipoFrecuenciaSelect.addEventListener('change', cambiarTipoFrecuencia);
+    }
+
+    const tipoMensualSelect = document.getElementById('tipo_mensual');
+    if (tipoMensualSelect && typeof cambiarTipoMensual === 'function') {
+        tipoMensualSelect.addEventListener('change', cambiarTipoMensual);
+    }
+
+    // Event listeners para actualizar vista previa cuando cambien los valores
+    const inputsParaPreview = [
+        'fecha_inicio', 'intervalo_dias', 'intervalo_semanas', 'intervalo_meses',
+        'dia_mes', 'semana_mes', 'dia_semana_mes', 'fechas_especificas'
+    ];
+
+    inputsParaPreview.forEach(id => {
+        const element = document.getElementById(id);
+        if (element && typeof previsualizarFechas === 'function') {
+            element.addEventListener('change', previsualizarFechas);
+            element.addEventListener('input', previsualizarFechas);
+        }
+    });
+
+    // Event listener para checkboxes de días de la semana
+    document.addEventListener('change', function (e) {
+        if (e.target.name === 'dias_semana' && typeof previsualizarFechas === 'function') {
+            previsualizarFechas();
+        }
+    });
 });
 
 // Configurar filtros de mantenimiento preventivo
 function configurarFiltrosPreventivo() {
-    console.log('🔍 Configurando filtros de mantenimiento preventivo...');
+    console.log('🔍 Configurando filtros de mantenimiento preventivo...');
 
     // Campo de búsqueda
     const campoBuscar = document.getElementById('search-planes');
@@ -37,7 +82,7 @@ function configurarFiltrosPreventivo() {
         campoBuscar.addEventListener('input', function () {
             clearTimeout(timeoutBusqueda);
             timeoutBusqueda = setTimeout(() => {
-                console.log('🔍 Búsqueda en planes:', this.value);
+                console.log('🔍 Búsqueda en planes:', this.value);
                 aplicarFiltrosPreventivo();
             }, 300);
         });
@@ -57,13 +102,13 @@ function configurarFiltrosPreventivo() {
 
 // Aplicar filtros a la lista de planes
 function aplicarFiltrosPreventivo() {
-    console.log('🔍 Aplicando filtros de preventivo...');
+    console.log('🔍 Aplicando filtros de preventivo...');
     cargarPlanes(1); // Recargar con filtros aplicados
 }
 
 // Inicializar autocompletado
 function inicializarAutocompletadoPreventivo() {
-    console.log('🔍 Inicializando autocompletado en preventivo...');
+    console.log('🔍 Inicializando autocompletado en preventivo...');
 
     if (!window.AutoComplete) {
         console.log('❌ AutoComplete no disponible');
@@ -87,7 +132,7 @@ function inicializarAutocompletadoPreventivo() {
                     (item.equipo && item.equipo.toLowerCase().includes(q));
             },
             onSelect: (item) => {
-                console.log('🔧 Plan seleccionado:', item);
+                console.log('🔧 Plan seleccionado:', item);
                 aplicarFiltrosPreventivo();
             }
         });
@@ -97,7 +142,7 @@ function inicializarAutocompletadoPreventivo() {
 
 // Función para limpiar filtros de preventivo
 function limpiarFiltrosPreventivo() {
-    console.log('🧹 Limpiando filtros de preventivo...');
+    console.log('üßπ Limpiando filtros de preventivo...');
 
     // Limpiar campos de filtro
     const filtros = [
@@ -115,7 +160,7 @@ function limpiarFiltrosPreventivo() {
         }
     });
 
-    // Aplicar filtros (mostrará todos los planes sin filtros)
+    // Aplicar filtros (mostraráá todos los planes sin filtros)
     aplicarFiltrosPreventivo();
     console.log('✅ Filtros limpiados y vista actualizada');
 }
@@ -205,15 +250,17 @@ function renderPlanes(planes) {
                 <td>${plan.proxima_ejecucion || 'N/A'}</td>
                 <td>${getEstadoPlanBadge(plan.estado)}</td>
                 <td>
-                    <button class="btn btn-sm btn-info" title="Ver detalles" onclick="viewPlan(${plan.id})">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-warning" title="Editar" onclick="editPlan(${plan.id})">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" title="Eliminar" onclick="deletePlan(${plan.id}, '${plan.codigo}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-sm btn-outline-primary action-btn view" title="Ver detalles" onclick="viewPlan(${plan.id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn edit" title="Editar" onclick="editPlan(${plan.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger action-btn delete" title="Eliminar" onclick="deletePlan(${plan.id}, '${plan.codigo}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -259,9 +306,14 @@ function guardarPlan() {
 
         if (data.tipo_mensual === 'dia_mes') {
             data.dia_mes = document.getElementById('dia_mes').value;
+            // Limpiar campos no utilizados
+            data.semana_mes = null;
+            data.dia_semana_mes = null;
         } else if (data.tipo_mensual === 'dia_semana_mes') {
             data.semana_mes = document.getElementById('semana_mes').value;
             data.dia_semana_mes = document.getElementById('dia_semana_mes').value;
+            // Limpiar campo no utilizado
+            data.dia_mes = null;
         }
     } else if (tipoFrecuencia === 'personalizada') {
         data.patron_personalizado = document.getElementById('patron_personalizado').value;
@@ -420,10 +472,10 @@ function cargarActivos() {
             selectActivo.innerHTML = '<option value="">Error al cargar activos</option>';
         });
 }// Función toast para notificaciones
-function mostrarToast(mensaje, tipo = 'info') {
+function mostraráToast(mensaje, tipo = 'info') {
     showNotificationToast(mensaje, tipo);
 }
-// Utilidad para mostrar badge de estado
+// Utilidad para mostrará badge de estado
 function getEstadoPlanBadge(estado) {
     if (estado === 'Activo') return '<span class="badge bg-success">Activo</span>';
     if (estado === 'Vencido') return '<span class="badge bg-danger">Vencido</span>';
@@ -460,7 +512,7 @@ function cambiarTipoFrecuencia() {
 
     const tipo = tipoElement.value;
 
-    // Ocultar todas las secciones de configuración
+    // Ocultar todías las secciones de configuración
     const secciones = ['config-diaria', 'config-semanal', 'config-mensual', 'config-personalizada'];
     secciones.forEach(id => {
         const elemento = document.getElementById(id);
@@ -483,7 +535,7 @@ function cambiarTipoMensual() {
 
     const tipoValue = tipo.value;
 
-    // Ocultar todas las opciones mensuales
+    // Ocultar todías las opciones mensuales
     const diaEspecificoMes = document.getElementById('dia-especifico-mes');
     const diaSemanaMs = document.getElementById('dia-semana-mes');
 
@@ -561,7 +613,7 @@ function calcularProximasFechas() {
         case 'diario':
             return calcularFechasDiarias(fechaInicio);
         case 'semanal':
-            return calcularFechasSemanaless(fechaInicio);
+            return calcularFechasSemanales(fechaInicio);
         case 'mensual':
             return calcularFechasMensuales(fechaInicio);
         case 'personalizado':
@@ -585,7 +637,7 @@ function calcularFechasDiarias(fechaInicio) {
     return fechas;
 }
 
-function calcularFechasSemanaless(fechaInicio) {
+function calcularFechasSemanales(fechaInicio) {
     const intervaloElement = document.getElementById('intervalo_semanas');
     const intervalo = intervaloElement ? parseInt(intervaloElement.value) || 1 : 1;
     const diasSeleccionados = [];
@@ -599,24 +651,24 @@ function calcularFechasSemanaless(fechaInicio) {
     if (diasSeleccionados.length === 0) return [];
 
     const fechas = [];
-    let fecha = new Date(fechaInicio);
-    let semanaActual = 0;
+    let fechaActual = new Date(fechaInicio);
+    let semanasContadas = 0;
 
-    for (let i = 0; i < 50; i++) { // Generar hasta 50 fechas
-        const diaSemana = fecha.getDay();
+    // Encontrar el primer día seleccionado a partir de fechaInicio
+    while (fechas.length < 10 && semanasContadas < 52) { // Máximo 52 semanas
+        const diaSemana = fechaActual.getDay();
 
-        if (diasSeleccionados.includes(diaSemana) && semanaActual % intervalo === 0) {
-            fechas.push(new Date(fecha));
+        if (diasSeleccionados.includes(diaSemana)) {
+            // Verificar si esta semana debe incluirse según el intervalo
+            const semanaDesdeInicio = Math.floor((fechaActual - fechaInicio) / (7 * 24 * 60 * 60 * 1000));
+            if (semanaDesdeInicio % intervalo === 0) {
+                fechas.push(new Date(fechaActual));
+            }
         }
 
-        fecha.setDate(fecha.getDate() + 1);
-
-        // Si es domingo, incrementar contador de semana
-        if (fecha.getDay() === 0) {
-            semanaActual++;
-        }
-
-        if (fechas.length >= 10) break;
+        // Avanzar al siguiente día
+        fechaActual.setDate(fechaActual.getDate() + 1);
+        semanasContadas++;
     }
 
     return fechas;
@@ -635,13 +687,27 @@ function calcularFechasMensuales(fechaInicio) {
     if (tipoMensual === 'dia_mes') {
         const diaMesElement = document.getElementById('dia_mes');
         const diaMes = diaMesElement ? parseInt(diaMesElement.value) || 1 : 1;
-        let fecha = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), diaMes);
+
+        // Calcular la primera fecha válida a partir de fechaInicio
+        let fecha = new Date(fechaInicio);
+        fecha.setDate(diaMes);
+
+        // Si la fecha calculada es anterior a fechaInicio, avanzar al próximo mes
+        if (fecha < fechaInicio) {
+            fecha.setMonth(fecha.getMonth() + 1);
+            fecha.setDate(diaMes);
+        }
 
         for (let i = 0; i < 12; i++) {
-            if (fecha >= fechaInicio) {
-                fechas.push(new Date(fecha));
+            // Ajustar si el día no existe en este mes (ej: 31 de febrero -> 28/29 de febrero)
+            const ultimoDiaMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0).getDate();
+            if (diaMes > ultimoDiaMes) {
+                fecha.setDate(ultimoDiaMes);
             }
+
+            fechas.push(new Date(fecha));
             fecha.setMonth(fecha.getMonth() + intervalMeses);
+            fecha.setDate(diaMes);
         }
     } else if (tipoMensual === 'dia_semana_mes') {
         const semanaMesElement = document.getElementById('semana_mes');
@@ -720,7 +786,7 @@ function calcularFechasPersonalizadas(fechaInicio) {
 function resetearFormularioPreventivo() {
     document.getElementById('formPlan').reset();
 
-    // Ocultar todas las secciones de configuración
+    // Ocultar todías las secciones de configuración
     document.getElementById('config-diaria').style.display = 'none';
     document.getElementById('config-semanal').style.display = 'none';
     document.getElementById('config-mensual').style.display = 'none';
@@ -741,56 +807,6 @@ function openPlanModal() {
 
     new bootstrap.Modal(document.getElementById('planModal')).show();
 }
-
-// Inicialización
-document.addEventListener('DOMContentLoaded', function () {
-    // Configurar paginación
-    paginacionPlanes = new Pagination('paginacion-planes', cargarPlanes, {
-        perPage: 10,
-        showInfo: true,
-        showSizeSelector: true,
-        pageSizes: [10, 25, 50, 100]
-    });
-
-    // Cargar datos iniciales
-    cargarPlanes(1);
-    cargarActivos(); // Cargar activos para el select
-
-    // Configurar búsqueda
-    setupPlanesSearch();
-
-    // Agregar event listeners para las funciones de frecuencia
-    const tipoFrecuenciaSelect = document.getElementById('tipo_frecuencia');
-    if (tipoFrecuenciaSelect) {
-        tipoFrecuenciaSelect.addEventListener('change', cambiarTipoFrecuencia);
-    }
-
-    const tipoMensualSelect = document.getElementById('tipo_mensual');
-    if (tipoMensualSelect) {
-        tipoMensualSelect.addEventListener('change', cambiarTipoMensual);
-    }
-
-    // Event listeners para actualizar vista previa cuando cambien los valores
-    const inputsParaPreview = [
-        'fecha_inicio', 'intervalo_dias', 'intervalo_semanas', 'intervalo_meses',
-        'dia_mes', 'semana_mes', 'dia_semana_mes', 'fechas_especificas'
-    ];
-
-    inputsParaPreview.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('change', previsualizarFechas);
-            element.addEventListener('input', previsualizarFechas);
-        }
-    });
-
-    // Event listener para checkboxes de días de la semana
-    document.addEventListener('change', function (e) {
-        if (e.target.name === 'dias_semana') {
-            previsualizarFechas();
-        }
-    });
-});
 
 // Funciones para manejar acciones de planes
 function viewPlan(planId) {
@@ -880,7 +896,7 @@ function viewPlan(planId) {
                                                 <div class="card-body">
                                                     <div class="row">
                                                         <div class="col-md-6">
-                                                            <strong>Última Ejecución:</strong><br>
+                                                            <strong>√öltima Ejecución:</strong><br>
                                                             <span class="text-muted">${plan.ultima_ejecucion ? formatearFecha(plan.ultima_ejecucion) : 'Nunca ejecutado'}</span>
                                                         </div>
                                                         <div class="col-md-6">
@@ -1021,7 +1037,7 @@ function deletePlan(planId, planCodigo) {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>¿Está seguro de que desea eliminar el plan de mantenimiento?</p>
+                        <p>¬øEstá seguro de que desea eliminar el plan de mantenimiento?</p>
                         <div class="alert alert-warning">
                             <strong>Código del Plan:</strong> ${planCodigo}<br>
                             <strong>Advertencia:</strong> Esta acción no se puede deshacer.
@@ -1078,4 +1094,185 @@ function deletePlan(planId, planCodigo) {
 
     // Mostrar modal
     modal.show();
+}
+
+
+// Función para cargar estadísticas de planes
+function cargarEstadisticasPlanes() {
+    console.log('📊 Cargando estadísticas de planes...');
+
+    fetch('/planes/api/estadisticas')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Estadísticas recibidas:', data);
+            actualizarTarjetasEstadisticas(data);
+        })
+        .catch(error => {
+            console.error('❌ Error cargando estadísticas:', error);
+            // En caso de error, mostrar 0 en las tarjetas
+            actualizarTarjetasEstadisticas({
+                planes_activos: 0,
+                planes_proximos: 0,
+                planes_vencidos: 0,
+                planes_completados: 0
+            });
+        });
+}
+
+// Función para actualizar las tarjetas de estadísticas
+function actualizarTarjetasEstadisticas(data) {
+    console.log('🎯 Actualizando tarjetas con datos:', data);
+
+    // Función helper para animar contadores
+    function animarContador(elementId, valorFinal) {
+        const elemento = document.getElementById(elementId);
+        if (!elemento) {
+            console.warn(`⚠️ Elemento ${elementId} no encontrado`);
+            return;
+        }
+
+        const valorInicial = parseInt(elemento.textContent) || 0;
+        const duracion = 1000; // 1 segundo
+        const pasos = 60; // 60fps
+        const incremento = (valorFinal - valorInicial) / pasos;
+        let contador = valorInicial;
+
+        const intervalo = setInterval(() => {
+            contador += incremento;
+            if ((incremento > 0 && contador >= valorFinal) || (incremento < 0 && contador <= valorFinal)) {
+                elemento.textContent = valorFinal;
+                clearInterval(intervalo);
+                console.log(`✅ ${elementId} actualizado a: ${valorFinal}`);
+            } else {
+                elemento.textContent = Math.round(contador);
+            }
+        }, 1000 / pasos);
+    }
+
+    // Actualizar cada tarjeta con animación
+    animarContador('stat-activos', data.planes_activos || 0);
+    animarContador('stat-proximos', data.planes_proximos || 0);
+    animarContador('stat-vencidos', data.planes_vencidos || 0);
+    animarContador('stat-completados', data.planes_completados || 0);
+
+    console.log('🎉 Tarjetas de estadísticas actualizadas exitosamente');
+}
+
+// Función para exportar planes a CSV
+function exportarCSV() {
+    console.log('📁 Iniciando exportación de planes a CSV...');
+
+    if (!planesData || planesData.length === 0) {
+        showNotificationToast('No hay datos para exportar. Primero carga los planes.', 'warning');
+        return;
+    }
+
+    try {
+        // Definir las columnas del CSV
+        const columnas = [
+            'Código',
+            'Nombre',
+            'Estado',
+            'Frecuencia',
+            'Última Ejecución',
+            'Próxima Ejecución',
+            'Tiempo Estimado (hrs)',
+            'Activo Asignado',
+            'Descripción'
+        ];
+
+        // Crear el contenido CSV
+        let csvContent = columnas.join(',') + '\n';
+
+        planesData.forEach(plan => {
+            const fila = [
+                `"${plan.codigo_plan || ''}"`,
+                `"${plan.nombre || ''}"`,
+                `"${plan.estado || ''}"`,
+                `"${plan.frecuencia || ''}"`,
+                plan.ultima_ejecucion ? `"${formatearFecha(plan.ultima_ejecucion)}"` : '""',
+                plan.proxima_ejecucion ? `"${formatearFecha(plan.proxima_ejecucion)}"` : '""',
+                plan.tiempo_estimado || '0',
+                `"${plan.activo_nombre || ''}"`,
+                `"${(plan.descripcion || '').replace(/"/g, '""')}"` // Escapar comillas dobles
+            ];
+            csvContent += fila.join(',') + '\n';
+        });
+
+        console.log(`📊 Generando CSV con ${planesData.length} planes...`);
+
+        // Crear y descargar el archivo
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+        if (!blob || blob.size === 0) {
+            throw new Error('No se pudo crear el archivo CSV');
+        }
+
+        const link = document.createElement('a');
+
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+
+            // Generar nombre del archivo con fecha actual
+            const ahora = new Date();
+            const fechaFormateada = ahora.getFullYear() +
+                (ahora.getMonth() + 1).toString().padStart(2, '0') +
+                ahora.getDate().toString().padStart(2, '0');
+            const nombreArchivo = `planes_mantenimiento_${fechaFormateada}.csv`;
+            link.setAttribute('download', nombreArchivo);
+
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+
+            // Intentar la descarga
+            try {
+                link.click();
+                console.log('✅ Comando de descarga ejecutado');
+
+                // Mostrar mensaje de éxito con delay para dar tiempo a que se inicie la descarga
+                setTimeout(() => {
+                    showNotificationToast(`Descargando archivo: ${nombreArchivo}`, 'success');
+                }, 100);
+
+                // Limpiar después de un tiempo
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 1000);
+
+            } catch (clickError) {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                throw new Error('Error al iniciar la descarga: ' + clickError.message);
+            }
+
+        } else {
+            throw new Error('Su navegador no soporta la descarga de archivos');
+        }
+
+    } catch (error) {
+        console.error('❌ Error al exportar CSV:', error);
+        showNotificationToast('Error al exportar el archivo CSV', 'error');
+    }
+}
+
+// Función helper para formatear fechas en el CSV
+function formatearFecha(fechaString) {
+    if (!fechaString) return '';
+
+    try {
+        const fecha = new Date(fechaString);
+        const dia = fecha.getDate().toString().padStart(2, '0');
+        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+        const año = fecha.getFullYear();
+        return `${dia}/${mes}/${año}`;
+    } catch (error) {
+        return fechaString;
+    }
 }

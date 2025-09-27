@@ -90,3 +90,273 @@ def crear_articulo_simple(data):
     db.session.add(articulo)
     db.session.commit()
     return articulo
+
+
+def exportar_inventario_csv():
+    """Genera un archivo CSV con todos los artículos del inventario"""
+    from io import StringIO
+    import csv
+
+    articulos = Inventario.query.filter_by(activo=True).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Escribir encabezados
+    writer.writerow(
+        [
+            "Código",
+            "Descripción",
+            "Categoría",
+            "Stock Actual",
+            "Stock Mínimo",
+            "Stock Máximo",
+            "Ubicación",
+            "Precio Unitario",
+            "Precio Promedio",
+            "Valor Stock",
+            "Unidad Medida",
+            "Proveedor Principal",
+            "Cuenta Contable",
+            "Grupo Contable",
+            "Crítico",
+            "Fecha Creación",
+        ]
+    )
+
+    # Escribir datos
+    for articulo in articulos:
+        writer.writerow(
+            [
+                articulo.codigo,
+                articulo.descripcion,
+                articulo.categoria or "",
+                articulo.stock_actual,
+                articulo.stock_minimo,
+                articulo.stock_maximo or "",
+                articulo.ubicacion or "",
+                articulo.precio_unitario,
+                articulo.precio_promedio,
+                (
+                    articulo.stock_actual * articulo.precio_promedio
+                    if articulo.precio_promedio
+                    else 0
+                ),
+                articulo.unidad_medida,
+                articulo.proveedor_principal or "",
+                articulo.cuenta_contable_compra,
+                articulo.grupo_contable or "",
+                "Sí" if articulo.critico else "No",
+                (
+                    articulo.fecha_creacion.strftime("%d/%m/%Y")
+                    if articulo.fecha_creacion
+                    else ""
+                ),
+            ]
+        )
+
+    csv_data = output.getvalue()
+    output.close()
+
+    return csv_data
+
+
+# Funciones para movimientos de inventario
+from app.models.movimiento_inventario import MovimientoInventario
+from app.models.usuario import Usuario
+
+
+def registrar_movimiento_inventario(data):
+    """Registrar un nuevo movimiento de inventario"""
+    try:
+        # Validar datos requeridos
+        required_fields = ["inventario_id", "tipo", "cantidad"]
+        for field in required_fields:
+            if field not in data:
+                raise ValueError(f"Campo requerido faltante: {field}")
+
+        # Obtener el artículo
+        articulo = Inventario.query.get(data["inventario_id"])
+        if not articulo:
+            raise ValueError("Artículo no encontrado")
+
+        # Crear el movimiento
+        movimiento = MovimientoInventario(
+            inventario_id=data["inventario_id"],
+            tipo=data["tipo"],
+            subtipo=data.get("subtipo"),
+            cantidad=data["cantidad"],
+            precio_unitario=data.get("precio_unitario"),
+            valor_total=data.get("valor_total"),
+            cuenta_contable=data.get(
+                "cuenta_contable", articulo.cuenta_contable_compra
+            ),
+            centro_costo=data.get("centro_costo"),
+            documento_referencia=data.get("documento_referencia"),
+            observaciones=data.get("observaciones"),
+            usuario_id=data.get("usuario_id", "sistema"),
+        )
+
+        # Actualizar stock del artículo según el tipo de movimiento
+        if movimiento.tipo == "entrada":
+            articulo.stock_actual += movimiento.cantidad
+        elif movimiento.tipo == "salida":
+            if articulo.stock_actual < movimiento.cantidad:
+                raise ValueError("Stock insuficiente para la salida")
+            articulo.stock_actual -= movimiento.cantidad
+        elif movimiento.tipo == "ajuste":
+            # Para ajustes, la cantidad puede ser positiva o negativa
+            articulo.stock_actual += movimiento.cantidad
+
+        # Calcular valor total si no se proporciona
+        if not movimiento.valor_total and movimiento.precio_unitario:
+            movimiento.valor_total = movimiento.precio_unitario * abs(
+                movimiento.cantidad
+            )
+
+        db.session.add(movimiento)
+        db.session.commit()
+
+        return movimiento
+
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+
+def obtener_movimientos_articulo(articulo_id, page=1, per_page=10):
+    """Obtener historial de movimientos de un artículo"""
+    try:
+        query = MovimientoInventario.query.filter_by(inventario_id=articulo_id)
+        query = query.order_by(MovimientoInventario.fecha.desc())
+
+        # Paginación
+        movimientos = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        return {
+            "movimientos": [
+                {
+                    "id": m.id,
+                    "fecha": m.fecha.strftime("%d/%m/%Y %H:%M") if m.fecha else "",
+                    "tipo": m.tipo,
+                    "subtipo": m.subtipo,
+                    "cantidad": m.cantidad,
+                    "precio_unitario": m.precio_unitario,
+                    "valor_total": m.valor_total,
+                    "cuenta_contable": m.cuenta_contable,
+                    "documento_referencia": m.documento_referencia,
+                    "observaciones": m.observaciones,
+                    "usuario_id": m.usuario_id,
+                }
+                for m in movimientos.items
+            ],
+            "page": movimientos.page,
+            "per_page": movimientos.per_page,
+            "total": movimientos.total,
+            "pages": movimientos.pages,
+        }
+
+    except Exception as e:
+        raise e
+
+
+def obtener_movimientos_generales(filtros=None, page=1, per_page=10):
+    """Obtener vista general de movimientos con filtros"""
+    try:
+        query = MovimientoInventario.query
+
+        # Aplicar filtros
+        if filtros:
+            if "tipo" in filtros:
+                query = query.filter_by(tipo=filtros["tipo"])
+            if "fecha_desde" in filtros:
+                query = query.filter(
+                    MovimientoInventario.fecha >= filtros["fecha_desde"]
+                )
+            if "fecha_hasta" in filtros:
+                query = query.filter(
+                    MovimientoInventario.fecha <= filtros["fecha_hasta"]
+                )
+            if "usuario_id" in filtros:
+                query = query.filter_by(usuario_id=filtros["usuario_id"])
+
+        # Unir con información del artículo
+        query = query.join(Inventario).add_columns(
+            Inventario.codigo, Inventario.descripcion, Inventario.unidad_medida
+        )
+
+        query = query.order_by(MovimientoInventario.fecha.desc())
+
+        # Paginación
+        movimientos = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        return {
+            "movimientos": [
+                {
+                    "id": m.MovimientoInventario.id,
+                    "fecha": (
+                        m.MovimientoInventario.fecha.strftime("%d/%m/%Y %H:%M")
+                        if m.MovimientoInventario.fecha
+                        else ""
+                    ),
+                    "tipo": m.MovimientoInventario.tipo,
+                    "subtipo": m.MovimientoInventario.subtipo,
+                    "cantidad": m.MovimientoInventario.cantidad,
+                    "codigo_articulo": m.codigo,
+                    "descripcion_articulo": m.descripcion,
+                    "unidad_medida": m.unidad_medida,
+                    "precio_unitario": m.MovimientoInventario.precio_unitario,
+                    "valor_total": m.MovimientoInventario.valor_total,
+                    "documento_referencia": m.MovimientoInventario.documento_referencia,
+                    "usuario_id": m.MovimientoInventario.usuario_id,
+                }
+                for m in movimientos.items
+            ],
+            "page": movimientos.page,
+            "per_page": movimientos.per_page,
+            "total": movimientos.total,
+            "pages": movimientos.pages,
+        }
+
+    except Exception as e:
+        raise e
+
+
+def editar_articulo_simple(articulo_id, data):
+    """Editar un artículo existente"""
+    try:
+        articulo = Inventario.query.get(articulo_id)
+        if not articulo:
+            raise ValueError("Artículo no encontrado")
+
+        # Campos que se pueden editar
+        campos_editables = [
+            "codigo",
+            "descripcion",
+            "categoria",
+            "subcategoria",
+            "ubicacion",
+            "stock_minimo",
+            "stock_maximo",
+            "unidad_medida",
+            "precio_unitario",
+            "proveedor_principal",
+            "cuenta_contable_compra",
+            "grupo_contable",
+            "critico",
+            "activo",
+            "observaciones",
+        ]
+
+        for campo in campos_editables:
+            if campo in data:
+                setattr(articulo, campo, data[campo])
+
+        articulo.fecha_actualizacion = datetime.now(timezone.utc)
+
+        db.session.commit()
+        return articulo
+
+    except Exception as e:
+        db.session.rollback()
+        raise e

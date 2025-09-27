@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Generación Automática de Códigos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .debug-log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>🧪 Test Generación Automática de Códigos</h1>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h3>Formulario de Prueba</h3>
+                
+                <div class="mb-3">
+                    <label for="nuevo-categoria" class="form-label">Categoría</label>
+                    <select class="form-select" id="nuevo-categoria">
+                        <option value="">Seleccionar categoría...</option>
+                        <!-- Las categorías se cargan dinámicamente -->
+                    </select>
+                    <div class="form-text">
+                        <span id="categoria-preview" class="text-muted">Seleccione una categoría</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="nuevo-codigo" class="form-label">Código del Artículo</label>
+                    <input type="text" class="form-control" id="nuevo-codigo" 
+                           placeholder="Se generará automáticamente al seleccionar categoría">
+                    <div class="form-text">
+                        <span id="codigo-preview" class="text-muted">Seleccione una categoría para generar el código</span>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="testGenerarCodigo()">
+                    🔄 Generar Código Manual
+                </button>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>Debug Log</h3>
+                <div id="debug-log" class="debug-log">
+                    <strong>Log de depuración:</strong><br>
+                    Esperando eventos...<br>
+                </div>
+                
+                <button type="button" class="btn btn-secondary mt-2" onclick="clearLog()">
+                    🗑️ Limpiar Log
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        let debugLog = document.getElementById('debug-log');
+        
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `[${timestamp}] ${message}<br>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        function clearLog() {
+            debugLog.innerHTML = '<strong>Log de depuración:</strong><br>Esperando eventos...<br>';
+        }
+        
+        function testGenerarCodigo() {
+            addLog('🔄 Función testGenerarCodigo() llamada manualmente');
+            if (window.categoriasManager) {
+                window.categoriasManager.generarCodigoAutomatico();
+            } else {
+                addLog('❌ categoriasManager no está disponible');
+            }
+        }
+        
+        // Override console.log para mostrar en debug
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            if (debugLog) {
+                addLog('📝 ' + args.join(' '));
+            }
+        };
+        
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            if (debugLog) {
+                addLog('❌ ERROR: ' + args.join(' '));
+            }
+        };
+        
+        const originalConsoleWarn = console.warn;
+        console.warn = function(...args) {
+            originalConsoleWarn.apply(console, args);
+            if (debugLog) {
+                addLog('⚠️ WARN: ' + args.join(' '));
+            }
+        };
+        
+        addLog('🚀 Página de test cargada');
+    </script>
+    
+    <!-- Cargar el script de categorías -->
+    <script src="/static/js/inventario-categorias.js"></script>
+    
+    <script>
+        // Después de cargar el script, verificar que funcione
+        setTimeout(() => {
+            addLog('🔍 Verificando instancia de categoriasManager...');
+            if (window.categoriasManager) {
+                addLog('✅ categoriasManager disponible');
+            } else {
+                addLog('❌ categoriasManager NO disponible');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

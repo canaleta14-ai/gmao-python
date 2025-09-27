@@ -58,8 +58,8 @@
 
             <div class="alert alert-info">
                 <i class="bi bi-info-circle"></i>
-                <strong>Objetivo:</strong> Identificar por qué las alertas tardan más de lo esperado.
-                <br>Esta página prueba las alertas con timeout de 5 segundos y logging detallado.
+                <strong>Objetivo:</strong> Identificar por qu√© las alertas tardan m√°s de lo esperado.
+                <br>Esta p√°gina prueba las alertas con timeout de 5 segundos y logging detallado.
             </div>
         </div>
 
@@ -95,7 +95,7 @@
             <h3><i class="bi bi-display"></i> Resultado de Alertas</h3>
             <div id="maintenanceAlerts">
                 <div class="alert alert-light">
-                    <i class="bi bi-arrow-up"></i> Las alertas aparecerán aquí...
+                    <i class="bi bi-arrow-up"></i> Las alertas aparecer√°n aqu√≠...
                 </div>
             </div>
         </div>
@@ -110,17 +110,17 @@
         <div class="test-section">
             <h3><i class="bi bi-info-circle"></i> Instrucciones</h3>
             <ol>
-                <li><strong>Cargar Alertas:</strong> Prueba la función completa con UI y timeout de 5 segundos</li>
-                <li><strong>Test Directo:</strong> Prueba solo el endpoint sin manipulación de UI</li>
+                <li><strong>Cargar Alertas:</strong> Prueba la funci√≥n completa con UI y timeout de 5 segundos</li>
+                <li><strong>Test Directo:</strong> Prueba solo el endpoint sin manipulaci√≥n de UI</li>
                 <li><strong>Observar Consola:</strong> Verifica los tiempos de respuesta en la consola de debug</li>
-                <li><strong>Comparar Tiempos:</strong> Si el test directo es rápido pero la UI es lenta, el problema
-                    está en el frontend</li>
+                <li><strong>Comparar Tiempos:</strong> Si el test directo es r√°pido pero la UI es lenta, el problema
+                    est√° en el frontend</li>
             </ol>
 
             <div class="alert alert-warning mt-3">
                 <i class="bi bi-exclamation-triangle"></i>
-                <strong>Expectativa:</strong> El backend debería responder en menos de 50ms según pruebas anteriores.
-                Si tarda más de 5 segundos, hay un problema de red o servidor.
+                <strong>Expectativa:</strong> El backend deber√≠a responder en menos de 50ms seg√∫n pruebas anteriores.
+                Si tarda m√°s de 5 segundos, hay un problema de red o servidor.
             </div>
         </div>
     </div>
@@ -130,7 +130,7 @@
     <script src="/static/js/alertas-test.js"></script>
 
     <script>
-        // Capturar console.log y mostrarlo en la página
+        // Capturar console.log y mostrarlo en la p√°gina
         const originalLog = console.log;
         const originalError = console.error;
         const originalWarn = console.warn;
@@ -138,7 +138,7 @@
         function addToConsoleOutput(message, type = 'log') {
             const output = document.getElementById('consoleOutput');
             const timestamp = new Date().toLocaleTimeString();
-            const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '📝';
+            const prefix = type === 'error' ? '‚ùå' : type === 'warn' ? '‚ö†Ô∏è' : 'üìù';
             output.textContent += `\n[${timestamp}] ${prefix} ${message}`;
             output.scrollTop = output.scrollHeight;
         }
@@ -164,12 +164,12 @@
 
         function showTimestamp() {
             const now = new Date();
-            console.log(`⏰ Timestamp actual: ${now.toLocaleString()}`);
+            console.log(`‚è∞ Timestamp actual: ${now.toLocaleString()}`);
         }
 
-        // Inicialización
-        console.log('🚀 Página de prueba de alertas cargada');
-        console.log('🎯 Listos para probar el rendimiento de las alertas');
+        // Inicializaci√≥n
+        console.log('üöÄ P√°gina de prueba de alertas cargada');
+        console.log('üéØ Listos para probar el rendimiento de las alertas');
     </script>
 </body>
 

@@ -40,28 +40,31 @@ def calcular_proxima_ejecucion(data, fecha_base=None):
             semana_mes = int(data.get("semana_mes", 1))  # 1-4
             dia_semana_mes = data.get("dia_semana_mes", "sabado")
 
-            # Mapeo de días de la semana
+            # Mapeo de días de la semana - soporta tanto nombres como números
             dias_semana_map = {
                 "lunes": 0,
+                "1": 0,
                 "martes": 1,
+                "2": 1,
                 "miercoles": 2,
+                "3": 2,
                 "jueves": 3,
+                "4": 3,
                 "viernes": 4,
+                "5": 4,
                 "sabado": 5,
+                "6": 5,
                 "domingo": 6,
+                "0": 6,
             }
 
             dia_semana_num = dias_semana_map.get(
                 dia_semana_mes.lower(), 5
             )  # Default: sábado
 
-            # Calcular el próximo mes
-            if fecha_base.month == 12:
-                año_objetivo = fecha_base.year + 1
-                mes_objetivo = 1
-            else:
-                año_objetivo = fecha_base.year
-                mes_objetivo = fecha_base.month + intervalo_meses
+            # Intentar calcular para el mes actual primero
+            año_objetivo = fecha_base.year
+            mes_objetivo = fecha_base.month
 
             # Encontrar el primer día del mes objetivo
             primer_dia_mes = datetime(año_objetivo, mes_objetivo, 1)
@@ -74,14 +77,36 @@ def calcular_proxima_ejecucion(data, fecha_base=None):
             semanas_adicionales = (semana_mes - 1) * 7
             proxima_ejecucion = primera_ocurrencia + timedelta(days=semanas_adicionales)
 
-            # Verificar que la fecha esté dentro del mes
-            if proxima_ejecucion.month != mes_objetivo:
-                # Si nos pasamos del mes, usar la última ocurrencia válida
+            # Verificar que la fecha esté dentro del mes y sea futura
+            if (
+                proxima_ejecucion.month != mes_objetivo
+                or proxima_ejecucion.date() <= fecha_base.date()
+            ):
+                # Si nos pasamos del mes o la fecha ya pasó, calcular para el próximo mes
+                if mes_objetivo == 12:
+                    año_objetivo = fecha_base.year + 1
+                    mes_objetivo = 1
+                else:
+                    año_objetivo = fecha_base.year
+                    mes_objetivo = fecha_base.month + intervalo_meses
+
+                # Recalcular para el próximo mes
+                primer_dia_mes = datetime(año_objetivo, mes_objetivo, 1)
+                dias_hasta_target = (dia_semana_num - primer_dia_mes.weekday()) % 7
+                primera_ocurrencia = primer_dia_mes + timedelta(days=dias_hasta_target)
+                semanas_adicionales = (semana_mes - 1) * 7
                 proxima_ejecucion = primera_ocurrencia + timedelta(
-                    days=(semana_mes - 2) * 7
+                    days=semanas_adicionales
                 )
+
+                # Verificar que la fecha esté dentro del mes
                 if proxima_ejecucion.month != mes_objetivo:
-                    proxima_ejecucion = primera_ocurrencia
+                    # Si nos pasamos del mes, usar la última ocurrencia válida
+                    proxima_ejecucion = primera_ocurrencia + timedelta(
+                        days=(semana_mes - 2) * 7
+                    )
+                    if proxima_ejecucion.month != mes_objetivo:
+                        proxima_ejecucion = primera_ocurrencia
 
     elif tipo_frecuencia == "semanal":
         # Lógica para frecuencia semanal con días específicos
@@ -306,19 +331,44 @@ def crear_plan(data):
         estado="Activo",
         descripcion=data.get("descripcion"),
         instrucciones=data.get("instrucciones"),
-        tiempo_estimado=data.get("tiempo_estimado"),
+        tiempo_estimado=(
+            float(data.get("tiempo_estimado"))
+            if data.get("tiempo_estimado") and str(data.get("tiempo_estimado")).strip()
+            else None
+        ),
         activo_id=data.get("activo_id"),
         # Nuevos campos para configuración específica
         tipo_frecuencia=data.get("tipo_frecuencia"),
-        intervalo_semanas=data.get("intervalo_semanas"),
+        intervalo_semanas=(
+            int(data.get("intervalo_semanas"))
+            if data.get("intervalo_semanas")
+            and str(data.get("intervalo_semanas")).strip()
+            else None
+        ),
         dias_semana=(
             str(data.get("dias_semana", [])) if data.get("dias_semana") else None
         ),
         tipo_mensual=data.get("tipo_mensual"),
-        dia_mes=data.get("dia_mes"),
-        semana_mes=data.get("semana_mes"),
-        dia_semana_mes=data.get("dia_semana_mes"),
-        intervalo_meses=data.get("intervalo_meses"),
+        dia_mes=(
+            int(data.get("dia_mes"))
+            if data.get("dia_mes") and str(data.get("dia_mes")).strip()
+            else None
+        ),
+        semana_mes=(
+            int(data.get("semana_mes"))
+            if data.get("semana_mes") and str(data.get("semana_mes")).strip()
+            else None
+        ),
+        dia_semana_mes=(
+            data.get("dia_semana_mes")
+            if data.get("dia_semana_mes") and str(data.get("dia_semana_mes")).strip()
+            else None
+        ),
+        intervalo_meses=(
+            int(data.get("intervalo_meses"))
+            if data.get("intervalo_meses") and str(data.get("intervalo_meses")).strip()
+            else None
+        ),
         frecuencia_personalizada=data.get("frecuencia_personalizada"),
     )
 
@@ -392,9 +442,53 @@ def editar_plan(plan_id, data):
     if "instrucciones" in data:
         plan.instrucciones = data["instrucciones"]
     if "tiempo_estimado" in data:
-        plan.tiempo_estimado = data["tiempo_estimado"]
+        plan.tiempo_estimado = (
+            float(data["tiempo_estimado"])
+            if data["tiempo_estimado"] and str(data["tiempo_estimado"]).strip()
+            else None
+        )
     if "activo_id" in data:
         plan.activo_id = data["activo_id"]
+
+    # Actualizar campos de configuración específica
+    if "tipo_frecuencia" in data:
+        plan.tipo_frecuencia = data["tipo_frecuencia"]
+    if "intervalo_semanas" in data:
+        plan.intervalo_semanas = (
+            int(data["intervalo_semanas"])
+            if data["intervalo_semanas"] and str(data["intervalo_semanas"]).strip()
+            else None
+        )
+    if "dias_semana" in data:
+        plan.dias_semana = str(data["dias_semana"]) if data["dias_semana"] else None
+    if "tipo_mensual" in data:
+        plan.tipo_mensual = data["tipo_mensual"]
+    if "dia_mes" in data:
+        plan.dia_mes = (
+            int(data["dia_mes"])
+            if data["dia_mes"] and str(data["dia_mes"]).strip()
+            else None
+        )
+    if "semana_mes" in data:
+        plan.semana_mes = (
+            int(data["semana_mes"])
+            if data["semana_mes"] and str(data["semana_mes"]).strip()
+            else None
+        )
+    if "dia_semana_mes" in data:
+        plan.dia_semana_mes = (
+            data["dia_semana_mes"]
+            if data["dia_semana_mes"] and str(data["dia_semana_mes"]).strip()
+            else None
+        )
+    if "intervalo_meses" in data:
+        plan.intervalo_meses = (
+            int(data["intervalo_meses"])
+            if data["intervalo_meses"] and str(data["intervalo_meses"]).strip()
+            else None
+        )
+    if "frecuencia_personalizada" in data:
+        plan.frecuencia_personalizada = data["frecuencia_personalizada"]
 
     db.session.commit()
     return plan
@@ -406,3 +500,39 @@ def eliminar_plan(plan_id):
     db.session.delete(plan)
     db.session.commit()
     return True
+
+
+def obtener_estadisticas_planes():
+    """Obtener estadísticas de planes de mantenimiento"""
+    from datetime import datetime, timedelta
+
+    ahora = datetime.now()
+    proximos_7_dias = ahora + timedelta(days=7)
+
+    # Planes por estado
+    activos = PlanMantenimiento.query.filter_by(estado="Activo").count()
+    inactivos = PlanMantenimiento.query.filter_by(estado="Inactivo").count()
+    pausados = PlanMantenimiento.query.filter_by(estado="Pausado").count()
+
+    # Planes próximos (próximos 7 días)
+    proximos = PlanMantenimiento.query.filter(
+        PlanMantenimiento.estado == "Activo",
+        PlanMantenimiento.proxima_ejecucion.between(ahora, proximos_7_dias),
+    ).count()
+
+    # Planes vencidos (fecha pasada)
+    vencidos = PlanMantenimiento.query.filter(
+        PlanMantenimiento.estado == "Activo",
+        PlanMantenimiento.proxima_ejecucion < ahora,
+    ).count()
+
+    # Para "completados" vamos a usar los inactivos por ahora
+    completados = inactivos
+
+    return {
+        "planes_activos": activos,
+        "planes_proximos": proximos,
+        "planes_vencidos": vencidos,
+        "planes_completados": completados,
+        "total_planes": activos + inactivos + pausados,
+    }

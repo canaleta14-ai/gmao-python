@@ -1,6 +1,8 @@
 from app.models.orden_trabajo import OrdenTrabajo
 from app.models.activo import Activo
 from app.models.usuario import Usuario
+from app.models.plan_mantenimiento import PlanMantenimiento
+from app.controllers.planes_controller import calcular_proxima_ejecucion
 from app.extensions import db
 from datetime import datetime, timezone
 import csv
@@ -306,6 +308,67 @@ def actualizar_estado_orden(id, data):
         # Actualizar tiempo real si se proporciona
         if data.get("tiempo_real"):
             orden.tiempo_real = float(data["tiempo_real"])
+
+        # Si es una orden preventiva, actualizar la próxima ejecución del plan correspondiente
+        if orden.tipo and "preventivo" in orden.tipo.lower() and orden.activo_id:
+            try:
+                # Buscar planes activos para este activo
+                planes_activos = PlanMantenimiento.query.filter_by(
+                    activo_id=orden.activo_id, estado="Activo"
+                ).all()
+
+                if planes_activos:
+                    # Encontrar el plan más próximo a vencer (o ya vencido)
+                    fecha_actual = datetime.now()
+                    plan_a_actualizar = None
+                    diferencia_minima = None
+
+                    for plan in planes_activos:
+                        if plan.proxima_ejecucion:
+                            diferencia = abs(
+                                (plan.proxima_ejecucion - fecha_actual).total_seconds()
+                            )
+                            if (
+                                diferencia_minima is None
+                                or diferencia < diferencia_minima
+                            ):
+                                diferencia_minima = diferencia
+                                plan_a_actualizar = plan
+
+                    # Si encontramos un plan, actualizar su próxima ejecución
+                    if plan_a_actualizar:
+                        # Preparar los datos de configuración del plan para recalcular
+                        plan_data = {
+                            "tipo_frecuencia": plan_a_actualizar.tipo_frecuencia
+                            or "mensual",
+                            "intervalo_meses": plan_a_actualizar.intervalo_meses or 1,
+                            "tipo_mensual": plan_a_actualizar.tipo_mensual or "dia_mes",
+                            "dia_mes": plan_a_actualizar.dia_mes,
+                            "semana_mes": plan_a_actualizar.semana_mes,
+                            "dia_semana_mes": plan_a_actualizar.dia_semana_mes,
+                            "intervalo_semanas": plan_a_actualizar.intervalo_semanas
+                            or 1,
+                            "dias_semana": plan_a_actualizar.dias_semana,
+                            "frecuencia": plan_a_actualizar.frecuencia,
+                        }
+
+                        # Calcular nueva próxima ejecución usando la fecha de completado como base
+                        nueva_proxima_ejecucion = calcular_proxima_ejecucion(
+                            plan_data, orden.fecha_completada
+                        )
+
+                        # Actualizar el plan
+                        plan_a_actualizar.ultima_ejecucion = orden.fecha_completada
+                        plan_a_actualizar.proxima_ejecucion = nueva_proxima_ejecucion
+
+                        print(
+                            f"DEBUG: Actualizado plan {plan_a_actualizar.nombre} - Nueva próxima ejecución: {nueva_proxima_ejecucion}"
+                        )
+
+            except Exception as e:
+                print(f"Error al actualizar plan de mantenimiento: {e}")
+                # No fallar la actualización de la orden por errores en planes
+
     elif nuevo_estado != "Completada":
         # Si se cambia de Completada a otro estado, limpiar fecha de completado
         orden.fecha_completada = None

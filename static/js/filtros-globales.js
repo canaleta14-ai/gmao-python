@@ -23,12 +23,8 @@ function initFiltrosGlobales() {
     const currentPage = window.location.pathname;
     const storageKey = `filtros_${currentPage}`;
 
-    // Restaurar estado guardado
-    const savedState = localStorage.getItem(storageKey);
-    if (savedState === 'shown') {
-        filtrosCollapse.classList.add('show');
-        icon.style.transform = 'rotate(180deg)';
-    }
+    // Los filtros siempre estarán colapsados por defecto
+    // No restaurar estado guardado para mantener consistencia
 
     // Manejar eventos de colapso
     filtrosCollapse.addEventListener('show.bs.collapse', function () {

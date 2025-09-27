@@ -18,7 +18,7 @@ def fix_inventario_model():
 
     with app.app_context():
         try:
-            print("🔄 Corrigiendo referencias del modelo Inventario...")
+            print("🔄 Corrigiendo referencias del modelo Inventario...")
 
             # Renombrar tabla antigua a inventario_old
             try:
@@ -28,9 +28,9 @@ def fix_inventario_model():
                 print("✅ Tabla inventario renombrada a inventario_old")
             except Exception as e:
                 if "no such table" in str(e).lower():
-                    print("ℹ️  Tabla inventario no existe o ya fue renombrada")
+                    print("‚Ñπ  Tabla inventario no existe o ya fue renombrada")
                 else:
-                    print(f"⚠️  Error al renombrar tabla: {e}")
+                    print(f"‚ö†  Error al renombrar tabla: {e}")
 
             # Renombrar nueva tabla para que use el nombre correcto
             try:
@@ -40,9 +40,9 @@ def fix_inventario_model():
                 print("✅ Tabla inventario_nuevo renombrada a inventario")
             except Exception as e:
                 if "no such table" in str(e).lower():
-                    print("⚠️  Tabla inventario_nuevo no existe")
+                    print("‚ö†  Tabla inventario_nuevo no existe")
                 else:
-                    print(f"⚠️  Error al renombrar tabla nueva: {e}")
+                    print(f"‚ö†  Error al renombrar tabla nueva: {e}")
 
             # Confirmar cambios
             db.session.commit()
@@ -51,7 +51,7 @@ def fix_inventario_model():
             # Verificar estructura de la nueva tabla
             result = db.session.execute(text("PRAGMA table_info(inventario);"))
             columns = result.fetchall()
-            print(f"\n📋 Estructura de la tabla inventario ({len(columns)} columnas):")
+            print(f"\nüìã Estructura de la tabla inventario ({len(columns)} columnas):")
             for col in columns:
                 print(f"   - {col[1]} ({col[2]})")
 

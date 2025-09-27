@@ -644,14 +644,33 @@ function mostrarModalMovimiento(articuloId = null, codigo = '', descripcion = ''
 
 // Inicializar autocompletado para artículos en modal de movimiento
 function initializeArticuloAutoComplete() {
+    console.log('🔧 Intentando inicializar autocompletado de artículos...');
+
     const input = document.getElementById('movimiento-articulo-info');
-    if (!input || input.dataset.autocompleteInitialized) return;
+    if (!input) {
+        console.error('❌ Input movimiento-articulo-info no encontrado');
+        return;
+    }
+
+    if (input.dataset.autocompleteInitialized) {
+        console.log('⚠️ Autocompletado ya inicializado');
+        return;
+    }
+
+    // Verificar que AutoComplete esté disponible
+    if (typeof AutoComplete === 'undefined') {
+        console.error('❌ AutoComplete no disponible. Reintentando en 1 segundo...');
+        setTimeout(initializeArticuloAutoComplete, 1000);
+        return;
+    }
+
+    console.log('✅ AutoComplete disponible, configurando...');
 
     // Crear configuración específica para artículos de inventario
     const articulosAutoCompleteConfig = {
         element: input,
         apiUrl: '/inventario/api/articulos',
-        searchKey: 'descripcion', // Buscar por descripción
+        searchKey: 'q', // Cambiar a 'q' que es el parámetro estándar
         displayKey: item => `${item.codigo} - ${item.descripcion} (Stock: ${item.stock_actual})`,
         valueKey: 'id',
         placeholder: 'Buscar artículo por código o descripción...',
@@ -667,13 +686,19 @@ function initializeArticuloAutoComplete() {
         },
         onSelect: (item) => {
             // Cuando se selecciona un artículo
-            console.log('Artículo seleccionado:', item);
+            console.log('✅ Artículo seleccionado:', item);
             document.getElementById('movimiento-articulo-id').value = item.id;
 
-            // Mostrar información adicional del stock si es necesario
+            // Mostrar información adicional del stock
             const stockInfo = document.getElementById('stock-info-display');
             if (stockInfo) {
-                stockInfo.textContent = `Stock actual: ${item.stock_actual} | Mínimo: ${item.stock_minimo}`;
+                stockInfo.innerHTML = `
+                    <small class="text-muted">
+                        <strong>Stock:</strong> ${item.stock_actual} | 
+                        <strong>Mínimo:</strong> ${item.stock_minimo} | 
+                        <strong>Categoría:</strong> ${item.categoria || 'N/A'}
+                    </small>
+                `;
                 stockInfo.style.display = 'block';
             }
 
@@ -684,6 +709,7 @@ function initializeArticuloAutoComplete() {
             }
         },
         onInput: (value) => {
+            console.log('🔍 Escribiendo:', value);
             // Limpiar selección si el usuario está escribiendo
             if (value.length < 2) {
                 document.getElementById('movimiento-articulo-id').value = '';
@@ -695,18 +721,18 @@ function initializeArticuloAutoComplete() {
         }
     };
 
-    // Inicializar autocompletado
-    if (typeof AutoComplete !== 'undefined') {
+    try {
+        // Inicializar autocompletado
         const autocompleteInstance = new AutoComplete(articulosAutoCompleteConfig);
         input.dataset.autocompleteInitialized = 'true';
 
-        // Remover readonly del input original y hacer el wrapper visible
+        // Remover readonly del input original
         input.removeAttribute('readonly');
 
-        console.log('✅ Autocompletado de artículos inicializado');
+        console.log('✅ Autocompletado de artículos inicializado correctamente');
         return autocompleteInstance;
-    } else {
-        console.error('❌ AutoComplete no disponible. Asegúrate de que autocomplete.js esté cargado.');
+    } catch (error) {
+        console.error('❌ Error al inicializar autocompletado:', error);
     }
 }
 
@@ -1313,4 +1339,24 @@ window.mostrarCargando = mostrarCargando;
 // Inicializar listeners del modal cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function () {
     initializeMovimientoModalListeners();
+
+    // Listener para cuando se muestre el modal de movimiento
+    const modalMovimiento = document.getElementById('modalMovimiento');
+    if (modalMovimiento) {
+        modalMovimiento.addEventListener('shown.bs.modal', function () {
+            console.log('🎭 Modal de movimiento mostrado, verificando autocompletado...');
+            const input = document.getElementById('movimiento-articulo-info');
+            const articuloId = document.getElementById('movimiento-articulo-id').value;
+
+            // Solo inicializar autocompletado si no hay artículo pre-seleccionado
+            if (input && !articuloId) {
+                console.log('🔧 Inicializando autocompletado automáticamente...');
+                setTimeout(() => {
+                    initializeArticuloAutoComplete();
+                }, 100); // Pequeño delay para asegurar que el DOM esté listo
+            } else {
+                console.log('ℹ️ Artículo pre-seleccionado, no se inicializa autocompletado');
+            }
+        });
+    }
 });

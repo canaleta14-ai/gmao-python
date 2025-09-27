@@ -6,6 +6,11 @@ class Inventario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     codigo = db.Column(db.String(50), unique=True, nullable=False)
     descripcion = db.Column(db.String(200), nullable=False)
+
+    # Relación con categoría (nueva estructura)
+    categoria_id = db.Column(db.Integer, db.ForeignKey("categoria.id"), nullable=True)
+
+    # Mantener campo categoria string para compatibilidad hacia atrás
     categoria = db.Column(db.String(100))
     subcategoria = db.Column(db.String(100))
     ubicacion = db.Column(db.String(100))
@@ -45,6 +50,7 @@ class Inventario(db.Model):
     # Relaciones
     movimientos = db.relationship("MovimientoInventario", backref="articulo", lazy=True)
     conteos = db.relationship("ConteoInventario", backref="articulo", lazy=True)
+    categoria_obj = db.relationship("Categoria", back_populates="articulos", lazy=True)
 
     def __repr__(self):
         return f"<Inventario {self.codigo}: {self.descripcion}>"
@@ -72,6 +78,29 @@ class Inventario(db.Model):
                 self.cuenta_contable_compra = "600000000"  # Cuenta por defecto grupo 60
         else:
             self.cuenta_contable_compra = "622000000"  # Cuenta predeterminada
+
+    def generar_codigo_categoria(self, categoria_id):
+        """Genera un código automático basado en la categoría seleccionada"""
+        from .categoria import Categoria
+
+        if categoria_id:
+            categoria = Categoria.query.get(categoria_id)
+            if categoria:
+                codigo = categoria.generar_proximo_codigo()
+                return codigo
+        return None
+
+    def obtener_nombre_categoria(self):
+        """Obtiene el nombre de la categoría (prioriza la nueva estructura)"""
+        if self.categoria_obj:
+            return self.categoria_obj.nombre
+        return self.categoria or "Sin categoría"
+
+    def obtener_prefijo_categoria(self):
+        """Obtiene el prefijo de la categoría"""
+        if self.categoria_obj:
+            return self.categoria_obj.prefijo
+        return ""
 
 
 class ConteoInventario(db.Model):

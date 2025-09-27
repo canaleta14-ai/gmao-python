@@ -74,7 +74,7 @@
         <div id="filtros-collapse" class="collapse">
             <div class="filtros-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label for="filtro-buscar" class="form-label">Buscar</label>
                             <input type="text" class="form-control" id="filtro-buscar"
@@ -127,15 +127,15 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label class="form-label">Acciones</label>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary btn-sm" onclick="filtrarActivos()">
-                                    <i class="bi bi-search me-1"></i>Buscar
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-primary" onclick="filtrarActivos()">
+                                    <i class="bi bi-search"></i>Buscar
                                 </button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                <button class="btn btn-outline-secondary btn-limpiar-filtro" onclick="limpiarFiltros()">
+                                    <i class="bi bi-arrow-clockwise"></i>Limpiar
                                 </button>
                             </div>
                         </div>
@@ -145,50 +145,61 @@
         </div>
     </div>
 
-    <!-- Tabla de activos -->
-    <div class="card">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Activos</h6>
-            <small class="text-muted" id="contador-activos">0 activos</small>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th><i class="bi bi-upc me-1"></i>Código</th>
-                            <th><i class="bi bi-building me-1"></i>Departamento</th>
-                            <th><i class="bi bi-tag me-1"></i>Nombre</th>
-                            <th><i class="bi bi-gear me-1"></i>Tipo</th>
-                            <th><i class="bi bi-geo-alt me-1"></i>Ubicación</th>
-                            <th><i class="bi bi-truck me-1"></i>Proveedor</th>
-                            <th><i class="bi bi-circle me-1"></i>Estado</th>
-                            <th><i class="bi bi-exclamation-triangle me-1"></i>Prioridad</th>
-                            <th><i class="bi bi-wrench me-1"></i>Último Mant.</th>
-                            <th><i class="bi bi-three-dots me-1"></i>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-activos">
-                        <!-- Indicador de carga inicial -->
-                        <tr id="loading-initial">
-                            <td colspan="10" class="text-center py-4">
-                                <div class="d-flex justify-content-center align-items-center">
-                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
-                                        <span class="visually-hidden">Cargando...</span>
-                                    </div>
-                                    <span>Cargando activos...</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <!-- Paginación -->
-            <div class="card-footer">
-                <div id="paginacion-activos"></div>
+    <!-- Tabla de Activos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-table me-2"></i>Listado de Activos
+                        <span class="badge bg-secondary ms-2" id="contador-activos">0 activos</span>
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0" id="tabla-activos-main"
+                            style="table-layout: fixed; min-width: 1250px;">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 80px;"><i class="bi bi-hash me-1"></i>Código</th>
+                                    <th style="width: 140px;"><i class="bi bi-building me-1"></i>Departamento</th>
+                                    <th style="width: 180px;"><i class="bi bi-cpu me-1"></i>Activo</th>
+                                    <th style="width: 80px;"><i class="bi bi-gear me-1"></i>Tipo</th>
+                                    <th style="width: 120px;"><i class="bi bi-geo-alt me-1"></i>Ubicación</th>
+                                    <th style="width: 120px;"><i class="bi bi-truck me-1"></i>Proveedor</th>
+                                    <th style="width: 100px;"><i class="bi bi-circle me-1"></i>Estado</th>
+                                    <th style="width: 80px;"><i class="bi bi-flag me-1"></i>Prioridad</th>
+                                    <th style="width: 100px;"><i class="bi bi-calendar me-1"></i>Último Mant.</th>
+                                    <th class="text-center" style="width: 180px;"><i
+                                            class="bi bi-three-dots me-1"></i>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-activos">
+                                <!-- Indicador de carga inicial -->
+                                <tr id="loading-initial">
+                                    <td colspan="10" class="text-center py-4">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2"
+                                                role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <span>Cargando activos...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación -->
+                    <nav aria-label="Paginación de activos" class="m-2">
+                        <div id="paginacion-activos"></div>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Modal Nuevo Activo -->

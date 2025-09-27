@@ -1,5 +1,6 @@
 let perPage = 10;
 let currentPage = 1;
+let paginacionUsuarios;
 
 function cargarUsuarios(page = 1) {
     currentPage = page;
@@ -14,21 +15,21 @@ function cargarUsuarios(page = 1) {
     if (rol) url += `&rol=${encodeURIComponent(rol)}`;
     if (activo) url += `&activo=${encodeURIComponent(activo)}`;
 
-    console.log('🔍 Cargando usuarios con URL:', url);
-    console.log('📊 Filtros aplicados:', { username, email, rol, activo });
+    console.log('🔍 Cargando usuarios con URL:', url);
+    console.log('üìä Filtros aplicados:', { username, email, rol, activo });
 
     fetch(url)
         .then(r => {
-            console.log('📡 Response status:', r.status);
+            console.log('üì° Response status:', r.status);
             return r.json();
         })
         .then(data => {
-            console.log('📦 Datos recibidos:', data);
+            console.log('üì¶ Datos recibidos:', data);
             const tbody = document.getElementById('tabla-usuarios');
             tbody.innerHTML = '';
 
             if (data.usuarios && data.usuarios.length > 0) {
-                console.log(`👥 Mostrando ${data.usuarios.length} usuarios de ${data.total} total`);
+                console.log(`üë• Mostrando ${data.usuarios.length} usuarios de ${data.total} total`);
                 data.usuarios.forEach(u => {
                     const badgeClass = u.activo ? 'bg-success' : 'bg-secondary';
                     const badgeText = u.activo ? 'Activo' : 'Inactivo';
@@ -46,13 +47,13 @@ function cargarUsuarios(page = 1) {
                             <td><span class="badge ${badgeClass}">${badgeText}</span></td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-primary" onclick="editarUsuario(${u.id})" title="Editar">
+                                    <button type="button" class="btn btn-sm btn-outline-primary action-btn edit" onclick="editarUsuario(${u.id})" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button type="button" class="btn ${btnClass}" onclick="toggleActivo(${u.id}, ${!u.activo})" title="${btnText}">
+                                    <button type="button" class="btn btn-sm ${btnClass} action-btn special" onclick="toggleActivo(${u.id}, ${!u.activo})" title="${btnText}">
                                         <i class="bi ${btnIcon}"></i>
                                     </button>
-                                    <button type="button" class="btn btn-outline-danger" onclick="mostrarModalEliminarUsuario(${u.id}, '${u.username}')" title="Eliminar">
+                                    <button type="button" class="btn btn-sm btn-outline-danger action-btn delete" onclick="mostrarModalEliminarUsuario(${u.id}, '${u.username}')" title="Eliminar">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -61,7 +62,7 @@ function cargarUsuarios(page = 1) {
                     `;
                 });
             } else {
-                console.log('📭 No se encontraron usuarios');
+                console.log('üì≠ No se encontraron usuarios');
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
@@ -72,7 +73,10 @@ function cargarUsuarios(page = 1) {
                 `;
             }
 
-            renderPaginacion(data.page, data.per_page, data.total);
+            // Renderizar paginación
+            if (typeof paginacionUsuarios !== 'undefined' && paginacionUsuarios.render) {
+                paginacionUsuarios.render(data.page, data.per_page, data.total);
+            }
             console.log(`✅ Usuarios cargados exitosamente`);
         })
         .catch(error => {
@@ -81,48 +85,7 @@ function cargarUsuarios(page = 1) {
         });
 }
 
-function renderPaginacion(page, perPage, total) {
-    const paginacion = document.getElementById('paginacion-usuarios');
-    if (!paginacion) {
-        console.error('❌ Elemento paginacion-usuarios no encontrado');
-        return;
-    }
-    paginacion.innerHTML = '';
 
-    const totalPages = Math.ceil(total / perPage);
-
-    if (totalPages <= 1) return;
-
-    // Botón anterior
-    const prevClass = page === 1 ? 'disabled' : '';
-    paginacion.innerHTML += `
-        <li class="page-item ${prevClass}">
-            <a class="page-link" href="#" onclick="cargarUsuarios(${page - 1})">
-                <i class="bi bi-chevron-left"></i>
-            </a>
-        </li>
-    `;
-
-    // Números de página
-    for (let i = 1; i <= totalPages; i++) {
-        const activeClass = i === page ? 'active' : '';
-        paginacion.innerHTML += `
-            <li class="page-item ${activeClass}">
-                <a class="page-link" href="#" onclick="cargarUsuarios(${i})">${i}</a>
-            </li>
-        `;
-    }
-
-    // Botón siguiente
-    const nextClass = page === totalPages ? 'disabled' : '';
-    paginacion.innerHTML += `
-        <li class="page-item ${nextClass}">
-            <a class="page-link" href="#" onclick="cargarUsuarios(${page + 1})">
-                <i class="bi bi-chevron-right"></i>
-            </a>
-        </li>
-    `;
-}
 
 function toggleActivo(id, estado) {
     fetch(`/usuarios/api/${id}/estado`, {
@@ -378,17 +341,24 @@ function mostrarAlerta(mensaje, tipo) {
 
 function getTituloSegunTipo(tipo) {
     const titulos = {
-        'success': '✅ Éxito',
+        'success': '✅ √âxito',
         'error': '❌ Error',
-        'warning': '⚠️ Advertencia',
-        'info': 'ℹ️ Información'
+        'warning': '‚ö† Advertencia',
+        'info': '‚Ñπ Información'
     };
     return titulos[tipo] || 'Información';
 }
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('🚀 DOM cargado, inicializando usuarios...');
+    console.log('🚀 DOM cargado, inicializando usuarios...');
+
+    // Inicializar paginación
+    paginacionUsuarios = createPagination('paginacion-usuarios', cargarUsuarios, {
+        perPage: 10,
+        showInfo: true,
+        showSizeSelector: true
+    });
 
     // Verificar que los elementos existen
     const elementos = ['filtro-username', 'filtro-email', 'filtro-rol', 'filtro-activo'];
@@ -415,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Configurar búsqueda en tiempo real para usuarios
 function configurarBusquedaUsuarios() {
-    console.log('🔍 Configurando búsqueda de usuarios...');
+    console.log('🔍 Configurando búsqueda de usuarios...');
 
     // Campo de filtro por username - usar solo para autocompletado, no eventos directos
     const filtroUsername = document.getElementById('filtro-username');
@@ -437,7 +407,7 @@ function configurarBusquedaUsuarios() {
     const filtroRol = document.getElementById('filtro-rol');
     if (filtroRol) {
         filtroRol.addEventListener('change', function (e) {
-            console.log(`🔍 Filtro rol cambiado: "${e.target.value}"`);
+            console.log(`🔍 Filtro rol cambiado: "${e.target.value}"`);
             cargarUsuarios(1);
         });
         console.log('✅ Filtro de rol configurado');
@@ -446,7 +416,7 @@ function configurarBusquedaUsuarios() {
     const filtroActivo = document.getElementById('filtro-activo');
     if (filtroActivo) {
         filtroActivo.addEventListener('change', function (e) {
-            console.log(`🔍 Filtro activo cambiado: "${e.target.value}"`);
+            console.log(`🔍 Filtro activo cambiado: "${e.target.value}"`);
             cargarUsuarios(1);
         });
         console.log('✅ Filtro de activo configurado');
@@ -484,7 +454,7 @@ function inicializarAutocompletado() {
                 cargarUsuarios(1);
             },
             onInput: (value) => {
-                console.log('🔍 Input en autocompletado username:', value);
+                console.log('🔍 Input en autocompletado username:', value);
                 // Búsqueda en tiempo real mientras escribe
                 setTimeout(() => {
                     cargarUsuarios(1);
@@ -512,7 +482,7 @@ function inicializarAutocompletado() {
                 cargarUsuarios(1);
             },
             onInput: (value) => {
-                console.log('🔍 Input en autocompletado email:', value);
+                console.log('🔍 Input en autocompletado email:', value);
                 // Búsqueda en tiempo real mientras escribe
                 setTimeout(() => {
                     cargarUsuarios(1);
@@ -544,7 +514,7 @@ function inicializarAutocompletado() {
     // Verificar que los elementos estén siendo "wrapeados" por autocompletado
     setTimeout(() => {
         const wrappers = document.querySelectorAll('.autocomplete-wrapper');
-        console.log(`🔍 Elementos de autocompletado encontrados: ${wrappers.length}`);
+        console.log(`🔍 Elementos de autocompletado encontrados: ${wrappers.length}`);
         wrappers.forEach((wrapper, index) => {
             const input = wrapper.querySelector('input');
             if (input) {
@@ -556,7 +526,7 @@ function inicializarAutocompletado() {
 
 // Función para limpiar filtros de usuarios
 function limpiarFiltrosUsuarios() {
-    console.log('🧹 Limpiando filtros de usuarios...');
+    console.log('üßπ Limpiando filtros de usuarios...');
 
     // Limpiar campos de filtro
     const filtros = [

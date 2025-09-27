@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  gmao-app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - ./instance:/app/instance
+      - ./static/uploads:/app/static/uploads
+      - ./uploads:/app/uploads
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - SECRET_KEY=development_key_change_in_production
+      - DATABASE_URL=sqlite:///instance/database.db
+    depends_on:
+      - db
+    networks:
+      - gmao-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=gmao_db
+      - POSTGRES_USER=gmao_user
+      - POSTGRES_PASSWORD=gmao_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - gmao-network
+  # Base de datos alternativa MySQL (descomentar si se prefiere)
+  # mysql-db:
+  #   image: mysql:8.0
+  #   environment:
+  #     - MYSQL_DATABASE=gmao_db
+  #     - MYSQL_USER=gmao_user
+  #     - MYSQL_PASSWORD=gmao_password
+  #     - MYSQL_ROOT_PASSWORD=root_password
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   ports:
+  #     - "3306:3306"
+  #   networks:
+  #     - gmao-network
+
+volumes:
+  postgres_data:
+  mysql_data:
+
+
+networks:
+  gmao-network:
+    driver: bridge

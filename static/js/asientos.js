@@ -174,16 +174,16 @@ function mostrarAsientos() {
             </td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" onclick="verAsiento(${asiento.id})" title="Ver detalle">
-                        <i class="fas fa-eye"></i>
+                    <button class="btn btn-sm btn-outline-primary action-btn view" onclick="verAsiento(${asiento.id})" title="Ver detalle">
+                        <i class="bi bi-eye"></i>
                     </button>
-                    <button class="btn btn-outline-warning" onclick="editarAsiento(${asiento.id})" 
+                    <button class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarAsiento(${asiento.id})" 
                             title="Editar" ${asiento.estado === 'cerrado' ? 'disabled' : ''}>
-                        <i class="fas fa-edit"></i>
+                        <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-outline-danger" onclick="eliminarAsiento(${asiento.id})" 
+                    <button class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarAsiento(${asiento.id})" 
                             title="Eliminar" ${asiento.estado === 'cerrado' ? 'disabled' : ''}>
-                        <i class="fas fa-trash"></i>
+                        <i class="bi bi-trash"></i>
                     </button>
                 </div>
             </td>
@@ -578,13 +578,13 @@ function mostrarVistaDetallada() {
                     <small class="text-muted">${asiento.concepto}</small>
                 </div>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-warning" onclick="editarAsiento(${asiento.id})" 
+                    <button class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarAsiento(${asiento.id})" 
                             ${asiento.estado === 'cerrado' ? 'disabled' : ''}>
-                        <i class="fas fa-edit"></i>
+                        <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-outline-danger" onclick="eliminarAsiento(${asiento.id})" 
+                    <button class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarAsiento(${asiento.id})" 
                             ${asiento.estado === 'cerrado' ? 'disabled' : ''}>
-                        <i class="fas fa-trash"></i>
+                        <i class="bi bi-trash"></i>
                     </button>
                 </div>
             </div>

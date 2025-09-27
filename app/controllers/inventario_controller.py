@@ -4,6 +4,7 @@ from app.models.movimiento_inventario import (
     AsientoContable,
     LineaAsientoContable,
 )
+from app.models.categoria import Categoria
 from app.extensions import db
 from flask import request
 from datetime import datetime, timezone
@@ -48,7 +49,8 @@ def listar_inventario():
             "id": i.id,
             "codigo": i.codigo,
             "descripcion": i.descripcion,
-            "categoria": i.categoria,
+            "categoria": i.obtener_nombre_categoria(),  # Usar método del modelo
+            "prefijo_categoria": i.obtener_prefijo_categoria(),
             "stock_actual": i.stock_actual,
             "stock_minimo": i.stock_minimo,
             "ubicacion": i.ubicacion,
@@ -70,16 +72,27 @@ def listar_inventario():
 
 
 def crear_item(data):
+    # Si hay categoria_id, generar código automáticamente
+    codigo = data.get("codigo")
+    categoria_id = data.get("categoria_id")
+
+    if categoria_id and not codigo:
+        # Generar código automático basado en categoría
+        categoria = Categoria.query.get(categoria_id)
+        if categoria:
+            codigo = categoria.generar_proximo_codigo()
+
     nuevo_item = Inventario(
-        codigo=data["codigo"],
+        codigo=codigo or data["codigo"],
         descripcion=data["descripcion"],
-        categoria=data.get("categoria"),
+        categoria_id=categoria_id,
+        categoria=data.get("categoria"),  # Mantener compatibilidad
         stock_actual=data.get("stock_actual", 0),
         stock_minimo=data.get("stock_minimo", 0),
         ubicacion=data.get("ubicacion"),
         precio_unitario=data.get("precio_unitario", 0),
         unidad_medida=data.get("unidad_medida"),
-        proveedor=data.get("proveedor"),
+        proveedor_principal=data.get("proveedor"),
     )
     db.session.add(nuevo_item)
     db.session.commit()
@@ -159,6 +172,19 @@ def listar_articulos_avanzado(filtros=None, page=1, per_page=10):
     query = Inventario.query.filter_by(activo=True)
 
     if filtros:
+        # Búsqueda general (para autocompletado)
+        if "busqueda_general" in filtros and filtros["busqueda_general"]:
+            search_term = filtros["busqueda_general"]
+            query = query.filter(
+                db.or_(
+                    Inventario.codigo.ilike(f"%{search_term}%"),
+                    Inventario.descripcion.ilike(f"%{search_term}%"),
+                    Inventario.categoria.ilike(f"%{search_term}%"),
+                    Inventario.ubicacion.ilike(f"%{search_term}%"),
+                )
+            )
+
+        # Filtros específicos
         if "codigo" in filtros and filtros["codigo"]:
             query = query.filter(Inventario.codigo.ilike(f"%{filtros['codigo']}%"))
         if "descripcion" in filtros and filtros["descripcion"]:

@@ -1,8 +1,8 @@
-// PRUEBA DE ALERTAS ULTRA-RÁPIDA
-console.log('🚨 Archivo de prueba de alertas cargado');
+// PRUEBA DE ALERTAS ULTRA-R√ÅPIDA
+console.log('üö® Archivo de prueba de alertas cargado');
 
 function loadMaintenanceAlertsTest() {
-    console.log('🚨 TEST: Iniciando carga de alertas con timeout de 5 segundos');
+    console.log('üö® TEST: Iniciando carga de alertas con timeout de 5 segundos');
     const start = performance.now();
 
     const container = document.getElementById('maintenanceAlerts');
@@ -24,13 +24,13 @@ function loadMaintenanceAlertsTest() {
     const timeoutId = setTimeout(() => {
         controller.abort();
         const timeoutMs = performance.now() - start;
-        console.error(`🚨 TIMEOUT: Alertas canceladas después de ${timeoutMs.toFixed(2)}ms`);
+        console.error(`üö® TIMEOUT: Alertas canceladas después de ${timeoutMs.toFixed(2)}ms`);
         container.innerHTML = `
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle"></i> <strong>Timeout de Prueba</strong>
                 <br>Las alertas tardaron más de 5 segundos
                 <br><small>Tiempo: ${timeoutMs.toFixed(0)}ms</small>
-                <br><button class="btn btn-sm btn-primary mt-2" onclick="loadMaintenanceAlertsTest()">🔄 Reintentar</button>
+                <br><button class="btn btn-sm btn-primary mt-2" onclick="loadMaintenanceAlertsTest()">🔄 Reintentar</button>
             </div>
         `;
     }, 5000); // 5 segundos máximo
@@ -46,7 +46,7 @@ function loadMaintenanceAlertsTest() {
         .then(response => {
             clearTimeout(timeoutId);
             const fetchTime = performance.now() - start;
-            console.log(`🚨 Fetch completado en ${fetchTime.toFixed(2)}ms - Status: ${response.status}`);
+            console.log(`üö® Fetch completado en ${fetchTime.toFixed(2)}ms - Status: ${response.status}`);
 
             if (!response.ok) {
                 throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
@@ -55,11 +55,11 @@ function loadMaintenanceAlertsTest() {
         })
         .then(data => {
             const totalTime = performance.now() - start;
-            console.log(`🚨 Alertas procesadas en ${totalTime.toFixed(2)}ms`, data);
+            console.log(`üö® Alertas procesadas en ${totalTime.toFixed(2)}ms`, data);
 
             if (data && data.success && data.alertas && Array.isArray(data.alertas)) {
                 if (data.alertas.length > 0) {
-                    console.log(`🚨 Mostrando ${data.alertas.length} alertas`);
+                    console.log(`üö® Mostrando ${data.alertas.length} alertas`);
 
                     // Mostrar alertas de forma simple
                     let alertasHtml = '<div class="row">';
@@ -89,7 +89,7 @@ function loadMaintenanceAlertsTest() {
                 `;
                 }
             } else {
-                console.warn('🚨 Respuesta sin alertas válidas:', data);
+                console.warn('üö® Respuesta sin alertas válidas:', data);
                 container.innerHTML = `
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i> No se encontraron alertas válidas
@@ -103,17 +103,17 @@ function loadMaintenanceAlertsTest() {
             const errorTime = performance.now() - start;
 
             if (error.name === 'AbortError') {
-                console.error(`🚨 Request abortado después de ${errorTime.toFixed(2)}ms`);
+                console.error(`üö® Request abortado después de ${errorTime.toFixed(2)}ms`);
                 return; // El timeout ya manejó la UI
             }
 
-            console.error(`🚨 Error en alertas después de ${errorTime.toFixed(2)}ms:`, error);
+            console.error(`üö® Error en alertas después de ${errorTime.toFixed(2)}ms:`, error);
             container.innerHTML = `
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-triangle"></i> <strong>Error al cargar alertas</strong>
                 <br>Motivo: ${error.message}
                 <br><small>Tiempo: ${errorTime.toFixed(0)}ms</small>
-                <br><button class="btn btn-sm btn-primary mt-2" onclick="loadMaintenanceAlertsTest()">🔄 Reintentar</button>
+                <br><button class="btn btn-sm btn-primary mt-2" onclick="loadMaintenanceAlertsTest()">🔄 Reintentar</button>
             </div>
         `;
         });
@@ -121,21 +121,21 @@ function loadMaintenanceAlertsTest() {
 
 // Función para probar directamente el endpoint
 function testEndpointDirect() {
-    console.log('🧪 TEST DIRECTO: Probando endpoint sin UI');
+    console.log('üß™ TEST DIRECTO: Probando endpoint sin UI');
     const start = performance.now();
 
     fetch('/api/alertas-mantenimiento')
         .then(response => {
             const fetchTime = performance.now() - start;
-            console.log(`🧪 Respuesta recibida en ${fetchTime.toFixed(2)}ms - Status: ${response.status}`);
+            console.log(`üß™ Respuesta recibida en ${fetchTime.toFixed(2)}ms - Status: ${response.status}`);
             return response.json();
         })
         .then(data => {
             const totalTime = performance.now() - start;
-            console.log(`🧪 Total: ${totalTime.toFixed(2)}ms`, data);
+            console.log(`üß™ Total: ${totalTime.toFixed(2)}ms`, data);
         })
         .catch(error => {
             const errorTime = performance.now() - start;
-            console.error(`🧪 Error después de ${errorTime.toFixed(2)}ms:`, error);
+            console.error(`üß™ Error después de ${errorTime.toFixed(2)}ms:`, error);
         });
 }

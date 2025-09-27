@@ -159,15 +159,15 @@ function actualizarTablaConteos(conteos) {
             <td>
                 <div class="btn-group btn-group-sm" role="group">
                     ${conteo.estado === 'pendiente' ?
-                `<button type="button" class="btn btn-outline-success" onclick="mostrarModalProcesarConteo(${conteo.id}, '${conteo.articulo_codigo}', '${conteo.articulo_descripcion}', ${conteo.stock_teorico})" title="Procesar conteo">
-                            <i class="fas fa-check"></i>
+                `<button type="button" class="btn btn-sm btn-outline-success action-btn special" onclick="mostrarModalProcesarConteo(${conteo.id}, '${conteo.articulo_codigo}', '${conteo.articulo_descripcion}', ${conteo.stock_teorico})" title="Procesar conteo">
+                            <i class="bi bi-check"></i>
                         </button>` :
-                `<button type="button" class="btn btn-outline-info" onclick="verDetalleConteo(${conteo.id})" title="Ver detalle">
-                            <i class="fas fa-eye"></i>
+                `<button type="button" class="btn btn-sm btn-outline-primary action-btn view" onclick="verDetalleConteo(${conteo.id})" title="Ver detalle">
+                            <i class="bi bi-eye"></i>
                         </button>`
             }
-                    <button type="button" class="btn btn-outline-primary" onclick="editarConteo(${conteo.id})" title="Editar">
-                        <i class="fas fa-edit"></i>
+                    <button type="button" class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarConteo(${conteo.id})" title="Editar">
+                        <i class="bi bi-pencil"></i>
                     </button>
                 </div>
             </td>

@@ -80,14 +80,14 @@ function mostrarOrdenes() {
             <td><span class="badge bg-${getEstadoBadgeColor(orden.estado)}">${orden.estado}</span></td>
             <td>${orden.tecnico_nombre || 'Sin asignar'}</td>
             <td>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="verOrden(${orden.id})" title="Ver detalles">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary action-btn view" onclick="verOrden(${orden.id})" title="Ver detalles">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarOrden(${orden.id})" title="Editar">
+                    <button type="button" class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarOrden(${orden.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-info" onclick="mostrarModalEstado(${orden.id})" title="Cambiar estado">
+                    <button type="button" class="btn btn-sm btn-outline-info action-btn info" onclick="mostrarModalEstado(${orden.id})" title="Cambiar estado">
                         <i class="bi bi-arrow-repeat"></i>
                     </button>
                 </div>
@@ -256,7 +256,7 @@ async function actualizarEstado() {
             updateData.tiempo_real = parseFloat(tiempoReal);
         }
 
-        const response = await fetch(`/ordenes/${ordenId}/estado`, {
+        const response = await fetch(`/ordenes/api/${ordenId}/estado`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updateData)
@@ -533,7 +533,7 @@ function inicializarAutocompletado() {
 
 // Configurar event listeners para filtros
 function configurarFiltrosOrdenes() {
-    console.log('🔍 Configurando filtros de órdenes...');
+    console.log('🔍 Configurando filtros de órdenes...');
 
     // Campo de búsqueda
     const filtroBuscar = document.getElementById('filtro-buscar');
@@ -555,7 +555,7 @@ function configurarFiltrosOrdenes() {
 
 // Aplicar filtros a la lista de órdenes
 function aplicarFiltros() {
-    console.log('🔍 Aplicando filtros...');
+    console.log('🔍 Aplicando filtros...');
 
     const textoBusqueda = document.getElementById('filtro-buscar')?.value.toLowerCase() || '';
     const filtroEstado = document.getElementById('filtro-estado')?.value || '';
@@ -592,7 +592,7 @@ function aplicarFiltros() {
     // Mostrar órdenes filtradas
     mostrarOrdenesFiltradas(ordenesFiltradas);
 
-    console.log(`🔍 Filtros aplicados: ${ordenesFiltradas.length} de ${ordenes.length} órdenes`);
+    console.log(`🔍 Filtros aplicados: ${ordenesFiltradas.length} de ${ordenes.length} órdenes`);
 }
 
 // Mostrar órdenes filtradas (versión específica para filtros)
@@ -619,14 +619,14 @@ function mostrarOrdenesFiltradas(ordenesFiltradas) {
             <td><span class="badge bg-${getEstadoBadgeColor(orden.estado)}">${orden.estado}</span></td>
             <td>${orden.tecnico_nombre || 'Sin asignar'}</td>
             <td>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="verOrden(${orden.id})" title="Ver detalles">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary action-btn view" onclick="verOrden(${orden.id})" title="Ver detalles">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarOrden(${orden.id})" title="Editar">
+                    <button type="button" class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarOrden(${orden.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-info" onclick="mostrarModalEstado(${orden.id})" title="Cambiar estado">
+                    <button type="button" class="btn btn-sm btn-outline-info action-btn info" onclick="mostrarModalEstado(${orden.id})" title="Cambiar estado">
                         <i class="bi bi-arrow-repeat"></i>
                     </button>
                 </div>
@@ -943,7 +943,7 @@ function validarArchivo(file) {
     }
 
     if (file.size > tamañoMaximo) {
-        mostrarToast(`Archivo muy grande: ${file.name} (máx. 10MB)`, 'error');
+        mostrarToast(`Archivo muy grande: ${file.name} (màx. 10MB)`, 'error');
         return false;
     }
 
@@ -984,16 +984,17 @@ function añadirArchivoALista(archivo, esNuevo = false) {
             <i class="bi ${icono} archivo-icono"></i>
             <div class="archivo-detalles">
                 <h6>${archivo.nombre || archivo.nombre_original}</h6>
-                <small>${formatearTamaño(archivo.tamaño || archivo.tamaño)} ${archivo.descripcion ? '- ' + archivo.descripcion : ''}</small>
-                ${esNuevo && archivo.estado === 'preparado' ? '<div class="upload-progress"><div class="upload-progress-bar" style="width: 0%"></div></div>' : ''}
-            </div>
-        </div>
-        <div class="archivo-acciones">
-            ${!esNuevo && archivo.tipo !== 'enlace' ? `<button class="btn btn-sm btn-outline-primary" onclick="descargarArchivo(${archivo.id})"><i class="bi bi-download"></i></button>` : ''}
-            ${archivo.tipo === 'enlace' ? `<button class="btn btn-sm btn-outline-info" onclick="abrirEnlace('${archivo.url_enlace}')"><i class="bi bi-box-arrow-up-right"></i></button>` : ''}
-            <button class="btn btn-sm btn-outline-danger" onclick="eliminarArchivo(${archivo.id}, ${esNuevo})"><i class="bi bi-trash"></i></button>
-        </div>
-    `;
+                <small>${formatearTamaño(archivo.tamaño || archivo.tamaño)
+        } ${archivo.descripcion ? '- ' + archivo.descripcion : ''}</small >
+    ${esNuevo && archivo.estado === 'preparado' ? '<div class="upload-progress"><div class="upload-progress-bar" style="width: 0%"></div></div>' : ''}
+            </div >
+        </div >
+    <div class="archivo-acciones">
+        ${!esNuevo && archivo.tipo !== 'enlace' ? `<button class="btn btn-sm btn-outline-primary" onclick="descargarArchivo(${archivo.id})"><i class="bi bi-download"></i></button>` : ''}
+        ${archivo.tipo === 'enlace' ? `<button class="btn btn-sm btn-outline-info" onclick="abrirEnlace('${archivo.url_enlace}')"><i class="bi bi-box-arrow-up-right"></i></button>` : ''}
+        <button class="btn btn-sm btn-outline-danger" onclick="eliminarArchivo(${archivo.id}, ${esNuevo})"><i class="bi bi-trash"></i></button>
+    </div>
+`;
 
     listaArchivos.appendChild(archivoDiv);
 }
@@ -1254,7 +1255,7 @@ async function subirArchivo(archivoTemp, ordenId) {
 
 // Función para limpiar filtros
 function limpiarFiltros() {
-    console.log('🧹 Limpiando filtros...');
+    console.log('üßπ Limpiando filtros...');
 
     // Limpiar campos de filtro
     const filtros = [
@@ -1272,7 +1273,7 @@ function limpiarFiltros() {
         }
     });
 
-    // Aplicar filtros (mostrará todas las órdenes sin filtros)
+    // Aplicar filtros (mostrarà todas las órdenes sin filtros)
     aplicarFiltros();
     console.log('✅ Filtros limpiados y vista actualizada');
 }

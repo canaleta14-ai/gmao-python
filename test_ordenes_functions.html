@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Ordenes.js</title>
+</head>
+<body>
+    <h1>Test de Funciones ordenes.js</h1>
+    
+    <div id="results"></div>
+    
+    <button onclick="testFunctions()">Probar Funciones</button>
+    
+    <!-- Cargar el archivo ordenes.js -->
+    <script src="static/js/ordenes.js"></script>
+    
+    <script>
+        function testFunctions() {
+            const results = document.getElementById('results');
+            let html = '<h2>Resultados del Test:</h2>';
+            
+            // Probar mostrarModalNuevaOrden
+            if (typeof mostrarModalNuevaOrden === 'function') {
+                html += '<p>✅ mostrarModalNuevaOrden está definida y es una función</p>';
+            } else {
+                html += '<p>❌ mostrarModalNuevaOrden NO está definida o no es una función</p>';
+            }
+            
+            // Probar exportarCSV
+            if (typeof exportarCSV === 'function') {
+                html += '<p>✅ exportarCSV está definida y es una función</p>';
+            } else {
+                html += '<p>❌ exportarCSV NO está definida o no es una función</p>';
+            }
+            
+            // Mostrar otras funciones globales disponibles
+            html += '<h3>Funciones globales detectadas en ordenes.js:</h3>';
+            html += '<ul>';
+            
+            const globalFunctions = [];
+            for (let prop in window) {
+                if (typeof window[prop] === 'function' && 
+                    (prop.includes('orden') || prop.includes('Orden') || 
+                     prop.includes('modal') || prop.includes('Modal') ||
+                     prop.includes('exportar') || prop.includes('Exportar'))) {
+                    globalFunctions.push(prop);
+                }
+            }
+            
+            if (globalFunctions.length > 0) {
+                globalFunctions.forEach(func => {
+                    html += `<li>${func}</li>`;
+                });
+            } else {
+                html += '<li>No se encontraron funciones relacionadas</li>';
+            }
+            
+            html += '</ul>';
+            results.innerHTML = html;
+        }
+        
+        // Ejecutar test automáticamente al cargar
+        window.onload = function() {
+            console.log('Probando carga de ordenes.js...');
+            testFunctions();
+        };
+    </script>
+</body>
+</html>

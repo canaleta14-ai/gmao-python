@@ -103,11 +103,7 @@
                                 <label for="filtro-categoria" class="form-label">Categoría</label>
                                 <select class="form-select" id="filtro-categoria">
                                     <option value="">Todas</option>
-                                    <option value="Mecánicos">Mecánicos</option>
-                                    <option value="Eléctricos">Eléctricos</option>
-                                    <option value="Hidráulicos">Hidráulicos</option>
-                                    <option value="Neumáticos">Neumáticos</option>
-                                    <option value="Lubricantes">Lubricantes</option>
+                                    <!-- Las categorías se cargan dinámicamente -->
                                 </select>
                             </div>
                         </div>
@@ -247,20 +243,39 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="nuevo-codigo" class="form-label">Código del Artículo *</label>
-                            <input type="text" class="form-control" id="nuevo-codigo" required placeholder="Ej: REP001">
-                            <div class="form-text">Código único para identificar el artículo</div>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="nuevo-codigo" required placeholder="Se genera automáticamente">
+                                <button type="button" class="btn btn-outline-secondary" 
+                                        id="btn-generar-codigo" 
+                                        onclick="generarCodigoAutomatico()" 
+                                        title="Generar código automático">
+                                    <i class="fas fa-magic"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Código único para identificar el artículo. 
+                                <span id="codigo-preview" class="text-info"></span>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label for="nuevo-categoria" class="form-label">Categoría</label>
-                            <select class="form-select" id="nuevo-categoria">
-                                <option value="">Seleccionar categoría...</option>
-                                <option value="Mecánicos">Mecánicos</option>
-                                <option value="Eléctricos">Eléctricos</option>
-                                <option value="Hidráulicos">Hidráulicos</option>
-                                <option value="Neumáticos">Neumáticos</option>
-                                <option value="Lubricantes">Lubricantes</option>
-                                <option value="Herramientas">Herramientas</option>
-                            </select>
+                            <div class="d-flex align-items-center">
+                                <select class="form-select" id="nuevo-categoria" onchange="categoriaSeleccionada()">
+                                    <option value="">Seleccionar categoría...</option>
+                                    <!-- Las categorías se cargan dinámicamente -->
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary ms-2" 
+                                        data-bs-toggle="modal" data-bs-target="#modalCategoria" 
+                                        title="Añadir nueva categoría">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <span id="categoria-preview"></span>
+                                <a href="/categorias" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-external-link-alt"></i> Gestionar categorías
+                                </a>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label for="nuevo-descripcion" class="form-label">Descripción *</label>
@@ -402,8 +417,42 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para crear categoría rápida -->
+<div class="modal fade" id="modalCategoria" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCategoriaRapida">
+                    <div class="mb-3">
+                        <label for="rapida-nombre" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="rapida-nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rapida-prefijo" class="form-label">Prefijo *</label>
+                        <input type="text" class="form-control" id="rapida-prefijo" required maxlength="10" style="text-transform: uppercase">
+                    </div>
+                    <div class="mb-3">
+                        <label for="rapida-color" class="form-label">Color</label>
+                        <input type="color" class="form-control form-control-color" id="rapida-color" value="#007bff">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="crearCategoriaRapida()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
+<script src="{{ url_for('static', filename='js/inventario-categorias.js') }}"></script>
+<script src="{{ url_for('static', filename='js/test-inventario.js') }}"></script>
 {% endblock %}

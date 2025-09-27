@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Debug Proveedores</title>
+    <script>
+        // Funci칩n de prueba simplificada
+        async function testCargarProveedores() {
+            console.log('Probando cargar proveedores...');
+            try {
+                const response = await fetch('/proveedores/api?page=1&per_page=10');
+                console.log('Response status:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Data received:', data);
+
+                    // Crear tabla simple para mostrar datos
+                    const tbody = document.getElementById('test-table');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                        data.items.forEach(proveedor => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${proveedor.nombre}</td>
+                                <td>${proveedor.nif}</td>
+                                <td>${proveedor.cuenta_contable}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                        console.log('Tabla actualizada con', data.items.length, 'proveedores');
+                    }
+                } else {
+                    console.error('Error:', response.status);
+                }
+            } catch (error) {
+                console.error('Error de conexi칩n:', error);
+            }
+        }
+
+        // Ejecutar cuando cargue la p치gina
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM cargado, ejecutando test...');
+            testCargarProveedores();
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Test Debug Proveedores</h1>
+    <button onclick="testCargarProveedores()">Cargar Proveedores</button>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>NIF</th>
+                <th>Cuenta Contable</th>
+            </tr>
+        </thead>
+        <tbody id="test-table">
+            <!-- Se llenar치 con JavaScript -->
+        </tbody>
+    </table>
+</body>
+
+</html>
