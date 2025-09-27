@@ -7,18 +7,209 @@ let articulosActuales = [];
 let paginaActual = 1;
 let articulosPorPagina = 10;
 let filtrosAplicados = {};
+let paginacionInventario;
+let categoriasDisponibles = []; // Nuevo: array para categorías dinámicas
+
+// Clase principal de la aplicación de inventario
+class InventarioApp {
+    constructor() {
+        this.categorias = [];
+        this.articuloSeleccionado = null;
+    }
+
+    async init() {
+        await this.cargarCategorias();
+        this.setupEventListeners();
+    }
+
+    async cargarCategorias() {
+        try {
+            const response = await fetch('/api/categorias/');
+            const data = await response.json();
+
+            if (data.success) {
+                this.categorias = data.categorias;
+                categoriasDisponibles = data.categorias; // Mantener compatibilidad
+                this.actualizarSelectoresCategorias();
+                console.log('✅ Categorías cargadas:', this.categorias.length);
+            } else {
+                console.error('Error cargando categorías:', data.message);
+            }
+        } catch (error) {
+            console.error('Error en petición de categorías:', error);
+        }
+    }
+
+    actualizarSelectoresCategorias() {
+        const selectores = ['filtro-categoria', 'nuevo-categoria'];
+
+        selectores.forEach(selectorId => {
+            const select = document.getElementById(selectorId);
+            if (select) {
+                // Mantener la primera opción
+                const primeraOpcion = select.querySelector('option[value=""]');
+                select.innerHTML = '';
+
+                if (primeraOpcion) {
+                    select.appendChild(primeraOpcion);
+                }
+
+                // Añadir categorías dinámicas
+                this.categorias.forEach(categoria => {
+                    if (categoria.activo) {
+                        const option = document.createElement('option');
+                        option.value = categoria.id;
+                        option.textContent = `${categoria.nombre} (${categoria.prefijo})`;
+                        option.dataset.prefijo = categoria.prefijo;
+                        option.dataset.color = categoria.color;
+                        select.appendChild(option);
+                    }
+                });
+            }
+        });
+    }
+
+    categoriaSeleccionada() {
+        const select = document.getElementById('nuevo-categoria');
+        const previewSpan = document.getElementById('categoria-preview');
+        const codigoInput = document.getElementById('nuevo-codigo');
+
+        if (select && select.value) {
+            const categoria = this.categorias.find(c => c.id == select.value);
+            if (categoria) {
+                // Mostrar preview
+                if (previewSpan) {
+                    previewSpan.innerHTML = `
+                        <span class="badge" style="background-color: ${categoria.color}">
+                            ${categoria.prefijo}
+                        </span>
+                        Próximo código: ${categoria.prefijo}-${new Date().getFullYear()}-${String(categoria.ultimo_numero + 1).padStart(3, '0')}
+                    `;
+                }
+
+                // Limpiar código actual para generar uno nuevo
+                if (codigoInput) {
+                    codigoInput.value = '';
+                    codigoInput.placeholder = 'Se generará automáticamente';
+                }
+            }
+        } else {
+            if (previewSpan) previewSpan.innerHTML = '';
+            if (codigoInput) codigoInput.placeholder = 'Ingrese código manualmente';
+        }
+    }
+
+    async generarCodigoAutomatico() {
+        const categoriaSelect = document.getElementById('nuevo-categoria');
+        const codigoInput = document.getElementById('nuevo-codigo');
+
+        if (!categoriaSelect || !categoriaSelect.value) {
+            alert('Por favor seleccione una categoría primero');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/categorias/${categoriaSelect.value}/codigo`);
+            const data = await response.json();
+
+            if (data.success) {
+                codigoInput.value = data.codigo;
+
+                // Actualizar el último número en la categoría local
+                const categoria = this.categorias.find(c => c.id == categoriaSelect.value);
+                if (categoria) {
+                    categoria.ultimo_numero = data.siguiente_numero;
+                }
+
+                console.log('✅ Código generado:', data.codigo);
+            } else {
+                alert('Error al generar código: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error generando código:', error);
+            alert('Error de conexión');
+        }
+    }
+
+    async crearCategoriaRapida() {
+        const nombre = document.getElementById('rapida-nombre').value.trim();
+        const prefijo = document.getElementById('rapida-prefijo').value.trim().toUpperCase();
+        const color = document.getElementById('rapida-color').value;
+
+        if (!nombre || !prefijo) {
+            alert('El nombre y prefijo son requeridos');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/categorias/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, prefijo, color })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Recargar categorías
+                await this.cargarCategorias();
+
+                // Seleccionar la nueva categoría
+                const select = document.getElementById('nuevo-categoria');
+                if (select && data.categoria) {
+                    select.value = data.categoria.id;
+                    this.categoriaSeleccionada();
+                }
+
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCategoria'));
+                if (modal) modal.hide();
+
+                // Limpiar formulario
+                document.getElementById('formCategoriaRapida').reset();
+
+                alert('Categoría creada exitosamente');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error creando categoría:', error);
+            alert('Error de conexión');
+        }
+    }
+
+    setupEventListeners() {
+        // Eventos específicos de categorías ya están en el HTML
+        console.log('✅ Event listeners de categorías configurados');
+    }
+}
+
+// Instancia global de la aplicación
+let inventarioApp;
+
+console.log('🔧 inventario.js cargado correctamente');
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('🚀 Inicializando módulo de inventario...');
-    console.log('📍 DOM elementos encontrados:');
+    console.log('🚀 Inicializando módulo de inventario...');
+    console.log('üìç DOM elements check:');
     console.log('- tabla-inventario-body:', document.getElementById('tabla-inventario-body') ? '✅' : '❌');
+    console.log('- paginacion-inventario:', document.getElementById('paginacion-inventario') ? '✅' : '❌');
+
+    // Inicializar paginación
+    console.log('üìÑ Inicializando paginación...');
+    paginacionInventario = createPagination('paginacion-inventario', cargarArticulos, {
+        perPage: 10,
+        showInfo: true,
+        showSizeSelector: true
+    });
+    console.log('üìÑ Paginación inicializada:', paginacionInventario ? '✅' : '❌');
 
     // Cargar datos iniciales
-    console.log('📊 Cargando estadísticas...');
+    console.log('üìä Cargando estadísticas...');
     cargarEstadisticas();
 
-    console.log('📦 Cargando artículos...');
+    console.log('üì¶ Cargando artículos...');
     cargarArticulos();
 
     // Configurar eventos de filtros
@@ -29,22 +220,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Configurar autocompletado
     configurarAutocompletado();
+
+    console.log('✅ Inicialización de inventario completada');
 });
 
-// Función para mostrar estado de carga en la tabla
-function mostrarCargando() {
+// Función para mostrar/ocultar estado de carga en la tabla
+function mostrarCargando(mostrar = true) {
     const tbody = document.getElementById('tabla-inventario-body');
-    if (tbody) {
-        tbody.innerHTML = `
-            <tr id="loading-row">
-                <td colspan="10" class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Cargando artículos...</p>
-                </td>
-            </tr>
-        `;
+    if (!tbody) return;
+
+    if (mostrar) {
+        // Solo mostrar loading si no hay ya un loading-row
+        if (!tbody.querySelector('#loading-row')) {
+            tbody.innerHTML = `
+                <tr id="loading-row">
+                    <td colspan="10" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando artículos...</p>
+                    </td>
+                </tr>
+            `;
+        }
+    } else {
+        // Ocultar loading: eliminar solo la fila de loading si existe
+        const loadingRow = tbody.querySelector('#loading-row');
+        if (loadingRow) {
+            loadingRow.remove();
+        }
     }
 }
 
@@ -74,15 +278,15 @@ function actualizarTarjetasEstadisticas(stats) {
 
 // Función para cargar artículos con filtros y paginación
 async function cargarArticulos(page = 1, filtros = {}) {
-    console.log('🔄 cargarArticulos iniciado - página:', page, 'filtros:', filtros);
+    console.log('🔄 cargarArticulos iniciado - página:', page, 'filtros:', filtros);
 
     const tbody = document.getElementById('tabla-inventario-body');
-    console.log('📋 tbody encontrado:', tbody ? '✅' : '❌');
+    console.log('üìã tbody encontrado:', tbody ? '✅' : '❌');
 
     // Mostrar estado de carga solo si no es la primera carga
     if (!tbody.querySelector('#loading-row')) {
-        console.log('📍 Mostrando spinner de carga...');
-        mostrarCargando();
+        console.log('üìç Mostrando spinner de carga...');
+        mostrarCargando(true);
     }
 
     try {
@@ -94,26 +298,34 @@ async function cargarArticulos(page = 1, filtros = {}) {
         });
 
         const url = `/inventario/api/articulos?${params}`;
-        console.log('🌐 Haciendo fetch a:', url);
+        console.log('üåê Haciendo fetch a:', url);
 
         const response = await fetch(url);
-        console.log('📡 Respuesta recibida - Status:', response.status);
+        console.log('üì° Respuesta recibida - Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+
+        if (response.status === 401 || response.status === 302) {
+            console.log('üîê Redirección de autenticación detectada - redirigiendo al login');
+            window.location.href = '/login';
+            return;
+        }
 
         const data = await response.json();
-        console.log('📦 Datos recibidos:', data);
-        console.log('📊 Total artículos:', data.total);
-        console.log('📋 Cantidad de artículos:', data.articulos ? data.articulos.length : 0);
+        console.log('üì¶ Datos recibidos:', data);
+        console.log('üìä Total artículos:', data.total);
+        console.log('üìã Cantidad de artículos:', data.articulos ? data.articulos.length : 0);
 
         if (response.ok) {
             console.log('✅ Respuesta exitosa, procesando datos...');
             articulosActuales = data.articulos;
 
-            console.log('📝 Llamando a actualizarTablaArticulos...');
+            console.log('üìù Llamando a actualizarTablaArticulos...');
             actualizarTablaArticulos(data.articulos);
-            console.log('📄 actualizarTablaArticulos completado');
+            console.log('üìÑ actualizarTablaArticulos completado');
 
-            console.log('📊 Llamando a actualizarPaginacion...');
-            actualizarPaginacion(data.total, page, articulosPorPagina);
+            // Renderizar paginación
+            if (typeof paginacionInventario !== 'undefined' && paginacionInventario.render) {
+                paginacionInventario.render(data.page, data.per_page, data.total);
+            }
 
             // Actualizar contadores
             const totalElement = document.getElementById('total-resultados');
@@ -127,6 +339,7 @@ async function cargarArticulos(page = 1, filtros = {}) {
 
         } else {
             // En caso de error, limpiar tabla y mostrar mensaje
+            console.error('❌ Error en respuesta:', data);
             tbody.innerHTML = `
                 <tr>
                     <td colspan="10" class="text-center py-4">
@@ -141,7 +354,7 @@ async function cargarArticulos(page = 1, filtros = {}) {
         }
     } catch (error) {
         console.error('❌ Error al cargar artículos:', error);
-        console.log('🔧 Detalles del error:', {
+        console.log('🔧 Detalles del error:', {
             message: error.message,
             stack: error.stack,
             name: error.name
@@ -211,44 +424,36 @@ function actualizarTablaArticulos(articulos) {
         tr.innerHTML = `
             <td><code>${articulo.codigo}</code></td>
             <td>
-                ${articulo.descripcion}
-                ${articulo.critico ? '<i class="fas fa-exclamation-triangle text-danger ms-1" title="Crítico"></i>' : ''}
+                <strong>${articulo.descripcion}</strong>
+                ${articulo.critico ? '<i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Artículo Crítico"></i>' : ''}
             </td>
             <td>
-                ${articulo.categoria ? `<span class="badge bg-secondary">${articulo.categoria}</span>` : '-'}
+                ${articulo.categoria ? `<span class="badge bg-secondary">${articulo.categoria}</span>` : '<span class="text-muted">-</span>'}
             </td>
             <td>
-                <span class="badge ${estadoBadge}">${articulo.stock_actual}</span>
-                <small class="text-muted d-block">${articulo.unidad_medida || 'UND'}</small>
+                <span class="badge ${estadoBadge} me-1">${articulo.stock_actual}</span>
+                <small class="text-muted">${articulo.unidad_medida || 'UND'}</small>
             </td>
             <td>
                 <small class="text-muted">
-                    Mín: ${articulo.stock_minimo}<br>
-                    Máx: ${articulo.stock_maximo}
+                    <div><strong>${articulo.stock_minimo}</strong></div>
+                    <div><strong>${articulo.stock_maximo}</strong></div>
                 </small>
             </td>
-            <td>
-                ${articulo.ubicacion || '-'}
-            </td>
-            <td>
-                ${articulo.precio_promedio ? formatearMoneda(articulo.precio_promedio) : '-'}
-            </td>
-            <td>
-                <strong>${formatearMoneda(articulo.valor_stock || 0)}</strong>
-            </td>
-            <td>
-                <span class="badge ${estadoBadge}">${estadoText}</span>
-            </td>
-            <td>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" onclick="editarArticulo(${articulo.id})" title="Editar">
-                        <i class="fas fa-edit"></i>
+            <td>${articulo.ubicacion || '<span class="text-muted">-</span>'}</td>
+            <td class="text-end">${articulo.precio_promedio ? formatearMoneda(articulo.precio_promedio) : '<span class="text-muted">-</span>'}</td>
+            <td class="text-end"><strong class="text-success">${formatearMoneda(articulo.valor_stock || 0)}</strong></td>
+            <td><span class="badge ${estadoBadge}">${estadoText}</span></td>
+            <td class="text-center">
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarArticulo(${articulo.id})" title="Editar">
+                        <i class="bi bi-pencil"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-success" onclick="mostrarModalMovimiento(${articulo.id}, '${articulo.codigo}', '${articulo.descripcion}')" title="Movimiento">
-                        <i class="fas fa-exchange-alt"></i>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="mostrarModalMovimiento(${articulo.id}, '${articulo.codigo}', '${articulo.descripcion}')" title="Movimiento">
+                        <i class="bi bi-arrow-left-right"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-info" onclick="verHistorial(${articulo.id})" title="Historial">
-                        <i class="fas fa-history"></i>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="verHistorial(${articulo.id})" title="Historial">
+                        <i class="bi bi-clock-history"></i>
                     </button>
                 </div>
             </td>
@@ -341,7 +546,7 @@ function mostrarModalNuevoArticulo() {
 
     // Establecer valores por defecto
     document.getElementById('nuevo-cuenta-contable').value = '622000000';
-    document.getElementById('nuevo-requiere-conteo').checked = true;
+    document.getElementById('nuevo-activo').checked = true;
 
     modal.show();
 }
@@ -385,7 +590,7 @@ async function guardarNuevoArticulo() {
         cuenta_contable_compra: document.getElementById('nuevo-cuenta-contable').value,
         grupo_contable: document.getElementById('nuevo-grupo-contable').value,
         critico: document.getElementById('nuevo-critico').checked,
-        requiere_conteo: document.getElementById('nuevo-requiere-conteo').checked
+        activo: document.getElementById('nuevo-activo').checked
     };
 
     try {
@@ -467,43 +672,7 @@ async function guardarMovimiento() {
     }
 }
 
-// Funciones de paginación
-function actualizarPaginacion(total, paginaActual, porPagina) {
-    const totalPaginas = Math.ceil(total / porPagina);
-    const pagination = document.getElementById('paginacion-inventario');
-    pagination.innerHTML = '';
 
-    if (totalPaginas <= 1) return;
-
-    // Botón anterior
-    const prevLi = document.createElement('li');
-    prevLi.className = `page-item ${paginaActual === 1 ? 'disabled' : ''}`;
-    prevLi.innerHTML = `<a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1})">Anterior</a>`;
-    pagination.appendChild(prevLi);
-
-    // Números de página
-    const inicio = Math.max(1, paginaActual - 2);
-    const fin = Math.min(totalPaginas, paginaActual + 2);
-
-    for (let i = inicio; i <= fin; i++) {
-        const li = document.createElement('li');
-        li.className = `page-item ${i === paginaActual ? 'active' : ''}`;
-        li.innerHTML = `<a class="page-link" href="#" onclick="cambiarPagina(${i})">${i}</a>`;
-        pagination.appendChild(li);
-    }
-
-    // Botón siguiente
-    const nextLi = document.createElement('li');
-    nextLi.className = `page-item ${paginaActual === totalPaginas ? 'disabled' : ''}`;
-    nextLi.innerHTML = `<a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1})">Siguiente</a>`;
-    pagination.appendChild(nextLi);
-}
-
-function cambiarPagina(nuevaPagina) {
-    if (nuevaPagina < 1) return;
-    paginaActual = nuevaPagina;
-    cargarArticulos(paginaActual, filtrosAplicados);
-}
 
 // Funciones auxiliares
 function formatearMoneda(valor) {
@@ -550,17 +719,254 @@ function mostrarAlerta(mensaje, tipo) {
     }, 5000);
 }
 
-// Funciones placeholder para futuras implementaciones
+// Funciones implementadas
 function editarArticulo(id) {
-    mostrarAlerta('Función de edición en desarrollo', 'info');
+    // Obtener datos del artículo y mostrar modal de edición
+    fetch(`/inventario/api/articulos/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success === false) {
+                mostrarAlerta('Error al cargar artículo: ' + data.error, 'danger');
+                return;
+            }
+
+            // Llenar el modal con los datos del artículo
+            document.getElementById('edit-codigo').value = data.codigo || '';
+            document.getElementById('edit-descripcion').value = data.descripcion || '';
+            document.getElementById('edit-categoria').value = data.categoria || '';
+            document.getElementById('edit-subcategoria').value = data.subcategoria || '';
+            document.getElementById('edit-ubicacion').value = data.ubicacion || '';
+            document.getElementById('edit-stock-minimo').value = data.stock_minimo || 0;
+            document.getElementById('edit-stock-maximo').value = data.stock_maximo || '';
+            document.getElementById('edit-unidad-medida').value = data.unidad_medida || 'UNI';
+            document.getElementById('edit-precio-unitario').value = data.precio_unitario || '';
+            document.getElementById('edit-proveedor').value = data.proveedor_principal || '';
+            document.getElementById('edit-cuenta-contable').value = data.cuenta_contable_compra || '622000000';
+            document.getElementById('edit-grupo-contable').value = data.grupo_contable || '';
+            document.getElementById('edit-observaciones').value = data.observaciones || '';
+
+            // Checkboxes
+            document.getElementById('edit-critico').checked = data.critico || false;
+            document.getElementById('edit-activo').checked = data.activo !== false; // Por defecto true
+
+            // Guardar ID del artículo que se está editando
+            document.getElementById('modalEditarArticulo').dataset.articuloId = id;
+
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarArticulo'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error al cargar artículo:', error);
+            mostrarAlerta('Error al cargar artículo para edición', 'danger');
+        });
+}
+
+function guardarEdicionArticulo() {
+    const articuloId = document.getElementById('modalEditarArticulo').dataset.articuloId;
+    if (!articuloId) {
+        mostrarAlerta('Error: ID de artículo no encontrado', 'danger');
+        return;
+    }
+
+    const data = {
+        codigo: document.getElementById('edit-codigo').value.trim(),
+        descripcion: document.getElementById('edit-descripcion').value.trim(),
+        categoria: document.getElementById('edit-categoria').value.trim(),
+        subcategoria: document.getElementById('edit-subcategoria').value.trim(),
+        ubicacion: document.getElementById('edit-ubicacion').value.trim(),
+        stock_minimo: parseInt(document.getElementById('edit-stock-minimo').value) || 0,
+        stock_maximo: parseInt(document.getElementById('edit-stock-maximo').value) || null,
+        unidad_medida: document.getElementById('edit-unidad-medida').value,
+        precio_unitario: parseFloat(document.getElementById('edit-precio-unitario').value) || null,
+        proveedor_principal: document.getElementById('edit-proveedor').value.trim(),
+        cuenta_contable_compra: document.getElementById('edit-cuenta-contable').value.trim(),
+        grupo_contable: document.getElementById('edit-grupo-contable').value.trim(),
+        critico: document.getElementById('edit-critico').checked,
+        activo: document.getElementById('edit-activo').checked,
+        observaciones: document.getElementById('edit-observaciones').value.trim()
+    };
+
+    // Validar campos requeridos
+    if (!data.codigo || !data.descripcion) {
+        mostrarAlerta('Los campos Código y Descripción son obligatorios', 'warning');
+        return;
+    }
+
+    fetch(`/inventario/api/articulos/${articuloId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                mostrarAlerta(result.message, 'success');
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditarArticulo'));
+                modal.hide();
+                // Recargar artículos
+                cargarArticulos();
+            } else {
+                mostrarAlerta('Error: ' + result.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error al guardar edición:', error);
+            mostrarAlerta('Error de conexión al guardar cambios', 'danger');
+        });
 }
 
 function verHistorial(id) {
-    mostrarAlerta('Historial de movimientos en desarrollo', 'info');
+    // Cargar historial de movimientos del artículo
+    fetch(`/inventario/api/articulos/${id}/movimientos?page=1&per_page=20`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                mostrarAlerta('Error al cargar historial: ' + data.error, 'danger');
+                return;
+            }
+
+            // Llenar la tabla de historial
+            const tbody = document.getElementById('historial-tbody');
+            tbody.innerHTML = '';
+
+            if (!data.movimientos || data.movimientos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-history fa-3x mb-3 opacity-25"></i>
+                                <p>No hay movimientos registrados para este artículo</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                data.movimientos.forEach(movimiento => {
+                    const tipoClass = movimiento.tipo === 'entrada' ? 'success' :
+                        movimiento.tipo === 'salida' ? 'danger' : 'warning';
+                    const tipoIcon = movimiento.tipo === 'entrada' ? 'plus' :
+                        movimiento.tipo === 'salida' ? 'minus' : 'exchange-alt';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${movimiento.fecha}</td>
+                            <td>
+                                <span class="badge bg-${tipoClass}">
+                                    <i class="fas fa-${tipoIcon} me-1"></i>
+                                    ${movimiento.tipo}
+                                    ${movimiento.subtipo ? ` (${movimiento.subtipo})` : ''}
+                                </span>
+                            </td>
+                            <td class="text-end">${movimiento.cantidad}</td>
+                            <td class="text-end">
+                                ${movimiento.precio_unitario ?
+                            movimiento.precio_unitario.toFixed(2) : '-'}
+                            </td>
+                            <td class="text-end">
+                                ${movimiento.valor_total ?
+                            movimiento.valor_total.toFixed(2) : '-'}
+                            </td>
+                            <td>
+                                ${movimiento.documento_referencia || '-'}
+                                ${movimiento.usuario_id ? `<br><small class="text-muted">por ${movimiento.usuario_id}</small>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Actualizar paginación si hay más páginas
+            if (data.pages > 1) {
+                // Aquí se podría implementar paginación para el historial
+                console.log(`Historial tiene ${data.pages} páginas`);
+            }
+
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalHistorial'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error al cargar historial:', error);
+            mostrarAlerta('Error al cargar historial de movimientos', 'danger');
+        });
 }
 
 function mostrarMovimientos() {
-    mostrarAlerta('Vista de movimientos en desarrollo', 'info');
+    // Cargar vista general de movimientos
+    fetch('/inventario/api/movimientos?page=1&per_page=25')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                mostrarAlerta('Error al cargar movimientos: ' + data.error, 'danger');
+                return;
+            }
+
+            // Llenar la tabla de movimientos generales
+            const tbody = document.getElementById('movimientos-tbody');
+            tbody.innerHTML = '';
+
+            if (!data.movimientos || data.movimientos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-exchange-alt fa-3x mb-3 opacity-25"></i>
+                                <p>No hay movimientos registrados</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                data.movimientos.forEach(movimiento => {
+                    const tipoClass = movimiento.tipo === 'entrada' ? 'success' :
+                        movimiento.tipo === 'salida' ? 'danger' : 'warning';
+                    const tipoIcon = movimiento.tipo === 'entrada' ? 'plus' :
+                        movimiento.tipo === 'salida' ? 'minus' : 'exchange-alt';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${movimiento.fecha}</td>
+                            <td>
+                                <span class="badge bg-${tipoClass}">
+                                    <i class="fas fa-${tipoIcon} me-1"></i>
+                                    ${movimiento.tipo}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>${movimiento.codigo_articulo}</strong><br>
+                                <small class="text-muted">${movimiento.descripcion_articulo}</small>
+                            </td>
+                            <td class="text-end">${movimiento.cantidad} ${movimiento.unidad_medida}</td>
+                            <td class="text-end">
+                                ${movimiento.precio_unitario ?
+                            movimiento.precio_unitario.toFixed(2) : '-'}
+                            </td>
+                            <td class="text-end">
+                                ${movimiento.valor_total ?
+                            movimiento.valor_total.toFixed(2) : '-'}
+                            </td>
+                            <td>
+                                ${movimiento.documento_referencia || '-'}
+                                ${movimiento.usuario_id ?
+                            `<br><small class="text-muted">por ${movimiento.usuario_id}</small>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalMovimientos'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error al cargar movimientos:', error);
+            mostrarAlerta('Error al cargar vista general de movimientos', 'danger');
+        });
 }
 
 // Exportar funciones globales
@@ -570,9 +976,10 @@ window.mostrarModalMovimiento = mostrarModalMovimiento;
 window.guardarMovimiento = guardarMovimiento;
 window.aplicarFiltros = aplicarFiltros;
 window.limpiarFiltros = limpiarFiltros;
-window.cambiarPagina = cambiarPagina;
 window.editarArticulo = editarArticulo;
+window.guardarEdicionArticulo = guardarEdicionArticulo;
 window.verHistorial = verHistorial;
+window.mostrarMovimientos = mostrarMovimientos;
 window.mostrarMovimientos = mostrarMovimientos;
 
 function configurarAutocompletado() {
@@ -598,7 +1005,7 @@ function configurarAutocompletado() {
                     (item.categoria && item.categoria.toLowerCase().includes(q));
             },
             onSelect: (item) => {
-                console.log('📦 Item de inventario seleccionado:', item);
+                console.log('üì¶ Item de inventario seleccionado:', item);
                 cargarInventario(1);
             }
         });
@@ -742,3 +1149,21 @@ function getEstadoInventarioBadge(estado) {
     if (estado === 'Sin Stock') return '<span class="badge bg-danger">Sin Stock</span>';
     return '<span class="badge bg-secondary">Desconocido</span>';
 }
+
+// Función para exportar CSV
+async function exportarCSV() {
+    await descargarCSVMejorado('/inventario/exportar-csv', 'inventario_{fecha}', 'CSV');
+}
+
+// Exponer funciones globales
+window.mostrarModalNuevoArticulo = mostrarModalNuevoArticulo;
+window.guardarNuevoArticulo = guardarNuevoArticulo;
+window.mostrarModalMovimiento = mostrarModalMovimiento;
+window.guardarMovimiento = guardarMovimiento;
+window.aplicarFiltros = aplicarFiltros;
+window.limpiarFiltros = limpiarFiltros;
+window.editarArticulo = editarArticulo;
+window.verHistorial = verHistorial;
+window.mostrarMovimientos = mostrarMovimientos;
+window.exportarCSV = exportarCSV;
+window.mostrarCargando = mostrarCargando;
