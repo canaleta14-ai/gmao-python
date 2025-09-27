@@ -619,14 +619,155 @@ async function guardarNuevoArticulo() {
 }
 
 // Mostrar modal de movimiento
-function mostrarModalMovimiento(articuloId, codigo, descripcion) {
-    document.getElementById('movimiento-articulo-id').value = articuloId;
-    document.getElementById('movimiento-articulo-info').value = `${codigo} - ${descripcion}`;
+function mostrarModalMovimiento(articuloId = null, codigo = '', descripcion = '') {
+    // Limpiar formulario
     document.getElementById('formMovimiento').reset();
-    document.getElementById('movimiento-articulo-id').value = articuloId;
+
+    // Si se llama con parámetros específicos, pre-rellenar
+    if (articuloId) {
+        document.getElementById('movimiento-articulo-id').value = articuloId;
+        document.getElementById('movimiento-articulo-info').value = `${codigo} - ${descripcion}`;
+        // Deshabilitar el campo de búsqueda cuando viene pre-seleccionado
+        const autocompleteInput = document.querySelector('#movimiento-articulo-info-autocomplete input, #movimiento-articulo-info');
+        if (autocompleteInput) {
+            autocompleteInput.value = `${codigo} - ${descripcion}`;
+        }
+    } else {
+        // Si no hay artículo pre-seleccionado, habilitar autocompletado
+        document.getElementById('movimiento-articulo-id').value = '';
+        initializeArticuloAutoComplete();
+    }
 
     const modal = new bootstrap.Modal(document.getElementById('modalMovimiento'));
     modal.show();
+}
+
+// Inicializar autocompletado para artículos en modal de movimiento
+function initializeArticuloAutoComplete() {
+    const input = document.getElementById('movimiento-articulo-info');
+    if (!input || input.dataset.autocompleteInitialized) return;
+
+    // Crear configuración específica para artículos de inventario
+    const articulosAutoCompleteConfig = {
+        element: input,
+        apiUrl: '/inventario/api/articulos',
+        searchKey: 'descripcion', // Buscar por descripción
+        displayKey: item => `${item.codigo} - ${item.descripcion} (Stock: ${item.stock_actual})`,
+        valueKey: 'id',
+        placeholder: 'Buscar artículo por código o descripción...',
+        minChars: 2,
+        maxResults: 15,
+        noResultsText: 'No se encontraron artículos',
+        loadingText: 'Buscando artículos...',
+        customFilter: (item, query) => {
+            const q = query.toLowerCase();
+            return item.descripcion.toLowerCase().includes(q) ||
+                item.codigo.toLowerCase().includes(q) ||
+                (item.categoria && item.categoria.toLowerCase().includes(q));
+        },
+        onSelect: (item) => {
+            // Cuando se selecciona un artículo
+            console.log('Artículo seleccionado:', item);
+            document.getElementById('movimiento-articulo-id').value = item.id;
+
+            // Mostrar información adicional del stock si es necesario
+            const stockInfo = document.getElementById('stock-info-display');
+            if (stockInfo) {
+                stockInfo.textContent = `Stock actual: ${item.stock_actual} | Mínimo: ${item.stock_minimo}`;
+                stockInfo.style.display = 'block';
+            }
+
+            // Validar stock si es salida
+            const tipoMovimiento = document.getElementById('movimiento-tipo');
+            if (tipoMovimiento && tipoMovimiento.value === 'salida') {
+                validarStockParaSalida(item);
+            }
+        },
+        onInput: (value) => {
+            // Limpiar selección si el usuario está escribiendo
+            if (value.length < 2) {
+                document.getElementById('movimiento-articulo-id').value = '';
+                const stockInfo = document.getElementById('stock-info-display');
+                if (stockInfo) {
+                    stockInfo.style.display = 'none';
+                }
+            }
+        }
+    };
+
+    // Inicializar autocompletado
+    if (typeof AutoComplete !== 'undefined') {
+        const autocompleteInstance = new AutoComplete(articulosAutoCompleteConfig);
+        input.dataset.autocompleteInitialized = 'true';
+
+        // Remover readonly del input original y hacer el wrapper visible
+        input.removeAttribute('readonly');
+
+        console.log('✅ Autocompletado de artículos inicializado');
+        return autocompleteInstance;
+    } else {
+        console.error('❌ AutoComplete no disponible. Asegúrate de que autocomplete.js esté cargado.');
+    }
+}
+
+// Validar stock para movimientos de salida
+function validarStockParaSalida(articulo) {
+    const cantidadInput = document.getElementById('movimiento-cantidad');
+    const stockAlert = document.getElementById('stock-alert');
+
+    if (cantidadInput && stockAlert) {
+        cantidadInput.addEventListener('input', function () {
+            const cantidad = parseInt(this.value) || 0;
+
+            if (cantidad > articulo.stock_actual) {
+                stockAlert.innerHTML = `
+                    <div class="alert alert-warning alert-sm mt-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        ⚠️ Cantidad solicitada (${cantidad}) supera el stock disponible (${articulo.stock_actual})
+                    </div>
+                `;
+                stockAlert.style.display = 'block';
+            } else if (cantidad > (articulo.stock_actual - articulo.stock_minimo)) {
+                stockAlert.innerHTML = `
+                    <div class="alert alert-info alert-sm mt-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        ℹ️ Esta salida dejará el stock por debajo del mínimo recomendado (${articulo.stock_minimo})
+                    </div>
+                `;
+                stockAlert.style.display = 'block';
+            } else {
+                stockAlert.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Inicializar listeners para el modal de movimiento
+function initializeMovimientoModalListeners() {
+    const tipoSelect = document.getElementById('movimiento-tipo');
+    const cantidadInput = document.getElementById('movimiento-cantidad');
+    const stockAlert = document.getElementById('stock-alert');
+
+    if (tipoSelect) {
+        tipoSelect.addEventListener('change', function () {
+            const articuloId = document.getElementById('movimiento-articulo-id').value;
+
+            if (this.value === 'salida' && articuloId && articulosActuales.length > 0) {
+                // Buscar el artículo actual para validar stock
+                const articulo = articulosActuales.find(a => a.id == articuloId);
+                if (articulo) {
+                    validarStockParaSalida(articulo);
+                }
+            } else if (stockAlert) {
+                stockAlert.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Función mejorada para mostrar un modal de movimiento general (sin artículo específico)
+function mostrarModalMovimientoGeneral() {
+    mostrarModalMovimiento(); // Llama sin parámetros para habilitar autocompletado
 }
 
 // Guardar movimiento
@@ -1159,6 +1300,7 @@ async function exportarCSV() {
 window.mostrarModalNuevoArticulo = mostrarModalNuevoArticulo;
 window.guardarNuevoArticulo = guardarNuevoArticulo;
 window.mostrarModalMovimiento = mostrarModalMovimiento;
+window.mostrarModalMovimientoGeneral = mostrarModalMovimientoGeneral;
 window.guardarMovimiento = guardarMovimiento;
 window.aplicarFiltros = aplicarFiltros;
 window.limpiarFiltros = limpiarFiltros;
@@ -1167,3 +1309,8 @@ window.verHistorial = verHistorial;
 window.mostrarMovimientos = mostrarMovimientos;
 window.exportarCSV = exportarCSV;
 window.mostrarCargando = mostrarCargando;
+
+// Inicializar listeners del modal cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function () {
+    initializeMovimientoModalListeners();
+});

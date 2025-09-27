@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Autocompletado de Artículos en Movimientos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="static/css/autocomplete.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .test-container { max-width: 800px; margin: 0 auto; }
+        .demo-data { background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; }
+        .status-indicator { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status-success { background-color: #d4edda; color: #155724; }
+        .status-info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="bi bi-search me-2"></i>Test: Autocompletado de Artículos en Movimientos</h4>
+            </div>
+            <div class="card-body">
+                <div class="status-indicator status-info">
+                    <strong>Objetivo:</strong> Probar el autocompletado de artículos con datos simulados
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>Modal de Movimiento (Simulado):</h5>
+                        <form id="formMovimiento">
+                            <input type="hidden" id="movimiento-articulo-id">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Artículo</label>
+                                <input type="text" class="form-control" id="movimiento-articulo-info" 
+                                       placeholder="Buscar artículo por código o descripción...">
+                                <div id="stock-info-display" class="text-muted small mt-1" style="display: none;"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="movimiento-tipo" class="form-label">Tipo de Movimiento</label>
+                                <select class="form-select" id="movimiento-tipo">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="entrada">Entrada</option>
+                                    <option value="salida">Salida</option>
+                                    <option value="ajuste">Ajuste</option>
+                                    <option value="regularizacion">Regularización</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="movimiento-cantidad" class="form-label">Cantidad</label>
+                                <input type="number" class="form-control" id="movimiento-cantidad" min="1">
+                                <div id="stock-alert" style="display: none;"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="movimiento-motivo" class="form-label">Motivo</label>
+                                <textarea class="form-control" id="movimiento-motivo" rows="3" placeholder="Opcional: describe el motivo del movimiento"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h5>Datos de Prueba:</h5>
+                        <div class="demo-data">
+                            <strong>Artículos disponibles:</strong><br>
+                            • FLT-001: Filtro Aceite (Stock: 15)<br>
+                            • BOM-002: Bomba Agua (Stock: 3)<br>
+                            • COR-003: Correa Transmisión (Stock: 25)<br>
+                            • ROD-004: Rodamiento (Stock: 8)<br>
+                            • VAL-005: Válvula Presión (Stock: 2)
+                        </div>
+                        
+                        <h6 class="mt-3">Controles de Prueba:</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-sm" onclick="initializeArticuloAutoComplete()">
+                                🔧 Inicializar Autocompletado
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="simularSeleccionArticulo()">
+                                🎭 Simular Selección
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="limpiarCampos()">
+                                🧹 Limpiar Campos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/autocomplete.js"></script>
+    <script>
+        // Datos de prueba simulados
+        const articulosSimulados = [
+            { id: 1, codigo: 'FLT-001', descripcion: 'Filtro Aceite Motor', categoria: 'Filtros', stock_actual: 15, stock_minimo: 5 },
+            { id: 2, codigo: 'BOM-002', descripcion: 'Bomba Agua Refrigeración', categoria: 'Bombas', stock_actual: 3, stock_minimo: 2 },
+            { id: 3, codigo: 'COR-003', descripcion: 'Correa Transmisión', categoria: 'Transmisión', stock_actual: 25, stock_minimo: 10 },
+            { id: 4, codigo: 'ROD-004', descripcion: 'Rodamiento SKF 6205', categoria: 'Rodamientos', stock_actual: 8, stock_minimo: 5 },
+            { id: 5, codigo: 'VAL-005', descripcion: 'Válvula Presión Hidráulica', categoria: 'Válvulas', stock_actual: 2, stock_minimo: 1 },
+            { id: 6, codigo: 'TUB-006', descripcion: 'Tubo Hidráulico 1/2"', categoria: 'Tuberías', stock_actual: 50, stock_minimo: 20 },
+            { id: 7, codigo: 'SEL-007', descripcion: 'Sello Mecánico', categoria: 'Sellado', stock_actual: 12, stock_minimo: 8 }
+        ];
+        
+        // Variable global para artículo seleccionado actual
+        let articuloSeleccionadoActual = null;
+        
+        // Simular API de búsqueda
+        function buscarArticulos(query) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const resultados = articulosSimulados.filter(item => {
+                        const q = query.toLowerCase();
+                        return item.descripcion.toLowerCase().includes(q) || 
+                               item.codigo.toLowerCase().includes(q) ||
+                               item.categoria.toLowerCase().includes(q);
+                    });
+                    resolve(resultados);
+                }, 300); // Simular delay de red
+            });
+        }
+        
+        // Inicializar autocompletado con datos simulados
+        function initializeArticuloAutoComplete() {
+            const input = document.getElementById('movimiento-articulo-info');
+            if (!input || input.dataset.autocompleteInitialized) {
+                console.log('⚠️ Input ya inicializado o no encontrado');
+                return;
+            }
+            
+            console.log('🔧 Inicializando autocompletado...');
+            
+            const autocompleteInstance = new AutoComplete({
+                element: input,
+                localData: articulosSimulados, // Usar datos locales para la demo
+                displayKey: item => `${item.codigo} - ${item.descripcion} (Stock: ${item.stock_actual})`,
+                valueKey: 'id',
+                placeholder: 'Buscar artículo por código o descripción...',
+                minChars: 1,
+                maxResults: 10,
+                noResultsText: 'No se encontraron artículos',
+                customFilter: (item, query) => {
+                    const q = query.toLowerCase();
+                    return item.descripcion.toLowerCase().includes(q) || 
+                           item.codigo.toLowerCase().includes(q) ||
+                           item.categoria.toLowerCase().includes(q);
+                },
+                onSelect: (item) => {
+                    console.log('✅ Artículo seleccionado:', item);
+                    articuloSeleccionadoActual = item;
+                    document.getElementById('movimiento-articulo-id').value = item.id;
+                    
+                    // Mostrar información de stock
+                    const stockInfo = document.getElementById('stock-info-display');
+                    if (stockInfo) {
+                        stockInfo.innerHTML = `
+                            <strong>Stock:</strong> ${item.stock_actual} | 
+                            <strong>Mínimo:</strong> ${item.stock_minimo} | 
+                            <strong>Categoría:</strong> ${item.categoria}
+                        `;
+                        stockInfo.style.display = 'block';
+                    }
+                    
+                    // Validar si el tipo actual es salida
+                    const tipoMovimiento = document.getElementById('movimiento-tipo');
+                    if (tipoMovimiento && tipoMovimiento.value === 'salida') {
+                        validarStockParaSalida(item);
+                    }
+                },
+                onInput: (value) => {
+                    if (value.length < 2) {
+                        document.getElementById('movimiento-articulo-id').value = '';
+                        articuloSeleccionadoActual = null;
+                        const stockInfo = document.getElementById('stock-info-display');
+                        if (stockInfo) stockInfo.style.display = 'none';
+                        const stockAlert = document.getElementById('stock-alert');
+                        if (stockAlert) stockAlert.style.display = 'none';
+                    }
+                }
+            });
+            
+            input.dataset.autocompleteInitialized = 'true';
+            console.log('✅ Autocompletado inicializado correctamente');
+        }
+        
+        // Validar stock para movimientos de salida
+        function validarStockParaSalida(articulo) {
+            const cantidadInput = document.getElementById('movimiento-cantidad');
+            const stockAlert = document.getElementById('stock-alert');
+            
+            if (!cantidadInput || !stockAlert) return;
+            
+            const validarCantidad = () => {
+                const cantidad = parseInt(cantidadInput.value) || 0;
+                
+                if (cantidad <= 0) {
+                    stockAlert.style.display = 'none';
+                    return;
+                }
+                
+                if (cantidad > articulo.stock_actual) {
+                    stockAlert.innerHTML = `
+                        <div class="alert alert-danger alert-sm mt-2">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>⚠️ Stock Insuficiente:</strong> Cantidad solicitada (${cantidad}) supera el stock disponible (${articulo.stock_actual})
+                        </div>
+                    `;
+                    stockAlert.style.display = 'block';
+                } else if ((articulo.stock_actual - cantidad) < articulo.stock_minimo) {
+                    stockAlert.innerHTML = `
+                        <div class="alert alert-warning alert-sm mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>ℹ️ Advertencia:</strong> Esta salida dejará el stock (${articulo.stock_actual - cantidad}) por debajo del mínimo recomendado (${articulo.stock_minimo})
+                        </div>
+                    `;
+                    stockAlert.style.display = 'block';
+                } else {
+                    stockAlert.innerHTML = `
+                        <div class="alert alert-success alert-sm mt-2">
+                            <i class="bi bi-check-circle me-1"></i>
+                            <strong>✅ OK:</strong> Stock suficiente. Quedarán ${articulo.stock_actual - cantidad} unidades.
+                        </div>
+                    `;
+                    stockAlert.style.display = 'block';
+                }
+            };
+            
+            // Remover listener anterior si existe
+            cantidadInput.removeEventListener('input', cantidadInput._stockValidator);
+            
+            // Agregar nuevo listener
+            cantidadInput._stockValidator = validarCantidad;
+            cantidadInput.addEventListener('input', validarCantidad);
+            
+            // Validar inmediatamente si ya hay valor
+            if (cantidadInput.value) {
+                validarCantidad();
+            }
+        }
+        
+        // Funciones de control
+        function simularSeleccionArticulo() {
+            const input = document.getElementById('movimiento-articulo-info');
+            const articulo = articulosSimulados[0]; // Filtro de aceite
+            
+            if (input.dataset.autocompleteInitialized) {
+                input.value = `${articulo.codigo} - ${articulo.descripcion} (Stock: ${articulo.stock_actual})`;
+                // Simular selección
+                document.getElementById('movimiento-articulo-id').value = articulo.id;
+                articuloSeleccionadoActual = articulo;
+                
+                const stockInfo = document.getElementById('stock-info-display');
+                stockInfo.innerHTML = `<strong>Stock:</strong> ${articulo.stock_actual} | <strong>Mínimo:</strong> ${articulo.stock_minimo} | <strong>Categoría:</strong> ${articulo.categoria}`;
+                stockInfo.style.display = 'block';
+                
+                console.log('🎭 Artículo simulado seleccionado:', articulo);
+            } else {
+                alert('⚠️ Primero inicializa el autocompletado');
+            }
+        }
+        
+        function limpiarCampos() {
+            document.getElementById('formMovimiento').reset();
+            document.getElementById('movimiento-articulo-id').value = '';
+            document.getElementById('stock-info-display').style.display = 'none';
+            document.getElementById('stock-alert').style.display = 'none';
+            articuloSeleccionadoActual = null;
+            console.log('🧹 Campos limpiados');
+        }
+        
+        // Listener para cambio de tipo de movimiento
+        document.addEventListener('DOMContentLoaded', function() {
+            const tipoSelect = document.getElementById('movimiento-tipo');
+            const cantidadInput = document.getElementById('movimiento-cantidad');
+            
+            tipoSelect.addEventListener('change', function() {
+                const stockAlert = document.getElementById('stock-alert');
+                
+                if (this.value === 'salida' && articuloSeleccionadoActual) {
+                    validarStockParaSalida(articuloSeleccionadoActual);
+                    if (cantidadInput.value) {
+                        cantidadInput.dispatchEvent(new Event('input'));
+                    }
+                } else {
+                    stockAlert.style.display = 'none';
+                }
+            });
+            
+            console.log('🚀 Test de autocompletado cargado');
+            console.log('📝 Instrucciones:');
+            console.log('1. Haz clic en "Inicializar Autocompletado"');
+            console.log('2. Escribe en el campo artículo (ej: "filtro", "FLT", "bomba")');
+            console.log('3. Selecciona un artículo de las sugerencias');
+            console.log('4. Cambia el tipo a "Salida" y prueba con diferentes cantidades');
+        });
+    </script>
+</body>
+</html>
