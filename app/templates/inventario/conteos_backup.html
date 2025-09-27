@@ -1,0 +1,493 @@
+{% extends 'base.html' %}
+{% block section_title %}Conteos de Inventario{% endblock %}
+{% set section = 'inventarios' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}?v=2025092704">
+{% endblock %}
+
+{% block content %}
+<!-- Wrapper para controlar el ancho total -->
+<div class="inventario-wrapper">
+<!-- Encabezado con estadísticas -->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-clipboard-check me-2"></i>Conteos de Inventario</h5>
+                    <small class="text-muted">Control y seguimiento de conteos físicos</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('inventario.inventario_page') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Volver al Inventario
+                    </a>
+                    <button type="button" class="btn btn-outline-primary" onclick="iniciarPeriodoConteo()">
+                        <i class="bi bi-calendar-plus me-1"></i>Nuevo Período
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="generarConteosAleatorios()">
+                        <i class="bi bi-shuffle me-1"></i>Conteos Aleatorios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de estadísticas modernizadas -->
+    <div class="row mb-4" id="estadisticas-cards">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <i class="bi bi-clipboard-check stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="total-conteos">-</div>
+                    <div class="stats-label">Total Conteos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <i class="bi bi-check-circle stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="conteos-completados">-</div>
+                    <div class="stats-label">Completados</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="conteos-diferencias">-</div>
+                    <div class="stats-label">Con Diferencias</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card danger">
+                <div class="card-body">
+                    <i class="bi bi-hourglass-split stats-icon text-danger"></i>
+                    <div class="stats-number text-danger" id="conteos-pendientes">-</div>
+                    <div class="stats-label">Pendientes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtrosConteos">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtrosConteos" class="collapse">
+            <div class="filtros-body">
+                <form id="filtros-conteos-form" class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-tipo-conteo" class="form-label fw-bold">Tipo de Conteo</label>
+                        <select class="form-select" id="filtro-tipo-conteo">
+                            <option value="">Todos</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="aleatorio">Aleatorio</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-estado" class="form-label fw-bold">Estado</label>
+                        <select class="form-select" id="filtro-estado">
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="validado">Validado</option>
+                            <option value="regularizado">Regularizado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-fecha-desde" class="form-label fw-bold">Desde</label>
+                        <input type="date" class="form-control" id="filtro-fecha-desde">
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-fecha-hasta" class="form-label fw-bold">Hasta</label>
+                        <input type="date" class="form-control" id="filtro-fecha-hasta">
+                    </div>
+
+                    <div class="col-12">
+                        <hr class="mb-3">
+                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                            <button type="button" class="btn btn-primary" onclick="aplicarFiltrosConteos()">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltrosConteos()">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </button>
+
+                            <div class="form-check ms-3">
+                                <input class="form-check-input" type="checkbox" id="filtro-con-diferencias">
+                                <label class="form-check-label" for="filtro-con-diferencias">
+                                    Solo con diferencias
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filtro-sin-usuario">
+                                <label class="form-check-label" for="filtro-sin-usuario">
+                                    Sin usuario asignado
+                                </label>
+            </div>
+
+                            <small class="text-muted ms-auto">Mostrando <span id="total-resultados">0</span>
+                                conteos</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Tabla de Conteos -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-table me-2"></i>Listado de Conteos</h6>
+                    <span class="badge bg-secondary" id="contador-conteos">0 conteos</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0" id="tabla-conteos">
+                        <thead class="table-dark">
+                            <tr>
+                                <th><i class="bi bi-calendar me-1"></i>Fecha</th>
+                                <th><i class="bi bi-box me-1"></i>Artículo</th>
+                                <th><i class="bi bi-tag me-1"></i>Tipo</th>
+                                <th><i class="bi bi-stack me-1"></i>Stock Teórico</th>
+                                <th><i class="bi bi-clipboard-data me-1"></i>Stock Físico</th>
+                                <th><i class="bi bi-arrow-up-down me-1"></i>Diferencia</th>
+                                <th><i class="bi bi-percent me-1"></i>% Diferencia</th>
+                                <th><i class="bi bi-circle me-1"></i>Estado</th>
+                                <th><i class="bi bi-person me-1"></i>Usuario</th>
+                                <th class="text-center"><i class="bi bi-gear me-1"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-conteos-body">
+                            <!-- Los datos se cargan dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Paginación -->
+            <nav aria-label="Paginación de conteos" class="m-2">
+                <div id="paginacion-conteos"></div>
+            </nav>
+        </div>
+    </div>
+</div>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtrosConteos">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtrosConteos" class="collapse">
+            <div class="filtros-body">
+                <form id="filtros-conteos-form" class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-tipo-conteo" class="form-label fw-bold">Tipo de Conteo</label>
+                        <select class="form-select" id="filtro-tipo-conteo">
+                            <option value="">Todos</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="aleatorio">Aleatorio</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-estado-conteo" class="form-label fw-bold">Estado</label>
+                        <select class="form-select" id="filtro-estado-conteo">
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="validado">Validado</option>
+                            <option value="regularizado">Regularizado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-fecha-desde" class="form-label fw-bold">Desde</label>
+                        <input type="date" class="form-control" id="filtro-fecha-desde">
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-fecha-hasta" class="form-label fw-bold">Hasta</label>
+                        <input type="date" class="form-control" id="filtro-fecha-hasta">
+                    </div>
+
+                    <div class="col-12">
+                        <hr class="mb-3">
+                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                            <button type="button" class="btn btn-primary" onclick="aplicarFiltrosConteos()">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltrosConteos()">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </button>
+
+                            <div class="form-check ms-3">
+                                <input class="form-check-input" type="checkbox" id="filtro-con-diferencias">
+                                <label class="form-check-label" for="filtro-con-diferencias">
+                                    Solo con diferencias
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="filtro-sin-usuario">
+                                <label class="form-check-label" for="filtro-sin-usuario">
+                                    Sin usuario asignado
+                                </label>
+                            </div>
+
+                            <small class="text-muted ms-auto">Mostrando <span id="total-resultados">0</span>
+                                conteos</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Tabla de Conteos -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Listado de Conteos</h6>
+                    <span class="badge bg-secondary" id="total-conteos-lista">0 conteos</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0" id="tabla-conteos">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Artículo</th>
+                                    <th>Tipo</th>
+                                    <th>Stock Teórico</th>
+                                    <th>Stock Físico</th>
+                                    <th>Diferencia</th>
+                                    <th>% Diferencia</th>
+                                    <th>Estado</th>
+                                    <th>Usuario</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-conteos-body">
+                                <!-- Los datos se cargan dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Período -->
+<div class="modal fade" id="modalNuevoPeriodo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Iniciar Período de Inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoPeriodo">
+                    <div class="mb-3">
+                        <label for="periodo-año" class="form-label">Año</label>
+                        <input type="number" class="form-control" id="periodo-año" min="2020" max="2030" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periodo-mes" class="form-label">Mes</label>
+                        <select class="form-select" id="periodo-mes" required>
+                            <option value="">Seleccionar mes...</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periodo-responsable" class="form-label">Usuario Responsable</label>
+                        <input type="text" class="form-control" id="periodo-responsable" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periodo-observaciones" class="form-label">Observaciones</label>
+                        <textarea class="form-control" id="periodo-observaciones" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarNuevoPeriodo()">
+                    <i class="fas fa-save"></i> Iniciar Período
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Conteos Aleatorios -->
+<div class="modal fade" id="modalConteosAleatorios" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Generar Conteos Aleatorios</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formConteosAleatorios">
+                    <div class="mb-3">
+                        <label for="cantidad-conteos" class="form-label">Cantidad de Conteos</label>
+                        <input type="number" class="form-control" id="cantidad-conteos" min="1" max="50" value="10"
+                            required>
+                        <div class="form-text">Número de artículos a seleccionar aleatoriamente para conteo</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Los conteos se generarán automáticamente para artículos seleccionados aleatoriamente.
+                        Solo se incluirán artículos que requieren conteo físico.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" onclick="guardarConteosAleatorios()">
+                    <i class="fas fa-random"></i> Generar Conteos
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Procesar Conteo -->
+<div class="modal fade" id="modalProcesarConteo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Procesar Conteo Físico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formProcesarConteo">
+                    <input type="hidden" id="conteo-id">
+                    <div class="mb-3">
+                        <label class="form-label">Artículo</label>
+                        <input type="text" class="form-control" id="conteo-articulo-info" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock Teórico</label>
+                        <input type="text" class="form-control" id="conteo-stock-teorico" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="conteo-stock-fisico" class="form-label">Stock Físico Contado *</label>
+                        <input type="number" class="form-control" id="conteo-stock-fisico" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="conteo-usuario" class="form-label">Usuario que realizó el conteo</label>
+                        <input type="text" class="form-control" id="conteo-usuario" 
+                               placeholder="Buscar usuario..." autocomplete="off" required>
+                        <div class="invalid-feedback" id="conteo-usuario-error"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="conteo-observaciones" class="form-label">Observaciones</label>
+                        <textarea class="form-control" id="conteo-observaciones" rows="3"
+                            placeholder="Observaciones sobre el conteo..."></textarea>
+                    </div>
+                    <div id="conteo-diferencia-info" class="alert" style="display: none;">
+                        <!-- Se mostrará la información de diferencia calculada -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="guardarConteoFisico()">
+                    <i class="fas fa-save"></i> Guardar Conteo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Conteo -->
+<div class="modal fade" id="modalEditarConteo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Conteo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarConteo">
+                    <input type="hidden" id="editar-conteo-id">
+                    <div class="mb-3">
+                        <label class="form-label">Artículo</label>
+                        <input type="text" class="form-control" id="editar-articulo-info" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock Teórico</label>
+                        <input type="text" class="form-control" id="editar-stock-teorico" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-stock-fisico" class="form-label">Stock Físico Contado *</label>
+                        <input type="number" class="form-control" id="editar-stock-fisico" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-usuario" class="form-label">Usuario que realizó el conteo</label>
+                        <input type="text" class="form-control" id="editar-usuario" 
+                               placeholder="Buscar usuario..." autocomplete="off" required
+                               list="usuarios-datalist-editar">
+                        <datalist id="usuarios-datalist-editar">
+                            <!-- Se llena dinámicamente -->
+                        </datalist>
+                        <div class="invalid-feedback" id="editar-usuario-error"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-observaciones" class="form-label">Observaciones</label>
+                        <textarea class="form-control" id="editar-observaciones" rows="3"
+                            placeholder="Observaciones sobre el conteo..."></textarea>
+                    </div>
+                    <div id="editar-diferencia-info" class="alert" style="display: none;">
+                        <!-- Se mostrará la información de diferencia calculada -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarEditarConteo()">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/conteos.js') }}"></script>
+{% endblock %}

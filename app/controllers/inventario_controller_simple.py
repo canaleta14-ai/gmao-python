@@ -56,6 +56,18 @@ def listar_articulos_avanzado(filtros=None, page=1, per_page=10):
                 Inventario.ubicacion.ilike(f"%{filtros['ubicacion']}%")
             )
 
+        # Filtro de búsqueda general (para autocompletado)
+        if "busqueda_general" in filtros and filtros["busqueda_general"]:
+            busqueda = filtros["busqueda_general"]
+            query = query.filter(
+                db.or_(
+                    Inventario.codigo.ilike(f"%{busqueda}%"),
+                    Inventario.descripcion.ilike(f"%{busqueda}%"),
+                    Inventario.categoria.ilike(f"%{busqueda}%"),
+                    Inventario.ubicacion.ilike(f"%{busqueda}%"),
+                )
+            )
+
     paginacion = query.order_by(Inventario.codigo).paginate(
         page=page, per_page=per_page, error_out=False
     )
@@ -206,6 +218,9 @@ def registrar_movimiento_inventario(data):
             articulo.stock_actual -= movimiento.cantidad
         elif movimiento.tipo == "ajuste":
             # Para ajustes, la cantidad puede ser positiva o negativa
+            articulo.stock_actual += movimiento.cantidad
+        elif movimiento.tipo == "regularizacion":
+            # Regularización suma al stock (corrige inventario)
             articulo.stock_actual += movimiento.cantidad
 
         # Calcular valor total si no se proporciona

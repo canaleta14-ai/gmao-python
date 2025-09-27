@@ -57,6 +57,7 @@ def create_app():
     from app.routes.web import web_bp
     from app.routes.activos import activos_bp
     from app.routes.ordenes import ordenes_bp
+    from app.routes.recambios import recambios_bp
     from app.routes.inventario import inventario_bp
     from app.routes.planes import planes_bp
     from app.routes.estadisticas import estadisticas_bp
@@ -68,6 +69,7 @@ def create_app():
     app.register_blueprint(web_bp)
     app.register_blueprint(activos_bp)
     app.register_blueprint(ordenes_bp)
+    app.register_blueprint(recambios_bp, url_prefix="/api")
     app.register_blueprint(inventario_bp)
     app.register_blueprint(planes_bp)
     app.register_blueprint(estadisticas_bp)

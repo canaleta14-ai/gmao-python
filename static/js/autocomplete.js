@@ -115,11 +115,14 @@ class AutoComplete {
 
     handleInput(e) {
         const value = e.target.value;
+        console.log('⌨️ Input event, valor:', `"${value}"`, 'longitud:', value.length, 'minChars:', this.minChars);
         this.onInput(value);
 
         if (value.length >= this.minChars) {
+            console.log('✅ Suficientes caracteres, iniciando búsqueda debounced');
             this.debouncedSearch(value);
         } else {
+            console.log('❌ Insuficientes caracteres, cerrando dropdown');
             this.close();
             this.clearOriginalValue();
         }
@@ -151,8 +154,12 @@ class AutoComplete {
     }
 
     handleFocus(e) {
+        console.log('🎯 Focus en input, valor actual:', `"${this.input.value}"`);
         if (this.input.value.length >= this.minChars) {
+            console.log('🔍 Disparando búsqueda por focus con:', `"${this.input.value}"`);
             this.search(this.input.value);
+        } else {
+            console.log('⏸️ No hay suficientes caracteres para búsqueda por focus');
         }
     }
 
@@ -184,7 +191,12 @@ class AutoComplete {
     }
 
     async search(query) {
-        if (this.isLoading) return;
+        console.log('🔎 Iniciando búsqueda con query:', `"${query}"`);
+
+        if (this.isLoading) {
+            console.log('⏳ Ya hay una búsqueda en progreso, ignorando');
+            return;
+        }
 
         this.isLoading = true;
         this.showLoading();
@@ -194,17 +206,20 @@ class AutoComplete {
 
             if (this.localData) {
                 // Búsqueda local
+                console.log('🏠 Búsqueda local');
                 results = this.searchLocal(query, this.localData);
             } else if (this.apiUrl) {
                 // Búsqueda remota
+                console.log('🌐 Búsqueda remota a:', this.apiUrl);
                 results = await this.searchRemote(query);
             }
 
+            console.log('📊 Resultados obtenidos:', results.length);
             this.currentResults = results.slice(0, this.maxResults);
             this.renderResults();
 
         } catch (error) {
-            console.error('Error en autocompletado:', error);
+            console.error('❌ Error en autocompletado:', error);
             this.showError();
         } finally {
             this.isLoading = false;
@@ -225,7 +240,9 @@ class AutoComplete {
     async searchRemote(query) {
         const url = new URL(this.apiUrl, window.location.origin);
         url.searchParams.set(this.searchKey, query);
-        url.searchParams.set('limit', this.maxResults);
+        url.searchParams.set('per_page', this.maxResults);  // Cambiar 'limit' por 'per_page'
+
+        console.log('🌐 API Request:', url.toString());
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -233,6 +250,19 @@ class AutoComplete {
         }
 
         const data = await response.json();
+        console.log('📊 API Response:', data);
+
+        // Soportar estructura específica de nuestra API de inventario
+        if (data.success === false) {
+            console.warn('⚠️ API returned success: false');
+            return [];
+        }
+
+        if (data.articulos) {
+            console.log('✅ Found articulos:', data.articulos.length);
+            return data.articulos;
+        }
+
         return Array.isArray(data) ? data : (data.items || data.results || []);
     }
 

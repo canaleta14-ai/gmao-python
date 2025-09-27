@@ -5,6 +5,7 @@ from app.extensions import db
 # Importar todos los modelos
 from .activo import Activo
 from .orden_trabajo import OrdenTrabajo
+from .orden_recambio import OrdenRecambio
 from .plan_mantenimiento import PlanMantenimiento
 from .proveedor import Proveedor
 from .inventario import Inventario
@@ -18,6 +19,7 @@ __all__ = [
     "db",
     "Activo",
     "OrdenTrabajo",
+    "OrdenRecambio",
     "PlanMantenimiento",
     "Proveedor",
     "Inventario",

@@ -1,6 +1,11 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, send_from_directory
 from flask_login import login_required, current_user
 from functools import wraps
+import os
+from datetime import datetime
+from app.extensions import db
+from app.models.inventario import Inventario, ConteoInventario, PeriodoInventario
+from app.controllers import inventario_controller
 from app.controllers.inventario_controller_simple import (
     obtener_estadisticas_inventario,
     listar_articulos_avanzado,
@@ -171,6 +176,317 @@ def conteos_page():
     return render_template("inventario/conteos.html", section="inventario")
 
 
+# API Routes para Conteos
+@inventario_bp.route("/api/conteos", methods=["GET"])
+def api_obtener_conteos():
+    """API para obtener conteos con filtros y paginación"""
+    try:
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 15, type=int)
+        tipo_conteo = request.args.get("tipo_conteo")
+        estado = request.args.get("estado")
+        fecha_desde = request.args.get("fecha_desde")
+        fecha_hasta = request.args.get("fecha_hasta")
+
+        # Construir query base
+        query = ConteoInventario.query.join(Inventario)
+
+        # Aplicar filtros
+        if tipo_conteo:
+            query = query.filter(ConteoInventario.tipo_conteo == tipo_conteo)
+        if estado:
+            query = query.filter(ConteoInventario.estado == estado)
+        if fecha_desde:
+            fecha_desde_obj = datetime.strptime(fecha_desde, "%Y-%m-%d").date()
+            query = query.filter(
+                db.func.date(ConteoInventario.fecha_conteo) >= fecha_desde_obj
+            )
+        if fecha_hasta:
+            fecha_hasta_obj = datetime.strptime(fecha_hasta, "%Y-%m-%d").date()
+            query = query.filter(
+                db.func.date(ConteoInventario.fecha_conteo) <= fecha_hasta_obj
+            )
+
+        # Ordenar por fecha descendente
+        query = query.order_by(ConteoInventario.fecha_conteo.desc())
+
+        # Paginación
+        conteos_paginated = query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+        # Serializar conteos
+        conteos_data = []
+        for conteo in conteos_paginated.items:
+            conteos_data.append(
+                {
+                    "id": conteo.id,
+                    "fecha_conteo": conteo.fecha_conteo.strftime("%Y-%m-%d %H:%M"),
+                    "tipo_conteo": conteo.tipo_conteo,
+                    "stock_teorico": conteo.stock_teorico,
+                    "stock_fisico": conteo.stock_fisico,
+                    "diferencia": conteo.diferencia,
+                    "porcentaje_diferencia": (
+                        round(conteo.porcentaje_diferencia, 2)
+                        if conteo.porcentaje_diferencia
+                        else 0
+                    ),
+                    "estado": conteo.estado,
+                    "usuario_conteo": conteo.usuario_conteo,
+                    "observaciones": conteo.observaciones,
+                    "articulo": {
+                        "id": conteo.articulo.id,
+                        "codigo": conteo.articulo.codigo,
+                        "descripcion": conteo.articulo.descripcion,
+                        "stock_actual": conteo.articulo.stock_actual,
+                    },
+                }
+            )
+
+        return jsonify(
+            {
+                "success": True,
+                "conteos": conteos_data,
+                "pagination": {
+                    "page": conteos_paginated.page,
+                    "pages": conteos_paginated.pages,
+                    "per_page": conteos_paginated.per_page,
+                    "total": conteos_paginated.total,
+                },
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@inventario_bp.route("/api/conteos/resumen", methods=["GET"])
+def api_resumen_conteos():
+    """API para obtener resumen de conteos"""
+    try:
+        # Obtener período actual
+        hoy = datetime.now()
+        periodo_actual = f"{hoy.year}-{hoy.month:02d}"
+
+        # Estadísticas de conteos
+        total_conteos = ConteoInventario.query.count()
+        conteos_completados = ConteoInventario.query.filter(
+            ConteoInventario.estado.in_(["validado", "regularizado"])
+        ).count()
+        conteos_diferencias = ConteoInventario.query.filter(
+            ConteoInventario.diferencia != 0
+        ).count()
+        conteos_pendientes = ConteoInventario.query.filter(
+            ConteoInventario.estado == "pendiente"
+        ).count()
+
+        return jsonify(
+            {
+                "success": True,
+                "resumen": {
+                    "periodo_actual": periodo_actual,
+                    "total_conteos": total_conteos,
+                    "conteos_completados": conteos_completados,
+                    "conteos_diferencias": conteos_diferencias,
+                    "conteos_pendientes": conteos_pendientes,
+                },
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@inventario_bp.route("/api/conteos/aleatorios", methods=["POST"])
+def api_generar_conteos_aleatorios():
+    """API para generar conteos aleatorios"""
+    try:
+        data = request.get_json()
+        cantidad = data.get("cantidad", 10)
+
+        conteos_creados = inventario_controller.generar_conteos_aleatorios(cantidad)
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Se generaron {len(conteos_creados)} conteos aleatorios",
+                "conteos_creados": len(conteos_creados),
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@inventario_bp.route("/api/conteos/<int:conteo_id>/procesar", methods=["PUT"])
+def api_procesar_conteo(conteo_id):
+    """API para procesar un conteo físico"""
+    try:
+        data = request.get_json()
+        stock_fisico = data.get("stock_fisico")
+        observaciones = data.get("observaciones", "")
+        usuario = data.get("usuario", "")
+
+        if stock_fisico is None:
+            return (
+                jsonify({"success": False, "error": "Stock físico es requerido"}),
+                400,
+            )
+
+        resultado = inventario_controller.procesar_conteo_fisico(
+            conteo_id, stock_fisico, observaciones, usuario
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Conteo procesado exitosamente",
+                "conteo": {
+                    "id": resultado.id,
+                    "estado": resultado.estado,
+                    "diferencia": resultado.diferencia,
+                    "stock_teorico": resultado.stock_teorico,
+                    "stock_fisico": resultado.stock_fisico,
+                },
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@inventario_bp.route("/api/conteos/<int:conteo_id>", methods=["GET"])
+def api_obtener_conteo(conteo_id):
+    """API para obtener un conteo específico"""
+    try:
+        from app.models.inventario import ConteoInventario
+
+        conteo = ConteoInventario.query.get_or_404(conteo_id)
+
+        return jsonify(
+            {
+                "success": True,
+                "conteo": {
+                    "id": conteo.id,
+                    "estado": conteo.estado,
+                    "diferencia": conteo.diferencia,
+                    "stock_teorico": conteo.stock_teorico,
+                    "stock_fisico": conteo.stock_fisico,
+                    "usuario_conteo": conteo.usuario_conteo,
+                    "observaciones": conteo.observaciones,
+                    "articulo": {
+                        "codigo": conteo.articulo.codigo,
+                        "descripcion": conteo.articulo.descripcion,
+                    },
+                },
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@inventario_bp.route("/api/conteos/<int:conteo_id>", methods=["PUT"])
+def api_editar_conteo(conteo_id):
+    """API para editar un conteo físico"""
+    try:
+        data = request.get_json()
+        stock_fisico = data.get("stock_fisico")
+        observaciones = data.get("observaciones", "")
+        usuario_conteo = data.get("usuario_conteo", "")
+
+        if stock_fisico is None:
+            return (
+                jsonify({"success": False, "error": "Stock físico es requerido"}),
+                400,
+            )
+
+        resultado = inventario_controller.editar_conteo(
+            conteo_id, stock_fisico, observaciones, usuario_conteo
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Conteo actualizado exitosamente",
+                "conteo": {
+                    "id": resultado.id,
+                    "estado": resultado.estado,
+                    "diferencia": resultado.diferencia,
+                    "stock_teorico": resultado.stock_teorico,
+                    "stock_fisico": resultado.stock_fisico,
+                    "usuario_conteo": resultado.usuario_conteo,
+                    "observaciones": resultado.observaciones,
+                },
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@inventario_bp.route("/api/periodos-inventario", methods=["GET", "POST"])
+def api_periodos_inventario():
+    """API para periodos de inventario"""
+    if request.method == "GET":
+        try:
+            periodos = PeriodoInventario.query.order_by(
+                PeriodoInventario.año.desc(), PeriodoInventario.mes.desc()
+            ).all()
+
+            periodos_data = []
+            for periodo in periodos:
+                periodos_data.append(
+                    {
+                        "id": periodo.id,
+                        "año": periodo.año,
+                        "mes": periodo.mes,
+                        "responsable": periodo.usuario_responsable,
+                        "estado": periodo.estado,
+                        "fecha_inicio": (
+                            periodo.fecha_inicio.isoformat()
+                            if periodo.fecha_inicio
+                            else None
+                        ),
+                        "fecha_fin": (
+                            periodo.fecha_fin.isoformat() if periodo.fecha_fin else None
+                        ),
+                        "observaciones": periodo.observaciones,
+                    }
+                )
+
+            return jsonify({"success": True, "periodos": periodos_data})
+
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    else:  # POST
+        try:
+            data = request.get_json()
+
+            nuevo_periodo = PeriodoInventario(
+                año=data.get("año"),
+                mes=data.get("mes"),
+                usuario_responsable=data.get("usuario_responsable", ""),
+                observaciones=data.get("observaciones", ""),
+            )
+
+            db.session.add(nuevo_periodo)
+            db.session.commit()
+
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Período de inventario creado exitosamente",
+                    "periodo_id": nuevo_periodo.id,
+                }
+            )
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"success": False, "error": str(e)}), 500
+
+
 @inventario_bp.route("/test-spinner")
 def test_spinner():
     """Página de prueba para el spinner"""
@@ -269,10 +585,23 @@ def registrar_movimiento():
     try:
         data = request.get_json()
         movimiento = registrar_movimiento_inventario(data)
+
+        # Obtener información del artículo para mensajes más descriptivos
+        from app.models.inventario import Inventario
+
+        articulo = Inventario.query.get(movimiento.inventario_id)
+
+        # Crear mensaje descriptivo
+        tipo_es = {"entrada": "entrada", "salida": "salida", "ajuste": "ajuste"}.get(
+            movimiento.tipo, movimiento.tipo
+        )
+
+        mensaje_detallado = f"Movimiento de {tipo_es} registrado: {abs(movimiento.cantidad)} unidades de {articulo.codigo if articulo else 'artículo'}. Stock actual: {articulo.stock_actual if articulo else 'N/A'}"
+
         return jsonify(
             {
                 "success": True,
-                "message": "Movimiento registrado exitosamente",
+                "message": mensaje_detallado,
                 "movimiento": {
                     "id": movimiento.id,
                     "tipo": movimiento.tipo,
@@ -281,6 +610,20 @@ def registrar_movimiento():
                         movimiento.fecha.strftime("%d/%m/%Y %H:%M")
                         if movimiento.fecha
                         else ""
+                    ),
+                },
+                "articulo": {
+                    "codigo": articulo.codigo if articulo else None,
+                    "descripcion": articulo.descripcion if articulo else None,
+                    "stock_actual": articulo.stock_actual if articulo else None,
+                    "stock_anterior": (
+                        (articulo.stock_actual - movimiento.cantidad)
+                        if articulo and movimiento.tipo == "entrada"
+                        else (
+                            (articulo.stock_actual + movimiento.cantidad)
+                            if articulo and movimiento.tipo == "salida"
+                            else articulo.stock_actual if articulo else None
+                        )
                     ),
                 },
             }
@@ -406,3 +749,22 @@ def obtener_articulo(articulo_id):
         )
     except Exception as e:
         return jsonify({"success": False, "error": "Error al obtener artículo"}), 500
+
+
+@inventario_bp.route("/test-autocomplete")
+def test_autocomplete():
+    """Página de test para el autocompletado"""
+    return send_from_directory(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "test_autocomplete.html",
+    )
+
+
+@inventario_bp.route("/test-autocomplete-browser.js")
+def test_autocomplete_browser_js():
+    """Script de test para autocompletado en navegador"""
+    return send_from_directory(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "test-autocomplete-browser.js",
+        mimetype="application/javascript",
+    )

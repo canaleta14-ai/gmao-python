@@ -136,7 +136,11 @@ class ConteoInventario(db.Model):
     @property
     def porcentaje_diferencia(self):
         """Calcula el porcentaje de diferencia"""
-        if self.stock_teorico > 0:
+        if (
+            self.stock_teorico
+            and self.stock_teorico > 0
+            and self.diferencia is not None
+        ):
             return (self.diferencia / self.stock_teorico) * 100
         return 0
 

@@ -26,3 +26,6 @@ class OrdenTrabajo(db.Model):
         lazy=True,
         cascade="all, delete-orphan",
     )
+
+    # Relación con recambios utilizados
+    # Nota: La relación inversa está definida en OrdenRecambio.orden_trabajo

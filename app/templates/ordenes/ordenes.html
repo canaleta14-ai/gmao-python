@@ -398,6 +398,49 @@
                         <label class="form-label fw-bold">Observaciones:</label>
                         <p class="form-control-plaintext" id="ver-orden-observaciones">Sin observaciones</p>
                     </div>
+                    
+                    <!-- Sección de Recambios -->
+                    <div class="col-12 mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0"><i class="bi bi-tools me-2"></i>Recambios y Repuestos</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="mostrarModalAgregarRecambio()">
+                                <i class="bi bi-plus me-1"></i>Agregar Recambio
+                            </button>
+                        </div>
+                        
+                        <div id="lista-recambios">
+                            <div class="text-center text-muted py-3" id="sin-recambios">
+                                <i class="bi bi-tools fs-1 mb-2 d-block"></i>
+                                <p>No hay recambios asignados a esta orden</p>
+                            </div>
+                        </div>
+                        
+                        <div id="recambios-table" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descripción</th>
+                                            <th>Cant. Solicitada</th>
+                                            <th>Cant. Utilizada</th>
+                                            <th>Stock</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-recambios">
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-warning" onclick="descontarRecambios()" id="btn-descontar">
+                                    <i class="bi bi-arrow-down-circle me-1"></i>Descontar del Stock
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -442,9 +485,66 @@
     </div>
 </div>
 
+<!-- Modal Agregar Recambio -->
+<div class="modal fade" id="modalAgregarRecambio" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Agregar Recambio/Repuesto
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-agregar-recambio">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="recambio-articulo" class="form-label">Artículo/Repuesto *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="recambio-articulo" 
+                                       placeholder="Buscar por código o descripción..." required>
+                                <input type="hidden" id="recambio-inventario-id">
+                            </div>
+                            <div class="form-text">
+                                <span id="recambio-info" class="text-muted">Selecciona un artículo para ver información de stock</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="recambio-cantidad" class="form-label">Cantidad Solicitada *</label>
+                            <input type="number" class="form-control" id="recambio-cantidad" min="1" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Stock Actual</label>
+                            <input type="text" class="form-control" id="recambio-stock" readonly placeholder="--">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="recambio-observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="recambio-observaciones" rows="3" 
+                                      placeholder="Notas adicionales sobre el uso de este recambio..."></textarea>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Container para alertas -->
+                <div id="alert-container-recambio"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarRecambio()">
+                    <i class="bi bi-check-lg me-1"></i>Agregar Recambio
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ordenes.js') }}"></script>
 {% endblock %}

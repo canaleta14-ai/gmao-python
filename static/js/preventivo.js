@@ -1168,7 +1168,11 @@ function exportarCSV() {
     console.log('📁 Iniciando exportación de planes a CSV...');
 
     if (!planesData || planesData.length === 0) {
-        showNotificationToast('No hay datos para exportar. Primero carga los planes.', 'warning');
+        if (typeof mostrarMensaje === 'function') {
+            mostrarMensaje('No hay datos para exportar. Primero carga los planes.', 'warning');
+        } else {
+            showNotificationToast('No hay datos para exportar. Primero carga los planes.', 'warning');
+        }
         return;
     }
 
@@ -1235,9 +1239,13 @@ function exportarCSV() {
                 link.click();
                 console.log('✅ Comando de descarga ejecutado');
 
-                // Mostrar mensaje de éxito con delay para dar tiempo a que se inicie la descarga
+                // Mostrar mensaje informativo apropiado con delay para dar tiempo a que se inicie la descarga
                 setTimeout(() => {
-                    showNotificationToast(`Descargando archivo: ${nombreArchivo}`, 'success');
+                    if (typeof mostrarMensaje === 'function') {
+                        mostrarMensaje(`Descarga iniciada. Revise su carpeta de descargas para el archivo ${nombreArchivo}.`, 'info');
+                    } else {
+                        showNotificationToast(`Descargando archivo: ${nombreArchivo}`, 'success');
+                    }
                 }, 100);
 
                 // Limpiar después de un tiempo
@@ -1258,7 +1266,11 @@ function exportarCSV() {
 
     } catch (error) {
         console.error('❌ Error al exportar CSV:', error);
-        showNotificationToast('Error al exportar el archivo CSV', 'error');
+        if (typeof mostrarMensaje === 'function') {
+            mostrarMensaje('Error al exportar el archivo CSV', 'danger');
+        } else {
+            showNotificationToast('Error al exportar el archivo CSV', 'error');
+        }
     }
 }
 

@@ -620,27 +620,76 @@ async function guardarNuevoArticulo() {
 
 // Mostrar modal de movimiento
 function mostrarModalMovimiento(articuloId = null, codigo = '', descripcion = '') {
+    console.log('📂 Abriendo modal de movimiento:', { articuloId, codigo, descripcion });
+
     // Limpiar formulario
     document.getElementById('formMovimiento').reset();
+
+    // Limpiar y forzar reinicialización del autocompletado
+    const articuloInput = document.getElementById('movimiento-articulo-info');
+    if (articuloInput) {
+        articuloInput.dataset.autocompleteInitialized = '';
+        articuloInput.value = '';
+        console.log('🧹 Campo de artículo limpiado para nueva inicialización');
+    }
 
     // Si se llama con parámetros específicos, pre-rellenar
     if (articuloId) {
         document.getElementById('movimiento-articulo-id').value = articuloId;
-        document.getElementById('movimiento-articulo-info').value = `${codigo} - ${descripcion}`;
-        // Deshabilitar el campo de búsqueda cuando viene pre-seleccionado
-        const autocompleteInput = document.querySelector('#movimiento-articulo-info-autocomplete input, #movimiento-articulo-info');
-        if (autocompleteInput) {
-            autocompleteInput.value = `${codigo} - ${descripcion}`;
+        const displayValue = `${codigo} - ${descripcion}`;
+        if (articuloInput) {
+            articuloInput.value = displayValue;
         }
+        console.log('📝 Artículo pre-seleccionado:', displayValue);
     } else {
-        // Si no hay artículo pre-seleccionado, habilitar autocompletado
+        // Si no hay artículo pre-seleccionado, limpiar
         document.getElementById('movimiento-articulo-id').value = '';
-        initializeArticuloAutoComplete();
+        console.log('🆕 Modal sin artículo pre-seleccionado');
     }
 
     const modal = new bootstrap.Modal(document.getElementById('modalMovimiento'));
     modal.show();
+
+    // Siempre inicializar autocompletado después de mostrar el modal
+    setTimeout(() => {
+        console.log('⏰ Inicializando autocompletado después de mostrar modal...');
+        initializeArticuloAutoComplete();
+    }, 150);
 }
+
+// Función global para reinicializar autocompletado manualmente
+window.reiniciarAutocompletado = function () {
+    console.log('🔄 Reinicializando autocompletado manualmente...');
+    const input = document.getElementById('movimiento-articulo-info');
+    if (input) {
+        // Forzar reinicialización
+        input.dataset.autocompleteInitialized = '';
+        initializeArticuloAutoComplete();
+    } else {
+        console.error('❌ Input no encontrado para reinicialización');
+    }
+};
+
+// Función global para probar API manualmente
+window.probarAPI = function (query = 'a') {
+    console.log(`🧪 Probando API con query: "${query}"`);
+    fetch(`/inventario/api/articulos?q=${query}&per_page=5`)
+        .then(response => {
+            console.log('📡 Status API:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Datos API:', data);
+            if (data.articulos && data.articulos.length > 0) {
+                console.log('✅ API funciona correctamente');
+            } else {
+                console.log('⚠️ API responde pero sin artículos');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error API:', error);
+        });
+};
 
 // Inicializar autocompletado para artículos en modal de movimiento
 function initializeArticuloAutoComplete() {
@@ -653,8 +702,18 @@ function initializeArticuloAutoComplete() {
     }
 
     if (input.dataset.autocompleteInitialized) {
-        console.log('⚠️ Autocompletado ya inicializado');
-        return;
+        console.log('⚠️ Autocompletado ya inicializado, forzando reinicialización...');
+        // Limpiar inicialización previa
+        input.dataset.autocompleteInitialized = '';
+        const wrapper = input.closest('.autocomplete-wrapper');
+        if (wrapper) {
+            console.log('🧹 Removiendo wrapper anterior');
+            const originalInput = wrapper.querySelector('input[type="hidden"]');
+            if (originalInput) {
+                wrapper.parentNode.insertBefore(input, wrapper);
+                wrapper.remove();
+            }
+        }
     }
 
     // Verificar que AutoComplete esté disponible
@@ -666,73 +725,86 @@ function initializeArticuloAutoComplete() {
 
     console.log('✅ AutoComplete disponible, configurando...');
 
-    // Crear configuración específica para artículos de inventario
-    const articulosAutoCompleteConfig = {
-        element: input,
-        apiUrl: '/inventario/api/articulos',
-        searchKey: 'q', // Cambiar a 'q' que es el parámetro estándar
-        displayKey: item => `${item.codigo} - ${item.descripcion} (Stock: ${item.stock_actual})`,
-        valueKey: 'id',
-        placeholder: 'Buscar artículo por código o descripción...',
-        minChars: 2,
-        maxResults: 15,
-        noResultsText: 'No se encontraron artículos',
-        loadingText: 'Buscando artículos...',
-        customFilter: (item, query) => {
-            const q = query.toLowerCase();
-            return item.descripcion.toLowerCase().includes(q) ||
-                item.codigo.toLowerCase().includes(q) ||
-                (item.categoria && item.categoria.toLowerCase().includes(q));
-        },
-        onSelect: (item) => {
-            // Cuando se selecciona un artículo
-            console.log('✅ Artículo seleccionado:', item);
-            document.getElementById('movimiento-articulo-id').value = item.id;
+    try {
+        // Crear configuración para AutoComplete
+        console.log('🚀 Creando instancia de AutoComplete...');
+        const autocompleteInstance = new AutoComplete({
+            element: input,
+            apiUrl: '/inventario/api/articulos',
+            searchKey: 'q',
+            displayKey: item => `${item.codigo} - ${item.descripcion}`,
+            valueKey: 'id',
+            minChars: 1,
+            maxResults: 15,
+            placeholder: 'Buscar artículo por código o descripción...',
+            noResultsText: 'No se encontraron artículos',
+            loadingText: 'Buscando artículos...',
+            onSelect: (item) => {
+                console.log('✅ Artículo seleccionado:', item);
+                document.getElementById('movimiento-articulo-id').value = item.id;
 
-            // Mostrar información adicional del stock
-            const stockInfo = document.getElementById('stock-info-display');
-            if (stockInfo) {
-                stockInfo.innerHTML = `
-                    <small class="text-muted">
-                        <strong>Stock:</strong> ${item.stock_actual} | 
-                        <strong>Mínimo:</strong> ${item.stock_minimo} | 
-                        <strong>Categoría:</strong> ${item.categoria || 'N/A'}
-                    </small>
-                `;
-                stockInfo.style.display = 'block';
-            }
-
-            // Validar stock si es salida
-            const tipoMovimiento = document.getElementById('movimiento-tipo');
-            if (tipoMovimiento && tipoMovimiento.value === 'salida') {
-                validarStockParaSalida(item);
-            }
-        },
-        onInput: (value) => {
-            console.log('🔍 Escribiendo:', value);
-            // Limpiar selección si el usuario está escribiendo
-            if (value.length < 2) {
-                document.getElementById('movimiento-articulo-id').value = '';
+                // Mostrar información adicional del stock
                 const stockInfo = document.getElementById('stock-info-display');
                 if (stockInfo) {
-                    stockInfo.style.display = 'none';
+                    stockInfo.innerHTML = `
+                        <small class="text-muted">
+                            <strong>Stock:</strong> ${item.stock_actual || 0} | 
+                            <strong>Mínimo:</strong> ${item.stock_minimo || 0} | 
+                            <strong>Categoría:</strong> ${item.categoria || 'N/A'}
+                        </small>
+                    `;
+                    stockInfo.style.display = 'block';
+                }
+            },
+            onInput: (value) => {
+                console.log('� Escribiendo:', value);
+                // Limpiar selección si el usuario está escribiendo
+                if (value.length < 2) {
+                    document.getElementById('movimiento-articulo-id').value = '';
+                    const stockInfo = document.getElementById('stock-info-display');
+                    if (stockInfo) {
+                        stockInfo.style.display = 'none';
+                    }
                 }
             }
-        }
-    };
+        });
 
-    try {
-        // Inicializar autocompletado
-        const autocompleteInstance = new AutoComplete(articulosAutoCompleteConfig);
         input.dataset.autocompleteInitialized = 'true';
 
         // Remover readonly del input original
         input.removeAttribute('readonly');
+        input.value = ''; // Limpiar cualquier valor existente
 
         console.log('✅ Autocompletado de artículos inicializado correctamente');
+
+        return autocompleteInstance;
+
+        // Test inmediato de la API
+        setTimeout(() => {
+            console.log('🧪 Probando API directamente...');
+            fetch('/inventario/api/articulos?q=a&per_page=5')
+                .then(response => {
+                    console.log('📡 Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📊 Respuesta de API:', data);
+                    if (data.articulos && data.articulos.length > 0) {
+                        console.log('✅ API funciona, artículos encontrados:', data.articulos.length);
+                        console.log('📝 Primer artículo:', data.articulos[0]);
+                    } else {
+                        console.log('⚠️ API responde pero sin artículos');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error en API:', error);
+                });
+        }, 500);
+
         return autocompleteInstance;
     } catch (error) {
         console.error('❌ Error al inicializar autocompletado:', error);
+        console.error('Error details:', error.stack);
     }
 }
 
@@ -826,12 +898,67 @@ async function guardarMovimiento() {
         const result = await response.json();
 
         if (response.ok) {
-            mostrarAlerta('Movimiento registrado exitosamente', 'success');
+            // Usar el mensaje detallado de la API si está disponible
+            let mensaje = result.message || 'Movimiento registrado exitosamente';
+
+            // Si tenemos información del artículo, crear mensaje más descriptivo
+            if (result.articulo && result.movimiento) {
+                const articulo = result.articulo;
+                const movimiento = result.movimiento;
+                const tipo = movimiento.tipo;
+                const cantidad = Math.abs(movimiento.cantidad);
+
+                // Emojis y texto según el tipo de movimiento
+                const tipoInfo = {
+                    'entrada': { emoji: '📦➕', texto: 'entrada', color: 'success' },
+                    'salida': { emoji: '📦➖', texto: 'salida', color: 'danger' },
+                    'ajuste': { emoji: '⚖️', texto: 'ajuste', color: 'warning' },
+                    'regularizacion': { emoji: '🔄', texto: 'regularización', color: 'info' }
+                };
+
+                const info = tipoInfo[tipo] || { emoji: '📦', texto: tipo, color: 'info' };
+
+                // Crear mensaje enriquecido
+                mensaje = `${info.emoji} Movimiento de ${info.texto} registrado: ${cantidad} unidades de ${articulo.codigo}`;
+
+                // Agregar información de stock si está disponible
+                if (articulo.stock_actual !== null) {
+                    const stockAnterior = articulo.stock_anterior;
+                    if (stockAnterior !== null && stockAnterior !== articulo.stock_actual) {
+                        mensaje += `\n📊 Stock: ${stockAnterior} → ${articulo.stock_actual}`;
+                    } else {
+                        mensaje += `\n📊 Stock actual: ${articulo.stock_actual}`;
+                    }
+                }
+
+                // Alertas especiales
+                if (tipo === 'salida' && articulo.stock_actual <= 0) {
+                    mensaje += '\n⚠️ ¡Artículo sin stock!';
+                } else if (articulo.stock_actual < 5) { // Umbral bajo configurable
+                    mensaje += '\n🟡 Stock bajo';
+                }
+            }
+
+            mostrarAlerta(mensaje, 'success');
             bootstrap.Modal.getInstance(document.getElementById('modalMovimiento')).hide();
             cargarArticulos(paginaActual, filtrosAplicados);
             cargarEstadisticas();
         } else {
-            mostrarAlerta('Error: ' + result.error, 'danger');
+            // Mejorar mensajes de error también
+            let mensajeError = result.error || 'Error desconocido';
+
+            // Personalizar mensajes de error comunes
+            if (mensajeError.includes('Stock insuficiente')) {
+                mensajeError = '⚠️ ' + mensajeError + '\n💡 Verifica el stock disponible antes de realizar la salida';
+            } else if (mensajeError.includes('Artículo no encontrado')) {
+                mensajeError = '❌ ' + mensajeError + '\n💡 Selecciona un artículo válido del autocompletado';
+            } else if (mensajeError.includes('Campo requerido')) {
+                mensajeError = '📝 ' + mensajeError + '\n💡 Completa todos los campos obligatorios';
+            } else {
+                mensajeError = '❌ ' + mensajeError;
+            }
+
+            mostrarAlerta(mensajeError, 'danger');
         }
     } catch (error) {
         console.error('Error:', error);
@@ -868,22 +995,33 @@ function mostrarAlerta(mensaje, tipo) {
         document.body.appendChild(alertContainer);
     }
 
+    // Convertir saltos de línea a <br> para HTML
+    const mensajeHtml = mensaje.replace(/\n/g, '<br>');
+
     // Crear alerta
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+    alertDiv.style.maxWidth = '400px'; // Limitar ancho para mejor legibilidad
     alertDiv.innerHTML = `
-        ${mensaje}
+        <div style="word-wrap: break-word;">${mensajeHtml}</div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
 
     alertContainer.appendChild(alertDiv);
 
-    // Auto-eliminar después de 5 segundos
+    // Auto-eliminar después de tiempo variable según el tipo y longitud
+    let timeout = 5000; // Por defecto
+    if (tipo === 'success' && mensaje.length > 100) {
+        timeout = 7000; // Más tiempo para mensajes largos de éxito
+    } else if (tipo === 'danger') {
+        timeout = 8000; // Más tiempo para errores
+    }
+
     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();
         }
-    }, 5000);
+    }, timeout);
 }
 
 // Funciones implementadas
@@ -987,20 +1125,41 @@ function guardarEdicionArticulo() {
 }
 
 function verHistorial(id) {
+    console.log('📋 Abriendo historial para artículo ID:', id);
+
     // Cargar historial de movimientos del artículo
-    fetch(`/inventario/api/articulos/${id}/movimientos?page=1&per_page=20`)
-        .then(response => response.json())
+    const url = `/inventario/api/articulos/${id}/movimientos?page=1&per_page=20`;
+    console.log('🌐 URL de historial:', url);
+
+    fetch(url)
+        .then(response => {
+            console.log('📡 Response status historial:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('📊 Datos de historial:', data);
+
             if (data.error) {
+                console.error('❌ Error en datos de historial:', data.error);
                 mostrarAlerta('Error al cargar historial: ' + data.error, 'danger');
                 return;
             }
 
             // Llenar la tabla de historial
             const tbody = document.getElementById('historial-tbody');
+            if (!tbody) {
+                console.error('❌ No se encontró elemento historial-tbody');
+                return;
+            }
+
             tbody.innerHTML = '';
+            console.log('🧹 Tabla de historial limpiada');
 
             if (!data.movimientos || data.movimientos.length === 0) {
+                console.log('📭 Sin movimientos para mostrar');
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-4">
@@ -1012,7 +1171,10 @@ function verHistorial(id) {
                     </tr>
                 `;
             } else {
-                data.movimientos.forEach(movimiento => {
+                console.log('📊 Mostrando', data.movimientos.length, 'movimientos');
+                data.movimientos.forEach((movimiento, index) => {
+                    console.log(`   ${index + 1}. ${movimiento.fecha} - ${movimiento.tipo} - ${movimiento.cantidad}`);
+
                     const tipoClass = movimiento.tipo === 'entrada' ? 'success' :
                         movimiento.tipo === 'salida' ? 'danger' : 'warning';
                     const tipoIcon = movimiento.tipo === 'entrada' ? 'plus' :
@@ -1052,12 +1214,15 @@ function verHistorial(id) {
                 console.log(`Historial tiene ${data.pages} páginas`);
             }
 
+            console.log('✅ Tabla de historial completada');
+
             // Mostrar modal
             const modal = new bootstrap.Modal(document.getElementById('modalHistorial'));
             modal.show();
+            console.log('📱 Modal de historial mostrado');
         })
         .catch(error => {
-            console.error('Error al cargar historial:', error);
+            console.error('❌ Error al cargar historial:', error);
             mostrarAlerta('Error al cargar historial de movimientos', 'danger');
         });
 }

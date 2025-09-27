@@ -1,10 +1,8 @@
 // personal.js - JavaScript específico para el módulo de personal
 
-// Variables globales para paginación
+// Variables globales
 let paginacionPersonal = null;
-let paginaActualPersonal = 1;
-let totalPaginasPersonal = 1;
-let totalEmpleados = 0;
+let empleadosData = [];
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Personal module loaded');
@@ -15,8 +13,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // Inicializar paginación
-    inicializarPaginacionPersonal();
+    // Inicializar módulo
+    inicializarModuloPersonal();
 
     // Encontrar elementos del colapso para mejorar UX
     const filtroHeader = document.querySelector('[data-bs-toggle="collapse"]');
@@ -44,33 +42,309 @@ document.addEventListener('DOMContentLoaded', function () {
     setupFiltrosPersonal();
 });
 
+// Función principal de inicialización
+function inicializarModuloPersonal() {
+    console.log('🚀 Inicializando módulo de personal...');
+
+    // Cargar datos de empleados desde la tabla HTML existente
+    cargarEmpleadosDesdeTabla();
+
+    // Inicializar paginación usando el sistema estándar
+    inicializarPaginacion();
+}
+
+// Cargar empleados desde la tabla HTML
+function cargarEmpleadosDesdeTabla() {
+    const filas = document.querySelectorAll('#tbody-personal tr');
+    empleadosData = [];
+
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        if (celdas.length >= 6) {
+            empleadosData.push({
+                id: celdas[0].textContent.trim(),
+                nombre: celdas[1].querySelector('.fw-bold')?.textContent.trim() || celdas[1].textContent.trim(),
+                departamento: celdas[2].querySelector('.badge')?.textContent.trim() || celdas[2].textContent.trim(),
+                cargo: celdas[3].textContent.trim(),
+                email: celdas[4].querySelector('div:first-child')?.textContent.replace('📧', '').trim() || '',
+                telefono: celdas[4].querySelector('div:last-child')?.textContent.replace('📞', '').trim() || '',
+                estado: celdas[5].querySelector('.badge')?.textContent.trim() || celdas[5].textContent.trim(),
+                elemento: fila
+            });
+        }
+    });
+
+    console.log(`📊 Cargados ${empleadosData.length} empleados`);
+}
+
+// Inicializar paginación estándar
+function inicializarPaginacion() {
+    console.log('🔧 Inicializando paginación estándar...');
+
+    if (typeof createPagination === 'undefined') {
+        console.error('❌ Función createPagination no disponible');
+        return;
+    }
+
+    try {
+        paginacionPersonal = createPagination('paginacion-personal', renderizarEmpleados, {
+            perPage: 10,
+            showInfo: true,
+            showSizeSelector: false
+        });
+
+        console.log('✅ Paginación inicializada correctamente');
+
+        // Cargar primera página
+        renderizarEmpleados(1, 10);
+
+    } catch (error) {
+        console.error('❌ Error inicializando paginación:', error);
+    }
+}
+
+// Renderizar empleados para una página específica
+function renderizarEmpleados(page, perPage) {
+    console.log(`📄 Renderizando página ${page} (${perPage} por página)`);
+
+    const tbody = document.getElementById('tbody-personal');
+    if (!tbody) {
+        console.error('❌ No se encontró tbody-personal');
+        return;
+    }
+
+    // Aplicar filtros si existen
+    let empleadosFiltrados = aplicarFiltros();
+
+    // Calcular paginación
+    const totalEmpleados = empleadosFiltrados.length;
+    const inicio = (page - 1) * perPage;
+    const empleadosPagina = empleadosFiltrados.slice(inicio, inicio + perPage);
+
+    // Limpiar tbody
+    tbody.innerHTML = '';
+
+    // Renderizar empleados de la página actual
+    empleadosPagina.forEach(empleado => {
+        tbody.appendChild(empleado.elemento.cloneNode(true));
+    });
+
+    // Actualizar paginación
+    if (paginacionPersonal) {
+        paginacionPersonal.updateData(totalEmpleados);
+    }
+
+    // Actualizar contador
+    actualizarContador(empleadosPagina.length, totalEmpleados, page, Math.ceil(totalEmpleados / perPage));
+
+    console.log(`✅ Renderizados ${empleadosPagina.length} empleados de ${totalEmpleados} total`);
+}
+
+// Aplicar filtros activos
+function aplicarFiltros() {
+    // Si no hay filtros activos, devolver todos los empleados
+    const nombreFiltro = document.getElementById('nombre')?.value.toLowerCase() || '';
+    const departamentoFiltro = document.getElementById('departamento')?.value.toLowerCase() || '';
+    const cargoFiltro = document.getElementById('cargo')?.value.toLowerCase() || '';
+
+    if (!nombreFiltro && !departamentoFiltro && !cargoFiltro) {
+        return empleadosData;
+    }
+
+    return empleadosData.filter(empleado => {
+        const cumpleNombre = !nombreFiltro || empleado.nombre.toLowerCase().includes(nombreFiltro);
+        const cumpleDepartamento = !departamentoFiltro || empleado.departamento.toLowerCase().includes(departamentoFiltro);
+        const cumpleCargo = !cargoFiltro || empleado.cargo.toLowerCase().includes(cargoFiltro);
+
+        return cumpleNombre && cumpleDepartamento && cumpleCargo;
+    });
+}
+
+// personal.js - JavaScript específico para el módulo de personal
+
+// Variables globales
+let paginacionPersonal = null;
+let empleadosData = [];
+
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('Personal module loaded');
+
+    // Verificar que Bootstrap está disponible
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap no está disponible');
+        return;
+    }
+
+    // Inicializar módulo
+    inicializarModuloPersonal();
+
+    // Encontrar elementos del colapso para mejorar UX
+    const filtroHeader = document.querySelector('[data-bs-toggle="collapse"]');
+    const filtroCollapse = document.getElementById('filtros-collapse');
+
+    if (filtroHeader && filtroCollapse) {
+        // Asegurar que inicie colapsado
+        if (!filtroCollapse.classList.contains('show')) {
+            filtroHeader.classList.add('collapsed');
+            filtroHeader.setAttribute('aria-expanded', 'false');
+        }
+
+        // Mejorar la indicación visual del estado
+        filtroCollapse.addEventListener('show.bs.collapse', function () {
+            filtroHeader.classList.remove('collapsed');
+        });
+
+        filtroCollapse.addEventListener('hide.bs.collapse', function () {
+            filtroHeader.classList.add('collapsed');
+        });
+    }
+
+    // Inicializar funcionalidades adicionales
+    setupFormPersonal();
+    setupFiltrosPersonal();
+});
+
+// Función principal de inicialización
+function inicializarModuloPersonal() {
+    console.log('🚀 Inicializando módulo de personal...');
+
+    // Cargar datos de empleados desde la tabla HTML existente
+    cargarEmpleadosDesdeTabla();
+
+    // Inicializar paginación usando el sistema estándar
+    inicializarPaginacion();
+}
+
+// Cargar empleados desde la tabla HTML
+function cargarEmpleadosDesdeTabla() {
+    const filas = document.querySelectorAll('#tbody-personal tr');
+    empleadosData = [];
+
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        if (celdas.length >= 6) {
+            empleadosData.push({
+                id: celdas[0].textContent.trim(),
+                nombre: celdas[1].querySelector('.fw-bold')?.textContent.trim() || celdas[1].textContent.trim(),
+                departamento: celdas[2].querySelector('.badge')?.textContent.trim() || celdas[2].textContent.trim(),
+                cargo: celdas[3].textContent.trim(),
+                email: celdas[4].querySelector('div:first-child')?.textContent.replace('📧', '').trim() || '',
+                telefono: celdas[4].querySelector('div:last-child')?.textContent.replace('📞', '').trim() || '',
+                estado: celdas[5].querySelector('.badge')?.textContent.trim() || celdas[5].textContent.trim(),
+                elemento: fila.cloneNode(true) // Clonar para mantener estructura
+            });
+        }
+    });
+
+    console.log(`📊 Cargados ${empleadosData.length} empleados`);
+}
+
+// Inicializar paginación estándar
+function inicializarPaginacion() {
+    console.log('🔧 Inicializando paginación estándar...');
+
+    if (typeof createPagination === 'undefined') {
+        console.error('❌ Función createPagination no disponible');
+        return;
+    }
+
+    try {
+        paginacionPersonal = createPagination('paginacion-personal', renderizarEmpleados, {
+            perPage: 10,
+            showInfo: true,
+            showSizeSelector: false
+        });
+
+        console.log('✅ Paginación inicializada correctamente');
+
+        // Cargar primera página
+        renderizarEmpleados(1, 10);
+
+    } catch (error) {
+        console.error('❌ Error inicializando paginación:', error);
+    }
+}
+
+// Renderizar empleados para una página específica
+function renderizarEmpleados(page, perPage) {
+    console.log(`📄 Renderizando página ${page} (${perPage} por página)`);
+
+    const tbody = document.getElementById('tbody-personal');
+    if (!tbody) {
+        console.error('❌ No se encontró tbody-personal');
+        return;
+    }
+
+    // Aplicar filtros si existen
+    let empleadosFiltrados = aplicarFiltros();
+
+    // Calcular paginación
+    const totalEmpleados = empleadosFiltrados.length;
+    const inicio = (page - 1) * perPage;
+    const empleadosPagina = empleadosFiltrados.slice(inicio, inicio + perPage);
+
+    // Limpiar tbody
+    tbody.innerHTML = '';
+
+    // Renderizar empleados de la página actual
+    empleadosPagina.forEach(empleado => {
+        tbody.appendChild(empleado.elemento.cloneNode(true));
+    });
+
+    // Actualizar paginación
+    if (paginacionPersonal) {
+        paginacionPersonal.updateData(totalEmpleados);
+    }
+
+    // Actualizar contador
+    actualizarContador(empleadosPagina.length, totalEmpleados, page, Math.ceil(totalEmpleados / perPage));
+
+    console.log(`✅ Renderizados ${empleadosPagina.length} empleados de ${totalEmpleados} total`);
+}
+
+// Aplicar filtros activos
+function aplicarFiltros() {
+    // Si no hay filtros activos, devolver todos los empleados
+    const nombreFiltro = document.getElementById('nombre')?.value.toLowerCase() || '';
+    const departamentoFiltro = document.getElementById('departamento')?.value.toLowerCase() || '';
+    const cargoFiltro = document.getElementById('cargo')?.value.toLowerCase() || '';
+
+    if (!nombreFiltro && !departamentoFiltro && !cargoFiltro) {
+        return empleadosData;
+    }
+
+    return empleadosData.filter(empleado => {
+        const cumpleNombre = !nombreFiltro || empleado.nombre.toLowerCase().includes(nombreFiltro);
+        const cumpleDepartamento = !departamentoFiltro || empleado.departamento.toLowerCase().includes(departamentoFiltro);
+        const cumpleCargo = !cargoFiltro || empleado.cargo.toLowerCase().includes(cargoFiltro);
+
+        return cumpleNombre && cumpleDepartamento && cumpleCargo;
+    });
+}
+
+// Actualizar contador de empleados
+function actualizarContador(empleadosPagina, totalEmpleados, paginaActual, totalPaginas) {
+    const contador = document.getElementById('contador-empleados');
+    if (contador) {
+        contador.textContent =
+            `Mostrando ${empleadosPagina} de ${totalEmpleados} empleados${totalPaginas > 1 ? ` (página ${paginaActual} de ${totalPaginas})` : ''}`;
+    }
+}
+
 // Función para limpiar filtros
 function limpiarFiltrosPersonal() {
     console.log('🧹 Limpiando filtros de personal');
 
-    // Limpiar campos individuales
+    // Limpiar campos
     document.getElementById('nombre').value = '';
     document.getElementById('departamento').value = '';
     document.getElementById('cargo').value = '';
 
-    // Limpiar clases de filtrado
-    const filas = document.querySelectorAll('#tbody-personal tr');
-    filas.forEach(fila => {
-        fila.classList.remove('filtrado-oculto');
-    });
+    // Re-renderizar primera página sin filtros
+    renderizarEmpleados(1, 10);
+}
 
-    // Re-renderizar paginación con todos los datos
-    if (paginacionPersonal) {
-        const elementosPorPagina = 10;
-        const totalFilas = filas.length;
-
-        paginaActualPersonal = 1;
-        paginacionPersonal.render(paginaActualPersonal, elementosPorPagina, totalFilas);
-    }
-
-    // Actualizar vista
-    actualizarVistaPersonal();
-}// Función para manejar el formulario de personal
+// Función para manejar el formulario de personal
 function setupFormPersonal() {
     const form = document.getElementById('form-personal');
     if (form) {
@@ -78,7 +352,6 @@ function setupFormPersonal() {
             e.preventDefault();
 
             // Obtener datos del formulario
-            const formData = new FormData(form);
             const data = {
                 nombres: document.getElementById('nombres').value,
                 apellidos: document.getElementById('apellidos').value,
@@ -95,7 +368,6 @@ function setupFormPersonal() {
             console.log('Datos del nuevo empleado:', data);
 
             // Aquí iría la lógica para enviar al servidor
-            // Por ahora solo mostramos un mensaje
             alert('Empleado guardado correctamente (demo)');
 
             // Cerrar modal y limpiar formulario
@@ -117,125 +389,95 @@ function setupFiltrosPersonal() {
     [filtroNombre, filtroDepartamento, filtroCargo].forEach(filtro => {
         if (filtro) {
             filtro.addEventListener('input', function () {
-                filtrarTablaPersonal();
+                // Re-renderizar desde la primera página cuando se aplican filtros
+                renderizarEmpleados(1, 10);
             });
         }
     });
 }
 
-// Función para inicializar la paginación de personal
-function inicializarPaginacionPersonal() {
-    console.log('🔧 Inicializando paginación de personal...');
-
-    // Verificar que el módulo de paginación esté disponible
-    if (typeof Pagination === 'undefined') {
-        console.error('❌ Módulo de paginación no está disponible');
-        return;
-    }
-
-    const container = document.getElementById('paginacion-personal');
-    if (!container) {
-        console.error('❌ Contenedor de paginación no encontrado');
-        return;
-    }
+// Función para exportar CSV
+function exportarCSVPersonal() {
+    console.log('Exportando datos de personal a CSV...');
 
     try {
-        // Configurar paginación con los datos actuales de la tabla
-        const filas = document.querySelectorAll('#tbody-personal tr');
-        totalEmpleados = filas.length;
-        const elementosPorPagina = 10;
-        totalPaginasPersonal = Math.ceil(totalEmpleados / elementosPorPagina);
+        // Obtener datos filtrados actuales
+        const empleadosFiltrados = aplicarFiltros();
 
-        // Crear instancia de paginación usando el constructor correcto
-        paginacionPersonal = new Pagination('paginacion-personal', function (page, perPage) {
-            console.log(`📄 Cambiando a página ${page}`);
-            paginaActualPersonal = page;
-            actualizarVistaPersonal();
-        }, {
-            perPage: elementosPorPagina,
-            maxVisiblePages: 5
+        if (empleadosFiltrados.length === 0) {
+            alert('No hay datos para exportar');
+            return;
+        }
+
+        // Preparar datos CSV
+        let csvContent = 'ID,Nombre,Departamento,Cargo,Email,Telefono,Estado\n';
+
+        empleadosFiltrados.forEach(empleado => {
+            csvContent += `"${empleado.id}","${empleado.nombre}","${empleado.departamento}","${empleado.cargo}","${empleado.email}","${empleado.telefono}","${empleado.estado}"\n`;
         });
 
-        // Renderizar la paginación inicial
-        paginacionPersonal.render(paginaActualPersonal, elementosPorPagina, totalEmpleados);
+        // Descargar archivo
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        const nombreArchivo = `personal_${new Date().toISOString().split('T')[0]}.csv`;
+        link.setAttribute('download', nombreArchivo);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
 
-        console.log(`✅ Paginación inicializada: ${totalPaginasPersonal} páginas, ${totalEmpleados} empleados`);
+        // Limpiar después de un delay
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
 
-        // Actualizar vista inicial
-        actualizarVistaPersonal();
+        // Mostrar mensaje informativo apropiado
+        if (typeof mostrarMensaje === 'function') {
+            mostrarMensaje(`Descarga iniciada. Revise su carpeta de descargas para el archivo ${nombreArchivo}.`, 'info');
+        }
 
     } catch (error) {
-        console.error('❌ Error inicializando paginación:', error);
-    }
-}
-
-// Función para actualizar la vista de empleados según la página
-function actualizarVistaPersonal() {
-    const elementosPorPagina = 10;
-    const inicio = (paginaActualPersonal - 1) * elementosPorPagina;
-    const fin = inicio + elementosPorPagina;
-
-    const filas = document.querySelectorAll('#tbody-personal tr');
-
-    // Ocultar todas las filas
-    filas.forEach(fila => {
-        fila.style.display = 'none';
-    });
-
-    // Mostrar solo las filas de la página actual
-    for (let i = inicio; i < fin && i < filas.length; i++) {
-        filas[i].style.display = '';
-    }
-
-    // Actualizar contador
-    const filasVisibles = Math.min(elementosPorPagina, filas.length - inicio);
-    document.getElementById('contador-empleados').textContent =
-        `Mostrando ${filasVisibles} de ${filas.length} empleados (página ${paginaActualPersonal} de ${totalPaginasPersonal})`;
-
-    console.log(`📊 Vista actualizada: página ${paginaActualPersonal}, mostrando filas ${inicio + 1} a ${Math.min(fin, filas.length)}`);
-}
-
-// Función para filtrar la tabla de personal
-function filtrarTablaPersonal() {
-    const nombreFiltro = document.getElementById('nombre').value.toLowerCase();
-    const departamentoFiltro = document.getElementById('departamento').value.toLowerCase();
-    const cargoFiltro = document.getElementById('cargo').value.toLowerCase();
-
-    const filas = document.querySelectorAll('#tbody-personal tr');
-    let filasVisibles = 0;
-
-    filas.forEach(fila => {
-        const nombre = fila.cells[1].textContent.toLowerCase();
-        const departamento = fila.cells[2].textContent.toLowerCase();
-        const cargo = fila.cells[3].textContent.toLowerCase();
-
-        const coincideNombre = !nombreFiltro || nombre.includes(nombreFiltro);
-        const coincideDepartamento = !departamentoFiltro || departamento.includes(departamentoFiltro);
-        const coincideCargo = !cargoFiltro || cargo.includes(cargoFiltro);
-
-        if (coincideNombre && coincideDepartamento && coincideCargo) {
-            fila.style.display = '';
-            fila.classList.remove('filtrado-oculto');
-            filasVisibles++;
+        console.error('Error al exportar CSV de personal:', error);
+        if (typeof mostrarMensaje === 'function') {
+            mostrarMensaje('Error al exportar archivo CSV', 'danger');
         } else {
-            fila.style.display = 'none';
-            fila.classList.add('filtrado-oculto');
+            alert('Error al exportar archivo CSV');
         }
+    }
+}
+const nombre = fila.cells[1].textContent.toLowerCase();
+const departamento = fila.cells[2].textContent.toLowerCase();
+const cargo = fila.cells[3].textContent.toLowerCase();
+
+const coincideNombre = !nombreFiltro || nombre.includes(nombreFiltro);
+const coincideDepartamento = !departamentoFiltro || departamento.includes(departamentoFiltro);
+const coincideCargo = !cargoFiltro || cargo.includes(cargoFiltro);
+
+if (coincideNombre && coincideDepartamento && coincideCargo) {
+    fila.style.display = '';
+    fila.classList.remove('filtrado-oculto');
+    filasVisibles++;
+} else {
+    fila.style.display = 'none';
+    fila.classList.add('filtrado-oculto');
+}
     });
 
-    // Re-renderizar paginación con los resultados filtrados
-    if (paginacionPersonal) {
-        const elementosPorPagina = 10;
-        paginaActualPersonal = 1; // Volver a la primera página
+// Re-renderizar paginación con los resultados filtrados
+if (paginacionPersonal) {
+    const elementosPorPagina = 10;
+    paginaActualPersonal = 1; // Volver a la primera página
 
-        // Re-renderizar paginación con nuevo total
-        paginacionPersonal.render(paginaActualPersonal, elementosPorPagina, filasVisibles);
+    // Re-renderizar paginación con nuevo total
+    paginacionPersonal.render(paginaActualPersonal, elementosPorPagina, filasVisibles);
 
-        // Actualizar vista
-        actualizarVistaPersonalFiltrado();
-    }
+    // Actualizar vista
+    actualizarVistaPersonalFiltrado();
+}
 
-    console.log(`🔍 Filtros aplicados: ${filasVisibles} empleados de ${filas.length} total`);
+console.log(`🔍 Filtros aplicados: ${filasVisibles} empleados de ${filas.length} total`);
 }
 
 // Función para actualizar la vista con filtros aplicados
@@ -269,43 +511,64 @@ function actualizarVistaPersonalFiltrado() {
 function exportarCSVPersonal() {
     console.log('Exportando datos de personal a CSV...');
 
-    // Obtener datos de la tabla
-    const tabla = document.getElementById('tabla-personal');
-    const filas = tabla.querySelectorAll('tbody tr:not([style*="display: none"])');
+    try {
+        // Obtener datos de la tabla
+        const tabla = document.getElementById('tabla-personal');
+        const filas = tabla.querySelectorAll('tbody tr:not([style*="display: none"])');
 
-    if (filas.length === 0) {
-        alert('No hay datos para exportar');
-        return;
+        if (filas.length === 0) {
+            alert('No hay datos para exportar');
+            return;
+        }
+
+        // Preparar datos CSV
+        let csvContent = 'ID,Nombre,Departamento,Cargo,Email,Telefono,Estado\n';
+
+        filas.forEach(fila => {
+            const celdas = fila.querySelectorAll('td');
+            const id = celdas[0].textContent.trim();
+            const nombre = celdas[1].querySelector('.fw-bold').textContent.trim();
+            const departamento = celdas[2].querySelector('.badge').textContent.trim();
+            const cargo = celdas[3].textContent.trim();
+
+            // Extraer email y teléfono del contenido HTML
+            const contactoDiv = celdas[4];
+            const email = contactoDiv.querySelector('div:first-child').textContent.replace('📧', '').trim();
+            const telefono = contactoDiv.querySelector('div:last-child').textContent.replace('📞', '').trim();
+
+            const estado = celdas[5].querySelector('.badge').textContent.trim();
+
+            csvContent += `"${id}","${nombre}","${departamento}","${cargo}","${email}","${telefono}","${estado}"\n`;
+        });
+
+        // Descargar archivo
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        const nombreArchivo = `personal_${new Date().toISOString().split('T')[0]}.csv`;
+        link.setAttribute('download', nombreArchivo);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpiar después de un delay
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+
+        // Mostrar mensaje informativo apropiado
+        if (typeof mostrarMensaje === 'function') {
+            mostrarMensaje(`Descarga iniciada. Revise su carpeta de descargas para el archivo ${nombreArchivo}.`, 'info');
+        }
+
+    } catch (error) {
+        console.error('Error al exportar CSV de personal:', error);
+        if (typeof mostrarMensaje === 'function') {
+            mostrarMensaje('Error al exportar archivo CSV', 'danger');
+        } else {
+            alert('Error al exportar archivo CSV');
+        }
     }
-
-    // Preparar datos CSV
-    let csvContent = 'ID,Nombre,Departamento,Cargo,Email,Telefono,Estado\n';
-
-    filas.forEach(fila => {
-        const celdas = fila.querySelectorAll('td');
-        const id = celdas[0].textContent.trim();
-        const nombre = celdas[1].querySelector('.fw-bold').textContent.trim();
-        const departamento = celdas[2].querySelector('.badge').textContent.trim();
-        const cargo = celdas[3].textContent.trim();
-
-        // Extraer email y teléfono del contenido HTML
-        const contactoDiv = celdas[4];
-        const email = contactoDiv.querySelector('div:first-child').textContent.replace('📧', '').trim();
-        const telefono = contactoDiv.querySelector('div:last-child').textContent.replace('📞', '').trim();
-
-        const estado = celdas[5].querySelector('.badge').textContent.trim();
-
-        csvContent += `"${id}","${nombre}","${departamento}","${cargo}","${email}","${telefono}","${estado}"\n`;
-    });
-
-    // Descargar archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `personal_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }

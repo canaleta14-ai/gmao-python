@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Autocompletado</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/autocomplete.js"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Test de Autocompletado</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Test API Directa</h3>
+            <button class="btn btn-primary" onclick="probarAPI('a')">Probar API con 'a'</button>
+            <button class="btn btn-secondary" onclick="probarAPI('art')">Probar API con 'art'</button>
+            <div id="resultadoAPI" class="mt-3"></div>
+        </div>
+        
+        <div class="col-md-6">
+            <h3>Test Autocompletado</h3>
+            <div class="mb-3">
+                <label for="test-articulo" class="form-label">Buscar Artículo</label>
+                <input type="text" class="form-control" id="test-articulo" placeholder="Escribe para buscar...">
+                <input type="hidden" id="test-articulo-id" name="articulo_id">
+            </div>
+            <button class="btn btn-success" onclick="initTestAutoComplete()">Inicializar Autocompletado</button>
+            <button class="btn btn-warning" onclick="reiniciarTestAutoComplete()">Reinicializar</button>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Log de Consola</h3>
+            <div id="consoleLog" style="background: #f8f9fa; padding: 10px; height: 300px; overflow-y: scroll; font-family: monospace; font-size: 12px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Capturar logs de consola en la página
+const originalLog = console.log;
+const originalError = console.error;
+const logContainer = document.getElementById('consoleLog');
+
+function addToLog(message, type = 'log') {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.innerHTML = `<span style="color: #666">${timestamp}</span> <span style="color: ${type === 'error' ? 'red' : 'blue'}">[${type}]</span> ${message}`;
+    logContainer.appendChild(logEntry);
+    logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+console.log = function(...args) {
+    originalLog.apply(console, args);
+    addToLog(args.join(' '), 'log');
+};
+
+console.error = function(...args) {
+    originalError.apply(console, args);
+    addToLog(args.join(' '), 'error');
+};
+
+// Funciones de test
+window.probarAPI = function(query = 'a') {
+    console.log(`🧪 Probando API con query: "${query}"`);
+    fetch(`/inventario/api/articulos?q=${query}&per_page=5`)
+        .then(response => {
+            console.log('📡 Status API:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Datos API:', data);
+            document.getElementById('resultadoAPI').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            if (data.articulos && data.articulos.length > 0) {
+                console.log('✅ API funciona correctamente');
+            } else {
+                console.log('⚠️ API responde pero sin artículos');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error API:', error);
+            document.getElementById('resultadoAPI').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        });
+};
+
+window.initTestAutoComplete = function() {
+    console.log('🔧 Inicializando autocompletado de test...');
+    
+    const input = document.getElementById('test-articulo');
+    if (!input) {
+        console.error('❌ Input no encontrado');
+        return;
+    }
+    
+    console.log('📍 Input encontrado:', input);
+    
+    try {
+        console.log('🏗️ Creando instancia AutoComplete...');
+        const autoComplete = new AutoComplete({
+            selector: '#test-articulo',
+            minChars: 1,
+            source: function(term, suggest) {
+                console.log(`🔍 Buscando término: "${term}"`);
+                
+                fetch(`/inventario/api/articulos?q=${encodeURIComponent(term)}&per_page=10`)
+                    .then(response => {
+                        console.log('📡 Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('📊 API Response:', data);
+                        
+                        if (data.success && data.articulos) {
+                            const suggestions = data.articulos.map(articulo => ({
+                                label: `${articulo.codigo} - ${articulo.descripcion}`,
+                                value: articulo.id
+                            }));
+                            console.log('💡 Sugerencias:', suggestions);
+                            suggest(suggestions);
+                        } else {
+                            console.log('⚠️ Sin resultados');
+                            suggest([]);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error en fetch:', error);
+                        suggest([]);
+                    });
+            },
+            renderItem: function(item, search) {
+                const label = item.label || item;
+                const regex = new RegExp('(' + search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + ')', 'gi');
+                const highlightedLabel = label.replace(regex, '<strong>$1</strong>');
+                return `<div class="autocomplete-suggestion" data-val="${item.value || item}">${highlightedLabel}</div>`;
+            },
+            onSelect: function(e, term, item) {
+                console.log('✅ Seleccionado:', { term, item });
+                const hiddenInput = document.getElementById('test-articulo-id');
+                if (hiddenInput) {
+                    hiddenInput.value = item.getAttribute('data-val');
+                    console.log('💾 ID guardado:', hiddenInput.value);
+                }
+            }
+        });
+        
+        console.log('✅ AutoComplete inicializado correctamente');
+        input.dataset.autocompleteInitialized = 'true';
+        
+    } catch (error) {
+        console.error('❌ Error inicializando AutoComplete:', error);
+    }
+};
+
+window.reiniciarTestAutoComplete = function() {
+    console.log('🔄 Reinicializando autocompletado...');
+    const input = document.getElementById('test-articulo');
+    if (input) {
+        input.dataset.autocompleteInitialized = '';
+        input.value = '';
+        document.getElementById('test-articulo-id').value = '';
+        initTestAutoComplete();
+    }
+};
+
+// Inicializar cuando la página carga
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 Página cargada, listo para pruebas');
+    addToLog('Página de test cargada. Usa los botones para probar el autocompletado.', 'log');
+});
+</script>
+
+</body>
+</html>

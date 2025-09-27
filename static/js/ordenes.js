@@ -26,6 +26,15 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Modal de orden encontrado, cargando datos...');
         cargarDatosIniciales();
     }
+
+    // Agregar listener al modal de recambios para inicializar autocompletado
+    const modalRecambio = document.getElementById('modalAgregarRecambio');
+    if (modalRecambio) {
+        modalRecambio.addEventListener('shown.bs.modal', function () {
+            inicializarAutocompletadoRecambio();
+        });
+    }
+
     cargarOrdenes();
 });
 
@@ -117,6 +126,9 @@ function mostrarToast(mensaje, tipo = 'info') {
 function verOrden(id) {
     const orden = ordenes.find(o => o.id === id);
     if (orden) {
+        // Guardar ID de orden actual para gestión de recambios
+        ordenActualId = id;
+
         document.getElementById('ver-orden-numero').textContent = `#${orden.id}`;
         document.getElementById('ver-orden-fecha').textContent = orden.fecha_creacion || 'N/A';
         document.getElementById('ver-orden-tipo').textContent = orden.tipo || 'N/A';
@@ -128,6 +140,9 @@ function verOrden(id) {
         document.getElementById('ver-orden-descripcion').textContent = orden.descripcion || 'N/A';
         document.getElementById('ver-orden-observaciones').textContent = orden.observaciones || 'Sin observaciones';
         document.getElementById('ver-orden-numero').dataset.ordenId = orden.id;
+
+        // Cargar recambios de la orden
+        cargarRecambiosOrden(id);
 
         const modal = new bootstrap.Modal(document.getElementById('modalVerOrden'));
         modal.show();
@@ -264,6 +279,12 @@ async function actualizarEstado() {
 
         if (response.ok) {
             mostrarToast(`Estado actualizado a: ${nuevoEstado}`, 'success');
+
+            // Si la orden se completó, descontar recambios automáticamente
+            if (nuevoEstado === 'Completada') {
+                await descontarRecambiosAutomaticamente(ordenId);
+            }
+
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalEstado'));
             modal.hide();
             await cargarOrdenes(currentPage);
@@ -1276,4 +1297,358 @@ function limpiarFiltros() {
     // Aplicar filtros (mostrarà todas las órdenes sin filtros)
     aplicarFiltros();
     console.log('✅ Filtros limpiados y vista actualizada');
+}
+
+// ================================
+// GESTIÓN DE RECAMBIOS
+// ================================
+
+// Variables globales para recambios
+let ordenActualId = null;
+let autoCompleteRecambio = null;
+
+// Mostrar modal para agregar recambio
+function mostrarModalAgregarRecambio() {
+    // Limpiar formulario
+    document.getElementById('form-agregar-recambio').reset();
+    document.getElementById('recambio-inventario-id').value = '';
+    document.getElementById('recambio-stock').value = '';
+    document.getElementById('recambio-info').textContent = 'Selecciona un artículo para ver información de stock';
+
+    // Mostrar modal
+    const modalRecambio = new bootstrap.Modal(document.getElementById('modalAgregarRecambio'));
+    modalRecambio.show();
+}// Inicializar autocompletado para recambios
+function inicializarAutocompletadoRecambio() {
+    const input = document.getElementById('recambio-articulo');
+    if (!input) {
+        console.error('Input recambio-articulo no encontrado');
+        return;
+    }
+
+    // Verificar que AutoComplete esté disponible
+    if (typeof AutoComplete === 'undefined') {
+        setTimeout(inicializarAutocompletadoRecambio, 500);
+        return;
+    }
+
+    // Limpiar instancia anterior si existe
+    if (autoCompleteRecambio) {
+        autoCompleteRecambio.destroy();
+    }
+
+    try {
+        autoCompleteRecambio = new AutoComplete({
+            element: input,
+            apiUrl: '/inventario/api/articulos',
+            searchKey: 'q',
+            displayKey: item => `${item.codigo} - ${item.descripcion}`,
+            valueKey: 'id',
+            minChars: 2,
+            maxResults: 10,
+            placeholder: 'Buscar artículo por código o descripción...',
+            noResultsText: 'No se encontraron artículos',
+            loadingText: 'Buscando...',
+            onSelect: (item) => {
+                // Completar campos
+                document.getElementById('recambio-articulo').value = `${item.codigo} - ${item.descripcion}`;
+                document.getElementById('recambio-inventario-id').value = item.id;
+                document.getElementById('recambio-stock').value = item.stock_actual || 0;
+
+                // Actualizar info
+                const stock = item.stock_actual || 0;
+                const stockText = stock <= 0 ?
+                    `⚠️ Sin stock disponible` :
+                    `📦 Stock disponible: ${stock} unidades`;
+
+                document.getElementById('recambio-info').innerHTML = `
+                    <strong>${item.codigo}</strong> - ${item.descripcion}<br>
+                    <span class="${stock <= 0 ? 'text-danger' : (stock < 5 ? 'text-warning' : 'text-success')}">${stockText}</span>
+                `;
+            },
+            onInput: (value) => {
+                // Limpiar selección si el usuario está escribiendo
+                if (value.length < 2) {
+                    document.getElementById('recambio-inventario-id').value = '';
+                    document.getElementById('recambio-stock').value = '';
+                    document.getElementById('recambio-info').textContent = 'Selecciona un artículo para ver información de stock';
+                }
+            }
+        });
+
+        console.log('Autocompletado de recambios inicializado');
+
+    } catch (error) {
+        console.error('Error inicializando autocompletado recambios:', error);
+    }
+}// Guardar recambio
+async function guardarRecambio() {
+    try {
+        const inventarioId = document.getElementById('recambio-inventario-id').value;
+        const cantidad = document.getElementById('recambio-cantidad').value;
+        const observaciones = document.getElementById('recambio-observaciones').value;
+
+        if (!inventarioId) {
+            mostrarAlertaRecambio('Debe seleccionar un artículo', 'danger');
+            return;
+        }
+
+        if (!cantidad || cantidad <= 0) {
+            mostrarAlertaRecambio('Debe especificar una cantidad válida', 'danger');
+            return;
+        }
+
+        const response = await fetch(`/api/ordenes/${ordenActualId}/recambios`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                inventario_id: parseInt(inventarioId),
+                cantidad_solicitada: parseInt(cantidad),
+                observaciones: observaciones
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            mostrarAlertaRecambio(result.message || 'Recambio agregado exitosamente', 'success');
+
+            // Cerrar modal después de 1 segundo
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('modalAgregarRecambio')).hide();
+                cargarRecambiosOrden(ordenActualId); // Recargar lista de recambios
+            }, 1000);
+
+        } else {
+            mostrarAlertaRecambio('Error: ' + result.error, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error guardando recambio:', error);
+        mostrarAlertaRecambio('Error de conexión', 'danger');
+    }
+}
+
+// Cargar recambios de una orden
+async function cargarRecambiosOrden(ordenId) {
+    try {
+        const response = await fetch(`/api/ordenes/${ordenId}/recambios`);
+        const result = await response.json();
+
+        if (response.ok) {
+            mostrarRecambios(result.recambios || []);
+        } else {
+            console.error('Error cargando recambios:', result.error);
+        }
+
+    } catch (error) {
+        console.error('Error de conexión:', error);
+    }
+}
+
+// Mostrar lista de recambios
+function mostrarRecambios(recambios) {
+    const sinRecambios = document.getElementById('sin-recambios');
+    const tablaRecambios = document.getElementById('recambios-table');
+    const tbody = document.getElementById('tbody-recambios');
+
+    if (!recambios || recambios.length === 0) {
+        sinRecambios.style.display = 'block';
+        tablaRecambios.style.display = 'none';
+        return;
+    }
+
+    sinRecambios.style.display = 'none';
+    tablaRecambios.style.display = 'block';
+
+    tbody.innerHTML = '';
+
+    recambios.forEach(recambio => {
+        const row = tbody.insertRow();
+        const estado = recambio.descontado ?
+            '<span class="badge bg-success">Descontado</span>' :
+            '<span class="badge bg-warning">Pendiente</span>';
+
+        const stockClass = recambio.articulo?.stock_actual <= 0 ? 'text-danger' :
+            (recambio.articulo?.stock_actual < 5 ? 'text-warning' : 'text-success');
+
+        row.innerHTML = `
+            <td><code>${recambio.articulo?.codigo || 'N/A'}</code></td>
+            <td>${recambio.articulo?.descripcion || 'N/A'}</td>
+            <td>${recambio.cantidad_solicitada}</td>
+            <td>
+                ${recambio.descontado ?
+                recambio.cantidad_utilizada :
+                `<input type="number" class="form-control form-control-sm" value="${recambio.cantidad_utilizada || recambio.cantidad_solicitada}" 
+                            min="0" max="${recambio.cantidad_solicitada}" onchange="actualizarCantidadRecambio(${recambio.id}, this.value)">`
+            }
+            </td>
+            <td class="${stockClass}">${recambio.articulo?.stock_actual || 0}</td>
+            <td>${estado}</td>
+            <td>
+                ${!recambio.descontado ?
+                `<button class="btn btn-sm btn-outline-danger" onclick="eliminarRecambio(${recambio.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>` :
+                '<span class="text-muted">N/A</span>'
+            }
+            </td>
+        `;
+    });
+}
+
+// Actualizar cantidad utilizada de un recambio
+async function actualizarCantidadRecambio(recambioId, cantidadUtilizada) {
+    try {
+        const response = await fetch(`/api/recambios/${recambioId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                cantidad_utilizada: parseInt(cantidadUtilizada)
+            })
+        });
+
+        if (!response.ok) {
+            const result = await response.json();
+            console.error('Error actualizando cantidad:', result.error);
+        }
+
+    } catch (error) {
+        console.error('Error de conexión:', error);
+    }
+}
+
+// Eliminar recambio
+async function eliminarRecambio(recambioId) {
+    if (!confirm('¿Está seguro de eliminar este recambio?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/recambios/${recambioId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            cargarRecambiosOrden(ordenActualId); // Recargar lista
+        } else {
+            alert('Error: ' + result.error);
+        }
+
+    } catch (error) {
+        console.error('Error eliminando recambio:', error);
+        alert('Error de conexión');
+    }
+}
+
+// Descontar recambios del stock
+// Descontar recambios del stock (MANUAL)
+async function descontarRecambios() {
+    if (!confirm('¿Confirma descontar todos los recambios pendientes del stock? Esta acción no se puede deshacer.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/ordenes/${ordenActualId}/recambios/descontar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                usuario_id: 'sistema', // Aquí podrías usar el usuario actual
+                manual: true
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            let mensaje = result.message;
+
+            if (result.recambios_descontados?.length > 0) {
+                mensaje += '\n\nRecambios descontados:';
+                result.recambios_descontados.forEach(r => {
+                    mensaje += `\n• ${r.articulo}: ${r.cantidad} unidades (Stock: ${r.stock_anterior} → ${r.stock_actual})`;
+                });
+            }
+
+            if (result.errores?.length > 0) {
+                mensaje += '\n\nErrores:';
+                result.errores.forEach(e => {
+                    mensaje += `\n• ${e.articulo}: ${e.error}`;
+                });
+            }
+
+            alert(mensaje);
+            cargarRecambiosOrden(ordenActualId); // Recargar lista
+
+        } else {
+            alert('Error: ' + result.error);
+        }
+
+    } catch (error) {
+        console.error('Error descontando recambios:', error);
+        alert('Error de conexión');
+    }
+}
+
+// Mostrar alertas en el modal de recambios
+function mostrarAlertaRecambio(mensaje, tipo) {
+    const alertContainer = document.getElementById('alert-container-recambio');
+    alertContainer.innerHTML = '';
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show mt-3`;
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    alertContainer.appendChild(alertDiv);
+
+    // Auto-eliminar después de 3 segundos para alertas de éxito
+    if (tipo === 'success') {
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 3000);
+    }
+}
+
+// Descontar recambios automáticamente al completar orden
+async function descontarRecambiosAutomaticamente(ordenId) {
+    try {
+        const response = await fetch(`/api/ordenes/${ordenId}/recambios/descontar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                usuario_id: 'sistema',
+                automatico: true
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.recambios_descontados?.length > 0) {
+            // Mostrar notificación discreta de recambios descontados
+            const cantidad = result.recambios_descontados.length;
+            mostrarToast(`✅ ${cantidad} recambio(s) descontado(s) del stock automáticamente`, 'info');
+        } else if (!response.ok && result.error) {
+            // Solo mostrar error si hay problema real
+            console.warn('Advertencia al descontar recambios:', result.error);
+        }
+
+    } catch (error) {
+        console.error('Error descontando recambios automáticamente:', error);
+        // No mostrar error al usuario para no interrumpir flujo de completar orden
+    }
 }

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template
 from flask_login import login_required, current_user
 from functools import wraps
+from app.extensions import db
 from app.controllers.usuarios_controller import (
     crear_usuario,  # type: ignore
     listar_usuarios,  # type: ignore
@@ -235,3 +236,49 @@ def obtener_estadisticas():
         return jsonify({"success": True, "estadisticas": stats})
     except Exception as e:
         return jsonify({"success": False, "error": "Error interno del servidor"}), 500
+
+
+@usuarios_bp.route("/api/autocomplete", methods=["GET"])
+def obtener_usuarios_autocomplete():
+    """API simplificada para autocompletado de usuarios - solo devuelve datos básicos"""
+    try:
+        q = request.args.get("q", "").strip()
+        limit = min(int(request.args.get("limit", 10)), 20)  # Máximo 20 resultados
+
+        if not q or len(q) < 2:
+            return jsonify([])
+
+        # Búsqueda directa sin usar el controlador complejo
+        search_term = f"%{q}%"
+        from app.models.usuario import Usuario
+
+        usuarios = (
+            Usuario.query.filter(
+                db.or_(
+                    Usuario.username.ilike(search_term),
+                    Usuario.nombre.ilike(search_term),
+                    Usuario.email.ilike(search_term),
+                ),
+                Usuario.activo == True,
+            )
+            .limit(limit)
+            .all()
+        )
+
+        # Devolver solo los datos necesarios para autocompletado
+        resultado = []
+        for user in usuarios:
+            resultado.append(
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "nombre": user.nombre or "",
+                    "rol": user.rol or "",
+                    "display": f"{user.username} - {user.nombre or ''} ({user.rol or 'Sin rol'})",
+                }
+            )
+
+        return jsonify(resultado)
+    except Exception as e:
+        print(f"Error en autocompletado de usuarios: {e}")  # Para debug
+        return jsonify([]), 500

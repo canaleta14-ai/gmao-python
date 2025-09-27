@@ -21,7 +21,7 @@
                     <button class="btn btn-outline-secondary" onclick="exportarCSV()">
                         <i class="bi bi-download me-1"></i>Exportar CSV
                     </button>
-                    <button type="button" class="btn btn-outline-primary" onclick="mostrarModalMovimientoGeneral()">
+                    <button type="button" class="btn btn-outline-secondary" onclick="mostrarModalMovimientoGeneral()">
                         <i class="bi bi-plus-circle me-1"></i>Nuevo Movimiento
                     </button>
                     <button type="button" class="btn btn-outline-secondary" onclick="mostrarMovimientos()">
@@ -327,11 +327,13 @@
 </div>
 
 <!-- Modal Movimiento -->
-<div class="modal fade" id="modalMovimiento" tabindex="-1">
+<div class="modal fade modal-modern" id="modalMovimiento" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Registrar Movimiento</h5>
+                <h5 class="modal-title">
+                    <i class="fas fa-exchange-alt me-2"></i>Registrar Movimiento
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -349,7 +351,6 @@
                             <option value="">Seleccionar...</option>
                             <option value="entrada">Entrada</option>
                             <option value="salida">Salida</option>
-                            <option value="ajuste">Ajuste</option>
                             <option value="regularizacion">Regularización</option>
                         </select>
                     </div>
@@ -510,7 +511,7 @@
 </div>
 
 <!-- Modal Historial de Movimientos -->
-<div class="modal fade" id="modalHistorial" tabindex="-1">
+<div class="modal fade modal-modern" id="modalHistorial" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
@@ -546,7 +547,7 @@
 </div>
 
 <!-- Modal Vista General de Movimientos -->
-<div class="modal fade" id="modalMovimientos" tabindex="-1">
+<div class="modal fade modal-modern" id="modalMovimientos" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
@@ -588,8 +589,9 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventario-categorias.js') }}"></script>
+<script src="{{ url_for('static', filename='js/diagnostico-autocomplete.js') }}"></script>
+<script src="/test-autocomplete-browser.js"></script>
 {% endblock %}

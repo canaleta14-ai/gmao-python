@@ -1933,6 +1933,59 @@ function debounce(func, wait) {
     };
 }
 
+// Función para mostrar/ocultar estado de carga global
+function mostrarCargando(mostrar = true) {
+    let loadingOverlay = document.getElementById('loading-overlay-global');
+
+    if (mostrar) {
+        // Crear overlay de carga si no existe
+        if (!loadingOverlay) {
+            loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loading-overlay-global';
+            loadingOverlay.innerHTML = `
+                <div class="d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100" 
+                     style="background: rgba(0,0,0,0.5); z-index: 9999;">
+                    <div class="text-center text-white">
+                        <div class="spinner-border text-light" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <div class="mt-2">Procesando...</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+        }
+        loadingOverlay.style.display = 'block';
+    } else {
+        // Ocultar overlay
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
+    }
+}
+
+// Función para mostrar mensajes de alerta
+function mostrarMensaje(mensaje, tipo = 'info') {
+    // Crear alerta Bootstrap
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 10000; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    `;
+
+    // Agregar al body
+    document.body.appendChild(alertDiv);
+
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
 // Función mejorada para descargar archivos CSV con opciones
 async function descargarCSVMejorado(url, nombrePorDefecto, tipo = 'CSV') {
     try {
@@ -1987,11 +2040,14 @@ async function descargarCSVMejorado(url, nombrePorDefecto, tipo = 'CSV') {
         document.body.appendChild(a);
         a.click();
 
-        // Limpiar
-        window.URL.revokeObjectURL(url_blob);
-        document.body.removeChild(a);
+        // Limpiar después de un breve delay para permitir que inicie la descarga
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url_blob);
+            document.body.removeChild(a);
+        }, 100);
 
-        mostrarMensaje(`Archivo ${tipo} descargado exitosamente`, 'success');
+        // Mostrar mensaje informativo en lugar de éxito para descarga tradicional
+        mostrarMensaje(`Descarga iniciada. Revise su carpeta de descargas para el archivo ${tipo}.`, 'info');
 
     } catch (error) {
         console.error('Error al descargar archivo:', error);

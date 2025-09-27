@@ -284,8 +284,8 @@ def iniciar_periodo_inventario(año, mes=None):
 
 def generar_conteos_aleatorios(cantidad=10):
     """Generar conteos aleatorios para control continuo"""
-    # Seleccionar artículos aleatoriamente
-    articulos = Inventario.query.filter_by(activo=True, requiere_conteo=True).all()
+    # Seleccionar artículos aleatoriamente (solo activos)
+    articulos = Inventario.query.filter_by(activo=True).all()
     if len(articulos) < cantidad:
         cantidad = len(articulos)
 
@@ -296,7 +296,9 @@ def generar_conteos_aleatorios(cantidad=10):
         conteo = ConteoInventario(
             inventario_id=articulo.id,
             tipo_conteo="aleatorio",
-            stock_teorico=articulo.stock_actual,
+            stock_teorico=(
+                int(float(articulo.stock_actual)) if articulo.stock_actual else 0
+            ),
             usuario_conteo="sistema",
         )
         db.session.add(conteo)
@@ -324,25 +326,49 @@ def procesar_conteo_fisico(conteo_id, stock_fisico, observaciones="", usuario=""
     return conteo
 
 
+def editar_conteo(conteo_id, stock_fisico, observaciones="", usuario_conteo=""):
+    """Editar un conteo físico existente"""
+    conteo = ConteoInventario.query.get_or_404(conteo_id)
+
+    # Solo permitir editar conteos que no estén ya procesados/regularizados
+    if conteo.estado == "regularizado":
+        raise ValueError("No se puede editar un conteo ya regularizado")
+
+    # Actualizar los campos
+    conteo.stock_fisico = stock_fisico
+    conteo.diferencia = stock_fisico - conteo.stock_teorico
+    conteo.observaciones = observaciones
+    conteo.usuario_conteo = usuario_conteo
+
+    # Si el conteo estaba pendiente y ahora tiene stock_fisico, marcarlo como validado
+    if conteo.estado == "pendiente" and stock_fisico is not None:
+        conteo.estado = "validado"
+
+    db.session.commit()
+    return conteo
+
+
 def crear_movimiento_regularizacion(conteo):
     """Crear movimiento de regularización por diferencia en conteo"""
     articulo = conteo.articulo
 
     if conteo.diferencia != 0:
         cantidad = abs(conteo.diferencia)
+        precio_unitario = float(articulo.precio_promedio or 0)
 
         movimiento = MovimientoInventario(
             inventario_id=articulo.id,
             tipo="ajuste",
             subtipo="regularizacion",
             cantidad=cantidad if conteo.diferencia > 0 else -cantidad,
-            precio_unitario=articulo.costo_promedio or 0,
+            precio_unitario=precio_unitario,
+            valor_total=cantidad * precio_unitario,
             observaciones=f"Regularización por conteo físico. Diferencia: {conteo.diferencia}",
             conteo_inventario_id=conteo.id,
         )
 
-        # Actualizar stock
-        articulo.stock_actual = conteo.stock_fisico
+        # Actualizar stock del artículo
+        articulo.stock_actual = int(conteo.stock_fisico)
 
         db.session.add(movimiento)
         conteo.estado = "regularizado"

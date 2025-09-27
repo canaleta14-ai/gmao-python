@@ -631,29 +631,15 @@ function mostrarCargando(mostrar) {
 // Exportar proveedores a CSV
 async function exportarCSV() {
     try {
-        mostrarCargando(true);
-
-        const response = await fetch('/proveedores/exportar-csv');
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `proveedores_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-
-            mostrarMensaje('Archivo CSV descargado exitosamente', 'success');
+        if (typeof descargarCSVMejorado === 'function') {
+            await descargarCSVMejorado('/proveedores/exportar-csv', 'proveedores_{fecha}', 'CSV');
         } else {
-            mostrarMensaje('Error al exportar CSV', 'danger');
+            // Fallback simple
+            window.open('/proveedores/exportar-csv', '_blank');
         }
     } catch (error) {
-        console.error('Error:', error);
-        mostrarMensaje('Error de conexión al exportar CSV', 'danger');
-    } finally {
-        mostrarCargando(false);
+        console.error('Error exportando CSV:', error);
+        mostrarMensaje('Error al exportar CSV', 'danger');
     }
 }
 

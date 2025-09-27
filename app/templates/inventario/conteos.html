@@ -15,13 +15,13 @@
                 <h2><i class="fas fa-clipboard-check"></i> Conteos de Inventario</h2>
                 <div class="btn-group" role="group">
                     <a href="{{ url_for('inventario.inventario_page') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left"></i> Volver al Inventario
+                        <i class="fas fa-arrow-left me-1"></i> Volver al Inventario
                     </a>
                     <button type="button" class="btn btn-primary" onclick="iniciarPeriodoConteo()">
-                        <i class="fas fa-calendar-plus"></i> Nuevo Período
+                        <i class="fas fa-calendar-plus me-1"></i> Nuevo Período
                     </button>
                     <button type="button" class="btn btn-warning" onclick="generarConteosAleatorios()">
-                        <i class="fas fa-random"></i> Conteos Aleatorios
+                        <i class="fas fa-random me-1"></i> Conteos Aleatorios
                     </button>
                 </div>
             </div>
@@ -198,7 +198,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="periodo-responsable" class="form-label">Usuario Responsable</label>
-                        <input type="text" class="form-control" id="periodo-responsable" required>
+                        <input type="text" class="form-control" id="periodo-responsable" 
+                               placeholder="Buscar usuario..." autocomplete="off" required
+                               list="usuarios-datalist-periodo">
+                        <datalist id="usuarios-datalist-periodo">
+                            <!-- Se llena dinámicamente -->
+                        </datalist>
                     </div>
                     <div class="mb-3">
                         <label for="periodo-observaciones" class="form-label">Observaciones</label>
@@ -274,7 +279,9 @@
                     </div>
                     <div class="mb-3">
                         <label for="conteo-usuario" class="form-label">Usuario que realizó el conteo</label>
-                        <input type="text" class="form-control" id="conteo-usuario" required>
+                        <input type="text" class="form-control" id="conteo-usuario" 
+                               placeholder="Buscar usuario..." autocomplete="off" required>
+                        <div class="invalid-feedback" id="conteo-usuario-error"></div>
                     </div>
                     <div class="mb-3">
                         <label for="conteo-observaciones" class="form-label">Observaciones</label>
@@ -295,8 +302,61 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Editar Conteo -->
+<div class="modal fade" id="modalEditarConteo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Conteo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarConteo">
+                    <input type="hidden" id="editar-conteo-id">
+                    <div class="mb-3">
+                        <label class="form-label">Artículo</label>
+                        <input type="text" class="form-control" id="editar-articulo-info" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock Teórico</label>
+                        <input type="text" class="form-control" id="editar-stock-teorico" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-stock-fisico" class="form-label">Stock Físico Contado *</label>
+                        <input type="number" class="form-control" id="editar-stock-fisico" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-usuario" class="form-label">Usuario que realizó el conteo</label>
+                        <input type="text" class="form-control" id="editar-usuario" 
+                               placeholder="Buscar usuario..." autocomplete="off" required
+                               list="usuarios-datalist-editar">
+                        <datalist id="usuarios-datalist-editar">
+                            <!-- Se llena dinámicamente -->
+                        </datalist>
+                        <div class="invalid-feedback" id="editar-usuario-error"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-observaciones" class="form-label">Observaciones</label>
+                        <textarea class="form-control" id="editar-observaciones" rows="3"
+                            placeholder="Observaciones sobre el conteo..."></textarea>
+                    </div>
+                    <div id="editar-diferencia-info" class="alert" style="display: none;">
+                        <!-- Se mostrará la información de diferencia calculada -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarEditarConteo()">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
 <script src="{{ url_for('static', filename='js/conteos.js') }}"></script>
 {% endblock %}
