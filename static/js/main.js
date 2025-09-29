@@ -1,390 +1,455 @@
 // ========== CONFIGURACIÓN GLOBAL ==========
-const API_BASE_URL = '';
+const API_BASE_URL = "";
 let currentUser = null;
-let notifications = [];
 let chartInstances = {};
-let currentSection = 'dashboard'; // Sección actual
+let currentSection = "dashboard"; // Sección actual
 
 // ========== FUNCIONES DE SIDEBAR RESPONSIVE ==========
 function toggleSidebar() {
-    console.log('üçî Toggle sidebar called');
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-        sidebar.classList.toggle('sidebar-open');
-        const isOpen = sidebar.classList.contains('sidebar-open');
-        console.log(`üçî Sidebar is now ${isOpen ? 'open' : 'closed'}`);
-    } else {
-        console.error('üçî Sidebar element not found');
+  console.log("üçî Toggle sidebar called");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.querySelector(".sidebar-overlay");
+  const body = document.body;
+
+  if (sidebar) {
+    const isOpen = sidebar.classList.contains("sidebar-open");
+    sidebar.classList.toggle("sidebar-open");
+
+    if (window.innerWidth <= 991.98) {
+      // Mobile/tablet breakpoint
+      if (!isOpen) {
+        // Opening sidebar on mobile
+        body.style.overflow = "hidden"; // Prevent background scrolling
+        if (overlay) overlay.style.display = "block";
+      } else {
+        // Closing sidebar on mobile
+        body.style.overflow = ""; // Restore scrolling
+        if (overlay) overlay.style.display = "none";
+      }
     }
+
+    console.log(
+      `üçî Sidebar is now ${
+        sidebar.classList.contains("sidebar-open") ? "open" : "closed"
+      }`
+    );
+  } else {
+    console.error("üçî Sidebar element not found");
+  }
 }
 
-// Cerrar sidebar al hacer click fuera en móviles
-document.addEventListener('click', function (event) {
-    const sidebar = document.getElementById('sidebar');
-    const toggleButton = event.target.closest('.navbar-toggler');
-
-    if (!toggleButton && !sidebar.contains(event.target) && window.innerWidth < 992) {
-        sidebar.classList.remove('sidebar-open');
-    }
-});
-
 // ========== INICIALIZACIÓN ==========
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('🚀 DOMContentLoaded - Iniciando aplicación...');
-    const appStart = performance.now();
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("🚀 DOMContentLoaded - Iniciando aplicación...");
+  const appStart = performance.now();
 
-    // Cargar elementos críticos primero
-    console.log('⚙️ Iniciando initializeApp...');
-    const initStart = performance.now();
-    initializeApp();
-    console.log(`⚙️ initializeApp completado en ${(performance.now() - initStart).toFixed(2)}ms`);
+  // Configurar cierre de sesión al cerrar navegador
+  setupSessionManagement();
 
-    console.log('⚡ Iniciando setupEventListeners...');
-    const listenersStart = performance.now();
-    setupEventListeners();
-    console.log(`⚡ setupEventListeners completado en ${(performance.now() - listenersStart).toFixed(2)}ms`);
+  // Cargar elementos críticos primero
+  console.log("⚙️ Iniciando initializeApp...");
+  const initStart = performance.now();
+  initializeApp();
+  console.log(
+    `⚙️ initializeApp completado en ${(performance.now() - initStart).toFixed(
+      2
+    )}ms`
+  );
 
-    console.log('🎯 Iniciando setupNavigationHandlers...');
-    const navStart = performance.now();
-    setupNavigationHandlers();
-    console.log(`🎯 setupNavigationHandlers completado en ${(performance.now() - navStart).toFixed(2)}ms`);
+  console.log("⚡ Iniciando setupEventListeners...");
+  const listenersStart = performance.now();
+  setupEventListeners();
+  console.log(
+    `⚡ setupEventListeners completado en ${(
+      performance.now() - listenersStart
+    ).toFixed(2)}ms`
+  );
 
-    // Cargar datos de usuario de forma diferida
+  console.log("🎯 Iniciando setupNavigationHandlers...");
+  const navStart = performance.now();
+  setupNavigationHandlers();
+  console.log(
+    `🎯 setupNavigationHandlers completado en ${(
+      performance.now() - navStart
+    ).toFixed(2)}ms`
+  );
+
+  // Cargar datos de usuario de forma diferida
+  setTimeout(() => {
+    console.log("👤 Iniciando loadUserInfo (diferido)...");
+    const userStart = performance.now();
+    loadUserInfo();
     setTimeout(() => {
-        console.log('👤 Iniciando loadUserInfo (diferido)...');
-        const userStart = performance.now();
-        loadUserInfo();
-        setTimeout(() => {
-            console.log(`👤 loadUserInfo completado en ${(performance.now() - userStart).toFixed(2)}ms`);
-        }, 50);
-    }, 100);
+      console.log(
+        `👤 loadUserInfo completado en ${(
+          performance.now() - userStart
+        ).toFixed(2)}ms`
+      );
+    }, 50);
+  }, 100);
 
-    // Verificar notificaciones de forma diferida  
+  // Verificar notificaciones de forma diferida
+  setTimeout(() => {
+    console.log("🔔 Iniciando checkNotifications (diferido)...");
+    const notifStart = performance.now();
+    // checkNotifications(); // REMOVED: Notifications functionality removed
     setTimeout(() => {
-        console.log('🔔 Iniciando checkNotifications (diferido)...');
-        const notifStart = performance.now();
-        checkNotifications();
-        setTimeout(() => {
-            console.log(`🔔 checkNotifications completado en ${(performance.now() - notifStart).toFixed(2)}ms`);
-        }, 50);
-    }, 500);
+      console.log(
+        `🔔 checkNotifications completado en ${(
+          performance.now() - notifStart
+        ).toFixed(2)}ms`
+      );
+    }, 50);
+  }, 500);
 
-    // Configurar auto-refresh después
+  // Configurar auto-refresh después
+  setTimeout(() => {
+    console.log("🔄 Iniciando setupAutoRefresh (diferido)...");
+    const refreshStart = performance.now();
+    setupAutoRefresh();
     setTimeout(() => {
-        console.log('🔄 Iniciando setupAutoRefresh (diferido)...');
-        const refreshStart = performance.now();
-        setupAutoRefresh();
-        setTimeout(() => {
-            console.log(`🔄 setupAutoRefresh completado en ${(performance.now() - refreshStart).toFixed(2)}ms`);
-        }, 50);
-    }, 1000);
+      console.log(
+        `🔄 setupAutoRefresh completado en ${(
+          performance.now() - refreshStart
+        ).toFixed(2)}ms`
+      );
+    }, 50);
+  }, 1000);
 
-    const appTime = performance.now() - appStart;
-    console.log(`🚀 DOMContentLoaded completado en ${appTime.toFixed(2)}ms`);
+  const appTime = performance.now() - appStart;
+  console.log(`🚀 DOMContentLoaded completado en ${appTime.toFixed(2)}ms`);
 });
 
 // Manejar navegación con botones atrás/adelante del navegador
 function setupNavigationHandlers() {
-    window.addEventListener('hashchange', function () {
-        const hash = window.location.hash.substring(1) || 'dashboard';
-        // En un sistema multi-página, redirigir en lugar de cambiar secciones
-        if (hash && hash !== window.location.pathname.substring(1)) {
-            const routeMap = {
-                'dashboard': '/',
-                'activos': '/activos',
-                'proveedores': '/proveedores',
-                'ordenes': '/ordenes',
-                'preventivo': '/planes',
-                'inventario': '/inventario',
-                'personal': '/usuarios',
-                'reportes': '/reportes'
-            };
+  window.addEventListener("hashchange", function () {
+    const hash = window.location.hash.substring(1) || "dashboard";
+    // En un sistema multi-página, redirigir en lugar de cambiar secciones
+    if (hash && hash !== window.location.pathname.substring(1)) {
+      const routeMap = {
+        dashboard: "/",
+        activos: "/activos",
+        proveedores: "/proveedores",
+        ordenes: "/ordenes",
+        preventivo: "/planes",
+        inventario: "/inventario",
+        personal: "/usuarios",
+      };
 
-            const route = routeMap[hash];
-            if (route && route !== window.location.pathname) {
-                window.location.href = route;
-            }
-        }
-    });
+      const route = routeMap[hash];
+      if (route && route !== window.location.pathname) {
+        window.location.href = route;
+      }
+    }
+  });
 }
 
 function initializeApp() {
-    // No llamar showSection en un sistema multi-página
-    // const hash = window.location.hash.substring(1) || 'dashboard';
-    // showSection(hash);
+  // No llamar showSection en un sistema multi-página
+  // const hash = window.location.hash.substring(1) || 'dashboard';
+  // showSection(hash);
 
-    // Inicializar tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+  // Inicializar tooltips
+  const tooltipTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  );
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
 }
 
 function setupEventListeners() {
-    // Búsqueda en tiempo real para activos
-    const searchActivo = document.getElementById('searchActivo');
-    if (searchActivo) {
-        searchActivo.addEventListener('input', debounce(function () {
-            if (typeof filtrarActivos === 'function') {
-                filtrarActivos();
-            }
-        }, 300));
+  // Búsqueda en tiempo real para activos
+  const searchActivo = document.getElementById("searchActivo");
+  if (searchActivo) {
+    searchActivo.addEventListener(
+      "input",
+      debounce(function () {
+        if (typeof filtrarActivos === "function") {
+          filtrarActivos();
+        }
+      }, 300)
+    );
+  }
+
+  // Manejar redimensionamiento de ventana para sidebar responsive
+  window.addEventListener("resize", function () {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.querySelector(".sidebar-overlay");
+    const body = document.body;
+
+    if (window.innerWidth >= 992) {
+      // En desktop, asegurar que sidebar esté visible y overlay oculto
+      if (sidebar) {
+        sidebar.classList.remove("sidebar-open");
+      }
+      if (overlay) {
+        overlay.style.display = "none";
+      }
+      body.style.overflow = ""; // Restaurar scrolling
+    } else {
+      // En móviles, cerrar sidebar si está abierto
+      if (sidebar && sidebar.classList.contains("sidebar-open")) {
+        sidebar.classList.remove("sidebar-open");
+        if (overlay) {
+          overlay.style.display = "none";
+        }
+        body.style.overflow = "";
+      }
     }
+  });
 
-    // Manejar redimensionamiento de ventana para sidebar responsive
-    window.addEventListener('resize', function () {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
+  // Event listeners para navegación
+  document.addEventListener("click", function (e) {
+    // Manejar clicks en enlaces de navegación hash
+    if (e.target.matches('a[href^="#"]') || e.target.closest('a[href^="#"]')) {
+      const link = e.target.matches('a[href^="#"]')
+        ? e.target
+        : e.target.closest('a[href^="#"]');
+      const sectionName = link.getAttribute("href").substring(1);
+      if (sectionName) {
+        // En lugar de showSection, redirigir usando las rutas apropiadas
+        const routeMap = {
+          dashboard: "/",
+          activos: "/activos",
+          proveedores: "/proveedores",
+          ordenes: "/ordenes",
+          preventivo: "/planes",
+          inventario: "/inventario",
+          personal: "/usuarios",
+        };
 
-        if (window.innerWidth >= 992) {
-            // En pantallas grandes, remover clases de móvil
-            if (sidebar) {
-                sidebar.classList.remove('show');
-            }
-            if (overlay) {
-                overlay.remove();
-            }
+        const route = routeMap[sectionName];
+        if (route) {
+          e.preventDefault();
+          window.location.href = route;
         }
-    });
+      }
+    }
+  });
 
-    // Event listeners para navegación
-    document.addEventListener('click', function (e) {
-        // Manejar clicks en enlaces de navegación hash
-        if (e.target.matches('a[href^="#"]') || e.target.closest('a[href^="#"]')) {
-            const link = e.target.matches('a[href^="#"]') ? e.target : e.target.closest('a[href^="#"]');
-            const sectionName = link.getAttribute('href').substring(1);
-            if (sectionName) {
-                // En lugar de showSection, redirigir usando las rutas apropiadas
-                const routeMap = {
-                    'dashboard': '/',
-                    'activos': '/activos',
-                    'proveedores': '/proveedores',
-                    'ordenes': '/ordenes',
-                    'preventivo': '/planes',
-                    'inventario': '/inventario',
-                    'personal': '/usuarios',
-                    'reportes': '/reportes'
-                };
+  // Manejar navegación con botones que tienen data-section
+  document.addEventListener("click", function (e) {
+    if (
+      e.target.matches("[data-section]") ||
+      e.target.closest("[data-section]")
+    ) {
+      const button = e.target.matches("[data-section]")
+        ? e.target
+        : e.target.closest("[data-section]");
+      const sectionName = button.getAttribute("data-section");
+      if (sectionName) {
+        // Redirigir usando las rutas apropiadas
+        const routeMap = {
+          dashboard: "/",
+          activos: "/activos",
+          proveedores: "/proveedores",
+          ordenes: "/ordenes",
+          preventivo: "/planes",
+          inventario: "/inventario",
+          personal: "/usuarios",
+        };
 
-                const route = routeMap[sectionName];
-                if (route) {
-                    e.preventDefault();
-                    window.location.href = route;
-                }
-            }
+        const route = routeMap[sectionName];
+        if (route) {
+          e.preventDefault();
+          window.location.href = route;
         }
-    });
+      }
+    }
+  });
 
-    // Manejar navegación con botones que tienen data-section
-    document.addEventListener('click', function (e) {
-        if (e.target.matches('[data-section]') || e.target.closest('[data-section]')) {
-            const button = e.target.matches('[data-section]') ? e.target : e.target.closest('[data-section]');
-            const sectionName = button.getAttribute('data-section');
-            if (sectionName) {
-                // Redirigir usando las rutas apropiadas
-                const routeMap = {
-                    'dashboard': '/',
-                    'activos': '/activos',
-                    'proveedores': '/proveedores',
-                    'ordenes': '/ordenes',
-                    'preventivo': '/planes',
-                    'inventario': '/inventario',
-                    'personal': '/usuarios',
-                    'reportes': '/reportes'
-                };
+  // Cerrar sidebar en móvil al hacer click fuera
+  document.addEventListener("click", function (e) {
+    const sidebar = document.querySelector(".sidebar");
+    const toggleButton = document.querySelector(
+      '.btn[onclick="toggleSidebar()"]'
+    );
 
-                const route = routeMap[sectionName];
-                if (route) {
-                    e.preventDefault();
-                    window.location.href = route;
-                }
-            }
+    // Solo proceder si el sidebar existe y está visible en móvil
+    if (sidebar && toggleButton) {
+      // Verificar si estamos en modo móvil (sidebar con clase 'show' o visible)
+      const isMobile = window.innerWidth < 992; // Bootstrap lg breakpoint
+      const sidebarVisible =
+        sidebar.classList.contains("show") ||
+        (isMobile && !sidebar.classList.contains("collapsed"));
+
+      if (
+        sidebarVisible &&
+        !sidebar.contains(e.target) &&
+        !toggleButton.contains(e.target)
+      ) {
+        // Ocultar sidebar en móvil
+        if (typeof toggleSidebar === "function") {
+          toggleSidebar();
+        } else {
+          sidebar.classList.remove("show");
         }
-    });
-
-    // Cerrar sidebar en móvil al hacer click fuera
-    document.addEventListener('click', function (e) {
-        const sidebar = document.querySelector('.sidebar');
-        const toggleButton = document.querySelector('.btn[onclick="toggleSidebar()"]');
-
-        // Solo proceder si el sidebar existe y está visible en móvil
-        if (sidebar && toggleButton) {
-            // Verificar si estamos en modo móvil (sidebar con clase 'show' o visible)
-            const isMobile = window.innerWidth < 992; // Bootstrap lg breakpoint
-            const sidebarVisible = sidebar.classList.contains('show') ||
-                (isMobile && !sidebar.classList.contains('collapsed'));
-
-            if (sidebarVisible && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
-                // Ocultar sidebar en móvil
-                if (typeof toggleSidebar === 'function') {
-                    toggleSidebar();
-                } else {
-                    sidebar.classList.remove('show');
-                }
-            }
-        }
-    });
+      }
+    }
+  });
 }
 
 // ========== NAVEGACIÓN ENTRE SECCIONES ==========
 function showSection(sectionName) {
-    // Esta función ahora solo funciona si realmente existe el elemento en el DOM
-    // Se usa para casos específicos donde hay secciones dinámicas en una misma página
+  // Esta función ahora solo funciona si realmente existe el elemento en el DOM
+  // Se usa para casos específicos donde hay secciones dinámicas en una misma página
 
-    const targetSection = document.getElementById(sectionName);
-    if (targetSection) {
-        // Ocultar todas las secciones de la misma página
-        const sections = document.querySelectorAll('.content-section');
-        sections.forEach(section => {
-            section.style.display = 'none';
-        });
-
-        // Mostrar la sección seleccionada
-        targetSection.style.display = 'block';
-
-        // Actualizar navegación activa
-        updateActiveNavigation(sectionName);
-
-        // Cargar contenido específico de la sección si existe la función
-        if (typeof loadSectionContent === 'function') {
-            loadSectionContent(sectionName);
-        }
-
-        // Actualizar URL sin recargar
-        window.location.hash = sectionName;
-
-        // Guardar sección actual
-        currentSection = sectionName;
-    } else {
-        // Si no existe la sección en esta página, redirigir a la ruta apropiada
-        console.warn(`Sección '${sectionName}' no encontrada en esta página`);
-
-        const routeMap = {
-            'dashboard': '/',
-            'activos': '/activos',
-            'proveedores': '/proveedores',
-            'ordenes': '/ordenes',
-            'preventivo': '/planes',
-            'inventario': '/inventario',
-            'personal': '/usuarios',
-            'reportes': '/reportes'
-        };
-
-        const route = routeMap[sectionName];
-        if (route && route !== window.location.pathname) {
-            window.location.href = route;
-        }
-    }
-} function updateActiveNavigation(sectionName) {
-    // Remover clase activa de todos los enlaces de navegación
-    const navLinks = document.querySelectorAll('.sidebar .nav-link, .navbar-nav .nav-link');
-    navLinks.forEach(link => {
-        link.classList.remove('active');
+  const targetSection = document.getElementById(sectionName);
+  if (targetSection) {
+    // Ocultar todas las secciones de la misma página
+    const sections = document.querySelectorAll(".content-section");
+    sections.forEach((section) => {
+      section.style.display = "none";
     });
 
-    // Agregar clase activa al enlace correspondiente
-    const activeLink = document.querySelector(`[href="#${sectionName}"], [data-section="${sectionName}"]`);
-    if (activeLink) {
-        activeLink.classList.add('active');
+    // Mostrar la sección seleccionada
+    targetSection.style.display = "block";
+
+    // Actualizar navegación activa
+    updateActiveNavigation(sectionName);
+
+    // Cargar contenido específico de la sección si existe la función
+    if (typeof loadSectionContent === "function") {
+      loadSectionContent(sectionName);
     }
+
+    // Actualizar URL sin recargar
+    window.location.hash = sectionName;
+
+    // Guardar sección actual
+    currentSection = sectionName;
+  } else {
+    // Si no existe la sección en esta página, redirigir a la ruta apropiada
+    console.warn(`Sección '${sectionName}' no encontrada en esta página`);
+
+    const routeMap = {
+      dashboard: "/",
+      activos: "/activos",
+      proveedores: "/proveedores",
+      ordenes: "/ordenes",
+      preventivo: "/planes",
+      inventario: "/inventario",
+      personal: "/usuarios",
+    };
+
+    const route = routeMap[sectionName];
+    if (route && route !== window.location.pathname) {
+      window.location.href = route;
+    }
+  }
+}
+function updateActiveNavigation(sectionName) {
+  // Remover clase activa de todos los enlaces de navegación
+  const navLinks = document.querySelectorAll(
+    ".sidebar .nav-link, .navbar-nav .nav-link"
+  );
+  navLinks.forEach((link) => {
+    link.classList.remove("active");
+  });
+
+  // Agregar clase activa al enlace correspondiente
+  const activeLink = document.querySelector(
+    `[href="#${sectionName}"], [data-section="${sectionName}"]`
+  );
+  if (activeLink) {
+    activeLink.classList.add("active");
+  }
 }
 
 // ========== FUNCIONES DE UI ==========
 
 function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
+  const sidebar = document.querySelector(".sidebar");
+  const mainContent = document.querySelector(".main-content");
 
-    if (sidebar && mainContent) {
-        // En dispositivos móviles (menos de 992px)
-        const isMobile = window.innerWidth < 992;
+  if (sidebar && mainContent) {
+    // En dispositivos móviles (menos de 992px)
+    const isMobile = window.innerWidth < 992;
 
-        if (isMobile) {
-            // En móvil, usar clase 'show' para mostrar/ocultar
-            sidebar.classList.toggle('show');
+    if (isMobile) {
+      // En móvil, usar clase 'show' para mostrar/ocultar
+      sidebar.classList.toggle("show");
 
-            // Crear o remover overlay
-            let overlay = document.querySelector('.sidebar-overlay');
-            if (sidebar.classList.contains('show')) {
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.className = 'sidebar-overlay';
-                    document.body.appendChild(overlay);
+      // Crear o remover overlay
+      let overlay = document.querySelector(".sidebar-overlay");
+      if (sidebar.classList.contains("show")) {
+        if (!overlay) {
+          overlay = document.createElement("div");
+          overlay.className = "sidebar-overlay";
+          document.body.appendChild(overlay);
 
-                    // Cerrar sidebar al hacer click en overlay
-                    overlay.addEventListener('click', () => {
-                        sidebar.classList.remove('show');
-                        overlay.classList.remove('show');
-                        setTimeout(() => {
-                            if (overlay.parentNode) {
-                                overlay.remove();
-                            }
-                        }, 300);
-                    });
-                }
-                // Pequeño delay para activar la animación
-                setTimeout(() => {
-                    overlay.classList.add('show');
-                }, 10);
-            } else {
-                if (overlay) {
-                    overlay.classList.remove('show');
-                    setTimeout(() => {
-                        if (overlay.parentNode) {
-                            overlay.remove();
-                        }
-                    }, 300);
-                }
-            }
-        } else {
-            // En pantallas grandes, usar clase 'collapsed'
-            sidebar.classList.toggle('collapsed');
-            // El CSS se encarga de los ajustes del main-content
+          // Cerrar sidebar al hacer click en overlay
+          overlay.addEventListener("click", () => {
+            sidebar.classList.remove("show");
+            overlay.classList.remove("show");
+            setTimeout(() => {
+              if (overlay.parentNode) {
+                overlay.remove();
+              }
+            }, 300);
+          });
         }
+        // Pequeño delay para activar la animación
+        setTimeout(() => {
+          overlay.classList.add("show");
+        }, 10);
+      } else {
+        if (overlay) {
+          overlay.classList.remove("show");
+          setTimeout(() => {
+            if (overlay.parentNode) {
+              overlay.remove();
+            }
+          }, 300);
+        }
+      }
+    } else {
+      // En pantallas grandes, usar clase 'collapsed'
+      sidebar.classList.toggle("collapsed");
+      // El CSS se encarga de los ajustes del main-content
     }
+  }
 }
 
 function loadSectionContent(sectionName) {
-    // Cargar contenido específico según la sección
-    switch (sectionName) {
-        case 'dashboard':
-            console.log('ÔøΩ Cargando dashboard optimizado...');
-            if (typeof loadDashboard === 'function') {
-                loadDashboard();
-            }
-            break;
-        case 'activos':
-            if (typeof cargarActivos === 'function') {
-                cargarActivos();
-            }
-            break;
-        case 'ordenes':
-            if (typeof cargarOrdenes === 'function') {
-                cargarOrdenes();
-            }
-            break;
-        case 'mantenimiento':
-            if (typeof cargarMantenimiento === 'function') {
-                cargarMantenimiento();
-            }
-            break;
-        case 'reportes':
-            if (typeof cargarReportes === 'function') {
-                cargarReportes();
-            }
-            break;
-        default:
-            console.log(`No hay función de carga específica para la sección: ${sectionName}`);
-    }
+  // Cargar contenido específico según la sección
+  switch (sectionName) {
+    case "dashboard":
+      console.log("ÔøΩ Cargando dashboard optimizado...");
+      if (typeof loadDashboard === "function") {
+        loadDashboard();
+      }
+      break;
+    case "activos":
+      if (typeof cargarActivos === "function") {
+        cargarActivos();
+      }
+      break;
+    case "ordenes":
+      if (typeof cargarOrdenes === "function") {
+        cargarOrdenes();
+      }
+      break;
+    case "mantenimiento":
+      if (typeof cargarMantenimiento === "function") {
+        cargarMantenimiento();
+      }
+      break;
+    default:
+      console.log(
+        `No hay función de carga específica para la sección: ${sectionName}`
+      );
+  }
 }
 
 function setupAutoRefresh() {
-    console.log('🔄 setupAutoRefresh COMPLETAMENTE DESHABILITADO');
+  console.log("🔄 setupAutoRefresh COMPLETAMENTE DESHABILITADO");
 
-    // AUTO-REFRESH COMPLETAMENTE DESHABILITADO PARA ELIMINAR CUALQUIER INTERFERENCIA
-    // NO se ejecutarán recargas automáticas
+  // AUTO-REFRESH COMPLETAMENTE DESHABILITADO PARA ELIMINAR CUALQUIER INTERFERENCIA
+  // NO se ejecutarán recargas automáticas
 
-    /*
+  /*
     // CÓDIGO DESHABILITADO:
     setInterval(() => {
         if (currentSection === 'dashboard') {
@@ -395,110 +460,111 @@ function setupAutoRefresh() {
 
     setInterval(() => {
         console.log('🔔 Auto-refresh de notificaciones (10 minutos)');
-        checkNotifications();
+        // checkNotifications(); // REMOVED: Notifications functionality removed
     }, 600000);
     */
-}// ========== GESTIÓN DE SESIÓN Y USUARIO ==========
+} // ========== GESTIÓN DE SESIÓN Y USUARIO ==========
 function loadUserInfo() {
-    console.log('👤 INICIO loadUserInfo - Haciendo fetch a /api/user/info...');
-    const fetchStart = performance.now();
+  console.log("👤 INICIO loadUserInfo - Haciendo fetch a /api/user/info...");
+  const fetchStart = performance.now();
 
-    // Intentar cargar información real del usuario
-    fetch('/api/user/info')
-        .then(response => {
-            const fetchTime = performance.now() - fetchStart;
-            console.log(`👤 Fetch completado en ${fetchTime.toFixed(2)}ms - Status: ${response.status}`);
+  // Intentar cargar información real del usuario
+  fetch("/api/user/info")
+    .then((response) => {
+      const fetchTime = performance.now() - fetchStart;
+      console.log(
+        `👤 Fetch completado en ${fetchTime.toFixed(2)}ms - Status: ${
+          response.status
+        }`
+      );
 
-            if (response.ok) {
-                return response.json();
-            } else if (response.status === 401) {
-                console.log('👤 Usuario no autenticado - Redirigiendo a login...');
-                // Usuario no autenticado, redirigir a login
-                window.location.href = '/login';
-                return null;
-            } else {
-                throw new Error('Error al obtener información del usuario');
-            }
-        })
-        .then(data => {
-            const processStart = performance.now();
-            console.log('👤 Procesando datos de usuario...');
+      if (response.ok) {
+        return response.json();
+      } else if (response.status === 401) {
+        console.log("👤 Usuario no autenticado - Redirigiendo a login...");
+        // Usuario no autenticado, redirigir a login
+        window.location.href = "/login";
+        return null;
+      } else {
+        throw new Error("Error al obtener información del usuario");
+      }
+    })
+    .then((data) => {
+      const processStart = performance.now();
+      console.log("👤 Procesando datos de usuario...");
 
-            if (data && data.success) {
-                currentUser = {
-                    id: data.user.id,
-                    nombre: data.user.nombre,
-                    username: data.user.username,
-                    rol: data.user.rol,
-                    email: data.user.email,
-                    activo: data.user.activo
-                };
-                updateUserInterface(currentUser);
+      if (data && data.success) {
+        currentUser = {
+          id: data.user.id,
+          nombre: data.user.nombre,
+          username: data.user.username,
+          rol: data.user.rol,
+          email: data.user.email,
+          activo: data.user.activo,
+        };
+        updateUserInterface(currentUser);
 
-                const processTime = performance.now() - processStart;
-                console.log(`👤 Datos procesados en ${processTime.toFixed(2)}ms`);
-            }
-        })
-        .catch(error => {
-            const errorTime = performance.now() - fetchStart;
-            console.warn(`👤 Error después de ${errorTime.toFixed(2)}ms:`, error);
-            // Usar datos por defecto como fallback
-            currentUser = {
-                nombre: 'Usuario',
-                username: 'usuario',
-                rol: 'Usuario',
-                email: 'usuario@gmao.com'
-            };
-            updateUserInterface(currentUser);
-        });
+        const processTime = performance.now() - processStart;
+        console.log(`👤 Datos procesados en ${processTime.toFixed(2)}ms`);
+      }
+    })
+    .catch((error) => {
+      const errorTime = performance.now() - fetchStart;
+      console.warn(`👤 Error después de ${errorTime.toFixed(2)}ms:`, error);
+      // Usar datos por defecto como fallback
+      currentUser = {
+        nombre: "Usuario",
+        username: "usuario",
+        rol: "Usuario",
+        email: "usuario@gmao.com",
+      };
+      updateUserInterface(currentUser);
+    });
 }
 
 function updateUserInterface(user) {
-    const userNameElements = document.querySelectorAll('.user-name, #current-user');
-    userNameElements.forEach(el => {
-        el.textContent = user.nombre || user.username;
-    });
+  const userNameElements = document.querySelectorAll(
+    ".user-name, #current-user"
+  );
+  userNameElements.forEach((el) => {
+    el.textContent = user.nombre || user.username;
+  });
 
-    // Actualizar información adicional si existen los elementos
-    const emailElements = document.querySelectorAll('.user-email');
-    emailElements.forEach(el => {
-        el.textContent = user.email || '';
-    });
+  // Actualizar información adicional si existen los elementos
+  const emailElements = document.querySelectorAll(".user-email");
+  emailElements.forEach((el) => {
+    el.textContent = user.email || "";
+  });
 
-    const roleElements = document.querySelectorAll('.user-role');
-    roleElements.forEach(el => {
-        el.textContent = user.rol || '';
-    });
+  const roleElements = document.querySelectorAll(".user-role");
+  roleElements.forEach((el) => {
+    el.textContent = user.rol || "";
+  });
 }
 
 // Función para cerrar sesión
 function logout() {
-    // Mostrar confirmación
-    if (!confirm('¬øEstá seguro que desea cerrar sesión?')) {
-        return;
-    }
-
-    // Mostrar loading
-    showNotificationToast('Cerrando sesión...', 'info');
-
+  // Mostrar confirmación con modal
+  showLogoutConfirmation(() => {
     // Limpiar datos locales
     currentUser = null;
-    notifications = [];
+    // notifications = []; // REMOVED: Notifications functionality removed
 
     // Redirigir directamente a logout (más simple y confiable)
     setTimeout(() => {
-        window.location.href = '/logout';
+      window.location.href = "/logout";
     }, 500);
+  });
 }
 
 // Función para abrir modal de perfil/configuración
 function openProfileModal() {
-    // Verificar si el modal ya existe
-    let modal = document.getElementById('profileModal');
+  // Verificar si el modal ya existe
+  let modal = document.getElementById("profileModal");
 
-    if (!modal) {
-        // Crear el modal dinámicamente
-        const modalHTML = `
+  if (!modal) {
+    // Crear el modal dinámicamente
+    const modalHTML = `
             <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -512,26 +578,36 @@ function openProfileModal() {
                             <form id="profileForm">
                                 <div class="text-center mb-4">
                                     <i class="bi bi-person-circle fs-1 text-primary"></i>
-                                    <h6 class="mt-2">${currentUser?.nombre || 'Usuario'}</h6>
-                                    <small class="text-muted">${currentUser?.rol || 'Usuario'}</small>
+                                    <h6 class="mt-2">${
+                                      currentUser?.nombre || "Usuario"
+                                    }</h6>
+                                    <small class="text-muted">${
+                                      currentUser?.rol || "Usuario"
+                                    }</small>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="userName" class="form-label">Nombre</label>
                                     <input type="text" class="form-control" id="userName" 
-                                           value="${currentUser?.nombre || ''}" readonly>
+                                           value="${
+                                             currentUser?.nombre || ""
+                                           }" readonly>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="userEmail" class="form-label">Email</label>
                                     <input type="email" class="form-control" id="userEmail" 
-                                           value="${currentUser?.email || ''}" readonly>
+                                           value="${
+                                             currentUser?.email || ""
+                                           }" readonly>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="userRole" class="form-label">Rol</label>
                                     <input type="text" class="form-control" id="userRole" 
-                                           value="${currentUser?.rol || ''}" readonly>
+                                           value="${
+                                             currentUser?.rol || ""
+                                           }" readonly>
                                 </div>
                                 
                                 <div class="alert alert-info">
@@ -551,25 +627,27 @@ function openProfileModal() {
             </div>
         `;
 
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        modal = document.getElementById('profileModal');
-    }
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+    modal = document.getElementById("profileModal");
+  }
 
-    // Mostrar el modal
-    const bootstrapModal = new bootstrap.Modal(modal);
-    bootstrapModal.show();
+  // Mostrar el modal
+  const bootstrapModal = new bootstrap.Modal(modal);
+  bootstrapModal.show();
 }
 
 // Función para cambiar contraseña
 function openChangePasswordModal() {
-    // Cerrar modal de perfil primero
-    const profileModal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
-    if (profileModal) {
-        profileModal.hide();
-    }
+  // Cerrar modal de perfil primero
+  const profileModal = bootstrap.Modal.getInstance(
+    document.getElementById("profileModal")
+  );
+  if (profileModal) {
+    profileModal.hide();
+  }
 
-    // Crear modal de cambio de contraseña
-    const modalHTML = `
+  // Crear modal de cambio de contraseña
+  const modalHTML = `
         <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -609,199 +687,187 @@ function openChangePasswordModal() {
         </div>
     `;
 
-    // Remover modal anterior si existe
-    const existingModal = document.getElementById('changePasswordModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
+  // Remover modal anterior si existe
+  const existingModal = document.getElementById("changePasswordModal");
+  if (existingModal) {
+    existingModal.remove();
+  }
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-    modal.show();
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
+  const modal = new bootstrap.Modal(
+    document.getElementById("changePasswordModal")
+  );
+  modal.show();
 }
 
 function changePassword() {
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
 
-    // Validaciones
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        showNotificationToast('Todos los campos son obligatorios', 'warning');
-        return;
-    }
+  // Validaciones
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    showNotificationToast("Todos los campos son obligatorios", "warning");
+    return;
+  }
 
-    if (newPassword !== confirmPassword) {
-        showNotificationToast('Las contraseñas no coinciden', 'error');
-        return;
-    }
+  if (newPassword !== confirmPassword) {
+    showNotificationToast("Las contraseñas no coinciden", "error");
+    return;
+  }
 
-    if (newPassword.length < 6) {
-        showNotificationToast('La nueva contraseña debe tener al menos 6 caracteres', 'warning');
-        return;
-    }
+  if (newPassword.length < 6) {
+    showNotificationToast(
+      "La nueva contraseña debe tener al menos 6 caracteres",
+      "warning"
+    );
+    return;
+  }
 
-    // Enviar solicitud
-    fetch('/api/change-password', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            current_password: currentPassword,
-            new_password: newPassword
-        })
+  // Enviar solicitud
+  fetch("/api/change-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        showNotificationToast("Contraseña cambiada exitosamente", "success");
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("changePasswordModal")
+        );
+        modal.hide();
+      } else {
+        showNotificationToast(
+          data.message || "Error al cambiar contraseña",
+          "error"
+        );
+      }
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotificationToast('Contraseña cambiada exitosamente', 'success');
-                const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
-                modal.hide();
-            } else {
-                showNotificationToast(data.message || 'Error al cambiar contraseña', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotificationToast('Error al cambiar contraseña', 'error');
-        });
+    .catch((error) => {
+      console.error("Error:", error);
+      showNotificationToast("Error al cambiar contraseña", "error");
+    });
 }
 
-// ========== SISTEMA DE NOTIFICACIONES ==========
-function checkNotifications() {
-    // TODO: Implementar endpoint /api/notificaciones cuando esté disponible
-    // Por ahora inicializamos con array vacío para evitar errores 404
-    notifications = [];
-    updateNotificationBadge(0);
-}
-
-function updateNotificationBadge(count) {
-    const badge = document.querySelector('.notification-count');
-    if (badge) {
-        badge.textContent = count;
-        badge.style.display = count > 0 ? 'flex' : 'none';
-    }
-}
-
-function showNotificationToast(message, type = 'info') {
-    // Soporte para ambos formatos: objeto o string
-    let notification;
-    if (typeof message === 'string') {
-        notification = {
-            titulo: getTypeTitle(type),
-            mensaje: message,
-            tipo: type
-        };
-    } else {
-        notification = message;
-    }
-
-    // Mapear tipos de notificación a clases de Bootstrap
-    const tipoIconMap = {
-        'success': { icon: 'bi-check-circle-fill', class: 'text-success', bgClass: 'bg-success' },
-        'error': { icon: 'bi-exclamation-triangle-fill', class: 'text-danger', bgClass: 'bg-danger' },
-        'warning': { icon: 'bi-exclamation-triangle-fill', class: 'text-warning', bgClass: 'bg-warning' },
-        'info': { icon: 'bi-info-circle-fill', class: 'text-info', bgClass: 'bg-info' }
+// ========== FUNCIONES DE UTILIDAD ==========
+function showNotificationToast(message, type = "info") {
+  // Soporte para ambos formatos: objeto o string
+  let notification;
+  if (typeof message === "string") {
+    notification = {
+      titulo: getTypeTitle(type),
+      mensaje: message,
+      tipo: type,
     };
+  } else {
+    notification = message;
+  }
 
-    const tipoConfig = tipoIconMap[notification.tipo] || tipoIconMap['info'];
+  // Mapear tipos de notificación a clases de Bootstrap
+  const tipoIconMap = {
+    success: { icon: "bi-check-circle-fill", class: "alert-success" },
+    error: { icon: "bi-exclamation-triangle-fill", class: "alert-danger" },
+    warning: { icon: "bi-exclamation-triangle-fill", class: "alert-warning" },
+    info: { icon: "bi-info-circle-fill", class: "alert-info" },
+  };
 
-    // Determinar duración basada en el tipo
-    const duracion = notification.tipo === 'error' ? 8000 : 4000;
+  const tipoConfig = tipoIconMap[notification.tipo] || tipoIconMap["info"];
 
-    const toastHTML = `
-        <div class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${duracion}" data-tipo="${notification.tipo}">
-            <div class="d-flex">
-                <div class="toast-body d-flex align-items-center">
-                    <i class="bi ${tipoConfig.icon} ${tipoConfig.class} me-2"></i>
-                    <div>
-                        <strong>${notification.titulo}</strong><br>
-                        <span class="text-muted small">${notification.mensaje}</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+  // Crear alerta de Bootstrap
+  const alerta = document.createElement("div");
+  alerta.className = `alert ${tipoConfig.class} alert-dismissible fade show position-fixed`;
+  alerta.style.cssText =
+    "top: 20px; right: 20px; z-index: 1060; min-width: 300px; max-width: 400px;";
+  alerta.innerHTML = `
+        <div class="d-flex align-items-start">
+            <i class="bi ${tipoConfig.icon} me-2 flex-shrink-0"></i>
+            <div class="flex-grow-1">
+                <strong>${notification.titulo}</strong><br>
+                <span>${notification.mensaje}</span>
             </div>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
 
-    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
-    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+  document.body.appendChild(alerta);
 
-    const toastElement = toastContainer.lastElementChild;
-    const toast = new bootstrap.Toast(toastElement, {
-        autohide: true,
-        delay: duracion
-    });
-
-    toast.show();
-
-    // Limpiar toasts antiguos después de que se oculten
-    toastElement.addEventListener('hidden.bs.toast', () => {
-        toastElement.remove();
-    });
+  // Auto-remover después de 5 segundos (8 para errores)
+  const duracion = notification.tipo === "error" ? 8000 : 5000;
+  setTimeout(() => {
+    if (alerta.parentNode) {
+      alerta.classList.remove("show");
+      setTimeout(() => {
+        if (alerta.parentNode) {
+          alerta.parentNode.removeChild(alerta);
+        }
+      }, 150);
+    }
+  }, duracion);
 }
 
 function getTypeTitle(type) {
-    const titles = {
-        'success': 'Éxito',
-        'error': 'Error',
-        'warning': 'Advertencia',
-        'info': 'Información'
-    };
-    return titles[type] || 'Notificación';
-}
-
-function createToastContainer() {
-    const container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-    container.style.zIndex = '9999';
-    document.body.appendChild(container);
-    return container;
+  const titles = {
+    success: "Éxito",
+    error: "Error",
+    warning: "Advertencia",
+    info: "Información",
+  };
+  return titles[type] || "Notificación";
 }
 
 // ========== DASHBOARD MEJORADO ==========
 function loadDashboard() {
-    console.log('ÔøΩ DASHBOARD ULTRA-SIMPLIFICADO - Solo lo esencial');
+  console.log("ÔøΩ DASHBOARD ULTRA-SIMPLIFICADO - Solo lo esencial");
 
-    // Cargar alertas de mantenimiento inmediatamente (ya confirmado rápido: 10-16ms)
-    if (alertsContainer) {
-        console.log('üö® Iniciando carga de alertas (backend confirmado rápido)...');
-        loadMaintenanceAlertsSimple();
-    }
+  // Cargar alertas de mantenimiento inmediatamente (ya confirmado rápido: 10-16ms)
+  if (alertsContainer) {
+    console.log(
+      "üö® Iniciando carga de alertas (backend confirmado rápido)..."
+    );
+    loadMaintenanceAlertsSimple();
+  }
 
-    // Cargar estadísticas (no bloquea otras cargas)
-    console.log('üìà Iniciando carga de estadísticas...');
-    const statsStart = performance.now();
-    fetch('/api/estadisticas')
-        .then(response => {
-            const statsTime = performance.now() - statsStart;
-            console.log(`üìà Estadísticas cargadas en ${statsTime.toFixed(2)}ms`);
-            return response.json();
-        })
-        .then(data => {
-            updateDashboardStats(data);
+  // Cargar estadísticas (no bloquea otras cargas)
+  console.log("üìà Iniciando carga de estadísticas...");
+  const statsStart = performance.now();
+  fetch("/api/estadisticas")
+    .then((response) => {
+      const statsTime = performance.now() - statsStart;
+      console.log(`üìà Estadísticas cargadas en ${statsTime.toFixed(2)}ms`);
+      return response.json();
+    })
+    .then((data) => {
+      updateDashboardStats(data);
 
-            // Cargar gráficos de forma no-bloqueante
-            setTimeout(() => {
-                console.log('üìä Iniciando carga de gráficos...');
-                createDashboardChartsWithTimeout(data);
-            }, 100);
-        })
-        .catch(error => {
-            const statsTime = performance.now() - statsStart;
-            console.error(`❌ Error estadísticas después de ${statsTime.toFixed(2)}ms:`, error);
-        });
+      // Cargar gráficos de forma no-bloqueante
+      setTimeout(() => {
+        console.log("üìä Iniciando carga de gráficos...");
+        createDashboardChartsWithTimeout(data);
+      }, 100);
+    })
+    .catch((error) => {
+      const statsTime = performance.now() - statsStart;
+      console.error(
+        `❌ Error estadísticas después de ${statsTime.toFixed(2)}ms:`,
+        error
+      );
+    });
 
-    // Cargar órdenes recientes (paralelo)
-    console.log('üìã Iniciando carga de órdenes recientes...');
-    loadRecentOrders();
+  // Cargar órdenes recientes (paralelo)
+  console.log("üìã Iniciando carga de órdenes recientes...");
+  loadRecentOrders();
 
-    // COMENTAR TODO LO DEMÁS TEMPORALMENTE
-    console.log('✅ Dashboard simplificado cargado instantáneamente');
+  // COMENTAR TODO LO DEMÁS TEMPORALMENTE
+  console.log("✅ Dashboard simplificado cargado instantáneamente");
 
-    /* CÓDIGO ORIGINAL COMENTADO PARA DEBUGGING:
+  /* CÓDIGO ORIGINAL COMENTADO PARA DEBUGGING:
     
     // Cargar estadísticas (no bloquea otras cargas)
     console.log('üìà Iniciando carga de estadísticas...');
@@ -842,199 +908,244 @@ function loadDashboard() {
     console.log(`üìä Dashboard setup completado en ${dashboardTime.toFixed(2)}ms`);
     
     */
-}// Función simplificada y más robusta
+} // Función simplificada y más robusta
 function loadMaintenanceAlertsSimple() {
-    console.log('ÔøΩ INICIO: Carga directa de alertas');
+  console.log("ÔøΩ INICIO: Carga directa de alertas");
 
-    const container = document.getElementById('maintenanceAlerts');
-    if (!container) return;
+  const container = document.getElementById("maintenanceAlerts");
+  if (!container) return;
 
-    // Indicador mínimo
-    container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Cargando...</div>';
+  // Indicador mínimo
+  container.innerHTML =
+    '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Cargando...</div>';
 
-    // Petición súper simple - sin timeout, sin AbortController
-    fetch('/api/alertas-mantenimiento')
-        .then(response => response.json())
-        .then(data => {
-            console.log('✅ Respuesta recibida:', data);
-            if (data.success && data.alertas) {
-                displayMaintenanceAlerts(data.alertas);
-            } else {
-                container.innerHTML = '<div class="alert alert-info">No hay alertas disponibles</div>';
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error:', error);
-            container.innerHTML = `
+  // Petición súper simple - sin timeout, sin AbortController
+  fetch("/api/alertas-mantenimiento")
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("✅ Respuesta recibida:", data);
+      if (data.success && data.alertas) {
+        displayMaintenanceAlerts(data.alertas);
+      } else {
+        container.innerHTML =
+          '<div class="alert alert-info">No hay alertas disponibles</div>';
+      }
+    })
+    .catch((error) => {
+      console.error("❌ Error:", error);
+      container.innerHTML = `
                 <div class="alert alert-warning">
                     Error cargando alertas
                     <br><button class="btn btn-sm btn-primary" onclick="loadMaintenanceAlertsSimple()">Reintentar</button>
                 </div>
             `;
-        });
+    });
 }
 
 // Función de test para llamar desde la consola del navegador
 function testAlertas() {
-    console.log('üß™ TEST: Iniciando prueba directa de alertas');
-    const start = performance.now();
+  console.log("üß™ TEST: Iniciando prueba directa de alertas");
+  const start = performance.now();
 
-    fetch('/api/alertas-mantenimiento', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
+  fetch("/api/alertas-mantenimiento", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => {
+      const fetchTime = performance.now() - start;
+      console.log(
+        `üß™ Fetch completado en ${fetchTime.toFixed(2)}ms - Status: ${
+          response.status
+        }`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
     })
-        .then(response => {
-            const fetchTime = performance.now() - start;
-            console.log(`üß™ Fetch completado en ${fetchTime.toFixed(2)}ms - Status: ${response.status}`);
+    .then((data) => {
+      const totalTime = performance.now() - start;
+      console.log(`üß™ TOTAL DESDE DASHBOARD: ${totalTime.toFixed(2)}ms`);
+      console.log(`üß™ Datos:`, data);
+      console.log(`üß™ Alertas: ${data.alertas ? data.alertas.length : 0}`);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const totalTime = performance.now() - start;
-            console.log(`üß™ TOTAL DESDE DASHBOARD: ${totalTime.toFixed(2)}ms`);
-            console.log(`üß™ Datos:`, data);
-            console.log(`üß™ Alertas: ${data.alertas ? data.alertas.length : 0}`);
-
-            // Resultado visual
-            alert(`✅ Test completado en ${totalTime.toFixed(2)}ms\nAlertas: ${data.alertas ? data.alertas.length : 0}`);
-        })
-        .catch(error => {
-            const errorTime = performance.now() - start;
-            console.error(`üß™ Error: ${error} después de ${errorTime.toFixed(2)}ms`);
-            alert(`❌ Error: ${error.message} (${errorTime.toFixed(2)}ms)`);
-        });
+      // Resultado visual
+      alert(
+        `✅ Test completado en ${totalTime.toFixed(2)}ms\nAlertas: ${
+          data.alertas ? data.alertas.length : 0
+        }`
+      );
+    })
+    .catch((error) => {
+      const errorTime = performance.now() - start;
+      console.error(
+        `üß™ Error: ${error} después de ${errorTime.toFixed(2)}ms`
+      );
+      alert(`❌ Error: ${error.message} (${errorTime.toFixed(2)}ms)`);
+    });
 }
 
 // DIAGNÓSTICO EXHAUSTIVO - REVISAR TODO
 function diagnosticoExhaustivo() {
-    console.log('🔍 DIAGNÓSTICO EXHAUSTIVO - Revisando TODO');
+  console.log("🔍 DIAGNÓSTICO EXHAUSTIVO - Revisando TODO");
 
-    // 1. TODOS los elementos con classes de carga
-    console.log('1. BUSCANDO ELEMENTOS DE CARGA:');
-    const loadingSelectors = [
-        '.spinner-border', '.spinner-grow', '.loading', '.is-loading',
-        '[class*="load"]', '[class*="spin"]', '[class*="wait"]',
-        '.fa-spinner', '.fa-circle-o-notch', '.fa-refresh',
-        '[data-loading]', '[aria-busy="true"]'
-    ];
+  // 1. TODOS los elementos con classes de carga
+  console.log("1. BUSCANDO ELEMENTOS DE CARGA:");
+  const loadingSelectors = [
+    ".spinner-border",
+    ".spinner-grow",
+    ".loading",
+    ".is-loading",
+    '[class*="load"]',
+    '[class*="spin"]',
+    '[class*="wait"]',
+    ".fa-spinner",
+    ".fa-circle-o-notch",
+    ".fa-refresh",
+    "[data-loading]",
+    '[aria-busy="true"]',
+  ];
 
-    loadingSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        if (elements.length > 0) {
-            console.log(`   ✓ ${selector}: ${elements.length} elementos encontrados`);
-            elements.forEach((el, i) => {
-                console.log(`      ${i + 1}. ${el.tagName} - Classes: ${el.className}`);
-                console.log(`         Visible: ${el.offsetWidth > 0 && el.offsetHeight > 0}`);
-                console.log(`         Display: ${getComputedStyle(el).display}`);
-                console.log(`         Opacity: ${getComputedStyle(el).opacity}`);
-            });
-        }
-    });
-
-    // 2. Verificar texto que indica carga
-    console.log('2. BUSCANDO TEXTO DE CARGA:');
-    const textosLoading = ['cargando', 'loading', 'espera', 'wait', 'procesando'];
-    textosLoading.forEach(texto => {
-        const xpath = `//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '${texto}')]`;
-        const result = document.evaluate(xpath, document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        if (result.snapshotLength > 0) {
-            console.log(`   ✓ Texto "${texto}": ${result.snapshotLength} elementos`);
-            for (let i = 0; i < result.snapshotLength; i++) {
-                const el = result.snapshotItem(i);
-                console.log(`      ${el.tagName}: "${el.textContent.trim()}"`);
-            }
-        }
-    });
-
-    // 3. Verificar atributos aria y data
-    console.log('3. VERIFICANDO ATRIBUTOS:');
-    const busyElements = document.querySelectorAll('[aria-busy="true"]');
-    const loadingData = document.querySelectorAll('[data-loading="true"]');
-    console.log(`   aria-busy="true": ${busyElements.length}`);
-    console.log(`   data-loading="true": ${loadingData.length}`);
-
-    // 4. CSS animations activas
-    console.log('4🔹 VERIFICANDO ANIMACIONES CSS:');
-    const allElements = document.querySelectorAll('*');
-    let animatingElements = 0;
-    allElements.forEach(el => {
-        const style = getComputedStyle(el);
-        if (style.animationName !== 'none' || style.transitionProperty !== 'all') {
-            animatingElements++;
-        }
-    });
-    console.log(`   Elementos con animaciones: ${animatingElements}`);
-
-    // 5. Timers y intervals activos
-    console.log('5🔹 VERIFICANDO TIMERS:');
-    console.log('   (Nota: No se pueden listar directamente, pero revisaremos el código)');
-
-    // 6. Network requests activos
-    console.log('6🔹 VERIFICANDO NETWORK:');
-    if (window.performance && window.performance.getEntriesByType) {
-        const resources = window.performance.getEntriesByType('resource');
-        const recentRequests = resources.filter(r => Date.now() - r.startTime < 5000);
-        console.log(`   Requests recientes (últimos 5s): ${recentRequests.length}`);
+  loadingSelectors.forEach((selector) => {
+    const elements = document.querySelectorAll(selector);
+    if (elements.length > 0) {
+      console.log(`   ✓ ${selector}: ${elements.length} elementos encontrados`);
+      elements.forEach((el, i) => {
+        console.log(`      ${i + 1}. ${el.tagName} - Classes: ${el.className}`);
+        console.log(
+          `         Visible: ${el.offsetWidth > 0 && el.offsetHeight > 0}`
+        );
+        console.log(`         Display: ${getComputedStyle(el).display}`);
+        console.log(`         Opacity: ${getComputedStyle(el).opacity}`);
+      });
     }
+  });
 
-    // 7. Estado del DOM
-    console.log('7🔹 ESTADO DEL DOM:');
-    console.log(`   readyState: ${document.readyState}`);
-    console.log(`   Total elementos: ${document.querySelectorAll('*').length}`);
-
-    // 8. Específico del dashboard
-    console.log('8🔹 DASHBOARD ESPECÍFICO:');
-    const dashboardMain = document.querySelector('#dashboard, .dashboard, main');
-    if (dashboardMain) {
-        console.log(`   Dashboard encontrado: ${dashboardMain.tagName}.${dashboardMain.className}`);
-        const loadingInDashboard = dashboardMain.querySelectorAll('.loading, .spinner-border, [class*="load"]');
-        console.log(`   Loading en dashboard: ${loadingInDashboard.length}`);
+  // 2. Verificar texto que indica carga
+  console.log("2. BUSCANDO TEXTO DE CARGA:");
+  const textosLoading = ["cargando", "loading", "espera", "wait", "procesando"];
+  textosLoading.forEach((texto) => {
+    const xpath = `//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '${texto}')]`;
+    const result = document.evaluate(
+      xpath,
+      document,
+      null,
+      XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+      null
+    );
+    if (result.snapshotLength > 0) {
+      console.log(`   ✓ Texto "${texto}": ${result.snapshotLength} elementos`);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        const el = result.snapshotItem(i);
+        console.log(`      ${el.tagName}: "${el.textContent.trim()}"`);
+      }
     }
+  });
 
-    console.log('🔍 DIAGNÓSTICO EXHAUSTIVO COMPLETADO');
+  // 3. Verificar atributos aria y data
+  console.log("3. VERIFICANDO ATRIBUTOS:");
+  const busyElements = document.querySelectorAll('[aria-busy="true"]');
+  const loadingData = document.querySelectorAll('[data-loading="true"]');
+  console.log(`   aria-busy="true": ${busyElements.length}`);
+  console.log(`   data-loading="true": ${loadingData.length}`);
+
+  // 4. CSS animations activas
+  console.log("4🔹 VERIFICANDO ANIMACIONES CSS:");
+  const allElements = document.querySelectorAll("*");
+  let animatingElements = 0;
+  allElements.forEach((el) => {
+    const style = getComputedStyle(el);
+    if (style.animationName !== "none" || style.transitionProperty !== "all") {
+      animatingElements++;
+    }
+  });
+  console.log(`   Elementos con animaciones: ${animatingElements}`);
+
+  // 5. Timers y intervals activos
+  console.log("5🔹 VERIFICANDO TIMERS:");
+  console.log(
+    "   (Nota: No se pueden listar directamente, pero revisaremos el código)"
+  );
+
+  // 6. Network requests activos
+  console.log("6🔹 VERIFICANDO NETWORK:");
+  if (window.performance && window.performance.getEntriesByType) {
+    const resources = window.performance.getEntriesByType("resource");
+    const recentRequests = resources.filter(
+      (r) => Date.now() - r.startTime < 5000
+    );
+    console.log(`   Requests recientes (últimos 5s): ${recentRequests.length}`);
+  }
+
+  // 7. Estado del DOM
+  console.log("7🔹 ESTADO DEL DOM:");
+  console.log(`   readyState: ${document.readyState}`);
+  console.log(`   Total elementos: ${document.querySelectorAll("*").length}`);
+
+  // 8. Específico del dashboard
+  console.log("8🔹 DASHBOARD ESPECÍFICO:");
+  const dashboardMain = document.querySelector("#dashboard, .dashboard, main");
+  if (dashboardMain) {
+    console.log(
+      `   Dashboard encontrado: ${dashboardMain.tagName}.${dashboardMain.className}`
+    );
+    const loadingInDashboard = dashboardMain.querySelectorAll(
+      '.loading, .spinner-border, [class*="load"]'
+    );
+    console.log(`   Loading en dashboard: ${loadingInDashboard.length}`);
+  }
+
+  console.log("🔍 DIAGNÓSTICO EXHAUSTIVO COMPLETADO");
 }
 
 // FUNCIÓN DE ELIMINACIÓN RADICAL
 function eliminacionRadical() {
-    console.log('🗑️ ELIMINACIÓN RADICAL - Eliminando TODO lo que pueda causar loading');
+  console.log(
+    "🗑️ ELIMINACIÓN RADICAL - Eliminando TODO lo que pueda causar loading"
+  );
 
-    // 1. Eliminar TODOS los spinners y loading
-    const allLoadingSelectors = [
-        '.spinner-border', '.spinner-grow', '.loading', '.is-loading',
-        '[class*="load"]', '[class*="spin"]', '[class*="wait"]',
-        '.fa-spinner', '.fa-circle-o-notch', '.fa-refresh'
-    ];
+  // 1. Eliminar TODOS los spinners y loading
+  const allLoadingSelectors = [
+    ".spinner-border",
+    ".spinner-grow",
+    ".loading",
+    ".is-loading",
+    '[class*="load"]',
+    '[class*="spin"]',
+    '[class*="wait"]',
+    ".fa-spinner",
+    ".fa-circle-o-notch",
+    ".fa-refresh",
+  ];
 
-    let removedCount = 0;
-    allLoadingSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            console.log(`üóë Eliminando: ${el.tagName}.${el.className}`);
-            el.remove();
-            removedCount++;
-        });
+  let removedCount = 0;
+  allLoadingSelectors.forEach((selector) => {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach((el) => {
+      console.log(`üóë Eliminando: ${el.tagName}.${el.className}`);
+      el.remove();
+      removedCount++;
     });
+  });
 
-    // 2. Limpiar atributos
-    document.querySelectorAll('[aria-busy="true"]').forEach(el => {
-        el.setAttribute('aria-busy', 'false');
-        console.log('🔧 aria-busy limpiado');
-    });
+  // 2. Limpiar atributos
+  document.querySelectorAll('[aria-busy="true"]').forEach((el) => {
+    el.setAttribute("aria-busy", "false");
+    console.log("🔧 aria-busy limpiado");
+  });
 
-    document.querySelectorAll('[data-loading="true"]').forEach(el => {
-        el.setAttribute('data-loading', 'false');
-        console.log('🔧 data-loading limpiado');
-    });
+  document.querySelectorAll('[data-loading="true"]').forEach((el) => {
+    el.setAttribute("data-loading", "false");
+    console.log("🔧 data-loading limpiado");
+  });
 
-    // 3. Detener animaciones CSS
-    const style = document.createElement('style');
-    style.textContent = `
+  // 3. Detener animaciones CSS
+  const style = document.createElement("style");
+  style.textContent = `
         * {
             animation: none !important;
             transition: none !important;
@@ -1043,256 +1154,297 @@ function eliminacionRadical() {
             display: none !important;
         }
     `;
-    document.head.appendChild(style);
-    console.log('üé® Animaciones CSS deshabilitadas');
+  document.head.appendChild(style);
+  console.log("üé® Animaciones CSS deshabilitadas");
 
-    // 4. Forzar contenido del dashboard
-    const alertsContainer = document.getElementById('maintenanceAlerts');
-    if (alertsContainer) {
-        console.log('üö® Forzando contenido de alertas...');
-        loadMaintenanceAlertsSimple();
-    }
+  // 4. Forzar contenido del dashboard
+  const alertsContainer = document.getElementById("maintenanceAlerts");
+  if (alertsContainer) {
+    console.log("üö® Forzando contenido de alertas...");
+    loadMaintenanceAlertsSimple();
+  }
 
-    // 5. Limpiar Chart.js
-    if (typeof Chart === 'undefined') {
-        window.createDashboardCharts = () => console.log('üìä Charts omitidos');
-        window.createDashboardChartsWithTimeout = () => console.log('üìä Charts omitidos');
-    }
+  // 5. Limpiar Chart.js
+  if (typeof Chart === "undefined") {
+    window.createDashboardCharts = () => console.log("üìä Charts omitidos");
+    window.createDashboardChartsWithTimeout = () =>
+      console.log("üìä Charts omitidos");
+  }
 
-    console.log(`🗑️ ELIMINACIÓN RADICAL COMPLETADA - ${removedCount} elementos eliminados`);
+  console.log(
+    `🗑️ ELIMINACIÓN RADICAL COMPLETADA - ${removedCount} elementos eliminados`
+  );
 }
 
 // DIAGNÓSTICO PROFUNDO - ¬øQué está cargando?
 function diagnosticarCargaContinua() {
-    console.log('🔍 DIAGNÓSTICO PROFUNDO: ¬øQué sigue cargando?');
+  console.log("🔍 DIAGNÓSTICO PROFUNDO: ¬øQué sigue cargando?");
 
-    // 1. Verificar indicadores de carga en el DOM
-    const spinners = document.querySelectorAll('.spinner-border, .loading, [class*="load"]');
-    console.log(`🔄 Spinners/Indicadores encontrados: ${spinners.length}`);
-    spinners.forEach((spinner, i) => {
-        console.log(`   ${i + 1}. ${spinner.className} - Visible: ${spinner.style.display !== 'none'}`);
-    });
+  // 1. Verificar indicadores de carga en el DOM
+  const spinners = document.querySelectorAll(
+    '.spinner-border, .loading, [class*="load"]'
+  );
+  console.log(`🔄 Spinners/Indicadores encontrados: ${spinners.length}`);
+  spinners.forEach((spinner, i) => {
+    console.log(
+      `   ${i + 1}. ${spinner.className} - Visible: ${
+        spinner.style.display !== "none"
+      }`
+    );
+  });
 
-    // 2. Verificar requests pendientes
-    const xhrActive = window.XMLHttpRequest.toString().includes('open');
-    console.log(`üì° Requests XHR activos: ${xhrActive}`);
+  // 2. Verificar requests pendientes
+  const xhrActive = window.XMLHttpRequest.toString().includes("open");
+  console.log(`üì° Requests XHR activos: ${xhrActive}`);
 
-    // 3. Verificar timers activos
-    console.log('⏰ Verificando timers/intervals...');
+  // 3. Verificar timers activos
+  console.log("⏰ Verificando timers/intervals...");
 
-    // 4. Verificar estado de elementos clave
-    const alertsContainer = document.getElementById('maintenanceAlerts');
-    if (alertsContainer) {
-        console.log(`üö® Contenedor alertas HTML: ${alertsContainer.innerHTML.substring(0, 100)}...`);
-    }
+  // 4. Verificar estado de elementos clave
+  const alertsContainer = document.getElementById("maintenanceAlerts");
+  if (alertsContainer) {
+    console.log(
+      `üö® Contenedor alertas HTML: ${alertsContainer.innerHTML.substring(
+        0,
+        100
+      )}...`
+    );
+  }
 
-    const dashboardContent = document.querySelector('#dashboard-content, .dashboard, main');
-    if (dashboardContent) {
-        console.log(`üìä Dashboard content encontrado: ${dashboardContent.tagName}`);
-        console.log(`üìä Dashboard classes: ${dashboardContent.className}`);
-    }
+  const dashboardContent = document.querySelector(
+    "#dashboard-content, .dashboard, main"
+  );
+  if (dashboardContent) {
+    console.log(
+      `üìä Dashboard content encontrado: ${dashboardContent.tagName}`
+    );
+    console.log(`üìä Dashboard classes: ${dashboardContent.className}`);
+  }
 
-    // 5. Verificar si hay overlays o modales
-    const overlays = document.querySelectorAll('.modal, .overlay, .backdrop');
-    console.log(`üé≠ Overlays/Modales: ${overlays.length}`);
+  // 5. Verificar si hay overlays o modales
+  const overlays = document.querySelectorAll(".modal, .overlay, .backdrop");
+  console.log(`üé≠ Overlays/Modales: ${overlays.length}`);
 
-    // 6. Estado de la página
-    console.log(`üìÑ Document ready state: ${document.readyState}`);
-    console.log(`üñº Imágenes pendientes: ${document.images.length}`);
+  // 6. Estado de la página
+  console.log(`üìÑ Document ready state: ${document.readyState}`);
+  console.log(`üñº Imágenes pendientes: ${document.images.length}`);
 
-    // 7. Verificar Chart.js si está cargado
-    if (typeof Chart !== 'undefined') {
-        console.log('üìä Chart.js está cargado');
-    } else {
-        console.log('❌ Chart.js NO está cargado (¬øesperando carga?)');
-    }
+  // 7. Verificar Chart.js si está cargado
+  if (typeof Chart !== "undefined") {
+    console.log("üìä Chart.js está cargado");
+  } else {
+    console.log("❌ Chart.js NO está cargado (¬øesperando carga?)");
+  }
 
-    // 8. Performance del navegador
-    const timing = performance.timing;
-    const loadTime = timing.loadEventEnd - timing.navigationStart;
-    console.log(`‚ö° Tiempo de carga página: ${loadTime}ms`);
+  // 8. Performance del navegador
+  const timing = performance.timing;
+  const loadTime = timing.loadEventEnd - timing.navigationStart;
+  console.log(`‚ö° Tiempo de carga página: ${loadTime}ms`);
 
-    console.log('🔍 Diagnóstico completo terminado');
+  console.log("🔍 Diagnóstico completo terminado");
 }
 
 // Función para forzar limpieza de indicadores de carga
 function limpiarIndicadoresCarga() {
-    console.log('üßπ LIMPIANDO indicadores de carga...');
+  console.log("üßπ LIMPIANDO indicadores de carga...");
 
-    // Remover todos los spinners
-    const spinners = document.querySelectorAll('.spinner-border, .loading, [class*="load"]');
-    console.log(`üóë Removiendo ${spinners.length} spinners...`);
-    spinners.forEach((spinner, i) => {
-        console.log(`   Removiendo: ${spinner.className}`);
-        spinner.remove();
-    });
+  // Remover todos los spinners
+  const spinners = document.querySelectorAll(
+    '.spinner-border, .loading, [class*="load"]'
+  );
+  console.log(`üóë Removiendo ${spinners.length} spinners...`);
+  spinners.forEach((spinner, i) => {
+    console.log(`   Removiendo: ${spinner.className}`);
+    spinner.remove();
+  });
 
-    // Limpiar clases de carga
-    const elementsWithLoading = document.querySelectorAll('[class*="loading"]');
-    elementsWithLoading.forEach(el => {
-        el.classList.remove('loading', 'is-loading');
-    });
+  // Limpiar clases de carga
+  const elementsWithLoading = document.querySelectorAll('[class*="loading"]');
+  elementsWithLoading.forEach((el) => {
+    el.classList.remove("loading", "is-loading");
+  });
 
-    // Verificar y limpiar alertas container
-    const alertsContainer = document.getElementById('maintenanceAlerts');
-    if (alertsContainer) {
-        console.log('üö® Forzando carga de alertas...');
-        alertsContainer.innerHTML = '<div class="alert alert-info">Cargando alertas...</div>';
-        loadMaintenanceAlertsSimple();
-    }
+  // Verificar y limpiar alertas container
+  const alertsContainer = document.getElementById("maintenanceAlerts");
+  if (alertsContainer) {
+    console.log("üö® Forzando carga de alertas...");
+    alertsContainer.innerHTML =
+      '<div class="alert alert-info">Cargando alertas...</div>';
+    loadMaintenanceAlertsSimple();
+  }
 
-    // Limpiar cualquier loading en el dashboard
-    const dashboardElements = document.querySelectorAll('[class*="dashboard"] .spinner-border, [class*="dashboard"] .loading');
-    dashboardElements.forEach(el => {
-        console.log('üìä Removiendo loading del dashboard');
-        el.remove();
-    });
+  // Limpiar cualquier loading en el dashboard
+  const dashboardElements = document.querySelectorAll(
+    '[class*="dashboard"] .spinner-border, [class*="dashboard"] .loading'
+  );
+  dashboardElements.forEach((el) => {
+    console.log("üìä Removiendo loading del dashboard");
+    el.remove();
+  });
 
-    console.log('✅ Limpieza completada');
+  console.log("✅ Limpieza completada");
 }
 
 // Función para arreglar Chart.js
 function arreglarChartJS() {
-    console.log('üìä ARREGLANDO Chart.js...');
+  console.log("üìä ARREGLANDO Chart.js...");
 
-    if (typeof Chart === 'undefined') {
-        console.log('üìä Chart.js no está disponible - eliminando dependencias...');
+  if (typeof Chart === "undefined") {
+    console.log(
+      "üìä Chart.js no está disponible - eliminando dependencias..."
+    );
 
-        // Deshabilitar cualquier función que espere Chart.js
-        window.createDashboardChartsWithTimeout = function () {
-            console.log('üìä Charts deshabilitados - Chart.js no disponible');
-        };
+    // Deshabilitar cualquier función que espere Chart.js
+    window.createDashboardChartsWithTimeout = function () {
+      console.log("üìä Charts deshabilitados - Chart.js no disponible");
+    };
 
-        window.createDashboardCharts = function () {
-            console.log('üìä Charts deshabilitados - Chart.js no disponible');
-        };
+    window.createDashboardCharts = function () {
+      console.log("üìä Charts deshabilitados - Chart.js no disponible");
+    };
 
-        console.log('üìä Chart.js dependencies deshabilitadas');
-    } else {
-        console.log('✅ Chart.js está disponible');
-    }
+    console.log("üìä Chart.js dependencies deshabilitadas");
+  } else {
+    console.log("✅ Chart.js está disponible");
+  }
 }
 
 // Función de limpieza total
 function limpiezaTotal() {
-    console.log('üßΩ LIMPIEZA TOTAL del dashboard...');
+  console.log("üßΩ LIMPIEZA TOTAL del dashboard...");
 
-    limpiarIndicadoresCarga();
-    arreglarChartJS();
+  limpiarIndicadoresCarga();
+  arreglarChartJS();
 
-    // Forzar restauración del dashboard
-    setTimeout(() => {
-        console.log('🔄 Forzando restauración del dashboard...');
-        restaurarDashboard();
-    }, 500);
+  // Forzar restauración del dashboard
+  setTimeout(() => {
+    console.log("🔄 Forzando restauración del dashboard...");
+    restaurarDashboard();
+  }, 500);
 
-    console.log('✅ Limpieza total completada');
-}// Función para restaurar dashboard completo
+  console.log("✅ Limpieza total completada");
+} // Función para restaurar dashboard completo
 function restaurarDashboard() {
-    console.log('🔄 RESTAURANDO DASHBOARD - Backend confirmado rápido');
+  console.log("🔄 RESTAURANDO DASHBOARD - Backend confirmado rápido");
 
-    // Cargar alertas inmediatamente
-    const alertsContainer = document.getElementById('maintenanceAlerts');
-    if (alertsContainer) {
-        console.log('üö® Cargando alertas (backend: 10-16ms)...');
-        loadMaintenanceAlertsSimple();
-    }
+  // Cargar alertas inmediatamente
+  const alertsContainer = document.getElementById("maintenanceAlerts");
+  if (alertsContainer) {
+    console.log("üö® Cargando alertas (backend: 10-16ms)...");
+    loadMaintenanceAlertsSimple();
+  }
 
-    // Cargar estadísticas
-    console.log('üìà Cargando estadísticas...');
-    fetch('/api/estadisticas')
-        .then(response => response.json())
-        .then(data => {
-            console.log('üìà Estadísticas cargadas:', data);
-            updateDashboardStats(data);
-        })
-        .catch(error => console.error('❌ Error estadísticas:', error));
+  // Cargar estadísticas
+  console.log("üìà Cargando estadísticas...");
+  fetch("/api/estadisticas")
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("üìà Estadísticas cargadas:", data);
+      updateDashboardStats(data);
+    })
+    .catch((error) => console.error("❌ Error estadísticas:", error));
 
-    // Cargar órdenes
-    console.log('üìã Cargando órdenes...');
-    loadRecentOrders();
+  // Cargar órdenes
+  console.log("üìã Cargando órdenes...");
+  loadRecentOrders();
 
-    console.log('✅ Dashboard restaurado completamente');
+  console.log("✅ Dashboard restaurado completamente");
 }
 
 // Función para cargar alertas en el dashboard actual
 function cargarAlertasAhora() {
-    console.log('🚀 EJECUTANDO: loadMaintenanceAlertsSimple() directamente');
-    if (typeof loadMaintenanceAlertsSimple === 'function') {
-        loadMaintenanceAlertsSimple();
-    } else {
-        console.error('❌ loadMaintenanceAlertsSimple no encontrada');
-    }
+  console.log("🚀 EJECUTANDO: loadMaintenanceAlertsSimple() directamente");
+  if (typeof loadMaintenanceAlertsSimple === "function") {
+    loadMaintenanceAlertsSimple();
+  } else {
+    console.error("❌ loadMaintenanceAlertsSimple no encontrada");
+  }
 }
 
 // Función adicional de test simple
 function testAlertasSimple() {
-    console.log('üß™ TEST SIMPLE: Probando endpoint de alertas');
-    const start = performance.now();
+  console.log("üß™ TEST SIMPLE: Probando endpoint de alertas");
+  const start = performance.now();
 
-    fetch('/api/alertas-mantenimiento')
-        .then(response => {
-            const time = performance.now() - start;
-            console.log(`‚è± Tiempo de respuesta: ${time.toFixed(2)}ms`);
-            return response.json();
-        })
-        .then(data => {
-            console.log('üìä Datos recibidos:', data);
-            console.log('✅ TEST COMPLETADO - La API funciona correctamente');
-        })
-        .catch(error => {
-            console.error('❌ TEST FALL√ì:', error);
-        });
+  fetch("/api/alertas-mantenimiento")
+    .then((response) => {
+      const time = performance.now() - start;
+      console.log(`‚è± Tiempo de respuesta: ${time.toFixed(2)}ms`);
+      return response.json();
+    })
+    .then((data) => {
+      console.log("üìä Datos recibidos:", data);
+      console.log("✅ TEST COMPLETADO - La API funciona correctamente");
+    })
+    .catch((error) => {
+      console.error("❌ TEST FALL√ì:", error);
+    });
 }
 
 // Función de diagnóstico completo del dashboard
 function diagnosticoDashboard() {
-    console.log('üö® DIAGNÓSTICO COMPLETO: Midiendo todos los endpoints del dashboard');
+  console.log(
+    "üö® DIAGNÓSTICO COMPLETO: Midiendo todos los endpoints del dashboard"
+  );
 
-    const endpoints = [
-        '/api/estadisticas',
-        '/api/alertas-mantenimiento',
-        '/ordenes/api?limit=5'
-    ];
+  const endpoints = [
+    "/api/estadisticas",
+    "/api/alertas-mantenimiento",
+    "/ordenes/api?limit=5",
+  ];
 
-    endpoints.forEach((endpoint, index) => {
-        const start = performance.now();
-        console.log(`🔍 ${index + 1}. Probando: ${endpoint}`);
+  endpoints.forEach((endpoint, index) => {
+    const start = performance.now();
+    console.log(`🔍 ${index + 1}. Probando: ${endpoint}`);
 
-        fetch(endpoint)
-            .then(response => {
-                const time = performance.now() - start;
-                console.log(`‚è± ${endpoint}: ${time.toFixed(2)}ms - Status: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                console.log(`üìä ${endpoint}: Datos recibidos exitosamente`);
-                if (endpoint.includes('estadisticas')) {
-                    console.log('   - Estadísticas:', Object.keys(data || {}).length, 'propiedades');
-                } else if (endpoint.includes('alertas')) {
-                    console.log('   - Alertas:', data?.total || 0, 'alertas');
-                } else if (endpoint.includes('ordenes')) {
-                    console.log('   - √ìrdenes:', data?.length || 0, 'órdenes');
-                }
-            })
-            .catch(error => {
-                const time = performance.now() - start;
-                console.error(`❌ ${endpoint}: ERROR después de ${time.toFixed(2)}ms -`, error);
-            });
-    });
-}// Función mejorada con sistema de fallback
+    fetch(endpoint)
+      .then((response) => {
+        const time = performance.now() - start;
+        console.log(
+          `‚è± ${endpoint}: ${time.toFixed(2)}ms - Status: ${response.status}`
+        );
+        return response.json();
+      })
+      .then((data) => {
+        console.log(`üìä ${endpoint}: Datos recibidos exitosamente`);
+        if (endpoint.includes("estadisticas")) {
+          console.log(
+            "   - Estadísticas:",
+            Object.keys(data || {}).length,
+            "propiedades"
+          );
+        } else if (endpoint.includes("alertas")) {
+          console.log("   - Alertas:", data?.total || 0, "alertas");
+        } else if (endpoint.includes("ordenes")) {
+          console.log("   - √ìrdenes:", data?.length || 0, "órdenes");
+        }
+      })
+      .catch((error) => {
+        const time = performance.now() - start;
+        console.error(
+          `❌ ${endpoint}: ERROR después de ${time.toFixed(2)}ms -`,
+          error
+        );
+      });
+  });
+} // Función mejorada con sistema de fallback
 function loadMaintenanceAlertsWithFallback() {
-    console.log('🔄 Iniciando carga de alertas con sistema de fallback');
+  console.log("🔄 Iniciando carga de alertas con sistema de fallback");
 
-    // Intentar carga normal primero
-    loadMaintenanceAlerts();
+  // Intentar carga normal primero
+  loadMaintenanceAlerts();
 
-    // Si después de 4 segundos no se ha cargado, mostrar mensaje especial
-    setTimeout(() => {
-        const container = document.getElementById('maintenanceAlerts');
-        if (container && container.innerHTML.includes('Cargando alertas de mantenimiento')) {
-            console.warn('‚ö† Fallback activado: Las alertas están tardando más de lo esperado');
-            container.innerHTML = `
+  // Si después de 4 segundos no se ha cargado, mostrar mensaje especial
+  setTimeout(() => {
+    const container = document.getElementById("maintenanceAlerts");
+    if (
+      container &&
+      container.innerHTML.includes("Cargando alertas de mantenimiento")
+    ) {
+      console.warn(
+        "‚ö† Fallback activado: Las alertas están tardando más de lo esperado"
+      );
+      container.innerHTML = `
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle me-2"></i>
                     <strong>Las alertas están tardando en cargar...</strong>
@@ -1305,410 +1457,481 @@ function loadMaintenanceAlertsWithFallback() {
                     </button>
                 </div>
             `;
-        }
-    }, 4000);
+    }
+  }, 4000);
 }
 
 function loadRecentOrders() {
-    console.log('üìã Cargando órdenes recientes...');
-    const ordersStart = performance.now();
+  console.log("üìã Cargando órdenes recientes...");
+  const ordersStart = performance.now();
 
-    fetch('/ordenes/api?limit=5')
-        .then(response => {
-            const ordersTime = performance.now() - ordersStart;
-            console.log(`üìã Respuesta órdenes recibida en ${ordersTime.toFixed(2)}ms`);
-            return response.json();
-        })
-        .then(ordenes => {
-            const ordersTime = performance.now() - ordersStart;
-            console.log(`üìã √ìrdenes procesadas en ${ordersTime.toFixed(2)}ms - ${ordenes?.length || 0} órdenes`);
+  fetch("/ordenes/api?limit=5")
+    .then((response) => {
+      const ordersTime = performance.now() - ordersStart;
+      console.log(
+        `üìã Respuesta órdenes recibida en ${ordersTime.toFixed(2)}ms`
+      );
+      return response.json();
+    })
+    .then((ordenes) => {
+      const ordersTime = performance.now() - ordersStart;
+      console.log(
+        `üìã √ìrdenes procesadas en ${ordersTime.toFixed(2)}ms - ${
+          ordenes?.length || 0
+        } órdenes`
+      );
 
-            const tbody = document.getElementById('ordenes-recientes-tbody');
-            if (!tbody) return;
+      const tbody = document.getElementById("ordenes-recientes-tbody");
+      if (!tbody) return;
 
-            tbody.innerHTML = '';
+      tbody.innerHTML = "";
 
-            if (!ordenes || ordenes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay órdenes recientes</td></tr>';
-                return;
-            }
+      if (!ordenes || ordenes.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="7" class="text-center text-muted">No hay órdenes recientes</td></tr>';
+        return;
+      }
 
-            // Tomar solo las 5 más recientes
-            const ordenesRecientes = ordenes.slice(0, 5);
+      // Tomar solo las 5 más recientes
+      const ordenesRecientes = ordenes.slice(0, 5);
 
-            ordenesRecientes.forEach(orden => {
-                const row = document.createElement('tr');
+      ordenesRecientes.forEach((orden) => {
+        const row = document.createElement("tr");
 
-                // Determinar clase de prioridad
-                let prioridadClass = 'bg-secondary';
-                switch (orden.prioridad) {
-                    case 'Crítica': prioridadClass = 'bg-danger'; break;
-                    case 'Alta': prioridadClass = 'bg-warning text-dark'; break;
-                    case 'Media': prioridadClass = 'bg-info'; break;
-                    case 'Baja': prioridadClass = 'bg-secondary'; break;
-                }
+        // Determinar clase de prioridad
+        let prioridadClass = "bg-secondary";
+        switch (orden.prioridad) {
+          case "Crítica":
+            prioridadClass = "bg-danger";
+            break;
+          case "Alta":
+            prioridadClass = "bg-warning text-dark";
+            break;
+          case "Media":
+            prioridadClass = "bg-info";
+            break;
+          case "Baja":
+            prioridadClass = "bg-secondary";
+            break;
+        }
 
-                // Determinar clase de estado
-                let estadoClass = 'bg-secondary';
-                switch (orden.estado) {
-                    case 'Pendiente': estadoClass = 'bg-warning text-dark'; break;
-                    case 'En Proceso': estadoClass = 'bg-info'; break;
-                    case 'Completada': estadoClass = 'bg-success'; break;
-                    case 'Cancelada': estadoClass = 'bg-danger'; break;
-                }
+        // Determinar clase de estado
+        let estadoClass = "bg-secondary";
+        switch (orden.estado) {
+          case "Pendiente":
+            estadoClass = "bg-warning text-dark";
+            break;
+          case "En Proceso":
+            estadoClass = "bg-info";
+            break;
+          case "Completada":
+            estadoClass = "bg-success";
+            break;
+          case "Cancelada":
+            estadoClass = "bg-danger";
+            break;
+        }
 
-                row.innerHTML = `
+        row.innerHTML = `
                     <td><strong>#${orden.id}</strong></td>
-                    <td>${orden.activo_nombre || 'No asignado'}</td>
-                    <td>${orden.tipo || 'N/A'}</td>
-                    <td><span class="badge ${prioridadClass}">${orden.prioridad || 'N/A'}</span></td>
-                    <td><span class="badge ${estadoClass}">${orden.estado || 'N/A'}</span></td>
-                    <td>${orden.tecnico_nombre || 'Sin asignar'}</td>
+                    <td>${orden.activo_nombre || "No asignado"}</td>
+                    <td>${orden.tipo || "N/A"}</td>
+                    <td><span class="badge ${prioridadClass}">${
+          orden.prioridad || "N/A"
+        }</span></td>
+                    <td><span class="badge ${estadoClass}">${
+          orden.estado || "N/A"
+        }</span></td>
+                    <td>${orden.tecnico_nombre || "Sin asignar"}</td>
                     <td>
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary action-btn view" onclick="verDetalleOrden(${orden.id})" title="Ver detalles">
+                            <button class="btn btn-outline-primary action-btn view" onclick="verDetalleOrden(${
+                              orden.id
+                            })" title="Ver detalles">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </div>
                     </td>
                 `;
 
-                tbody.appendChild(row);
-            });
-        })
-        .catch(error => {
-            const ordersTime = performance.now() - ordersStart;
-            console.error(`❌ Error órdenes después de ${ordersTime.toFixed(2)}ms:`, error);
-            const tbody = document.getElementById('ordenes-recientes-tbody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Error al cargar órdenes</td></tr>';
-            }
-        });
+        tbody.appendChild(row);
+      });
+    })
+    .catch((error) => {
+      const ordersTime = performance.now() - ordersStart;
+      console.error(
+        `❌ Error órdenes después de ${ordersTime.toFixed(2)}ms:`,
+        error
+      );
+      const tbody = document.getElementById("ordenes-recientes-tbody");
+      if (tbody) {
+        tbody.innerHTML =
+          '<tr><td colspan="7" class="text-center text-muted">Error al cargar órdenes</td></tr>';
+      }
+    });
 }
 
 function verDetalleOrden(ordenId) {
-    // Redirigir a la página de órdenes con foco en esa orden específica
-    window.location.href = `/ordenes/?orden=${ordenId}`;
+  // Redirigir a la página de órdenes con foco en esa orden específica
+  window.location.href = `/ordenes/?orden=${ordenId}`;
 }
 
 function updateDashboardStats(data) {
-    console.log('üìà Iniciando updateDashboardStats...');
-    const statsStart = performance.now();
+  console.log("üìà Iniciando updateDashboardStats...");
+  const statsStart = performance.now();
 
-    // Actualizar contadores con animación
-    // Calcular órdenes activas (todas menos las completadas)
-    const completadas = data.ordenes_por_estado['Completada'] || 0;
-    const pendientes = data.ordenes_por_estado['Pendiente'] || 0;
-    const enProceso = data.ordenes_por_estado['En Proceso'] || 0;
-    const iniciadas = data.ordenes_por_estado['Iniciada'] || 0;
+  // Actualizar contadores con animación
+  // Calcular órdenes activas (todas menos las completadas)
+  const completadas = data.ordenes_por_estado["Completada"] || 0;
+  const pendientes = data.ordenes_por_estado["Pendiente"] || 0;
+  const enProceso = data.ordenes_por_estado["En Proceso"] || 0;
+  const iniciadas = data.ordenes_por_estado["Iniciada"] || 0;
 
-    // Órdenes activas = todas las que no están completadas
-    const activas = pendientes + enProceso + iniciadas;
+  // Órdenes activas = todas las que no están completadas
+  const activas = pendientes + enProceso + iniciadas;
 
-    console.log(`📊 Datos: completadas=${completadas}, pendientes=${pendientes}, activas=${activas}, activos=${data.total_activos}`);
+  console.log(
+    `📊 Datos: completadas=${completadas}, pendientes=${pendientes}, activas=${activas}, activos=${data.total_activos}`
+  );
 
-    animateCounter('stat-ordenes-activas', activas);
-    animateCounter('stat-completadas', completadas);
-    animateCounter('stat-pendientes', pendientes);
-    animateCounter('stat-activos', data.total_activos || 0);
+  animateCounter("stat-ordenes-activas", activas);
+  animateCounter("stat-completadas", completadas);
+  animateCounter("stat-pendientes", pendientes);
+  animateCounter("stat-activos", data.total_activos || 0);
 
-    const statsTime = performance.now() - statsStart;
-    console.log(`üìà updateDashboardStats completado en ${statsTime.toFixed(2)}ms`);
+  const statsTime = performance.now() - statsStart;
+  console.log(
+    `üìà updateDashboardStats completado en ${statsTime.toFixed(2)}ms`
+  );
 }
 
 function animateCounter(elementId, targetValue) {
-    const element = document.getElementById(elementId);
-    if (!element) return;
+  const element = document.getElementById(elementId);
+  if (!element) return;
 
-    const startValue = parseInt(element.textContent) || 0;
-    const duration = 1000;
-    const step = (targetValue - startValue) / (duration / 16);
-    let current = startValue;
+  const startValue = parseInt(element.textContent) || 0;
+  const duration = 1000;
+  const step = (targetValue - startValue) / (duration / 16);
+  let current = startValue;
 
-    const timer = setInterval(() => {
-        current += step;
-        if ((step > 0 && current >= targetValue) || (step < 0 && current <= targetValue)) {
-            element.textContent = targetValue;
-            clearInterval(timer);
-        } else {
-            element.textContent = Math.round(current);
-        }
-    }, 16);
+  const timer = setInterval(() => {
+    current += step;
+    if (
+      (step > 0 && current >= targetValue) ||
+      (step < 0 && current <= targetValue)
+    ) {
+      element.textContent = targetValue;
+      clearInterval(timer);
+    } else {
+      element.textContent = Math.round(current);
+    }
+  }, 16);
 }
 
 function createDashboardCharts(data) {
-    console.log('üìä Iniciando createDashboardCharts...');
-    const chartsStart = performance.now();
+  console.log("üìä Iniciando createDashboardCharts...");
+  const chartsStart = performance.now();
 
-    // Verificar si Chart.js está disponible
-    if (typeof Chart === 'undefined') {
-        console.log('‚ö† Chart.js no está disponible, cargando desde CDN...');
-        loadChartJS().then(() => {
-            const chartsTime = performance.now() - chartsStart;
-            console.log(`üìä Chart.js cargado en ${chartsTime.toFixed(2)}ms, creando gráficos...`);
-            createDashboardCharts(data);
-        }).catch(error => {
-            const chartsTime = performance.now() - chartsStart;
-            console.error(`❌ Error cargando Chart.js después de ${chartsTime.toFixed(2)}ms:`, error);
-        });
-        return;
-    }
+  // Verificar si Chart.js está disponible
+  if (typeof Chart === "undefined") {
+    console.log("‚ö† Chart.js no está disponible, cargando desde CDN...");
+    loadChartJS()
+      .then(() => {
+        const chartsTime = performance.now() - chartsStart;
+        console.log(
+          `üìä Chart.js cargado en ${chartsTime.toFixed(
+            2
+          )}ms, creando gráficos...`
+        );
+        createDashboardCharts(data);
+      })
+      .catch((error) => {
+        const chartsTime = performance.now() - chartsStart;
+        console.error(
+          `❌ Error cargando Chart.js después de ${chartsTime.toFixed(2)}ms:`,
+          error
+        );
+      });
+    return;
+  }
 
-    // Gráfico de órdenes por día
-    createOrdersChart(data);
+  // Gráfico de órdenes por día
+  createOrdersChart(data);
 
-    // Gráfico de estado de equipos
-    createEquipmentChart(data);
+  // Gráfico de estado de equipos
+  createEquipmentChart(data);
 
-    // Gráfico de tendencias
-    createTrendsChart(data);
+  // Gráfico de tendencias
+  createTrendsChart(data);
 
-    const chartsTime = performance.now() - chartsStart;
-    console.log(`üìä createDashboardCharts completado en ${chartsTime.toFixed(2)}ms`);
+  const chartsTime = performance.now() - chartsStart;
+  console.log(
+    `üìä createDashboardCharts completado en ${chartsTime.toFixed(2)}ms`
+  );
 }
 
 // Función de gráficos con timeout para evitar bloqueos
 function createDashboardChartsWithTimeout(data) {
-    console.log('üìä Iniciando carga de gráficos con timeout...');
+  console.log("üìä Iniciando carga de gráficos con timeout...");
 
-    // Timeout de 5 segundos para la carga de Chart.js
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout cargando gráficos')), 5000);
+  // Timeout de 5 segundos para la carga de Chart.js
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error("Timeout cargando gráficos")), 5000);
+  });
+
+  // Si Chart.js ya está disponible, usarlo directamente
+  if (typeof Chart !== "undefined") {
+    console.log("üìä Chart.js ya disponible, creando gráficos...");
+    createDashboardCharts(data);
+    return;
+  }
+
+  // Cargar Chart.js con timeout
+  Promise.race([loadChartJS(), timeoutPromise])
+    .then(() => {
+      console.log("üìä Chart.js cargado, creando gráficos...");
+      createDashboardCharts(data);
+    })
+    .catch((error) => {
+      console.warn("‚ö† No se pudieron cargar los gráficos:", error.message);
+      // Mostrar mensaje en lugar de gráficos
+      showChartsPlaceholder();
     });
-
-    // Si Chart.js ya está disponible, usarlo directamente
-    if (typeof Chart !== 'undefined') {
-        console.log('üìä Chart.js ya disponible, creando gráficos...');
-        createDashboardCharts(data);
-        return;
-    }
-
-    // Cargar Chart.js con timeout
-    Promise.race([
-        loadChartJS(),
-        timeoutPromise
-    ])
-        .then(() => {
-            console.log('üìä Chart.js cargado, creando gráficos...');
-            createDashboardCharts(data);
-        })
-        .catch(error => {
-            console.warn('‚ö† No se pudieron cargar los gráficos:', error.message);
-            // Mostrar mensaje en lugar de gráficos
-            showChartsPlaceholder();
-        });
 }
 
 // Mostrar placeholder si los gráficos no se pueden cargar
 function showChartsPlaceholder() {
-    const chartsContainers = ['ordersChart', 'equipmentChart', 'trendsChart'];
+  const chartsContainers = ["ordersChart", "equipmentChart", "trendsChart"];
 
-    chartsContainers.forEach(containerId => {
-        const container = document.getElementById(containerId);
-        if (container && container.parentElement) {
-            container.parentElement.innerHTML = `
+  chartsContainers.forEach((containerId) => {
+    const container = document.getElementById(containerId);
+    if (container && container.parentElement) {
+      container.parentElement.innerHTML = `
                 <div class="text-center text-muted p-4">
                     <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
                     <p class="mt-2">Gráficos no disponibles</p>
                     <small>Los gráficos no se pudieron cargar desde el CDN</small>
                 </div>
             `;
-        }
-    });
+    }
+  });
 }
 
 function loadChartJS() {
-    console.log('üåê Cargando Chart.js desde CDN...');
-    const cdnStart = performance.now();
+  console.log("üåê Cargando Chart.js desde CDN...");
+  const cdnStart = performance.now();
 
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-        script.onload = () => {
-            const cdnTime = performance.now() - cdnStart;
-            console.log(`✅ Chart.js cargado exitosamente en ${cdnTime.toFixed(2)}ms`);
-            resolve();
-        };
-        script.onerror = (error) => {
-            const cdnTime = performance.now() - cdnStart;
-            console.error(`❌ Error cargando Chart.js después de ${cdnTime.toFixed(2)}ms:`, error);
-            reject(error);
-        };
-        document.head.appendChild(script);
-    });
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/chart.js";
+    script.onload = () => {
+      const cdnTime = performance.now() - cdnStart;
+      console.log(
+        `✅ Chart.js cargado exitosamente en ${cdnTime.toFixed(2)}ms`
+      );
+      resolve();
+    };
+    script.onerror = (error) => {
+      const cdnTime = performance.now() - cdnStart;
+      console.error(
+        `❌ Error cargando Chart.js después de ${cdnTime.toFixed(2)}ms:`,
+        error
+      );
+      reject(error);
+    };
+    document.head.appendChild(script);
+  });
 }
 
 function createOrdersChart(data) {
-    const ctx = document.getElementById('ordersChart');
-    if (!ctx) return;
+  const ctx = document.getElementById("ordersChart");
+  if (!ctx) return;
 
-    // Destruir gráfico anterior si existe
-    if (chartInstances.orders) {
-        chartInstances.orders.destroy();
-    }
+  // Destruir gráfico anterior si existe
+  if (chartInstances.orders) {
+    chartInstances.orders.destroy();
+  }
 
-    chartInstances.orders = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: getLast7Days(),
-            datasets: [{
-                label: '√ìrdenes Completadas',
-                data: [12, 19, 3, 5, 2, 3, 7],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.4
-            }, {
-                label: '√ìrdenes Creadas',
-                data: [5, 10, 15, 8, 12, 7, 9],
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                tension: 0.4
-            }]
+  chartInstances.orders = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: getLast7Days(),
+      datasets: [
+        {
+          label: "√ìrdenes Completadas",
+          data: [12, 19, 3, 5, 2, 3, 7],
+          borderColor: "rgb(75, 192, 192)",
+          backgroundColor: "rgba(75, 192, 192, 0.2)",
+          tension: 0.4,
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+        {
+          label: "√ìrdenes Creadas",
+          data: [5, 10, 15, 8, 12, 7, 9],
+          borderColor: "rgb(255, 99, 132)",
+          backgroundColor: "rgba(255, 99, 132, 0.2)",
+          tension: 0.4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
 }
 
 function createEquipmentChart(data) {
-    const ctx = document.getElementById('equipmentChart');
-    if (!ctx) return;
+  const ctx = document.getElementById("equipmentChart");
+  if (!ctx) return;
 
-    if (chartInstances.equipment) {
-        chartInstances.equipment.destroy();
-    }
+  if (chartInstances.equipment) {
+    chartInstances.equipment.destroy();
+  }
 
-    chartInstances.equipment = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(data.activos_por_estado || {}),
-            datasets: [{
-                data: Object.values(data.activos_por_estado || {}),
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.8)',
-                    'rgba(255, 206, 86, 0.8)',
-                    'rgba(255, 99, 132, 0.8)'
-                ]
-            }]
+  chartInstances.equipment = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(data.activos_por_estado || {}),
+      datasets: [
+        {
+          data: Object.values(data.activos_por_estado || {}),
+          backgroundColor: [
+            "rgba(75, 192, 192, 0.8)",
+            "rgba(255, 206, 86, 0.8)",
+            "rgba(255, 99, 132, 0.8)",
+          ],
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
-            }
-        }
-    });
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+        },
+      },
+    },
+  });
 }
 
 function createTrendsChart(data) {
-    const ctx = document.getElementById('trendsChart');
-    if (!ctx) return;
+  const ctx = document.getElementById("trendsChart");
+  if (!ctx) return;
 
-    if (chartInstances.trends) {
-        chartInstances.trends.destroy();
-    }
+  if (chartInstances.trends) {
+    chartInstances.trends.destroy();
+  }
 
-    chartInstances.trends = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
-            datasets: [{
-                label: 'MTBF (horas)',
-                data: [720, 680, 740, 780, 820, 850],
-                backgroundColor: 'rgba(54, 162, 235, 0.8)'
-            }, {
-                label: 'MTTR (horas)',
-                data: [4.5, 4.2, 3.8, 3.5, 3.2, 3.0],
-                backgroundColor: 'rgba(255, 99, 132, 0.8)'
-            }]
+  chartInstances.trends = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio"],
+      datasets: [
+        {
+          label: "MTBF (horas)",
+          data: [720, 680, 740, 780, 820, 850],
+          backgroundColor: "rgba(54, 162, 235, 0.8)",
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
-            }
-        }
-    });
+        {
+          label: "MTTR (horas)",
+          data: [4.5, 4.2, 3.8, 3.5, 3.2, 3.0],
+          backgroundColor: "rgba(255, 99, 132, 0.8)",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+        },
+      },
+    },
+  });
 }
 
 function getLast7Days() {
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        days.push(date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }));
-    }
-    return days;
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    days.push(
+      date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })
+    );
+  }
+  return days;
 }
 
 function loadMaintenanceAlerts() {
-    // Solo cargar alertas si estamos en la página del dashboard
-    const container = document.getElementById('maintenanceAlerts');
-    if (!container) {
-        // Salir silenciosamente si no estamos en el dashboard
-        return;
-    }
+  // Solo cargar alertas si estamos en la página del dashboard
+  const container = document.getElementById("maintenanceAlerts");
+  if (!container) {
+    // Salir silenciosamente si no estamos en el dashboard
+    return;
+  }
 
-    console.log('🔍 Cargando alertas de mantenimiento...');
+  console.log("🔍 Cargando alertas de mantenimiento...");
 
-    // Crear un AbortController para timeout más agresivo
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-        console.warn('⏰ Timeout de 3 segundos alcanzado, abortando petición de alertas');
-        controller.abort();
-    }, 3000); // Timeout reducido a 3 segundos
+  // Crear un AbortController para timeout más agresivo
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.warn(
+      "⏰ Timeout de 3 segundos alcanzado, abortando petición de alertas"
+    );
+    controller.abort();
+  }, 3000); // Timeout reducido a 3 segundos
 
-    fetch('/api/alertas-mantenimiento', {
-        signal: controller.signal,
-        headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-        }
+  fetch("/api/alertas-mantenimiento", {
+    signal: controller.signal,
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+    },
+  })
+    .then((response) => {
+      clearTimeout(timeoutId);
+      console.log(
+        "üì° Respuesta recibida:",
+        response.status,
+        response.statusText
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
     })
-        .then(response => {
-            clearTimeout(timeoutId);
-            console.log('üì° Respuesta recibida:', response.status, response.statusText);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('üìä Datos de alertas:', data);
-            if (data.success) {
-                console.log(`✅ Cargando ${data.alertas?.length || 0} alertas`);
-                displayMaintenanceAlerts(data.alertas);
-            } else {
-                console.warn('‚ö† Error en respuesta de alertas:', data.error);
-                displayMaintenanceAlerts([]); // Mostrar contenedor vacío
-            }
-        })
-        .catch(error => {
-            clearTimeout(timeoutId);
-            const container = document.getElementById('maintenanceAlerts');
+    .then((data) => {
+      console.log("üìä Datos de alertas:", data);
+      if (data.success) {
+        console.log(`✅ Cargando ${data.alertas?.length || 0} alertas`);
+        displayMaintenanceAlerts(data.alertas);
+      } else {
+        console.warn("‚ö† Error en respuesta de alertas:", data.error);
+        displayMaintenanceAlerts([]); // Mostrar contenedor vacío
+      }
+    })
+    .catch((error) => {
+      clearTimeout(timeoutId);
+      const container = document.getElementById("maintenanceAlerts");
 
-            if (error.name === 'AbortError') {
-                console.error('‚è± Timeout cargando alertas de mantenimiento (3 segundos)');
-                if (container) {
-                    container.innerHTML = `
+      if (error.name === "AbortError") {
+        console.error(
+          "‚è± Timeout cargando alertas de mantenimiento (3 segundos)"
+        );
+        if (container) {
+          container.innerHTML = `
                         <div class="alert alert-danger">
                             <i class="bi bi-hourglass-split me-2"></i>
                             <strong>Tiempo agotado:</strong> Las alertas tardaron más de 3 segundos en cargar.
@@ -1718,11 +1941,11 @@ function loadMaintenanceAlerts() {
                             </button>
                         </div>
                     `;
-                }
-            } else {
-                console.error('❌ Error cargando alertas de mantenimiento:', error);
-                if (container) {
-                    container.innerHTML = `
+        }
+      } else {
+        console.error("❌ Error cargando alertas de mantenimiento:", error);
+        if (container) {
+          container.innerHTML = `
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle me-2"></i>
                             Error al cargar alertas: ${error.message}
@@ -1731,17 +1954,17 @@ function loadMaintenanceAlerts() {
                             </button>
                         </div>
                     `;
-                }
-            }
-        });
+        }
+      }
+    });
 }
 
 // Función para saltar alertas en caso de problemas persistentes
 function skipAlerts() {
-    console.log('‚è≠ Saltando carga de alertas por solicitud del usuario');
-    const container = document.getElementById('maintenanceAlerts');
-    if (container) {
-        container.innerHTML = `
+  console.log("‚è≠ Saltando carga de alertas por solicitud del usuario");
+  const container = document.getElementById("maintenanceAlerts");
+  if (container) {
+    container.innerHTML = `
             <div class="alert alert-light">
                 <i class="bi bi-info-circle me-2"></i>
                 Alertas omitidas por el usuario.
@@ -1750,37 +1973,49 @@ function skipAlerts() {
                 </button>
             </div>
         `;
-    }
-} function displayMaintenanceAlerts(alerts) {
-    const container = document.getElementById('maintenanceAlerts');
-    if (!container) {
-        console.warn('‚ö† Contenedor maintenanceAlerts no encontrado');
-        return;
-    }
+  }
+}
+function displayMaintenanceAlerts(alerts) {
+  const container = document.getElementById("maintenanceAlerts");
+  if (!container) {
+    console.warn("‚ö† Contenedor maintenanceAlerts no encontrado");
+    return;
+  }
 
-    console.log('üé® Renderizando alertas:', alerts?.length || 0);
+  console.log("üé® Renderizando alertas:", alerts?.length || 0);
 
-    if (!alerts || alerts.length === 0) {
-        container.innerHTML = `
+  if (!alerts || alerts.length === 0) {
+    container.innerHTML = `
             <div class="alert alert-info">
                 <i class="bi bi-info-circle me-2"></i>
                 No hay alertas de mantenimiento pendientes
             </div>
         `;
-        console.log('‚Ñπ No hay alertas para mostrar');
-        return;
-    }
+    console.log("‚Ñπ No hay alertas para mostrar");
+    return;
+  }
 
-    const alertHTML = alerts.map(alert => {
-        const iconClass = alert.tipo === 'vencido' ? 'bi-exclamation-triangle' : 'bi-clock';
-        const alertClass = alert.prioridad === 'alta' ? 'danger' :
-            alert.prioridad === 'media' ? 'warning' : 'info';
+  const alertHTML = alerts
+    .map((alert) => {
+      const iconClass =
+        alert.tipo === "vencido" ? "bi-exclamation-triangle" : "bi-clock";
+      const alertClass =
+        alert.prioridad === "alta"
+          ? "danger"
+          : alert.prioridad === "media"
+          ? "warning"
+          : "info";
 
-        const fechaInfo = alert.tipo === 'vencido' ?
-            `Vencido hace ${alert.dias_vencido} día${alert.dias_vencido !== 1 ? 's' : ''}` :
-            `Vence en ${alert.dias_restantes} día${alert.dias_restantes !== 1 ? 's' : ''}`;
+      const fechaInfo =
+        alert.tipo === "vencido"
+          ? `Vencido hace ${alert.dias_vencido} día${
+              alert.dias_vencido !== 1 ? "s" : ""
+            }`
+          : `Vence en ${alert.dias_restantes} día${
+              alert.dias_restantes !== 1 ? "s" : ""
+            }`;
 
-        return `
+      return `
             <div class="alert alert-${alertClass} alert-dismissible fade show mb-2" role="alert">
                 <i class="${iconClass} me-2"></i>
                 <div>
@@ -1792,58 +2027,62 @@ function skipAlerts() {
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;
-    }).join('');
+    })
+    .join("");
 
-    container.innerHTML = alertHTML;
-    console.log('✅ Alertas renderizadas exitosamente');
+  container.innerHTML = alertHTML;
+  console.log("✅ Alertas renderizadas exitosamente");
 }
 
 // ========== GESTIÓN DE ACTIVOS MEJORADA ==========
 class ActivosManager {
-    constructor() {
-        this.activos = [];
-        this.filteredActivos = [];
-        this.currentPage = 1;
-        this.itemsPerPage = 10;
+  constructor() {
+    this.activos = [];
+    this.filteredActivos = [];
+    this.currentPage = 1;
+    this.itemsPerPage = 10;
+  }
+
+  async load() {
+    try {
+      const response = await fetch("/api/activos");
+      this.activos = await response.json();
+      this.filteredActivos = [...this.activos];
+      this.render();
+    } catch (error) {
+      console.error("Error cargando activos:", error);
+      showAlert("Error al cargar activos", "danger");
     }
+  }
 
-    async load() {
-        try {
-            const response = await fetch('/api/activos');
-            this.activos = await response.json();
-            this.filteredActivos = [...this.activos];
-            this.render();
-        } catch (error) {
-            console.error('Error cargando activos:', error);
-            showAlert('Error al cargar activos', 'danger');
-        }
-    }
+  filter(searchTerm = "", tipo = "", ubicacion = "", estado = "") {
+    this.filteredActivos = this.activos.filter((activo) => {
+      const matchSearch =
+        !searchTerm ||
+        activo.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        activo.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchTipo = !tipo || activo.tipo === tipo;
+      const matchUbicacion = !ubicacion || activo.ubicacion === ubicacion;
+      const matchEstado = !estado || activo.estado === estado;
 
-    filter(searchTerm = '', tipo = '', ubicacion = '', estado = '') {
-        this.filteredActivos = this.activos.filter(activo => {
-            const matchSearch = !searchTerm ||
-                activo.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                activo.codigo.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchTipo = !tipo || activo.tipo === tipo;
-            const matchUbicacion = !ubicacion || activo.ubicacion === ubicacion;
-            const matchEstado = !estado || activo.estado === estado;
+      return matchSearch && matchTipo && matchUbicacion && matchEstado;
+    });
 
-            return matchSearch && matchTipo && matchUbicacion && matchEstado;
-        });
+    this.currentPage = 1;
+    this.render();
+  }
 
-        this.currentPage = 1;
-        this.render();
-    }
+  render() {
+    const tbody = document.getElementById("activosTableBody");
+    if (!tbody) return;
 
-    render() {
-        const tbody = document.getElementById('activosTableBody');
-        if (!tbody) return;
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    const pageActivos = this.filteredActivos.slice(start, end);
 
-        const start = (this.currentPage - 1) * this.itemsPerPage;
-        const end = start + this.itemsPerPage;
-        const pageActivos = this.filteredActivos.slice(start, end);
-
-        tbody.innerHTML = pageActivos.map(activo => `
+    tbody.innerHTML = pageActivos
+      .map(
+        (activo) => `
             <tr>
                 <td>${activo.codigo}</td>
                 <td>
@@ -1855,60 +2094,80 @@ class ActivosManager {
                 <td><span class="badge bg-secondary">${activo.tipo}</span></td>
                 <td><i class="bi bi-geo-alt me-1"></i>${activo.ubicacion}</td>
                 <td>${this.getEstadoBadge(activo.estado)}</td>
-                <td>${activo.ultimo_mantenimiento || 'N/A'}</td>
+                <td>${activo.ultimo_mantenimiento || "N/A"}</td>
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary action-btn view" onclick="viewActivo(${activo.id})"
+                        <button class="btn btn-outline-primary action-btn view" onclick="viewActivo(${
+                          activo.id
+                        })"
                                 data-bs-toggle="tooltip" title="Ver detalles">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-outline-secondary action-btn edit" onclick="editActivo(${activo.id})"
+                        <button class="btn btn-outline-secondary action-btn edit" onclick="editActivo(${
+                          activo.id
+                        })"
                                 data-bs-toggle="tooltip" title="Editar">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-outline-info action-btn info" onclick="showActivoHistory(${activo.id})"
+                        <button class="btn btn-outline-info action-btn info" onclick="showActivoHistory(${
+                          activo.id
+                        })"
                                 data-bs-toggle="tooltip" title="Historial">
                             <i class="bi bi-clock-history"></i>
                         </button>
-                        <button class="btn btn-outline-success action-btn special" onclick="createMaintenanceOrder(${activo.id})"
+                        <button class="btn btn-outline-success action-btn special" onclick="createMaintenanceOrder(${
+                          activo.id
+                        })"
                                 data-bs-toggle="tooltip" title="Crear orden">
                             <i class="bi bi-wrench"></i>
                         </button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `
+      )
+      .join("");
 
-        this.renderPagination();
-        this.updateStats();
-    }
+    this.renderPagination();
+    this.updateStats();
+  }
 
-    renderPagination() {
-        const totalPages = Math.ceil(this.filteredActivos.length / this.itemsPerPage);
-        const paginationContainer = document.getElementById('activosPagination');
-        if (!paginationContainer) return;
+  renderPagination() {
+    const totalPages = Math.ceil(
+      this.filteredActivos.length / this.itemsPerPage
+    );
+    const paginationContainer = document.getElementById("activosPagination");
+    if (!paginationContainer) return;
 
-        let html = `
+    let html = `
             <nav>
                 <ul class="pagination justify-content-center">
-                    <li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
-                        <a class="page-link" href="#" onclick="activosManager.goToPage(${this.currentPage - 1})">
+                    <li class="page-item ${
+                      this.currentPage === 1 ? "disabled" : ""
+                    }">
+                        <a class="page-link" href="#" onclick="activosManager.goToPage(${
+                          this.currentPage - 1
+                        })">
                             Anterior
                         </a>
                     </li>
         `;
 
-        for (let i = 1; i <= totalPages; i++) {
-            html += `
-                <li class="page-item ${this.currentPage === i ? 'active' : ''}">
+    for (let i = 1; i <= totalPages; i++) {
+      html += `
+                <li class="page-item ${this.currentPage === i ? "active" : ""}">
                     <a class="page-link" href="#" onclick="activosManager.goToPage(${i})">${i}</a>
                 </li>
             `;
-        }
+    }
 
-        html += `
-                    <li class="page-item ${this.currentPage === totalPages ? 'disabled' : ''}">
-                        <a class="page-link" href="#" onclick="activosManager.goToPage(${this.currentPage + 1})">
+    html += `
+                    <li class="page-item ${
+                      this.currentPage === totalPages ? "disabled" : ""
+                    }">
+                        <a class="page-link" href="#" onclick="activosManager.goToPage(${
+                          this.currentPage + 1
+                        })">
                             Siguiente
                         </a>
                     </li>
@@ -1916,33 +2175,33 @@ class ActivosManager {
             </nav>
         `;
 
-        return html;
-    }
+    return html;
+  }
 }
 
 // ========== UTILIDADES ==========
 function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
     };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }
 
 // Función para mostrar/ocultar estado de carga global
 function mostrarCargando(mostrar = true) {
-    let loadingOverlay = document.getElementById('loading-overlay-global');
+  let loadingOverlay = document.getElementById("loading-overlay-global");
 
-    if (mostrar) {
-        // Crear overlay de carga si no existe
-        if (!loadingOverlay) {
-            loadingOverlay = document.createElement('div');
-            loadingOverlay.id = 'loading-overlay-global';
-            loadingOverlay.innerHTML = `
+  if (mostrar) {
+    // Crear overlay de carga si no existe
+    if (!loadingOverlay) {
+      loadingOverlay = document.createElement("div");
+      loadingOverlay.id = "loading-overlay-global";
+      loadingOverlay.innerHTML = `
                 <div class="d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100" 
                      style="background: rgba(0,0,0,0.5); z-index: 9999;">
                     <div class="text-center text-white">
@@ -1953,125 +2212,139 @@ function mostrarCargando(mostrar = true) {
                     </div>
                 </div>
             `;
-            document.body.appendChild(loadingOverlay);
-        }
-        loadingOverlay.style.display = 'block';
-    } else {
-        // Ocultar overlay
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
-        }
+      document.body.appendChild(loadingOverlay);
     }
+    loadingOverlay.style.display = "block";
+  } else {
+    // Ocultar overlay
+    if (loadingOverlay) {
+      loadingOverlay.style.display = "none";
+    }
+  }
 }
 
 // Función para mostrar mensajes de alerta
-function mostrarMensaje(mensaje, tipo = 'info') {
-    // Crear alerta Bootstrap
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 10000; max-width: 400px;';
-    alertDiv.innerHTML = `
+function mostrarMensaje(mensaje, tipo = "info") {
+  // Crear alerta Bootstrap
+  const alertDiv = document.createElement("div");
+  alertDiv.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+  alertDiv.style.cssText =
+    "top: 20px; right: 20px; z-index: 10000; max-width: 400px;";
+  alertDiv.innerHTML = `
         ${mensaje}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     `;
 
-    // Agregar al body
-    document.body.appendChild(alertDiv);
+  // Agregar al body
+  document.body.appendChild(alertDiv);
 
-    // Auto-remover después de 5 segundos
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
+  // Auto-remover después de 5 segundos
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.remove();
+    }
+  }, 5000);
 }
 
 // Función mejorada para descargar archivos CSV con opciones
-async function descargarCSVMejorado(url, nombrePorDefecto, tipo = 'CSV') {
-    try {
-        // Mostrar modal de configuración de descarga
-        const configuracion = await mostrarModalDescargaCSV(nombrePorDefecto, tipo);
-        if (!configuracion) return; // Usuario canceló
+async function descargarCSVMejorado(url, nombrePorDefecto, tipo = "CSV") {
+  try {
+    // Mostrar modal de configuración de descarga
+    const configuracion = await mostrarModalDescargaCSV(nombrePorDefecto, tipo);
+    if (!configuracion) return; // Usuario canceló
 
-        mostrarCargando(true);
+    mostrarCargando(true);
 
-        // Realizar fetch
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const blob = await response.blob();
-
-        // Intentar usar File System Access API si está disponible (Chrome/Edge modernos)
-        if ('showSaveFilePicker' in window) {
-            try {
-                const fileHandle = await window.showSaveFilePicker({
-                    suggestedName: configuracion.nombre,
-                    types: [{
-                        description: `Archivos ${tipo}`,
-                        accept: {
-                            'text/csv': ['.csv'],
-                            'application/vnd.ms-excel': ['.csv']
-                        }
-                    }]
-                });
-
-                const writable = await fileHandle.createWritable();
-                await writable.write(blob);
-                await writable.close();
-
-                mostrarMensaje(`Archivo ${tipo} guardado exitosamente en la ubicación seleccionada`, 'success');
-                return;
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    console.warn('Error con File System Access API, usando descarga tradicional:', err);
-                }
-                // Si el usuario cancela o hay error, continuar con descarga tradicional
-            }
-        }
-
-        // Descarga tradicional como fallback
-        const url_blob = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url_blob;
-        a.download = configuracion.nombre;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-
-        // Limpiar después de un breve delay para permitir que inicie la descarga
-        setTimeout(() => {
-            window.URL.revokeObjectURL(url_blob);
-            document.body.removeChild(a);
-        }, 100);
-
-        // Mostrar mensaje informativo en lugar de éxito para descarga tradicional
-        mostrarMensaje(`Descarga iniciada. Revise su carpeta de descargas para el archivo ${tipo}.`, 'info');
-
-    } catch (error) {
-        console.error('Error al descargar archivo:', error);
-        mostrarMensaje(`Error al descargar archivo ${tipo}: ${error.message}`, 'danger');
-    } finally {
-        mostrarCargando(false);
+    // Realizar fetch
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
+
+    const blob = await response.blob();
+
+    // Intentar usar File System Access API si está disponible (Chrome/Edge modernos)
+    if ("showSaveFilePicker" in window) {
+      try {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: configuracion.nombre,
+          types: [
+            {
+              description: `Archivos ${tipo}`,
+              accept: {
+                "text/csv": [".csv"],
+                "application/vnd.ms-excel": [".csv"],
+              },
+            },
+          ],
+        });
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+
+        mostrarMensaje(
+          `Archivo ${tipo} guardado exitosamente en la ubicación seleccionada`,
+          "success"
+        );
+        return;
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.warn(
+            "Error con File System Access API, usando descarga tradicional:",
+            err
+          );
+        }
+        // Si el usuario cancela o hay error, continuar con descarga tradicional
+      }
+    }
+
+    // Descarga tradicional como fallback
+    const url_blob = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url_blob;
+    a.download = configuracion.nombre;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+
+    // Limpiar después de un breve delay para permitir que inicie la descarga
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url_blob);
+      document.body.removeChild(a);
+    }, 100);
+
+    // Mostrar mensaje informativo en lugar de éxito para descarga tradicional
+    mostrarMensaje(
+      `Descarga iniciada. Revise su carpeta de descargas para el archivo ${tipo}.`,
+      "info"
+    );
+  } catch (error) {
+    console.error("Error al descargar archivo:", error);
+    mostrarMensaje(
+      `Error al descargar archivo ${tipo}: ${error.message}`,
+      "danger"
+    );
+  } finally {
+    mostrarCargando(false);
+  }
 }
 
 // Modal para configurar descarga de CSV
-function mostrarModalDescargaCSV(nombrePorDefecto, tipo = 'CSV') {
-    return new Promise((resolve) => {
-        const modalId = 'modalDescargaCSV';
+function mostrarModalDescargaCSV(nombrePorDefecto, tipo = "CSV") {
+  return new Promise((resolve) => {
+    const modalId = "modalDescargaCSV";
 
-        // Remover modal anterior si existe
-        const modalExistente = document.getElementById(modalId);
-        if (modalExistente) {
-            modalExistente.remove();
-        }
+    // Remover modal anterior si existe
+    const modalExistente = document.getElementById(modalId);
+    if (modalExistente) {
+      modalExistente.remove();
+    }
 
-        const fechaHoy = new Date().toISOString().split('T')[0];
-        const nombreSugerido = nombrePorDefecto.replace(/\{fecha\}/g, fechaHoy);
+    const fechaHoy = new Date().toISOString().split("T")[0];
+    const nombreSugerido = nombrePorDefecto.replace(/\{fecha\}/g, fechaHoy);
 
-        const modalHTML = `
+    const modalHTML = `
             <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${modalId}Label" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -2098,7 +2371,13 @@ function mostrarModalDescargaCSV(nombrePorDefecto, tipo = 'CSV') {
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="incluirFecha" 
-                                               ${nombreSugerido.includes(fechaHoy) ? 'checked' : ''}>
+                                               ${
+                                                 nombreSugerido.includes(
+                                                   fechaHoy
+                                                 )
+                                                   ? "checked"
+                                                   : ""
+                                               }>
                                         <label class="form-check-label" for="incluirFecha">
                                             Incluir fecha en el nombre
                                         </label>
@@ -2107,9 +2386,11 @@ function mostrarModalDescargaCSV(nombrePorDefecto, tipo = 'CSV') {
                                 
                                 <div class="alert alert-info">
                                     <i class="bi bi-info-circle me-2"></i>
-                                    ${window.showSaveFilePicker ?
-                'Su navegador permite elegir la ubicación de descarga.' :
-                'El archivo se descargará en su carpeta de descargas predeterminada.'}
+                                    ${
+                                      window.showSaveFilePicker
+                                        ? "Su navegador permite elegir la ubicación de descarga."
+                                        : "El archivo se descargará en su carpeta de descargas predeterminada."
+                                    }
                                 </div>
                             </form>
                         </div>
@@ -2124,43 +2405,263 @@ function mostrarModalDescargaCSV(nombrePorDefecto, tipo = 'CSV') {
             </div>
         `;
 
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
 
-        const modal = new bootstrap.Modal(document.getElementById(modalId));
-        const inputNombre = document.getElementById('nombreArchivo');
-        const checkboxFecha = document.getElementById('incluirFecha');
-        const btnConfirmar = document.getElementById('btnConfirmarDescarga');
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
+    const inputNombre = document.getElementById("nombreArchivo");
+    const checkboxFecha = document.getElementById("incluirFecha");
+    const btnConfirmar = document.getElementById("btnConfirmarDescarga");
 
-        // Event listeners
-        checkboxFecha.addEventListener('change', function () {
-            const nombreBase = inputNombre.value.replace(`_${fechaHoy}`, '').replace(fechaHoy, '');
-            if (this.checked) {
-                if (!inputNombre.value.includes(fechaHoy)) {
-                    inputNombre.value = `${nombreBase}_${fechaHoy}`;
-                }
-            } else {
-                inputNombre.value = nombreBase.replace(/^_|_$/, '');
-            }
-        });
-
-        btnConfirmar.addEventListener('click', function () {
-            const nombre = inputNombre.value.trim();
-            if (nombre) {
-                modal.hide();
-                resolve({ nombre: nombre + '.csv' });
-            } else {
-                inputNombre.classList.add('is-invalid');
-            }
-        });
-
-        // Resolver con null si se cancela
-        document.getElementById(modalId).addEventListener('hidden.bs.modal', function () {
-            this.remove();
-            resolve(null);
-        });
-
-        modal.show();
-        inputNombre.focus();
-        inputNombre.select();
+    // Event listeners
+    checkboxFecha.addEventListener("change", function () {
+      const nombreBase = inputNombre.value
+        .replace(`_${fechaHoy}`, "")
+        .replace(fechaHoy, "");
+      if (this.checked) {
+        if (!inputNombre.value.includes(fechaHoy)) {
+          inputNombre.value = `${nombreBase}_${fechaHoy}`;
+        }
+      } else {
+        inputNombre.value = nombreBase.replace(/^_|_$/, "");
+      }
     });
+
+    btnConfirmar.addEventListener("click", function () {
+      const nombre = inputNombre.value.trim();
+      if (nombre) {
+        modal.hide();
+        resolve({ nombre: nombre + ".csv" });
+      } else {
+        inputNombre.classList.add("is-invalid");
+      }
+    });
+
+    // Resolver con null si se cancela
+    document
+      .getElementById(modalId)
+      .addEventListener("hidden.bs.modal", function () {
+        this.remove();
+        resolve(null);
+      });
+
+    modal.show();
+    inputNombre.focus();
+    inputNombre.select();
+  });
+}
+
+// ========== MANEJO DE SESIÓN ==========
+function setupSessionManagement() {
+  console.log("🔐 Configurando manejo de sesión...");
+
+  // REMOVIDO: Logout automático al cerrar pestaña - causaba problemas de sesión
+  // Solo verificar sesión periódicamente, sin logout automático agresivo
+
+  // Detectar pérdida de visibilidad de la página (solo verificar, no logout)
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") {
+      // La página volvió a ser visible - verificar sesión silenciosamente
+      console.log("🔐 Página visible - verificando sesión...");
+      // Verificar sesión después de un pequeño delay
+      setTimeout(() => checkSessionStatus(), 500);
+    }
+  });
+
+  // Verificar sesión periódicamente (cada 10 minutos en lugar de 5)
+  setInterval(() => {
+    if (document.visibilityState === "visible") {
+      checkSessionStatus();
+    }
+  }, 10 * 60 * 1000); // 10 minutos en lugar de 5
+
+  console.log("🔐 Manejo de sesión configurado (sin logout automático)");
+}
+
+// Función para verificar estado de sesión
+function checkSessionStatus() {
+  fetch("/api/user/info")
+    .then((response) => {
+      if (response.status === 401) {
+        // Sesión expirada, redirigir al login
+        console.log("🔐 Sesión expirada, redirigiendo al login...");
+        window.location.href = "/login";
+      } else if (response.ok) {
+        // Sesión activa, actualizar información del usuario si es necesario
+        return response.json().then((data) => {
+          if (data.success && data.user) {
+            currentUser = data.user;
+            console.log(
+              "🔐 Sesión verificada - usuario:",
+              currentUser.username
+            );
+          }
+        });
+      }
+    })
+    .catch((error) => {
+      console.log("Error verificando sesión:", error);
+      // En caso de error de red, asumir que la sesión sigue activa
+    });
+}
+
+function crearGraficosEstadisticas(data) {
+  console.log("📊 Creando gráficos de estadísticas...");
+
+  // Gráfico de órdenes por estado
+  crearGraficoOrdenesEstado(data);
+
+  // Gráfico de activos por estado
+  crearGraficoActivosEstado(data);
+}
+
+function crearGraficoOrdenesEstado(data) {
+  const ctx = document.getElementById("ordenesChart");
+  if (!ctx) return;
+
+  const estados = Object.keys(data.ordenes_por_estado || {});
+  const valores = Object.values(data.ordenes_por_estado || {});
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: estados,
+      datasets: [
+        {
+          label: "Órdenes por Estado",
+          data: valores,
+          backgroundColor: [
+            "rgba(255, 99, 132, 0.8)",
+            "rgba(54, 162, 235, 0.8)",
+            "rgba(255, 206, 86, 0.8)",
+            "rgba(75, 192, 192, 0.8)",
+            "rgba(153, 102, 255, 0.8)",
+          ],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        y: { beginAtZero: true },
+      },
+    },
+  });
+}
+
+function crearGraficoActivosEstado(data) {
+  const ctx = document.getElementById("activosChart");
+  if (!ctx) return;
+
+  const estados = Object.keys(data.activos_por_estado || {});
+  const valores = Object.values(data.activos_por_estado || {});
+
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: estados,
+      datasets: [
+        {
+          data: valores,
+          backgroundColor: [
+            "rgba(75, 192, 192, 0.8)",
+            "rgba(255, 206, 86, 0.8)",
+            "rgba(255, 99, 132, 0.8)",
+            "rgba(54, 162, 235, 0.8)",
+          ],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom" },
+      },
+    },
+  });
+}
+
+function crearGraficoEstadosPlanes(data) {
+  const ctx = document.getElementById("estadosChart");
+  if (!ctx) return;
+
+  const estados = ["Activos", "Próximos", "Vencidos", "Completados"];
+  const valores = [
+    data.planes_activos || 0,
+    data.planes_proximos || 0,
+    data.planes_vencidos || 0,
+    data.planes_completados || 0,
+  ];
+
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: estados,
+      datasets: [
+        {
+          data: valores,
+          backgroundColor: [
+            "rgba(40, 167, 69, 0.8)", // Verde para activos
+            "rgba(255, 193, 7, 0.8)", // Amarillo para próximos
+            "rgba(220, 53, 69, 0.8)", // Rojo para vencidos
+            "rgba(108, 117, 125, 0.8)", // Gris para completados
+          ],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom" },
+      },
+    },
+  });
+}
+
+function crearGraficoTiposMantenimiento() {
+  // Este gráfico requeriría datos adicionales de tipos de mantenimiento
+  // Por ahora es un placeholder
+  const ctx = document.getElementById("tiposChart");
+  if (!ctx) return;
+
+  // Datos de ejemplo
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Preventivo", "Correctivo", "Predictivo", "Condicional"],
+      datasets: [
+        {
+          label: "Tipos de Mantenimiento",
+          data: [12, 8, 3, 2],
+          backgroundColor: "rgba(153, 102, 255, 0.8)",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        y: { beginAtZero: true },
+      },
+    },
+  });
+}
+
+function getEstadoBadgeClass(estado) {
+  switch (estado) {
+    case "Completada":
+      return "success";
+    case "En Proceso":
+      return "info";
+    case "Pendiente":
+      return "warning";
+    case "Cancelada":
+      return "danger";
+    default:
+      return "secondary";
+  }
 }

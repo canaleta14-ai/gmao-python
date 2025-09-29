@@ -34,4 +34,9 @@ class PlanMantenimiento(db.Model):
     # Configuración personalizada
     frecuencia_personalizada = db.Column(db.Text)  # JSON para configuraciones complejas
 
+    # Control de generación automática
+    generacion_automatica = db.Column(
+        db.Boolean, default=True
+    )  # Si genera órdenes automáticamente
+
     activo_id = db.Column(db.Integer, db.ForeignKey("activo.id"))

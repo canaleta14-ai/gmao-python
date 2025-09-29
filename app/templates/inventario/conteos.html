@@ -12,79 +12,75 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-clipboard-check"></i> Conteos de Inventario</h2>
-                <div class="btn-group" role="group">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-clipboard-check me-2"></i>Conteos de Inventario</h5>
+                    <small class="text-muted">Control y seguimiento de inventarios físicos</small>
+                </div>
+                <div class="d-flex gap-2">
                     <a href="{{ url_for('inventario.inventario_page') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i> Volver al Inventario
+                        <i class="bi bi-arrow-left me-1"></i>Volver al Inventario
                     </a>
-                    <button type="button" class="btn btn-primary" onclick="iniciarPeriodoConteo()">
-                        <i class="fas fa-calendar-plus me-1"></i> Nuevo Período
+                    <button type="button" class="btn btn-outline-secondary" onclick="iniciarPeriodoConteo()">
+                        <i class="bi bi-calendar-plus me-1"></i>Nuevo Período
                     </button>
-                    <button type="button" class="btn btn-warning" onclick="generarConteosAleatorios()">
-                        <i class="fas fa-random me-1"></i> Conteos Aleatorios
+                    <button type="button" class="btn btn-primary" onclick="generarConteosAleatorios()">
+                        <i class="bi bi-shuffle me-1"></i>Conteos Aleatorios
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tarjetas de resumen -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-primary">
-                <div class="card-body text-center">
-                    <i class="fas fa-calendar fa-2x text-primary mb-2"></i>
-                    <h5 class="card-title">Período Actual</h5>
-                    <h4 class="text-primary" id="periodo-actual">-</h4>
+    <!-- Tarjetas de estadísticas modernizadas -->
+    <div class="row mb-4" id="estadisticas-cards">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card primary">
+                <div class="card-body">
+                    <i class="bi bi-calendar-event stats-icon text-primary"></i>
+                    <div class="stats-number text-primary" id="periodo-actual">-</div>
+                    <div class="stats-label">Período Actual</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-info">
-                <div class="card-body text-center">
-                    <i class="fas fa-list-ol fa-2x text-info mb-2"></i>
-                    <h5 class="card-title">Total Conteos</h5>
-                    <h4 class="text-info" id="total-conteos">-</h4>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card success">
+                <div class="card-body">
+                    <i class="bi bi-list-ol stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="total-conteos">-</div>
+                    <div class="stats-label">Total Conteos</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-success">
-                <div class="card-body text-center">
-                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                    <h5 class="card-title">Completados</h5>
-                    <h4 class="text-success" id="conteos-completados">-</h4>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card warning">
+                <div class="card-body">
+                    <i class="bi bi-check-circle stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="conteos-completados">-</div>
+                    <div class="stats-label">Completados</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-warning">
-                <div class="card-body text-center">
-                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
-                    <h5 class="card-title">Con Diferencias</h5>
-                    <h4 class="text-warning" id="conteos-diferencias">-</h4>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card danger">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle stats-icon text-danger"></i>
+                    <div class="stats-number text-danger" id="conteos-diferencias">-</div>
+                    <div class="stats-label">Con Diferencias</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#filtros-conteos">
-                            <i class="fas fa-filter"></i> Filtros
-                        </button>
-                    </h5>
-                </div>
-                <div id="filtros-conteos" class="collapse">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label for="filtro-tipo-conteo" class="form-label">Tipo de Conteo</label>
+    <!-- Filtros colapsables -->
+    <div class="filtros-container">
+        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-conteos">
+            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+        </div>
+        <div id="filtros-conteos" class="collapse">
+            <div class="filtros-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="filtro-tipo-conteo" class="form-label">Tipo de Conteo</label>
                                 <select class="form-select" id="filtro-tipo-conteo">
                                     <option value="">Todos</option>
                                     <option value="mensual">Mensual</option>
@@ -113,17 +109,15 @@
                         <div class="row mt-3">
                             <div class="col-12">
                                 <button type="button" class="btn btn-primary" onclick="aplicarFiltrosConteos()">
-                                    <i class="fas fa-search"></i> Buscar
+                                    <i class="bi bi-search me-1"></i>Buscar
                                 </button>
-                                <button type="button" class="btn btn-secondary" onclick="limpiarFiltrosConteos()">
-                                    <i class="fas fa-eraser"></i> Limpiar
+                                <button type="button" class="btn btn-outline-secondary ms-2" onclick="limpiarFiltrosConteos()">
+                                    <i class="bi bi-eraser me-1"></i>Limpiar
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
     </div>
 
     <!-- Tabla de conteos -->
@@ -214,7 +208,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="guardarNuevoPeriodo()">
-                    <i class="fas fa-save"></i> Iniciar Período
+                    <i class="bi bi-save me-1"></i>Iniciar Período
                 </button>
             </div>
         </div>
@@ -238,7 +232,7 @@
                         <div class="form-text">Número de artículos a seleccionar aleatoriamente para conteo</div>
                     </div>
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="bi bi-info-circle me-1"></i>
                         Los conteos se generarán automáticamente para artículos seleccionados aleatoriamente.
                         Solo se incluirán artículos que requieren conteo físico.
                     </div>
@@ -247,7 +241,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-warning" onclick="guardarConteosAleatorios()">
-                    <i class="fas fa-random"></i> Generar Conteos
+                    <i class="bi bi-shuffle me-1"></i>Generar Conteos
                 </button>
             </div>
         </div>
@@ -296,7 +290,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" onclick="guardarConteoFisico()">
-                    <i class="fas fa-save"></i> Guardar Conteo
+                    <i class="bi bi-save me-1"></i>Guardar Conteo
                 </button>
             </div>
         </div>
@@ -349,7 +343,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="guardarEditarConteo()">
-                    <i class="fas fa-save"></i> Guardar Cambios
+                    <i class="bi bi-save me-1"></i>Guardar Cambios
                 </button>
             </div>
         </div>

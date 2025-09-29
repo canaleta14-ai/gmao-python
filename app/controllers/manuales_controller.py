@@ -7,8 +7,9 @@ import uuid
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import send_file, jsonify, current_app
-from app.models import db, Manual
-from app.models.activos import Activo
+from app.models.manual import Manual
+from app.models.activo import Activo
+from app.extensions import db
 
 
 # Extensiones permitidas

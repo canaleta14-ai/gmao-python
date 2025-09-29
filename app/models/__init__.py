@@ -13,6 +13,7 @@ from .movimiento_inventario import MovimientoInventario
 from .usuario import Usuario
 from .manual import Manual
 from .archivo_adjunto import ArchivoAdjunto
+from .solicitud_servicio import SolicitudServicio
 
 # Exportar para fácil importación
 __all__ = [
@@ -27,4 +28,5 @@ __all__ = [
     "Usuario",
     "Manual",
     "ArchivoAdjunto",
+    "SolicitudServicio",
 ]

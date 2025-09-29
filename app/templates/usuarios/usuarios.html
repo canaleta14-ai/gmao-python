@@ -1,38 +1,37 @@
-{% extends 'base.html' %}
-{% block section_title %}Gestión de Personal{% endblock %}
-{% set section = 'personal' %}
+﻿{% extends 'base.html' %}
+{% block section_title %}Gestion de Usuarios{% endblock %}
+{% set section = 'usuarios' %}
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
 {% endblock %}
 {% block content %}
-<!-- Encabezado con estadísticas -->
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h5 class="mb-1"><i class="bi bi-people me-2"></i>Gestión de Personal</h5>
-                    <small class="text-muted">Administración de usuarios y permisos</small>
+                    <h5 class="mb-1"><i class="bi bi-people me-2"></i>Gestion de Usuarios</h5>
+                    <small class="text-muted">Administracion de usuarios y permisos</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+                    <button class="btn btn-outline-secondary" onclick="exportarCSVUsuarios()">
                         <i class="bi bi-download me-1"></i>Exportar CSV
                     </button>
                     <button class="btn btn-primary" onclick="mostrarModalNuevoUsuario()">
-                        <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
+                        <i class="bi bi-plus-circle me-1"></i>Nuevo Usuario
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tarjetas de estadísticas modernizadas -->
+    <!-- Tarjetas de estadisticas -->
     <div class="row mb-4" id="estadisticas-cards">
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card stats-card primary">
                 <div class="card-body">
                     <i class="bi bi-people stats-icon text-primary"></i>
-                    <div class="stats-number text-primary" id="stat-total-usuarios">0</div>
+                    <div class="stats-number text-primary" id="total-usuarios">0</div>
                     <div class="stats-label">Total Usuarios</div>
                 </div>
             </div>
@@ -40,8 +39,8 @@
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card stats-card success">
                 <div class="card-body">
-                    <i class="bi bi-person-check stats-icon text-success"></i>
-                    <div class="stats-number text-success" id="stat-usuarios-activos">0</div>
+                    <i class="bi bi-check-circle stats-icon text-success"></i>
+                    <div class="stats-number text-success" id="usuarios-activos">0</div>
                     <div class="stats-label">Usuarios Activos</div>
                 </div>
             </div>
@@ -49,18 +48,18 @@
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card stats-card warning">
                 <div class="card-body">
-                    <i class="bi bi-shield-check stats-icon text-warning"></i>
-                    <div class="stats-number text-warning" id="stat-administradores">0</div>
-                    <div class="stats-label">Administradores</div>
+                    <i class="bi bi-building stats-icon text-warning"></i>
+                    <div class="stats-number text-warning" id="departamentos">5</div>
+                    <div class="stats-label">Departamentos</div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card primary">
+            <div class="card stats-card danger">
                 <div class="card-body">
-                    <i class="bi bi-tools stats-icon text-primary"></i>
-                    <div class="stats-number text-primary" id="stat-tecnicos">0</div>
-                    <div class="stats-label">Técnicos</div>
+                    <i class="bi bi-person-x stats-icon text-danger"></i>
+                    <div class="stats-number text-danger" id="usuarios-inactivos">0</div>
+                    <div class="stats-label">Usuarios Inactivos</div>
                 </div>
             </div>
         </div>
@@ -74,50 +73,85 @@
         <div id="filtros-collapse" class="collapse">
             <div class="filtros-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
-                            <label for="filtro-username" class="form-label">Usuario</label>
-                            <input type="text" class="form-control" id="filtro-username"
-                                placeholder="Buscar por usuario">
+                            <label for="filtro-buscar" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="filtro-buscar"
+                                placeholder="Código, nombre o email">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
-                            <label for="filtro-email" class="form-label">Email</label>
-                            <input type="text" class="form-control" id="filtro-email" placeholder="Buscar por email">
+                            <label for="filtro-departamento" class="form-label">Departamento</label>
+                            <select class="form-select" id="filtro-departamento">
+                                <option value="">Todos</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Administracion">Administración</option>
+                                <option value="Operaciones">Operaciones</option>
+                                <option value="RRHH">RRHH</option>
+                                <option value="Finanzas">Finanzas</option>
+                                <option value="Compras">Compras</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-cargo" class="form-label">Cargo</label>
+                            <select class="form-select" id="filtro-cargo">
+                                <option value="">Todos</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Operador">Operador</option>
+                                <option value="Jefe">Jefe</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Analista">Analista</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="filtro-estado" class="form-label">Estado</label>
+                            <select class="form-select" id="filtro-estado">
+                                <option value="">Todos</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
                             <label for="filtro-rol" class="form-label">Rol</label>
                             <select class="form-select" id="filtro-rol">
-                                <option value="">Todos los roles</option>
+                                <option value="">Todos</option>
                                 <option value="Administrador">Administrador</option>
-                                <option value="Técnico">Técnico</option>
                                 <option value="Supervisor">Supervisor</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Analista">Analista</option>
+                                <option value="Operador">Operador</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label for="filtro-activo" class="form-label">Estado</label>
-                            <select class="form-select" id="filtro-activo">
-                                <option value="">Todos</option>
-                                <option value="true">Activo</option>
-                                <option value="false">Inactivo</option>
+                            <label for="filtro-fecha" class="form-label">Fecha creación</label>
+                            <select class="form-select" id="filtro-fecha">
+                                <option value="">Todas</option>
+                                <option value="hoy">Hoy</option>
+                                <option value="semana">Esta semana</option>
+                                <option value="mes">Este mes</option>
+                                <option value="trimestre">Este trimestre</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
                             <label class="form-label">Acciones</label>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary btn-sm" onclick="cargarUsuarios(1)" title="Buscar">
-                                    <i class="bi bi-search me-1"></i>Buscar
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-primary" onclick="filtrarUsuarios()">
+                                    <i class="bi bi-search"></i>Buscar
                                 </button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltrosUsuarios()"
-                                    title="Limpiar filtros">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                <button class="btn btn-outline-secondary btn-limpiar-filtro" onclick="limpiarFiltros()">
+                                    <i class="bi bi-arrow-clockwise"></i>Limpiar
                                 </button>
                             </div>
                         </div>
@@ -133,183 +167,173 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Usuarios</h6>
-                        <span class="badge bg-secondary" id="contador-usuarios">0 usuarios</span>
+                        <h6 class="mb-0">
+                            <i class="bi bi-table me-2"></i>Listado de Usuarios
+                            <span class="badge bg-secondary ms-2" id="contador-usuarios">0 usuarios</span>
+                            <span class="badge bg-primary ms-1" id="contador-seleccion" style="display: none;">0 seleccionados</span>
+                        </h6>
+                        
+                        <!-- Acciones masivas -->
+                        <div id="acciones-masivas" style="display: none;" class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" onclick="cambiarEstadoSeleccionados('Activo')" 
+                                title="Activar seleccionados">
+                                <i class="bi bi-check-circle me-1"></i>Activar
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="cambiarEstadoSeleccionados('Inactivo')" 
+                                title="Desactivar seleccionados">
+                                <i class="bi bi-pause-circle me-1"></i>Desactivar
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="exportarSeleccionados()" 
+                                title="Exportar seleccionados">
+                                <i class="bi bi-download me-1"></i>Exportar
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="eliminarSeleccionados()" 
+                                title="Eliminar seleccionados">
+                                <i class="bi bi-trash me-1"></i>Eliminar
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0"
-                            style="table-layout: fixed; min-width: 1000px;">
+                        <table class="table table-striped table-hover mb-0" id="tabla-usuarios-main"
+                            style="table-layout: fixed; min-width: 1200px;">
                             <thead class="table-dark">
                                 <tr>
+                                    <th style="width: 50px;"><input type="checkbox" class="form-check-input" id="select-all"></th>
                                     <th style="width: 60px;"><i class="bi bi-hash me-1"></i>ID</th>
-                                    <th style="width: 150px;"><i class="bi bi-person me-1"></i>Usuario</th>
-                                    <th style="width: 200px;"><i class="bi bi-envelope me-1"></i>Email</th>
-                                    <th style="width: 150px;"><i class="bi bi-person-badge me-1"></i>Nombre</th>
+                                    <th style="width: 100px;"><i class="bi bi-card-text me-1"></i>Código</th>
+                                    <th style="width: 200px;"><i class="bi bi-person me-1"></i>Nombre Completo</th>
+                                    <th style="width: 120px;"><i class="bi bi-telephone me-1"></i>Teléfono</th>
+                                    <th style="width: 130px;"><i class="bi bi-briefcase me-1"></i>Cargo</th>
                                     <th style="width: 100px;"><i class="bi bi-shield me-1"></i>Rol</th>
-                                    <th style="width: 100px;"><i class="bi bi-toggle-on me-1"></i>Estado</th>
-                                    <th class="text-center" style="width: 140px;"><i
-                                            class="bi bi-three-dots me-1"></i>Acciones</th>
+                                    <th style="width: 90px;"><i class="bi bi-circle me-1"></i>Estado</th>
+                                    <th style="width: 120px;"><i class="bi bi-calendar me-1"></i>Fecha Ingreso</th>
+                                    <th class="text-center" style="width: 140px;"><i class="bi bi-three-dots me-1"></i>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-usuarios">
-                                <!-- Los datos se cargan dinámicamente aquí -->
+                                <!-- Indicador de carga inicial -->
+                                <tr id="loading-initial">
+                                    <td colspan="10" class="text-center py-4">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2"
+                                                role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <span>Cargando usuarios...</span>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Paginación -->
+                    <nav aria-label="Paginación de usuarios" class="m-2">
+                        <div id="paginacion-usuarios"></div>
+                    </nav>
                 </div>
-                <!-- Paginación -->
-                <nav aria-label="Paginación de usuarios" class="m-2">
-                    <div id="paginacion-usuarios"></div>
-                </nav>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Nuevo Usuario -->
-<div class="modal fade" id="modalNuevoUsuario" tabindex="-1">
-    <div class="modal-dialog">
+<!-- Modal para crear/editar usuario -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Nuevo Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="modalUsuarioLabel">
+                    <i class="bi bi-person-plus me-2"></i>Nuevo Usuario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="formNuevoUsuario">
+                <form id="form-usuario" novalidate>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="nuevo-username" class="form-label">Usuario</label>
-                            <input type="text" class="form-control" id="nuevo-username" required>
+                        <div class="col-md-4">
+                            <label for="codigo" class="form-label">Codigo</label>
+                            <input type="text" class="form-control" id="codigo" name="codigo" readonly>
+                            <div class="form-text">Se genera automaticamente</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="username" class="form-label">Usuario *</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="invalid-feedback">Por favor, ingrese un nombre de usuario</div>
+                            <div class="form-text">Nombre para iniciar sesión</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="nombre" class="form-label">Nombre completo *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            <div class="invalid-feedback">Por favor, ingrese el nombre completo</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="nuevo-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="nuevo-email" required>
-                        </div>
-                        <div class="col-12">
-                            <label for="nuevo-nombre" class="form-label">Nombre Completo</label>
-                            <input type="text" class="form-control" id="nuevo-nombre">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="invalid-feedback">Por favor, ingrese un email valido</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="nuevo-password" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="nuevo-password" required>
+                            <label for="password" class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="invalid-feedback">Por favor, ingrese una contraseña</div>
+                            <div class="form-text">Mínimo 6 caracteres</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="nuevo-rol" class="form-label">Rol</label>
-                            <select class="form-select" id="nuevo-rol" required>
+                            <label for="telefono" class="form-label">Telefono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="departamento" class="form-label">Departamento *</label>
+                            <select class="form-select" id="departamento" name="departamento" required>
+                                <option value="">Seleccionar departamento</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Administracion">Administracion</option>
+                                <option value="Operaciones">Operaciones</option>
+                                <option value="RRHH">RRHH</option>
+                                <option value="Finanzas">Finanzas</option>
+                                <option value="Compras">Compras</option>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un departamento</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cargo" class="form-label">Cargo *</label>
+                            <input type="text" class="form-control" id="cargo" name="cargo" required>
+                            <div class="invalid-feedback">Por favor, ingrese el cargo</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="rol" class="form-label">Rol *</label>
+                            <select class="form-select" id="rol" name="rol" required>
                                 <option value="">Seleccionar rol</option>
                                 <option value="Administrador">Administrador</option>
-                                <option value="Técnico">Técnico</option>
                                 <option value="Supervisor">Supervisor</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Analista">Analista</option>
+                                <option value="Operador">Operador</option>
                             </select>
+                            <div class="invalid-feedback">Por favor, seleccione un rol</div>
                         </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="nuevo-activo" checked>
-                                <label class="form-check-label" for="nuevo-activo">
-                                    Usuario activo
-                                </label>
-                            </div>
+                        <div class="col-md-6">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select class="form-select" id="estado" name="estado">
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="crearUsuario()">
-                    <i class="bi bi-check-lg me-1"></i>Crear Usuario
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-usuario">
+                    <i class="bi bi-check-circle me-1"></i>Guardar Usuario
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Editar Usuario -->
-<div class="modal fade" id="modalEditarUsuario" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-gear me-2"></i>Editar Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditarUsuario">
-                    <input type="hidden" id="editar-id">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="editar-username" class="form-label">Usuario</label>
-                            <input type="text" class="form-control" id="editar-username" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="editar-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="editar-email" required>
-                        </div>
-                        <div class="col-12">
-                            <label for="editar-nombre" class="form-label">Nombre Completo</label>
-                            <input type="text" class="form-control" id="editar-nombre">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="editar-password" class="form-label">Nueva Contraseña (opcional)</label>
-                            <input type="password" class="form-control" id="editar-password"
-                                placeholder="Dejar vacío para mantener actual">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="editar-rol" class="form-label">Rol</label>
-                            <select class="form-select" id="editar-rol" required>
-                                <option value="">Seleccionar rol</option>
-                                <option value="Administrador">Administrador</option>
-                                <option value="Técnico">Técnico</option>
-                                <option value="Supervisor">Supervisor</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="editar-activo">
-                                <label class="form-check-label" for="editar-activo">
-                                    Usuario activo
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="actualizarUsuario()">
-                    <i class="bi bi-check-lg me-1"></i>Actualizar Usuario
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Confirmación Eliminar -->
-<div class="modal fade" id="modalEliminarUsuario" tabindex="-1">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar Eliminación</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="bi bi-person-x display-1 text-danger mb-3"></i>
-                <p>¿Está seguro de que desea eliminar al usuario <strong id="usuario-a-eliminar"></strong>?</p>
-                <p class="text-muted small">Esta acción no se puede deshacer.</p>
-                <input type="hidden" id="id-usuario-eliminar">
-            </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="confirmarEliminarUsuario()">
-                    <i class="bi bi-trash me-1"></i>Eliminar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/usuarios.js') }}?v=20250928"></script>
 {% endblock %}

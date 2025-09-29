@@ -306,9 +306,18 @@ function actualizarTarjetasEstadisticas(estadisticas) {
 // Mostrar modal de nuevo proveedor
 function mostrarModalNuevoProveedor() {
     limpiarFormularioProveedor();
+    proveedorEditando = null;
 
-    document.getElementById('modalProveedorTitulo').innerHTML =
-        '<i class="bi bi-plus-circle me-2"></i>Nuevo Proveedor';
+    // Restablecer título del modal y botón
+    const titulo = document.querySelector('#modalProveedor .modal-title');
+    const botonGuardar = document.getElementById('btnGuardarProveedor');
+
+    if (titulo) {
+        titulo.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Nuevo Proveedor';
+    }
+    if (botonGuardar) {
+        botonGuardar.innerHTML = '<i class="bi bi-save me-1"></i>Guardar';
+    }
 
     const modal = new bootstrap.Modal(document.getElementById('modalProveedor'));
     modal.show();
@@ -450,16 +459,14 @@ async function editarProveedor(id) {
             document.getElementById('proveedor-email').value = proveedor.email || '';
 
             // Cambiar título del modal
-            const titulo = document.getElementById('modalProveedorTitulo');
-            const botonTexto = document.getElementById('boton-guardar-texto');
-            console.log('Título modal:', titulo ? 'existe' : 'NO EXISTE');
-            console.log('Botón texto:', botonTexto ? 'existe' : 'NO EXISTE');
+            const titulo = document.querySelector('#modalProveedor .modal-title');
+            const botonGuardar = document.getElementById('btnGuardarProveedor');
 
             if (titulo) {
                 titulo.innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Proveedor';
             }
-            if (botonTexto) {
-                botonTexto.textContent = 'Actualizar Proveedor';
+            if (botonGuardar) {
+                botonGuardar.innerHTML = '<i class="bi bi-check-lg me-1"></i>Actualizar';
             }
 
             // Mostrar modal
@@ -845,69 +852,30 @@ function crearModalVerProveedor() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Nombre</label>
-                                    <p class="form-control-plaintext" id="ver-proveedor-nombre">-</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Estado</label>
-                                    <div>
-                                        <span class="badge bg-success" id="ver-proveedor-estado">Activo</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
+                        <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">NIF</label>
-                                    <p class="form-control-plaintext"><code id="ver-proveedor-nif">-</code></p>
-                                </div>
+                                <h6 class="text-muted">Información Básica</h6>
+                                <p><strong>Nombre:</strong> <span id="ver-proveedor-nombre">-</span></p>
+                                <p><strong>NIF:</strong> <span id="ver-proveedor-nif">-</span></p>
+                                <p><strong>Cuenta Contable:</strong> <span id="ver-proveedor-cuenta-contable">-</span></p>
+                                <p><strong>Estado:</strong> <span class="badge bg-success" id="ver-proveedor-estado">Activo</span></p>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Cuenta Contable</label>
-                                    <p class="form-control-plaintext"><code id="ver-proveedor-cuenta-contable">-</code></p>
-                                </div>
+                                <h6 class="text-muted">Información de Contacto</h6>
+                                <p><strong>Persona de Contacto:</strong> <span id="ver-proveedor-contacto">-</span></p>
+                                <p><strong>Teléfono:</strong> <span id="ver-proveedor-telefono">-</span></p>
+                                <p><strong>Email:</strong> <span id="ver-proveedor-email">-</span></p>
                             </div>
-                            
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Dirección</label>
-                                    <p class="form-control-plaintext" id="ver-proveedor-direccion">-</p>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Persona de Contacto</label>
-                                    <p class="form-control-plaintext" id="ver-proveedor-contacto">-</p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Teléfono</label>
-                                    <p class="form-control-plaintext" id="ver-proveedor-telefono">-</p>
-                                </div>
-                            </div>
-                            
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Email</label>
-                                    <p class="form-control-plaintext" id="ver-proveedor-email">-</p>
-                                </div>
-                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6 class="text-muted">Dirección</h6>
+                            <p id="ver-proveedor-direccion">-</p>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-lg me-1"></i>Cerrar
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                         <button type="button" class="btn btn-primary" onclick="editarProveedorDesdeVer()">
-                            <i class="bi bi-pencil me-1"></i>Editar Proveedor
+                            <i class="bi bi-pencil me-1"></i>Editar
                         </button>
                     </div>
                 </div>

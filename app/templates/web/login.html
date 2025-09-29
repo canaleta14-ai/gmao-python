@@ -66,6 +66,11 @@
             </form>
             <div class="text-center mt-4">
                 <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Usuario por defecto: <strong>admin</strong> / <strong>admin123</strong>
+                </small>
+                <br>
+                <small class="text-muted">
                     <i class="bi bi-shield-check me-1"></i>
                     Conexión segura SSL
                 </small>
@@ -96,8 +101,16 @@
                 password: password
             })
         })
-            .then(response => response.json())
+            .then(response => {
+                if (response.redirected) {
+                    // Si el servidor redirige, seguir la redirección
+                    window.location.href = response.url;
+                    return;
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return; // Ya se manejó la redirección
                 if (data.success) {
                     alertContainer.innerHTML = `
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -106,8 +119,15 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 `;
+                    // Obtener el parámetro next de la URL actual
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const nextPage = urlParams.get('next');
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        if (nextPage && nextPage.startsWith('/')) {
+                            window.location.href = nextPage;
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
                     }, 1000);
                 } else {
                     throw new Error(data.message || 'Credenciales incorrectas');

@@ -1,0 +1,337 @@
+{% extends "base.html" %} {% block title %}Calendario de Órdenes{% endblock %}
+{% block extra_css %}
+<link
+  href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+  rel="stylesheet"
+/>
+<style>
+  /* Estilos específicos del calendario ahora están en style.css */
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-4">
+  <!-- Tarjetas de estadísticas modernizadas -->
+  <div class="row mb-4" id="estadisticas-cards">
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card primary">
+        <div class="card-body">
+          <i class="bi bi-calendar-check stats-icon text-primary"></i>
+          <div class="stats-number text-primary" id="total-ordenes">0</div>
+          <div class="stats-label">Órdenes Este Mes</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card warning">
+        <div class="card-body">
+          <i class="bi bi-calendar-event stats-icon text-warning"></i>
+          <div class="stats-number text-warning" id="planes-programados">0</div>
+          <div class="stats-label">Planes Programados</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card danger">
+        <div class="card-body">
+          <i class="bi bi-clock stats-icon text-danger"></i>
+          <div class="stats-number text-danger" id="ordenes-pendientes">0</div>
+          <div class="stats-label">Pendientes</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card success">
+        <div class="card-body">
+          <i class="bi bi-check-circle stats-icon text-success"></i>
+          <div class="stats-number text-success" id="ordenes-completadas">
+            0
+          </div>
+          <div class="stats-label">Completadas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <h2><i class="bi bi-calendar3"></i> Calendario de Órdenes de Trabajo</h2>
+    </div>
+    <div class="col-md-6 text-end">
+      <button class="btn btn-generar btn-sm me-2" onclick="generarOrdenesHoy()">
+        <i class="bi bi-gear"></i> Generar Órdenes Hoy
+      </button>
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        onclick="actualizarCalendario()"
+      >
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Leyenda -->
+  <div class="leyenda">
+    <div class="leyenda-item">
+      <div
+        class="leyenda-color"
+        style="background-color: var(--warning-color)"
+      ></div>
+      <span>Pendiente</span>
+    </div>
+    <div class="leyenda-item">
+      <div
+        class="leyenda-color"
+        style="background-color: var(--info-color)"
+      ></div>
+      <span>En Proceso</span>
+    </div>
+    <div class="leyenda-item">
+      <div
+        class="leyenda-color"
+        style="background-color: var(--success-color)"
+      ></div>
+      <span>Completada</span>
+    </div>
+    <div class="leyenda-item">
+      <div
+        class="leyenda-color"
+        style="background-color: var(--danger-color)"
+      ></div>
+      <span>Cancelada</span>
+    </div>
+    <div class="leyenda-item">
+      <div
+        class="leyenda-color"
+        style="background-color: var(--primary-color)"
+      ></div>
+      <span>Plan Futuro</span>
+    </div>
+  </div>
+
+  <!-- Calendario -->
+  <div class="card">
+    <div class="card-body p-4">
+      <div id="calendario"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para detalles del evento -->
+<div class="modal fade" id="modalEvento" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEventoTitle"></h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body" id="modalEventoBody">
+        <!-- Contenido dinámico -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const calendarEl = document.getElementById("calendario");
+    let calendar;
+
+    // Inicializar calendario
+    calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      locale: "es",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,listWeek",
+      },
+      buttonText: {
+        today: "hoy",
+        month: "mes",
+        week: "semana",
+        list: "lista",
+        dayGridMonth: "mes",
+        timeGridWeek: "semana",
+        listWeek: "lista",
+      },
+      height: "auto",
+      events: function (info, successCallback, failureCallback) {
+        cargarEventos(info.start, info.end, successCallback, failureCallback);
+      },
+      eventClick: function (info) {
+        mostrarDetalleEvento(info.event);
+      },
+      datesSet: function (info) {
+        // Se ejecuta cuando cambia el mes/vista
+        cargarEstadisticas(info.start);
+      },
+    });
+
+    calendar.render();
+
+    // Funciones auxiliares
+    function cargarEventos(start, end, successCallback, failureCallback) {
+      fetch(
+        `/calendario/api/ordenes?year=${start.getFullYear()}&month=${
+          start.getMonth() + 1
+        }`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            successCallback(data.eventos);
+          } else {
+            console.error("Error cargando eventos:", data.error);
+            failureCallback(data.error);
+          }
+        })
+        .catch((error) => {
+          console.error("Error en la petición:", error);
+          failureCallback(error);
+        });
+    }
+
+    function cargarEstadisticas(fecha) {
+      fetch(
+        `/calendario/api/estadisticas-mes?year=${fecha.getFullYear()}&month=${
+          fecha.getMonth() + 1
+        }`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            document.getElementById("total-ordenes").textContent =
+              data.total_ordenes;
+            document.getElementById("planes-programados").textContent =
+              data.planes_programados;
+            document.getElementById("ordenes-pendientes").textContent =
+              data.ordenes_por_estado["Pendiente"] || 0;
+            document.getElementById("ordenes-completadas").textContent =
+              data.ordenes_por_estado["Completada"] || 0;
+          } else {
+            console.error("Error cargando estadísticas:", data.error);
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+
+    function mostrarDetalleEvento(evento) {
+      const modal = new bootstrap.Modal(document.getElementById("modalEvento"));
+      const title = document.getElementById("modalEventoTitle");
+      const body = document.getElementById("modalEventoBody");
+
+      title.textContent = evento.title;
+
+      let contenido = "";
+      if (evento.extendedProps.tipo === "orden") {
+        contenido = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Descripción:</strong><br>
+                        ${evento.extendedProps.description}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Estado:</strong> <span class="badge bg-secondary">${
+                          evento.extendedProps.estado
+                        }</span><br>
+                        <strong>Prioridad:</strong> ${
+                          evento.extendedProps.prioridad
+                        }<br>
+                        <strong>Fecha:</strong> ${evento.start.toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+      } else if (evento.extendedProps.tipo === "plan_futuro") {
+        contenido = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Descripción:</strong><br>
+                        ${evento.extendedProps.description}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Activo:</strong> ${
+                          evento.extendedProps.activo_nombre
+                        }<br>
+                        <strong>Frecuencia:</strong> ${
+                          evento.extendedProps.frecuencia
+                        }<br>
+                        <strong>Fecha programada:</strong> ${evento.start.toLocaleDateString()}
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> Este es un mantenimiento preventivo programado. La orden se generará automáticamente en esta fecha.
+                </div>
+            `;
+      }
+
+      body.innerHTML = contenido;
+      modal.show();
+    }
+
+    // Funciones globales
+    window.generarOrdenesHoy = function () {
+      if (
+        confirm("¿Generar órdenes para todos los planes vencidos hasta hoy?")
+      ) {
+        const hoy = new Date().toISOString().split("T")[0];
+
+        fetch(`/calendario/api/generar-ordenes-fecha?fecha=${hoy}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              const ordenes = data.ordenes_generadas || 0;
+              mostrarMensaje(
+                `✅ Se generaron ${ordenes} órdenes correctamente`,
+                "success"
+              );
+              calendar.refetchEvents();
+              cargarEstadisticas(calendar.getDate());
+            } else {
+              mostrarMensaje(`❌ Error: ${data.error}`, "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            mostrarMensaje("❌ Error de conexión", "danger");
+          });
+      }
+    };
+
+    window.actualizarCalendario = function () {
+      calendar.refetchEvents();
+      cargarEstadisticas(calendar.getDate());
+      mostrarMensaje("🔄 Calendario actualizado", "info");
+    };
+
+    function mostrarMensaje(mensaje, tipo = "info") {
+      const alerta = document.createElement("div");
+      alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+      alerta.style.cssText =
+        "top: 20px; right: 20px; z-index: 1060; min-width: 300px;";
+      alerta.innerHTML = `
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+      document.body.appendChild(alerta);
+
+      setTimeout(() => {
+        if (alerta.parentNode) {
+          alerta.parentNode.removeChild(alerta);
+        }
+      }, 5000);
+    }
+  });
+</script>
+{% endblock %}

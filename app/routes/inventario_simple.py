@@ -124,9 +124,3 @@ def crear_articulo():
 def conteos_page():
     """Página de conteos de inventario"""
     return render_template("inventario/conteos.html", section="inventario")
-
-
-@inventario_bp.route("/reportes")
-def reportes_page():
-    """Página de reportes de inventario"""
-    return render_template("inventario/reportes.html", section="inventario")

@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, render_template, Response
+from flask_login import login_required
 from app.controllers.activos_controller import (
     listar_activos,
     listar_activos_paginado,
@@ -17,6 +18,7 @@ activos_bp = Blueprint("activos", __name__, url_prefix="/activos")
 
 
 @activos_bp.route("/", methods=["GET", "POST"])
+@login_required
 def activos_page():
     if request.method == "GET":
         """Página principal de activos"""
@@ -34,6 +36,7 @@ def activos_page():
 
 
 @activos_bp.route("/api", methods=["GET"])
+@login_required
 def activos_list_api():
     """API para listar activos con soporte para filtros de búsqueda y paginación"""
     try:
@@ -72,6 +75,7 @@ def activos_list_api():
 
 
 @activos_bp.route("/api/<int:id>", methods=["GET", "PUT", "DELETE"])
+@login_required
 def activo_detail(id):
     if request.method == "GET":
         # Para detalle, puedes crear una función en el controlador si lo deseas
@@ -103,12 +107,14 @@ def activo_detail(id):
 
 
 @activos_bp.route("/departamentos", methods=["GET"])
+@login_required
 def get_departamentos():
     """Obtiene la lista de departamentos"""
     return jsonify(obtener_departamentos())
 
 
 @activos_bp.route("/generar-codigo/<departamento>", methods=["GET"])
+@login_required
 def get_siguiente_codigo(departamento):
     """Genera el siguiente código para un departamento"""
     try:
@@ -119,6 +125,7 @@ def get_siguiente_codigo(departamento):
 
 
 @activos_bp.route("/validar-codigo", methods=["POST"])
+@login_required
 def validar_codigo():
     """Valida que un código sea único y tenga formato correcto"""
     try:
@@ -152,6 +159,7 @@ def exportar_csv():
 
 
 @activos_bp.route("/api/<int:activo_id>/manuales", methods=["GET"])
+@login_required
 def obtener_manuales(activo_id):
     """Obtener lista de manuales de un activo"""
     try:
@@ -224,6 +232,7 @@ def eliminar_manual(manual_id):
 
 
 @activos_bp.route("/api/estadisticas", methods=["GET"])
+@login_required
 def estadisticas_activos():
     """Obtener estadísticas de activos"""
     try:
@@ -234,6 +243,7 @@ def estadisticas_activos():
 
 
 @activos_bp.route("/api/<int:id>/toggle", methods=["PUT"])
+@login_required
 def toggle_activo_route(id):
     """Activar o desactivar un activo"""
     try:

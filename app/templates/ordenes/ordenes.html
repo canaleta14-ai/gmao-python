@@ -1,550 +1,752 @@
-{% extends 'base.html' %}
-{% block section_title %}Órdenes de Trabajo{% endblock %}
-{% set section = 'ordenes' %}
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ordenes.css') }}">
-{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% block section_title %}Órdenes de Trabajo{% endblock
+%} {% set section = 'ordenes' %} {% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/ordenes.css') }}"
+/>
+{% endblock %} {% block content %}
 <!-- Encabezado con estadísticas -->
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="mb-1"><i class="bi bi-clipboard-check me-2"></i>Gestión de Órdenes de Trabajo</h5>
-                    <small class="text-muted">Control y seguimiento de trabajos de mantenimiento</small>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
-                        <i class="bi bi-download me-1"></i>Exportar CSV
-                    </button>
-                    <button class="btn btn-primary" onclick="mostrarModalNuevaOrden()">
-                        <i class="bi bi-plus-circle me-1"></i>Nueva Orden
-                    </button>
-                </div>
-            </div>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h5 class="mb-1">
+            <i class="bi bi-clipboard-check me-2"></i>Gestión de Órdenes de
+            Trabajo
+          </h5>
+          <small class="text-muted"
+            >Control y seguimiento de trabajos de mantenimiento</small
+          >
         </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+            <i class="bi bi-download me-1"></i>Exportar CSV
+          </button>
+          <button class="btn btn-primary" onclick="mostrarModalNuevaOrden()">
+            <i class="bi bi-plus-circle me-1"></i>Nueva Orden
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Tarjetas de estadísticas modernizadas -->
-    <div class="row mb-4" id="estadisticas-cards">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card warning">
-                <div class="card-body">
-                    <i class="bi bi-clock stats-icon text-warning"></i>
-                    <div class="stats-number text-warning" id="stat-pendientes">0</div>
-                    <div class="stats-label">Pendientes</div>
-                </div>
-            </div>
+  <!-- Tarjetas de estadísticas modernizadas -->
+  <div class="row mb-4" id="estadisticas-cards">
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card warning">
+        <div class="card-body">
+          <i class="bi bi-clock stats-icon text-warning"></i>
+          <div class="stats-number text-warning" id="stat-pendientes">0</div>
+          <div class="stats-label">Pendientes</div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card primary">
-                <div class="card-body">
-                    <i class="bi bi-gear stats-icon text-primary"></i>
-                    <div class="stats-number text-primary" id="stat-en-proceso">0</div>
-                    <div class="stats-label">En Proceso</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card success">
-                <div class="card-body">
-                    <i class="bi bi-check-circle stats-icon text-success"></i>
-                    <div class="stats-number text-success" id="stat-completadas">0</div>
-                    <div class="stats-label">Completadas</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card danger">
-                <div class="card-body">
-                    <i class="bi bi-exclamation-triangle stats-icon text-danger"></i>
-                    <div class="stats-number text-danger" id="stat-vencidas">0</div>
-                    <div class="stats-label">Vencidas</div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card primary">
+        <div class="card-body">
+          <i class="bi bi-gear stats-icon text-primary"></i>
+          <div class="stats-number text-primary" id="stat-en-proceso">0</div>
+          <div class="stats-label">En Proceso</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card success">
+        <div class="card-body">
+          <i class="bi bi-check-circle stats-icon text-success"></i>
+          <div class="stats-number text-success" id="stat-completadas">0</div>
+          <div class="stats-label">Completadas</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card stats-card danger">
+        <div class="card-body">
+          <i class="bi bi-exclamation-triangle stats-icon text-danger"></i>
+          <div class="stats-number text-danger" id="stat-vencidas">0</div>
+          <div class="stats-label">Vencidas</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Filtros modernos colapsables -->
-    <div class="filtros-container">
-        <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
-            <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
-        </div>
-        <div id="filtros-collapse" class="collapse">
-            <div class="filtros-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="filtro-buscar" class="form-label">Buscar</label>
-                            <input type="text" class="form-control" id="filtro-buscar"
-                                placeholder="Número, descripción, activo...">
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-estado" class="form-label">Estado</label>
-                            <select class="form-select" id="filtro-estado">
-                                <option value="">Todos</option>
-                                <option value="Pendiente">Pendientes</option>
-                                <option value="En Proceso">En Proceso</option>
-                                <option value="Completada">Completadas</option>
-                                <option value="Cancelada">Canceladas</option>
-                                <option value="En Espera">En Espera</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-tipo" class="form-label">Tipo</label>
-                            <select class="form-select" id="filtro-tipo">
-                                <option value="">Todos</option>
-                                <option value="Correctivo">Correctivo</option>
-                                <option value="Preventivo">Preventivo</option>
-                                <option value="Predictivo">Predictivo</option>
-                                <option value="Mejorativo">Mejorativo</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-prioridad" class="form-label">Prioridad</label>
-                            <select class="form-select" id="filtro-prioridad">
-                                <option value="">Todas</option>
-                                <option value="Crítica">Crítica</option>
-                                <option value="Alta">Alta</option>
-                                <option value="Media">Media</option>
-                                <option value="Baja">Baja</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label class="form-label">Acciones</label>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary btn-sm" onclick="aplicarFiltros()">
-                                    <i class="bi bi-search me-1"></i>Buscar
-                                </button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
-                                    <i class="bi bi-x-circle me-1"></i>Limpiar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- Filtros modernos colapsables -->
+  <div class="filtros-container">
+    <div
+      class="filtros-header"
+      data-bs-toggle="collapse"
+      data-bs-target="#filtros-collapse"
+    >
+      <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
     </div>
+    <div id="filtros-collapse" class="collapse">
+      <div class="filtros-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="filtro-buscar" class="form-label">Buscar</label>
+              <input
+                type="text"
+                class="form-control"
+                id="filtro-buscar"
+                placeholder="Número, descripción, activo..."
+              />
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label for="filtro-estado" class="form-label">Estado</label>
+              <select class="form-select" id="filtro-estado">
+                <option value="">Todos</option>
+                <option value="Pendiente">Pendientes</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Completada">Completadas</option>
+                <option value="Cancelada">Canceladas</option>
+                <option value="En Espera">En Espera</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label for="filtro-tipo" class="form-label">Tipo</label>
+              <select class="form-select" id="filtro-tipo">
+                <option value="">Todos</option>
+                <option value="Correctivo">Correctivo</option>
+                <option value="Preventivo">Preventivo</option>
+                <option value="Predictivo">Predictivo</option>
+                <option value="Mejorativo">Mejorativo</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label for="filtro-prioridad" class="form-label">Prioridad</label>
+              <select class="form-select" id="filtro-prioridad">
+                <option value="">Todas</option>
+                <option value="Crítica">Crítica</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              <label class="form-label">Acciones</label>
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-primary btn-sm"
+                  onclick="aplicarFiltros()"
+                >
+                  <i class="bi bi-search me-1"></i>Buscar
+                </button>
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  onclick="limpiarFiltros()"
+                >
+                  <i class="bi bi-x-circle me-1"></i>Limpiar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Tabla de órdenes -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Lista de Órdenes de Trabajo</h6>
-                        <span class="badge bg-primary" id="contador-ordenes">0 órdenes</span>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th><i class="bi bi-hash me-1"></i>Número</th>
-                                    <th><i class="bi bi-calendar me-1"></i>Fecha</th>
-                                    <th><i class="bi bi-cpu me-1"></i>Activo</th>
-                                    <th><i class="bi bi-gear me-1"></i>Tipo</th>
-                                    <th><i class="bi bi-chat-text me-1"></i>Descripción</th>
-                                    <th><i class="bi bi-exclamation-triangle me-1"></i>Prioridad</th>
-                                    <th><i class="bi bi-circle me-1"></i>Estado</th>
-                                    <th><i class="bi bi-person me-1"></i>Técnico</th>
-                                    <th class="text-center"><i class="bi bi-three-dots me-1"></i>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-ordenes">
-                                <!-- Los datos se cargan dinámicamente aquí -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <!-- Paginación -->
-                <nav aria-label="Paginación de órdenes" class="m-2">
-                    <div id="paginacion-ordenes"></div>
-                </nav>
-            </div>
+  <!-- Tabla de órdenes -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+              <i class="bi bi-list-ul me-2"></i>Lista de Órdenes de Trabajo
+            </h6>
+            <span class="badge bg-primary" id="contador-ordenes"
+              >0 órdenes</span
+            >
+          </div>
         </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th><i class="bi bi-hash me-1"></i>Número</th>
+                  <th><i class="bi bi-calendar me-1"></i>Fecha</th>
+                  <th><i class="bi bi-cpu me-1"></i>Activo</th>
+                  <th class="col-tipo"><i class="bi bi-gear me-1"></i>Tipo</th>
+                  <th>
+                    <i class="bi bi-exclamation-triangle me-1"></i>Prioridad
+                  </th>
+                  <th><i class="bi bi-circle me-1"></i>Estado</th>
+                  <th class="col-tecnico">
+                    <i class="bi bi-person me-1"></i>Técnico
+                  </th>
+                  <th class="text-center">
+                    <i class="bi bi-three-dots me-1"></i>Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="tabla-ordenes">
+                <!-- Los datos se cargan dinámicamente aquí -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Paginación -->
+        <nav aria-label="Paginación de órdenes" class="m-2">
+          <div id="paginacion-ordenes"></div>
+        </nav>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Modal Nueva/Editar Orden -->
 <div class="modal fade" id="modalOrden" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalOrdenTitulo">
-                    <i class="bi bi-plus-circle me-2"></i>Nueva Orden de Trabajo
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalOrdenTitulo">
+          <i class="bi bi-plus-circle me-2"></i>Nueva Orden de Trabajo
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="formOrden" novalidate>
+          <input type="hidden" id="orden-id" />
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="orden-tipo" class="form-label"
+                >Tipo <span class="text-danger">*</span></label
+              >
+              <select class="form-select" id="orden-tipo" required>
+                <option value="">Seleccionar tipo</option>
+                <option value="Correctivo">Correctivo</option>
+                <option value="Preventivo">Preventivo</option>
+                <option value="Predictivo">Predictivo</option>
+                <option value="Mejorativo">Mejorativo</option>
+              </select>
             </div>
-            <div class="modal-body">
-                <form id="formOrden" novalidate>
-                    <input type="hidden" id="orden-id">
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="orden-tipo" class="form-label">Tipo <span class="text-danger">*</span></label>
-                            <select class="form-select" id="orden-tipo" required>
-                                <option value="">Seleccionar tipo</option>
-                                <option value="Correctivo">Correctivo</option>
-                                <option value="Preventivo">Preventivo</option>
-                                <option value="Predictivo">Predictivo</option>
-                                <option value="Mejorativo">Mejorativo</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="orden-prioridad" class="form-label">Prioridad <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" id="orden-prioridad" required>
-                                <option value="">Seleccionar prioridad</option>
-                                <option value="Crítica">Crítica</option>
-                                <option value="Alta">Alta</option>
-                                <option value="Media" selected>Media</option>
-                                <option value="Baja">Baja</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="orden-activo" class="form-label">Activo</label>
-                            <input type="text" class="form-control" id="orden-activo" placeholder="Buscar activo...">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="orden-tecnico" class="form-label">Técnico Asignado</label>
-                            <input type="text" class="form-control" id="orden-tecnico" placeholder="Buscar técnico...">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="orden-fecha-programada" class="form-label">Fecha Programada</label>
-                            <input type="date" class="form-control" id="orden-fecha-programada">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="orden-tiempo-estimado" class="form-label">Tiempo Estimado (horas)</label>
-                            <input type="number" class="form-control" id="orden-tiempo-estimado" step="0.5" min="0"
-                                placeholder="Ej: 2.5">
-                        </div>
-                        <div class="col-12">
-                            <label for="orden-descripcion" class="form-label">Descripción <span
-                                    class="text-danger">*</span></label>
-                            <textarea class="form-control" id="orden-descripcion" rows="3"
-                                placeholder="Descripción detallada del trabajo a realizar..." required></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label for="orden-observaciones" class="form-label">Observaciones</label>
-                            <textarea class="form-control" id="orden-observaciones" rows="2"
-                                placeholder="Observaciones adicionales..."></textarea>
-                        </div>
-
-                        <!-- Sección de Archivos Adjuntos -->
-                        <div class="col-12">
-                            <hr class="my-3">
-                            <h6 class="mb-3"><i class="bi bi-paperclip me-2"></i>Archivos Adjuntos</h6>
-
-                            <!-- Área de subida de archivos -->
-                            <div class="mb-3">
-                                <label class="form-label">Subir Archivos (Fotos, Documentos)</label>
-                                <div class="upload-area border-2 border-dashed rounded p-4 text-center"
-                                    id="upload-area">
-                                    <i class="bi bi-cloud-upload fs-1 text-muted mb-2"></i>
-                                    <p class="mb-2">Arrastra archivos aquí o <a href="#" id="browse-files">selecciona
-                                            archivos</a></p>
-                                    <small class="text-muted">
-                                        Formatos soportados: JPG, PNG, PDF, DOC, XLS (Máx. 10MB)
-                                    </small>
-                                    <input type="file" id="file-input" multiple
-                                        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt" hidden>
-                                </div>
-                            </div>
-
-                            <!-- Enlaces externos -->
-                            <div class="mb-3">
-                                <label class="form-label">Agregar Enlaces</label>
-                                <div class="input-group">
-                                    <input type="url" class="form-control" id="enlace-url"
-                                        placeholder="https://ejemplo.com/manual.pdf"
-                                        onkeypress="if(event.key==='Enter'){ event.preventDefault(); agregarEnlace(); }">
-                                    <input type="text" class="form-control" id="enlace-descripcion"
-                                        placeholder="Descripción del enlace"
-                                        onkeypress="if(event.key==='Enter'){ event.preventDefault(); agregarEnlace(); }">
-                                    <button class="btn btn-outline-primary" type="button" onclick="agregarEnlace()">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Lista de archivos adjuntos -->
-                            <div id="lista-archivos" class="archivos-adjuntos">
-                                <!-- Los archivos se cargarán dinámicamente aquí -->
-                            </div>
-                        </div>
-                    </div>
-                </form>
+            <div class="col-md-6">
+              <label for="orden-prioridad" class="form-label"
+                >Prioridad <span class="text-danger">*</span></label
+              >
+              <select class="form-select" id="orden-prioridad" required>
+                <option value="">Seleccionar prioridad</option>
+                <option value="Crítica">Crítica</option>
+                <option value="Alta">Alta</option>
+                <option value="Media" selected>Media</option>
+                <option value="Baja">Baja</option>
+              </select>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarOrden()">
-                    <span id="boton-guardar-texto">Crear Orden</span>
-                </button>
+            <div class="col-md-6">
+              <label for="orden-activo" class="form-label">Activo</label>
+              <input
+                type="text"
+                class="form-control"
+                id="orden-activo"
+                placeholder="Buscar activo..."
+              />
             </div>
-        </div>
+            <div class="col-md-6">
+              <label for="orden-tecnico" class="form-label"
+                >Técnico Asignado</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="orden-tecnico"
+                placeholder="Buscar técnico..."
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="orden-fecha-programada" class="form-label"
+                >Fecha Programada</label
+              >
+              <input
+                type="date"
+                class="form-control"
+                id="orden-fecha-programada"
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="orden-tiempo-estimado" class="form-label"
+                >Tiempo Estimado (horas)</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="orden-tiempo-estimado"
+                step="0.5"
+                min="0"
+                placeholder="Ej: 2.5"
+              />
+            </div>
+            <div class="col-12">
+              <label for="orden-descripcion" class="form-label"
+                >Descripción <span class="text-danger">*</span></label
+              >
+              <textarea
+                class="form-control"
+                id="orden-descripcion"
+                rows="3"
+                placeholder="Descripción detallada del trabajo a realizar..."
+                required
+              ></textarea>
+            </div>
+            <div class="col-12">
+              <label for="orden-observaciones" class="form-label"
+                >Observaciones</label
+              >
+              <textarea
+                class="form-control"
+                id="orden-observaciones"
+                rows="2"
+                placeholder="Observaciones adicionales..."
+              ></textarea>
+            </div>
+
+            <!-- Sección de Archivos Adjuntos -->
+            <div class="col-12">
+              <hr class="my-3" />
+              <h6 class="mb-3">
+                <i class="bi bi-paperclip me-2"></i>Archivos Adjuntos
+              </h6>
+
+              <!-- Área de subida de archivos -->
+              <div class="mb-3">
+                <label class="form-label"
+                  >Subir Archivos (Fotos, Documentos)</label
+                >
+                <div
+                  class="upload-area border-2 border-dashed rounded p-4 text-center"
+                  id="upload-area"
+                >
+                  <i class="bi bi-cloud-upload fs-1 text-muted mb-2"></i>
+                  <p class="mb-2">
+                    Arrastra archivos aquí o
+                    <a href="#" id="browse-files">selecciona archivos</a>
+                  </p>
+                  <small class="text-muted">
+                    Formatos soportados: JPG, PNG, PDF, DOC, XLS (Máx. 10MB)
+                  </small>
+                  <input
+                    type="file"
+                    id="file-input"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                    hidden
+                  />
+                </div>
+              </div>
+
+              <!-- Enlaces externos -->
+              <div class="mb-3">
+                <label class="form-label">Agregar Enlaces</label>
+                <div class="input-group">
+                  <input
+                    type="url"
+                    class="form-control"
+                    id="enlace-url"
+                    placeholder="https://ejemplo.com/manual.pdf"
+                    onkeypress="if(event.key==='Enter'){ event.preventDefault(); agregarEnlace(); }"
+                  />
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="enlace-descripcion"
+                    placeholder="Descripción del enlace"
+                    onkeypress="if(event.key==='Enter'){ event.preventDefault(); agregarEnlace(); }"
+                  />
+                  <button
+                    class="btn btn-outline-primary"
+                    type="button"
+                    onclick="agregarEnlace()"
+                  >
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Lista de archivos adjuntos -->
+              <div id="lista-archivos" class="archivos-adjuntos">
+                <!-- Los archivos se cargarán dinámicamente aquí -->
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" onclick="guardarOrden()">
+          <span id="boton-guardar-texto">Crear Orden</span>
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Modal Actualizar Estado -->
 <div class="modal fade" id="modalEstado" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-arrow-repeat me-2"></i>Actualizar Estado
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEstado">
-                    <input type="hidden" id="estado-orden-id">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-arrow-repeat me-2"></i>Actualizar Estado
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEstado">
+          <input type="hidden" id="estado-orden-id" />
 
-                    <div class="mb-3">
-                        <label for="nuevo-estado" class="form-label">Nuevo Estado</label>
-                        <select class="form-select" id="nuevo-estado" required>
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="En Proceso">En Proceso</option>
-                            <option value="Completada">Completada</option>
-                            <option value="Cancelada">Cancelada</option>
-                            <option value="En Espera">En Espera</option>
-                        </select>
-                    </div>
+          <div class="mb-3">
+            <label for="nuevo-estado" class="form-label">Nuevo Estado</label>
+            <select class="form-select" id="nuevo-estado" required>
+              <option value="Pendiente">Pendiente</option>
+              <option value="En Proceso">En Proceso</option>
+              <option value="Completada">Completada</option>
+              <option value="Cancelada">Cancelada</option>
+              <option value="En Espera">En Espera</option>
+            </select>
+          </div>
 
-                    <div class="mb-3" id="tiempo-real-container" style="display: none;">
-                        <label for="tiempo-real" class="form-label">Tiempo Real (horas)</label>
-                        <input type="number" class="form-control" id="tiempo-real" step="0.5" min="0"
-                            placeholder="Tiempo real empleado">
-                    </div>
+          <div class="mb-3" id="tiempo-real-container" style="display: none">
+            <label for="tiempo-real" class="form-label"
+              >Tiempo Real (horas)</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="tiempo-real"
+              step="0.5"
+              min="0"
+              placeholder="Tiempo real empleado"
+            />
+          </div>
 
-                    <div class="mb-3">
-                        <label for="observaciones-estado" class="form-label">Observaciones</label>
-                        <textarea class="form-control" id="observaciones-estado" rows="3"
-                            placeholder="Observaciones sobre el cambio de estado..."></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-info" onclick="actualizarEstado()">
-                    Actualizar Estado
-                </button>
-            </div>
-        </div>
+          <div class="mb-3">
+            <label for="observaciones-estado" class="form-label"
+              >Observaciones</label
+            >
+            <textarea
+              class="form-control"
+              id="observaciones-estado"
+              rows="3"
+              placeholder="Observaciones sobre el cambio de estado..."
+            ></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-info" onclick="actualizarEstado()">
+          Actualizar Estado
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Modal Ver Detalles Orden -->
 <div class="modal fade" id="modalVerOrden" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-eye me-2"></i>Detalles de la Orden de Trabajo
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-eye me-2"></i>Detalles de la Orden de Trabajo
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Número de Orden:</label>
+            <p class="form-control-plaintext" id="ver-orden-numero">#000</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Fecha de Creación:</label>
+            <p class="form-control-plaintext" id="ver-orden-fecha">N/A</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Tipo:</label>
+            <p class="form-control-plaintext" id="ver-orden-tipo">N/A</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Prioridad:</label>
+            <p class="form-control-plaintext" id="ver-orden-prioridad">N/A</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Estado:</label>
+            <p class="form-control-plaintext" id="ver-orden-estado">N/A</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Activo:</label>
+            <p class="form-control-plaintext" id="ver-orden-activo">
+              Sin asignar
+            </p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Técnico Asignado:</label>
+            <p class="form-control-plaintext" id="ver-orden-tecnico">
+              Sin asignar
+            </p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Tiempo Estimado:</label>
+            <p class="form-control-plaintext" id="ver-orden-tiempo-estimado">
+              N/A
+            </p>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-bold">Descripción:</label>
+            <p class="form-control-plaintext" id="ver-orden-descripcion">N/A</p>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-bold">Observaciones:</label>
+            <p class="form-control-plaintext" id="ver-orden-observaciones">
+              Sin observaciones
+            </p>
+          </div>
+
+          <!-- Sección de Recambios -->
+          <div class="col-12 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">
+                <i class="bi bi-tools me-2"></i>Recambios y Repuestos
+              </h6>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                onclick="mostrarModalAgregarRecambio()"
+              >
+                <i class="bi bi-plus me-1"></i>Agregar Recambio
+              </button>
             </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Número de Orden:</label>
-                        <p class="form-control-plaintext" id="ver-orden-numero">#000</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Fecha de Creación:</label>
-                        <p class="form-control-plaintext" id="ver-orden-fecha">N/A</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Tipo:</label>
-                        <p class="form-control-plaintext" id="ver-orden-tipo">N/A</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Prioridad:</label>
-                        <p class="form-control-plaintext" id="ver-orden-prioridad">N/A</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Estado:</label>
-                        <p class="form-control-plaintext" id="ver-orden-estado">N/A</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Activo:</label>
-                        <p class="form-control-plaintext" id="ver-orden-activo">Sin asignar</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Técnico Asignado:</label>
-                        <p class="form-control-plaintext" id="ver-orden-tecnico">Sin asignar</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Tiempo Estimado:</label>
-                        <p class="form-control-plaintext" id="ver-orden-tiempo-estimado">N/A</p>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold">Descripción:</label>
-                        <p class="form-control-plaintext" id="ver-orden-descripcion">N/A</p>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold">Observaciones:</label>
-                        <p class="form-control-plaintext" id="ver-orden-observaciones">Sin observaciones</p>
-                    </div>
-                    
-                    <!-- Sección de Recambios -->
-                    <div class="col-12 mt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0"><i class="bi bi-tools me-2"></i>Recambios y Repuestos</h6>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="mostrarModalAgregarRecambio()">
-                                <i class="bi bi-plus me-1"></i>Agregar Recambio
-                            </button>
-                        </div>
-                        
-                        <div id="lista-recambios">
-                            <div class="text-center text-muted py-3" id="sin-recambios">
-                                <i class="bi bi-tools fs-1 mb-2 d-block"></i>
-                                <p>No hay recambios asignados a esta orden</p>
-                            </div>
-                        </div>
-                        
-                        <div id="recambios-table" style="display: none;">
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Código</th>
-                                            <th>Descripción</th>
-                                            <th>Cant. Solicitada</th>
-                                            <th>Cant. Utilizada</th>
-                                            <th>Stock</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbody-recambios">
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            <div class="mt-3">
-                                <button type="button" class="btn btn-warning" onclick="descontarRecambios()" id="btn-descontar">
-                                    <i class="bi bi-arrow-down-circle me-1"></i>Descontar del Stock
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+            <div id="lista-recambios">
+              <div class="text-center text-muted py-3" id="sin-recambios">
+                <i class="bi bi-tools fs-1 mb-2 d-block"></i>
+                <p>No hay recambios asignados a esta orden</p>
+              </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-info" onclick="cambiarEstadoDesdeDetalle()">
-                    <i class="bi bi-arrow-repeat me-1"></i>Cambiar Estado
+
+            <div id="recambios-table" style="display: none">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Descripción</th>
+                      <th>Cant. Solicitada</th>
+                      <th>Cant. Utilizada</th>
+                      <th>Stock</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-recambios"></tbody>
+                </table>
+              </div>
+
+              <div class="mt-3">
+                <button
+                  type="button"
+                  class="btn btn-warning"
+                  onclick="descontarRecambios()"
+                  id="btn-descontar"
+                >
+                  <i class="bi bi-arrow-down-circle me-1"></i>Descontar del
+                  Stock
                 </button>
-                <button type="button" class="btn btn-primary" onclick="editarDesdeDetalle()">
-                    <i class="bi bi-pencil me-1"></i>Editar
-                </button>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+        <button
+          type="button"
+          class="btn btn-info"
+          onclick="cambiarEstadoDesdeDetalle()"
+        >
+          <i class="bi bi-arrow-repeat me-1"></i>Cambiar Estado
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          onclick="editarDesdeDetalle()"
+        >
+          <i class="bi bi-pencil me-1"></i>Editar
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Modal Eliminar Orden -->
 <div class="modal fade" id="modalEliminarOrden" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-trash me-2"></i>Eliminar Orden de Trabajo
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Esta acción no se puede deshacer.
-                </div>
-                <p>¿Estás seguro de que deseas eliminar la orden de trabajo <strong
-                        id="numero-orden-eliminar"></strong>?</p>
-                <p class="text-muted">Solo se pueden eliminar órdenes en estado "Pendiente" o "Cancelada".</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="confirmarEliminarOrden()">
-                    <i class="bi bi-trash me-1"></i>Eliminar
-                </button>
-            </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-trash me-2"></i>Eliminar Orden de Trabajo
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Esta acción no se puede deshacer.
         </div>
+        <p>
+          ¿Estás seguro de que deseas eliminar la orden de trabajo
+          <strong id="numero-orden-eliminar"></strong>?
+        </p>
+        <p class="text-muted">
+          Solo se pueden eliminar órdenes en estado "Pendiente" o "Cancelada".
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          onclick="confirmarEliminarOrden()"
+        >
+          <i class="bi bi-trash me-1"></i>Eliminar
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Modal Agregar Recambio -->
 <div class="modal fade" id="modalAgregarRecambio" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle me-2"></i>Agregar Recambio/Repuesto
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-plus-circle me-2"></i>Agregar Recambio/Repuesto
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-agregar-recambio">
+          <div class="row g-3">
+            <div class="col-12">
+              <label for="recambio-articulo" class="form-label"
+                >Artículo/Repuesto *</label
+              >
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="recambio-articulo"
+                  placeholder="Buscar por código o descripción..."
+                  required
+                />
+                <input type="hidden" id="recambio-inventario-id" />
+              </div>
+              <div class="form-text">
+                <span id="recambio-info" class="text-muted"
+                  >Selecciona un artículo para ver información de stock</span
+                >
+              </div>
             </div>
-            <div class="modal-body">
-                <form id="form-agregar-recambio">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label for="recambio-articulo" class="form-label">Artículo/Repuesto *</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="recambio-articulo" 
-                                       placeholder="Buscar por código o descripción..." required>
-                                <input type="hidden" id="recambio-inventario-id">
-                            </div>
-                            <div class="form-text">
-                                <span id="recambio-info" class="text-muted">Selecciona un artículo para ver información de stock</span>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label for="recambio-cantidad" class="form-label">Cantidad Solicitada *</label>
-                            <input type="number" class="form-control" id="recambio-cantidad" min="1" required>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Stock Actual</label>
-                            <input type="text" class="form-control" id="recambio-stock" readonly placeholder="--">
-                        </div>
-                        
-                        <div class="col-12">
-                            <label for="recambio-observaciones" class="form-label">Observaciones</label>
-                            <textarea class="form-control" id="recambio-observaciones" rows="3" 
-                                      placeholder="Notas adicionales sobre el uso de este recambio..."></textarea>
-                        </div>
-                    </div>
-                </form>
-                
-                <!-- Container para alertas -->
-                <div id="alert-container-recambio"></div>
+
+            <div class="col-md-6">
+              <label for="recambio-cantidad" class="form-label"
+                >Cantidad Solicitada *</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="recambio-cantidad"
+                min="1"
+                required
+              />
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarRecambio()">
-                    <i class="bi bi-check-lg me-1"></i>Agregar Recambio
-                </button>
+
+            <div class="col-md-6">
+              <label class="form-label">Stock Actual</label>
+              <input
+                type="text"
+                class="form-control"
+                id="recambio-stock"
+                readonly
+                placeholder="--"
+              />
             </div>
-        </div>
+
+            <div class="col-12">
+              <label for="recambio-observaciones" class="form-label"
+                >Observaciones</label
+              >
+              <textarea
+                class="form-control"
+                id="recambio-observaciones"
+                rows="3"
+                placeholder="Notas adicionales sobre el uso de este recambio..."
+              ></textarea>
+            </div>
+          </div>
+        </form>
+
+        <!-- Container para alertas -->
+        <div id="alert-container-recambio"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          onclick="guardarRecambio()"
+        >
+          <i class="bi bi-check-lg me-1"></i>Agregar Recambio
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
+{% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ordenes.js') }}"></script>
 {% endblock %}

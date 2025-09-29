@@ -17,6 +17,9 @@
                     <small class="text-muted">Control y seguimiento de planes de mantenimiento</small>
                 </div>
                 <div class="d-flex gap-2">
+                    <button class="btn btn-warning" onclick="generarOrdenesManual()" title="Generar órdenes manualmente para planes sin generación automática">
+                        <i class="bi bi-play-circle me-1"></i>Generar Órdenes Manual
+                    </button>
                     <button class="btn btn-outline-secondary" onclick="exportarCSV()">
                         <i class="bi bi-download me-1"></i>Exportar CSV
                     </button>
@@ -464,8 +467,23 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <h6 class="text-primary border-bottom pb-2 mb-3">
-                                    <i class="bi bi-list-task me-2"></i>Instrucciones de Trabajo
+                                    <i class="bi bi-list-task me-2"></i>Instrucciones y Configuración
                                 </h6>
+                            </div>
+                            <!-- Checkbox de Generación Automática -->
+                            <div class="col-12 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="generacion_automatica" 
+                                           name="generacion_automatica" checked>
+                                    <label class="form-check-label" for="generacion_automatica">
+                                        <strong>Generación Automática de Órdenes</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            Si está activado, las órdenes se generarán automáticamente a las 6:00 AM.
+                                            Si está desactivado, deberá generar las órdenes manualmente.
+                                        </small>
+                                    </label>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label for="instrucciones" class="form-label">Instrucciones detalladas</label>
@@ -497,5 +515,6 @@
 {% endblock %}
 {% block scripts %}
 <script src="/static/js/pagination.js"></script>
+<script src="/static/js/confirmation-modal.js"></script>
 <script src="/static/js/preventivo.js"></script>
 {% endblock %}

@@ -1,284 +1,383 @@
-from flask import Blueprint, request, jsonify, render_template
-from flask_login import login_required, current_user
-from functools import wraps
-from app.extensions import db
-from app.controllers.usuarios_controller import (
-    crear_usuario,  # type: ignore
-    listar_usuarios,  # type: ignore
-    editar_usuario,  # type: ignore
-    cambiar_rol_usuario,  # type: ignore
-    cambiar_estado_usuario,  # type: ignore
-    obtener_usuario_por_id,  # type: ignore
-    eliminar_usuario,  # type: ignore
-    obtener_estadisticas_usuarios,  # type: ignore
-)
+from flask import Blueprint, request, jsonify, render_template, Response
+from flask_login import login_required
+import csv
+from io import StringIO
 
 usuarios_bp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
-
-
-def admin_required(f):
-    """Decorador para rutas que requieren permisos de administrador"""
-
-    @wraps(f)
-    @login_required
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.rol != "Administrador":
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "Acceso denegado. Se requieren permisos de administrador.",
-                    }
-                ),
-                403,
-            )
-        return f(*args, **kwargs)
-
-    return decorated_function
-
-
-def supervisor_or_admin_required(f):
-    """Decorador para rutas que requieren permisos de supervisor o administrador"""
-
-    @wraps(f)
-    @login_required
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.rol not in [
-            "Administrador",
-            "Supervisor",
-        ]:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "Acceso denegado. Se requieren permisos de supervisor o administrador.",
-                    }
-                ),
-                403,
-            )
-        return f(*args, **kwargs)
-
-    return decorated_function
 
 
 @usuarios_bp.route("/")
 @login_required
 def usuarios_page():
-    """Página principal de usuarios"""
-    return render_template("usuarios/usuarios.html", section="personal")
+    return render_template("usuarios/usuarios.html", section="usuarios")
 
 
 @usuarios_bp.route("/api", methods=["GET"])
 @login_required
-def obtener_usuarios():
+def api_usuarios():
     try:
-        filtros = {}
-        if "username" in request.args:
-            filtros["username"] = request.args["username"]
-        if "email" in request.args:
-            filtros["email"] = request.args["email"]
-        if "rol" in request.args:
-            filtros["rol"] = request.args["rol"]
-        if "activo" in request.args:
-            filtros["activo"] = request.args.get("activo", "").lower() == "true"
-        if "nombre" in request.args:
-            filtros["nombre"] = request.args["nombre"]
-        if "q" in request.args:
-            filtros["q"] = request.args["q"]
-        if "limit" in request.args:
-            filtros["limit"] = request.args["limit"]
+        from app.models.usuario import Usuario
 
-        page = int(request.args.get("page", 1))
-        per_page = int(request.args.get("per_page", 10))
-        usuarios, total = listar_usuarios(filtros, page, per_page)
+        # Obtener usuarios reales de la base de datos
+        usuarios_db = Usuario.query.all()
+
+        usuarios_data = []
+        for usuario in usuarios_db:
+            usuarios_data.append(
+                {
+                    "id": usuario.id,
+                    "codigo": f"USR{str(usuario.id).zfill(3)}",  # Generar código basado en ID
+                    "nombre": usuario.nombre,
+                    "email": usuario.email,
+                    "telefono": "",  # No tenemos teléfono en la DB actual
+                    "departamento": "Mantenimiento",  # Valor por defecto
+                    "cargo": (
+                        "Técnico" if usuario.rol != "Administrador" else "Administrador"
+                    ),
+                    "estado": "Activo" if usuario.activo else "Inactivo",
+                    "fecha_ingreso": (
+                        usuario.fecha_creacion.strftime("%Y-%m-%d")
+                        if usuario.fecha_creacion
+                        else "2023-01-01"
+                    ),
+                    "rol": usuario.rol,
+                    "permisos": (
+                        ["*"]
+                        if usuario.rol == "Administrador"
+                        else ["mantenimiento.leer"]
+                    ),
+                }
+            )
+
         return jsonify(
-            {
-                "total": total,
-                "page": page,
-                "per_page": per_page,
-                "usuarios": [
-                    {
-                        "id": u.id,
-                        "username": u.username,
-                        "email": u.email,
-                        "nombre": u.nombre,
-                        "rol": u.rol,
-                        "activo": u.activo,
-                    }
-                    for u in usuarios
-                ],
-            }
+            {"success": True, "usuarios": usuarios_data, "total": len(usuarios_data)}
         )
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
-        return jsonify({"success": False, "error": "Error al obtener usuarios"}), 500
-
-
-@usuarios_bp.route("/api/<int:id>", methods=["PUT"])
-@admin_required
-def actualizar_usuario(id: int):
-    try:
-        data = request.get_json()
-        user = editar_usuario(id, data)
-        return jsonify(
-            {
-                "success": True,
-                "message": "Usuario actualizado",
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "rol": user.rol,
-                "activo": user.activo,
-            }
-        )
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": "Error interno del servidor"}), 500
-
-
-@usuarios_bp.route("/api/<int:id>/rol", methods=["PUT"])
-@admin_required
-def actualizar_rol_usuario(id: int):
-    try:
-        data = request.get_json()
-        user = cambiar_rol_usuario(id, data["rol"])
-        return jsonify(
-            {
-                "success": True,
-                "message": "Rol actualizado",
-                "id": user.id,
-                "rol": user.rol,
-            }
-        )
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": "Error interno del servidor"}), 500
-
-
-@usuarios_bp.route("/api/<int:id>/estado", methods=["PUT"])
-@supervisor_or_admin_required
-def actualizar_estado_usuario(id: int):
-    try:
-        data = request.get_json()
-        user = cambiar_estado_usuario(id, data["activo"])
-        return jsonify(
-            {
-                "success": True,
-                "message": "Estado actualizado",
-                "id": user.id,
-                "activo": user.activo,
-            }
-        )
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": "Error interno del servidor"}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @usuarios_bp.route("/api", methods=["POST"])
-@admin_required
-def registrar_usuario():
+@login_required
+def crear_usuario_api():
     try:
+        from app.models.usuario import Usuario
+        from app.extensions import db
+
         data = request.get_json()
-        user = crear_usuario(data)
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "message": "Usuario creado exitosamente",
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "rol": user.rol,
-                }
-            ),
-            201,
+
+        # Validar campos requeridos
+        required_fields = ["username", "email", "password", "nombre"]
+        for field in required_fields:
+            if not data.get(field):
+                return (
+                    jsonify(
+                        {"success": False, "error": f"El campo {field} es requerido"}
+                    ),
+                    400,
+                )
+
+        # Verificar que el username no exista
+        if Usuario.query.filter_by(username=data["username"]).first():
+            return (
+                jsonify({"success": False, "error": "El nombre de usuario ya existe"}),
+                400,
+            )
+
+        # Verificar que el email no exista
+        if Usuario.query.filter_by(email=data["email"]).first():
+            return (
+                jsonify({"success": False, "error": "El email ya está registrado"}),
+                400,
+            )
+
+        # Crear el nuevo usuario
+        nuevo_usuario = Usuario(
+            username=data["username"],
+            email=data["email"],
+            nombre=data["nombre"],
+            rol=data.get("rol", "Técnico"),
+            activo=data.get("activo", True),
         )
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+
+        # Establecer la contraseña encriptada
+        nuevo_usuario.set_password(data["password"])
+
+        # Guardar en la base de datos
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Usuario creado correctamente",
+                "id": nuevo_usuario.id,
+            }
+        )
     except Exception as e:
-        return jsonify({"success": False, "error": "Error interno del servidor"}), 500
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @usuarios_bp.route("/api/<int:user_id>", methods=["GET"])
-@supervisor_or_admin_required
-def obtener_usuario(user_id: int):
-    """Obtener detalles de un usuario específico"""
+@login_required
+def obtener_usuario_api(user_id):
     try:
-        usuario = obtener_usuario_por_id(user_id)
-        return jsonify({"success": True, "usuario": usuario})
+        from app.models.usuario import Usuario
+
+        # Buscar el usuario
+        usuario = Usuario.query.get(user_id)
+        if not usuario:
+            return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
+
+        # Retornar datos del usuario
+        usuario_data = {
+            "id": usuario.id,
+            "codigo": f"USR{str(usuario.id).zfill(3)}",
+            "username": usuario.username,
+            "nombre": usuario.nombre,
+            "email": usuario.email,
+            "telefono": "",  # No tenemos teléfono en la DB actual
+            "departamento": "Mantenimiento",  # Valor por defecto
+            "cargo": ("Técnico" if usuario.rol != "Administrador" else "Administrador"),
+            "estado": "Activo" if usuario.activo else "Inactivo",
+            "fecha_ingreso": (
+                usuario.fecha_creacion.strftime("%Y-%m-%d")
+                if usuario.fecha_creacion
+                else "2023-01-01"
+            ),
+            "rol": usuario.rol,
+            "permisos": (
+                ["*"] if usuario.rol == "Administrador" else ["mantenimiento.leer"]
+            ),
+        }
+
+        return jsonify({"success": True, "usuario": usuario_data})
+
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 404
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@usuarios_bp.route("/api/<int:user_id>", methods=["PUT"])
+@login_required
+def actualizar_usuario_api(user_id):
+    try:
+        from app.models.usuario import Usuario
+        from app.extensions import db
+
+        data = request.get_json()
+
+        # Buscar el usuario
+        usuario = Usuario.query.get(user_id)
+        if not usuario:
+            return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
+
+        # Validar campos requeridos
+        required_fields = ["username", "email", "nombre"]
+        for field in required_fields:
+            if not data.get(field):
+                return (
+                    jsonify(
+                        {"success": False, "error": f"El campo {field} es requerido"}
+                    ),
+                    400,
+                )
+
+        # Verificar que el username no exista (excepto para el usuario actual)
+        existing_user = Usuario.query.filter_by(username=data["username"]).first()
+        if existing_user and existing_user.id != user_id:
+            return (
+                jsonify({"success": False, "error": "El nombre de usuario ya existe"}),
+                400,
+            )
+
+        # Verificar que el email no exista (excepto para el usuario actual)
+        existing_user = Usuario.query.filter_by(email=data["email"]).first()
+        if existing_user and existing_user.id != user_id:
+            return (
+                jsonify({"success": False, "error": "El email ya está registrado"}),
+                400,
+            )
+
+        # Actualizar los campos
+        usuario.username = data["username"]
+        usuario.email = data["email"]
+        usuario.nombre = data["nombre"]
+        usuario.rol = data.get("rol", "Técnico")
+
+        # Convertir estado "Activo"/"Inactivo" a booleano
+        estado = data.get("estado", "Activo")
+        usuario.activo = estado == "Activo"
+
+        # Actualizar contraseña solo si se proporcionó
+        if data.get("password"):
+            usuario.set_password(data["password"])
+
+        # Guardar cambios
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Usuario {usuario.nombre} actualizado correctamente",
+            }
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @usuarios_bp.route("/api/<int:user_id>", methods=["DELETE"])
-@admin_required
-def eliminar_usuario_route(user_id: int):
-    """Eliminar un usuario"""
+@login_required
+def eliminar_usuario_api(user_id):
     try:
-        eliminar_usuario(user_id)
-        return jsonify({"success": True, "message": "Usuario eliminado exitosamente"})
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        from app.models.usuario import Usuario
+        from app.extensions import db
+
+        # Buscar el usuario en la base de datos
+        usuario = Usuario.query.get(user_id)
+        if not usuario:
+            return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
+
+        # No permitir eliminar el usuario admin
+        if usuario.username == "admin":
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "No se puede eliminar el usuario administrador",
+                    }
+                ),
+                403,
+            )
+
+        # Eliminar el usuario
+        nombre_usuario = usuario.nombre
+        db.session.delete(usuario)
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Usuario {nombre_usuario} eliminado correctamente",
+            }
+        )
     except Exception as e:
-        return jsonify({"success": False, "error": "Error interno del servidor"}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
-@usuarios_bp.route("/api/estadisticas", methods=["GET"])
-@supervisor_or_admin_required
-def obtener_estadisticas():
-    """Obtener estadísticas de usuarios"""
+@usuarios_bp.route("/api/roles", methods=["GET"])
+@login_required
+def api_roles():
     try:
-        stats = obtener_estadisticas_usuarios()
-        return jsonify({"success": True, "estadisticas": stats})
+        roles_data = [
+            {
+                "id": 1,
+                "nombre": "Administrador",
+                "descripcion": "Acceso completo al sistema",
+                "permisos": ["*"],
+                "color": "danger",
+            },
+            {
+                "id": 2,
+                "nombre": "Supervisor",
+                "descripcion": "Supervisión y gestión de equipos",
+                "permisos": [
+                    "usuarios.leer",
+                    "activos.leer",
+                    "ordenes.leer",
+                    "operaciones.leer",
+                    "operaciones.editar",
+                ],
+                "color": "warning",
+            },
+            {
+                "id": 3,
+                "nombre": "Técnico",
+                "descripcion": "Operaciones técnicas y mantenimiento",
+                "permisos": [
+                    "mantenimiento.leer",
+                    "mantenimiento.editar",
+                    "ordenes.crear",
+                    "ordenes.editar",
+                    "activos.leer",
+                ],
+                "color": "primary",
+            },
+            {
+                "id": 4,
+                "nombre": "Operador",
+                "descripcion": "Operaciones básicas",
+                "permisos": ["ordenes.leer", "activos.leer"],
+                "color": "secondary",
+            },
+        ]
+        return jsonify({"success": True, "roles": roles_data, "total": len(roles_data)})
     except Exception as e:
-        return jsonify({"success": False, "error": "Error interno del servidor"}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
-@usuarios_bp.route("/api/autocomplete", methods=["GET"])
-def obtener_usuarios_autocomplete():
-    """API simplificada para autocompletado de usuarios - solo devuelve datos básicos"""
+@usuarios_bp.route("/exportar-csv", methods=["GET"])
+@login_required
+def exportar_csv():
+    """Exporta todos los usuarios a CSV"""
     try:
-        q = request.args.get("q", "").strip()
-        limit = min(int(request.args.get("limit", 10)), 20)  # Máximo 20 resultados
-
-        if not q or len(q) < 2:
-            return jsonify([])
-
-        # Búsqueda directa sin usar el controlador complejo
-        search_term = f"%{q}%"
         from app.models.usuario import Usuario
 
-        usuarios = (
-            Usuario.query.filter(
-                db.or_(
-                    Usuario.username.ilike(search_term),
-                    Usuario.nombre.ilike(search_term),
-                    Usuario.email.ilike(search_term),
-                ),
-                Usuario.activo == True,
-            )
-            .limit(limit)
-            .all()
+        # Obtener todos los usuarios
+        usuarios = Usuario.query.all()
+
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Escribir encabezados
+        writer.writerow(
+            [
+                "ID",
+                "Código",
+                "Nombre",
+                "Email",
+                "Teléfono",
+                "Departamento",
+                "Cargo",
+                "Rol",
+                "Estado",
+                "Fecha Ingreso",
+            ]
         )
 
-        # Devolver solo los datos necesarios para autocompletado
-        resultado = []
-        for user in usuarios:
-            resultado.append(
-                {
-                    "id": user.id,
-                    "username": user.username,
-                    "nombre": user.nombre or "",
-                    "rol": user.rol or "",
-                    "display": f"{user.username} - {user.nombre or ''} ({user.rol or 'Sin rol'})",
-                }
+        # Escribir datos de usuarios
+        for usuario in usuarios:
+            writer.writerow(
+                [
+                    usuario.id,
+                    f"USR{str(usuario.id).zfill(3)}",  # Código generado
+                    usuario.nombre,
+                    usuario.email,
+                    "",  # Teléfono (no disponible en el modelo actual)
+                    "Mantenimiento",  # Departamento por defecto
+                    (
+                        "Técnico" if usuario.rol != "Administrador" else "Administrador"
+                    ),  # Cargo
+                    usuario.rol,
+                    "Activo" if usuario.activo else "Inactivo",
+                    (
+                        usuario.fecha_creacion.strftime("%Y-%m-%d")
+                        if usuario.fecha_creacion
+                        else "2023-01-01"
+                    ),
+                ]
             )
 
-        return jsonify(resultado)
+        # Preparar respuesta
+        output.seek(0)
+        csv_data = output.getvalue()
+        output.close()
+
+        response = Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=usuarios.csv"},
+        )
+        return response
     except Exception as e:
-        print(f"Error en autocompletado de usuarios: {e}")  # Para debug
-        return jsonify([]), 500
+        return jsonify({"error": str(e)}), 500

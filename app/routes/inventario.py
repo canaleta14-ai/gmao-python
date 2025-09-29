@@ -34,6 +34,7 @@ inventario_bp = Blueprint("inventario", __name__, url_prefix="/inventario")
 
 
 @inventario_bp.route("/")
+@login_required
 def inventario_page():
     """Página principal de inventario"""
     return render_template("inventario/inventario.html", section="inventario")
@@ -171,6 +172,7 @@ def crear_articulo():
 
 
 @inventario_bp.route("/conteos")
+@login_required
 def conteos_page():
     """Página de conteos de inventario"""
     return render_template("inventario/conteos.html", section="inventario")
@@ -178,6 +180,7 @@ def conteos_page():
 
 # API Routes para Conteos
 @inventario_bp.route("/api/conteos", methods=["GET"])
+@api_login_required
 def api_obtener_conteos():
     """API para obtener conteos con filtros y paginación"""
     try:
@@ -261,6 +264,7 @@ def api_obtener_conteos():
 
 
 @inventario_bp.route("/api/conteos/resumen", methods=["GET"])
+@api_login_required
 def api_resumen_conteos():
     """API para obtener resumen de conteos"""
     try:
@@ -298,6 +302,7 @@ def api_resumen_conteos():
 
 
 @inventario_bp.route("/api/conteos/aleatorios", methods=["POST"])
+@api_login_required
 def api_generar_conteos_aleatorios():
     """API para generar conteos aleatorios"""
     try:
@@ -319,6 +324,7 @@ def api_generar_conteos_aleatorios():
 
 
 @inventario_bp.route("/api/conteos/<int:conteo_id>/procesar", methods=["PUT"])
+@api_login_required
 def api_procesar_conteo(conteo_id):
     """API para procesar un conteo físico"""
     try:
@@ -356,6 +362,7 @@ def api_procesar_conteo(conteo_id):
 
 
 @inventario_bp.route("/api/conteos/<int:conteo_id>", methods=["GET"])
+@api_login_required
 def api_obtener_conteo(conteo_id):
     """API para obtener un conteo específico"""
     try:
@@ -387,6 +394,7 @@ def api_obtener_conteo(conteo_id):
 
 
 @inventario_bp.route("/api/conteos/<int:conteo_id>", methods=["PUT"])
+@api_login_required
 def api_editar_conteo(conteo_id):
     """API para editar un conteo físico"""
     try:
@@ -426,6 +434,7 @@ def api_editar_conteo(conteo_id):
 
 
 @inventario_bp.route("/api/periodos-inventario", methods=["GET", "POST"])
+@api_login_required
 def api_periodos_inventario():
     """API para periodos de inventario"""
     if request.method == "GET":
@@ -488,6 +497,7 @@ def api_periodos_inventario():
 
 
 @inventario_bp.route("/test-spinner")
+@login_required
 def test_spinner():
     """Página de prueba para el spinner"""
     return """<!DOCTYPE html>
@@ -569,12 +579,6 @@ def test_spinner():
     </script>
 </body>
 </html>"""
-
-
-@inventario_bp.route("/reportes")
-def reportes_page():
-    """Página de reportes de inventario"""
-    return render_template("inventario/reportes.html", section="inventario")
 
 
 # Rutas de API para movimientos de inventario
@@ -752,6 +756,7 @@ def obtener_articulo(articulo_id):
 
 
 @inventario_bp.route("/test-autocomplete")
+@login_required
 def test_autocomplete():
     """Página de test para el autocompletado"""
     return send_from_directory(
@@ -761,6 +766,7 @@ def test_autocomplete():
 
 
 @inventario_bp.route("/test-autocomplete-browser.js")
+@login_required
 def test_autocomplete_browser_js():
     """Script de test para autocompletado en navegador"""
     return send_from_directory(

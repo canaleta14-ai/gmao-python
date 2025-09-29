@@ -7,6 +7,8 @@ from app.controllers.planes_controller import (
     editar_plan,
     eliminar_plan,
     obtener_estadisticas_planes,
+    generar_ordenes_automaticas,
+    generar_ordenes_manuales,
 )
 
 planes_bp = Blueprint("planes", __name__, url_prefix="/planes")
@@ -100,11 +102,10 @@ def plan_individual(plan_id):
             eliminar_plan(plan_id)
             return jsonify({"success": True, "message": "Plan eliminado exitosamente"})
         except Exception as e:
-            print(f"Error al eliminar plan: {e}")  # Debug
             return jsonify({"success": False, "error": str(e)}), 500
 
 
-@planes_bp.route("/api/estadisticas", methods=["GET"])
+@planes_bp.route("/api/estadisticas")
 @login_required
 def estadisticas_planes():
     """Obtener estadísticas de planes de mantenimiento"""
@@ -116,3 +117,30 @@ def estadisticas_planes():
             jsonify({"success": False, "error": "Error al obtener estadísticas"}),
             500,
         )
+
+
+@planes_bp.route("/api/generar-ordenes", methods=["POST"])
+@login_required
+def generar_ordenes_preventivo():
+    """Generar órdenes automáticamente desde planes vencidos"""
+    try:
+        resultado = generar_ordenes_automaticas()
+        return jsonify(resultado)
+    except Exception as e:
+        print(f"Error en endpoint generar-ordenes: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@planes_bp.route("/api/generar-ordenes-manual", methods=["POST"])
+@login_required
+def generar_ordenes_manual():
+    """Generar órdenes manualmente para planes sin generación automática"""
+    try:
+        # Obtener usuario si está disponible (opcional)
+        usuario = "Usuario Manual"  # Se puede mejorar para obtener el usuario actual
+
+        resultado = generar_ordenes_manuales(usuario)
+        return jsonify(resultado)
+    except Exception as e:
+        print(f"Error en endpoint generar-ordenes-manual: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500

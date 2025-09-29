@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, render_template, Response
+from flask_login import login_required
 from app.controllers.proveedores_controller import (
     listar_proveedores,
     listar_proveedores_paginado,
@@ -16,6 +17,7 @@ proveedores_bp = Blueprint("proveedores", __name__, url_prefix="/proveedores")
 
 
 @proveedores_bp.route("/", methods=["GET", "POST"])
+@login_required
 def proveedores_page():
     if request.method == "GET":
         """Página principal de proveedores"""
@@ -41,6 +43,7 @@ def proveedores_page():
 
 
 @proveedores_bp.route("/api", methods=["GET"])
+@login_required
 def proveedores_list_api():
     """API para listar proveedores con soporte para filtros de búsqueda y paginación"""
     try:
@@ -68,6 +71,7 @@ def proveedores_list_api():
 
 
 @proveedores_bp.route("/api/<int:id>", methods=["GET", "PUT", "DELETE"])
+@login_required
 def proveedor_detail(id):
     try:
         if request.method == "GET":
@@ -144,6 +148,7 @@ def proveedores_select():
 
 
 @proveedores_bp.route("/api/estadisticas", methods=["GET"])
+@login_required
 def estadisticas_proveedores():
     """Obtener estadísticas de proveedores"""
     try:
@@ -154,15 +159,18 @@ def estadisticas_proveedores():
 
 
 @proveedores_bp.route("/api/<int:id>/toggle", methods=["PUT"])
+@login_required
 def toggle_proveedor_route(id):
     """Activar o desactivar un proveedor"""
     try:
         proveedor = toggle_proveedor(id)
         estado = "activado" if proveedor.activo else "desactivado"
-        return jsonify({
-            "success": True,
-            "message": f"Proveedor {estado} exitosamente",
-            "activo": proveedor.activo
-        })
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Proveedor {estado} exitosamente",
+                "activo": proveedor.activo,
+            }
+        )
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

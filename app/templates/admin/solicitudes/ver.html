@@ -1,0 +1,771 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitud {{ solicitud.numero_solicitud }} - GMAO{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-2">
+                            <li class="breadcrumb-item">
+                                <a href="{{ url_for('solicitudes_admin.listar_solicitudes') }}">Solicitudes</a>
+                            </li>
+                            <li class="breadcrumb-item active">{{ solicitud.numero_solicitud }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-card-text me-2 text-primary"></i>
+                        Solicitud #{{ solicitud.numero_solicitud }}
+                    </h1>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('solicitudes_admin.editar_solicitud', id=solicitud.id) }}"
+                       class="btn btn-warning">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </a>
+                    <button type="button" class="btn btn-info" onclick="cambiarEstado()">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Cambiar Estado
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Información Principal -->
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle me-2"></i>Información de la Solicitud
+                            </h5>
+                            <span class="badge fs-6 bg-{{ 'primary' if solicitud.estado == 'pendiente' else 'warning' if solicitud.estado == 'en_revision' else 'success' if solicitud.estado == 'aprobada' else 'info' if solicitud.estado == 'en_progreso' else 'success' if solicitud.estado == 'completada' else 'danger' if solicitud.estado == 'rechazada' else 'secondary' }}">
+                                {{ solicitud.estado_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="border-start border-primary border-4 ps-3">
+                                        <small class="text-muted d-block">Número de Solicitud</small>
+                                        <strong class="fs-5 text-primary">{{ solicitud.numero_solicitud }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="border-start border-info border-4 ps-3">
+                                        <small class="text-muted d-block">Fecha de Creación</small>
+                                        <strong>{{ solicitud.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="border-start border-warning border-4 ps-3">
+                                        <small class="text-muted d-block">Última Actualización</small>
+                                        <strong>{{ solicitud.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="border-start border-success border-4 ps-3">
+                                        <small class="text-muted d-block">Tipo de Servicio</small>
+                                        <strong>{{ solicitud.tipo_servicio_display }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="border-start border-danger border-4 ps-3">
+                                        <small class="text-muted d-block">Prioridad</small>
+                                        <span class="badge fs-6 bg-{{ 'secondary' if solicitud.prioridad == 'baja' else 'primary' if solicitud.prioridad == 'normal' else 'warning' if solicitud.prioridad == 'alta' else 'danger' }} px-3 py-2">
+                                            {{ solicitud.prioridad_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="border-start border-info border-4 ps-3">
+                                        <small class="text-muted d-block">Título</small>
+                                        <strong class="fs-6">{{ solicitud.titulo }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="border-start border-secondary border-4 ps-3">
+                                        <small class="text-muted d-block">Descripción</small>
+                                        <div class="bg-light p-3 rounded mt-2">
+                                            {{ solicitud.descripcion }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if solicitud.ubicacion %}
+                                <div class="col-md-6">
+                                    <div class="border-start border-primary border-4 ps-3">
+                                        <small class="text-muted d-block">Ubicación</small>
+                                        <strong>{{ solicitud.ubicacion }}</strong>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if solicitud.activo_afectado %}
+                                <div class="col-md-6">
+                                    <div class="border-start border-warning border-4 ps-3">
+                                        <small class="text-muted d-block">Activo Afectado</small>
+                                        <strong>{{ solicitud.activo_afectado }}</strong>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historial de Estados -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-timeline me-2"></i>Historial de Estados
+                            </h5>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                Actualizado: {{ solicitud.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') if solicitud.fecha_actualizacion else 'N/A' }}
+                            </small>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline-modern">
+                                {% set estados_info = {
+                                    'pendiente': {'titulo': 'Pendiente', 'icono': 'circle', 'color': 'secondary', 'descripcion': 'Solicitud creada y esperando revisión'},
+                                    'en_revision': {'titulo': 'En Revisión', 'icono': 'search', 'color': 'warning', 'descripcion': 'Solicitud siendo evaluada por el equipo técnico'},
+                                    'aprobada': {'titulo': 'Aprobada', 'icono': 'check-circle', 'color': 'success', 'descripcion': 'Solicitud aprobada para ejecución'},
+                                    'en_progreso': {'titulo': 'En Progreso', 'icono': 'gear', 'color': 'info', 'descripcion': 'Trabajo en curso'},
+                                    'completada': {'titulo': 'Completada', 'icono': 'check-circle-fill', 'color': 'success', 'descripcion': 'Servicio completado satisfactoriamente'}
+                                } %}
+                                {% set estados_orden = ['pendiente', 'en_revision', 'aprobada', 'en_progreso', 'completada'] %}
+
+                                {% for estado in estados_orden %}
+                                    {% set estado_data = estados_info[estado] %}
+                                    <div class="timeline-item-modern {{ 'active' if solicitud.estado == estado else 'completed' if estados_orden.index(solicitud.estado) > estados_orden.index(estado) else 'pending' }}">
+                                        <div class="timeline-marker-modern">
+                                            <i class="bi bi-{{ estado_data.icono }}"></i>
+                                        </div>
+                                        <div class="timeline-content-modern">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="timeline-title-modern mb-1">
+                                                        {{ estado_data.titulo }}
+                                                    </h6>
+                                                    <p class="timeline-text-modern mb-2">
+                                                        {{ estado_data.descripcion }}
+                                                    </p>
+                                                </div>
+                                                <div class="text-end">
+                                                    {% if solicitud.estado == estado %}
+                                                        <span class="badge bg-{{ estado_data.color }} fs-6 px-3 py-2">
+                                                            <i class="bi bi-record-circle me-1"></i>Estado Actual
+                                                        </span>
+                                                    {% elif estados_orden.index(solicitud.estado) > estados_orden.index(estado) %}
+                                                        <span class="badge bg-success fs-6 px-3 py-2">
+                                                            <i class="bi bi-check-circle me-1"></i>Completado
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary fs-6 px-3 py-2">
+                                                            <i class="bi bi-dash-circle me-1"></i>Pendiente
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <!-- Mostrar fecha si es el estado actual o completado -->
+                                            {% if solicitud.estado == estado %}
+                                                <div class="timeline-meta">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-calendar-event me-1"></i>
+                                                        Estado actual desde: {{ solicitud.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') if solicitud.fecha_actualizacion else 'N/A' }}
+                                                    </small>
+                                                </div>
+                                            {% elif estados_orden.index(solicitud.estado) > estados_orden.index(estado) %}
+                                                <div class="timeline-meta">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-calendar-check me-1"></i>
+                                                        Completado el: {{ solicitud.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') if solicitud.fecha_actualizacion else 'N/A' }}
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Información adicional del historial -->
+                            <div class="mt-4 pt-3 border-top">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="p-2">
+                                            <i class="bi bi-calendar-plus fs-2 text-primary mb-2"></i>
+                                            <div>
+                                                <small class="text-muted d-block">Creada</small>
+                                                <strong>{{ solicitud.fecha_creacion.strftime('%d/%m/%Y') if solicitud.fecha_creacion else 'N/A' }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="p-2">
+                                            <i class="bi bi-clock-history fs-2 text-info mb-2"></i>
+                                            <div>
+                                                <small class="text-muted d-block">Última actualización</small>
+                                                <strong>{{ solicitud.fecha_actualizacion.strftime('%d/%m/%Y') if solicitud.fecha_actualizacion else 'N/A' }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="p-2">
+                                            <i class="bi bi-flag fs-2 text-warning mb-2"></i>
+                                            <div>
+                                                <small class="text-muted d-block">Prioridad</small>
+                                                <strong class="text-{{ 'danger' if solicitud.prioridad == 'urgente' else 'warning' if solicitud.prioridad == 'alta' else 'success' if solicitud.prioridad == 'baja' else 'secondary' }}">
+                                                    {{ solicitud.prioridad|title if solicitud.prioridad else 'Normal' }}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="p-2">
+                                            <i class="bi bi-gear fs-2 text-success mb-2"></i>
+                                            <div>
+                                                <small class="text-muted d-block">Tipo</small>
+                                                <strong>{{ solicitud.tipo_servicio|title if solicitud.tipo_servicio else 'N/A' }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Solicitante -->
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person me-2"></i>Información del Solicitante
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mb-3"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-person-fill fs-3"></i>
+                                </div>
+                                <h6 class="fw-bold">{{ solicitud.nombre_solicitante }}</h6>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-envelope-fill text-primary me-3 fs-5"></i>
+                                        <div>
+                                            <small class="text-muted d-block">Email</small>
+                                            <strong>{{ solicitud.email_solicitante }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if solicitud.telefono_solicitante %}
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-telephone-fill text-success me-3 fs-5"></i>
+                                        <div>
+                                            <small class="text-muted d-block">Teléfono</small>
+                                            <strong>{{ solicitud.telefono_solicitante }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if solicitud.empresa_solicitante %}
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-building text-info me-3 fs-5"></i>
+                                        <div>
+                                            <small class="text-muted d-block">Empresa</small>
+                                            <strong>{{ solicitud.empresa_solicitante }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                        onclick="enviarEmail('{{ solicitud.email_solicitante }}')">
+                                    <i class="bi bi-envelope me-1"></i>Enviar Email
+                                </button>
+                                {% if solicitud.telefono_solicitante %}
+                                <button type="button" class="btn btn-outline-success btn-sm"
+                                        onclick="llamar('{{ solicitud.telefono_solicitante }}')">
+                                    <i class="bi bi-telephone me-1"></i>Llamar
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones Rápidas -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-gear me-2"></i>Acciones Rápidas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                {% if solicitud.estado == 'pendiente' %}
+                                <button type="button" class="btn btn-warning btn-sm"
+                                        onclick="cambiarEstadoRapido('en_revision')">
+                                    <i class="bi bi-eye me-1"></i>Marcar en Revisión
+                                </button>
+                                {% endif %}
+
+                                {% if solicitud.estado == 'en_revision' %}
+                                <button type="button" class="btn btn-success btn-sm"
+                                        onclick="cambiarEstadoRapido('aprobada')">
+                                    <i class="bi bi-check-circle me-1"></i>Aprobar Solicitud
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        onclick="cambiarEstadoRapido('rechazada')">
+                                    <i class="bi bi-x-circle me-1"></i>Rechazar Solicitud
+                                </button>
+                                {% endif %}
+
+                                {% if solicitud.estado == 'aprobada' %}
+                                <button type="button" class="btn btn-info btn-sm"
+                                        onclick="cambiarEstadoRapido('en_progreso')">
+                                    <i class="bi bi-play-circle me-1"></i>Iniciar Trabajo
+                                </button>
+                                {% endif %}
+
+                                {% if solicitud.estado == 'en_progreso' %}
+                                <button type="button" class="btn btn-success btn-sm"
+                                        onclick="cambiarEstadoRapido('completada')">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Marcar Completada
+                                </button>
+                                {% endif %}
+
+                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                        onclick="agregarComentario()">
+                                    <i class="bi bi-chat-text me-1"></i>Agregar Comentario
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para cambiar estado -->
+<div class="modal fade" id="cambiarEstadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado de Solicitud</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="cambiarEstadoForm">
+                <div class="modal-body">
+                    <input type="hidden" name="solicitud_id" value="{{ solicitud.id }}">
+                    <div class="mb-3">
+                        <label for="nuevoEstado" class="form-label">Nuevo Estado</label>
+                        <select class="form-select" id="nuevoEstado" name="estado" required>
+                            <option value="pendiente" {{ 'selected' if solicitud.estado == 'pendiente' }}>Pendiente</option>
+                            <option value="en_revision" {{ 'selected' if solicitud.estado == 'en_revision' }}>En Revisión</option>
+                            <option value="aprobada" {{ 'selected' if solicitud.estado == 'aprobada' }}>Aprobada</option>
+                            <option value="en_progreso" {{ 'selected' if solicitud.estado == 'en_progreso' }}>En Progreso</option>
+                            <option value="completada" {{ 'selected' if solicitud.estado == 'completada' }}>Completada</option>
+                            <option value="rechazada" {{ 'selected' if solicitud.estado == 'rechazada' }}>Rechazada</option>
+                            <option value="cancelada" {{ 'selected' if solicitud.estado == 'cancelada' }}>Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comentarioEstado" class="form-label">Comentario (opcional)</label>
+                        <textarea class="form-control" id="comentarioEstado" name="comentario" rows="3"
+                                  placeholder="Agregue un comentario sobre el cambio de estado..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cambiar Estado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar comentario -->
+<div class="modal fade" id="comentarioModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Comentario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="comentarioForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="comentarioTexto" class="form-label">Comentario</label>
+                        <textarea class="form-control" id="comentarioTexto" name="comentario" rows="4"
+                                  placeholder="Escriba su comentario..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Comentario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-modern {
+        position: relative;
+        padding-left: 80px;
+    }
+
+    .timeline-modern::before {
+        content: "";
+        position: absolute;
+        left: 35px;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(to bottom, #e9ecef 0%, #dee2e6 50%, #e9ecef 100%);
+        border-radius: 2px;
+    }
+
+    .timeline-item-modern {
+        position: relative;
+        margin-bottom: 40px;
+        opacity: 0.7;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .timeline-item-modern:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-item-modern:hover {
+        opacity: 0.9;
+        transform: translateX(5px);
+    }
+
+    .timeline-item-modern.active {
+        opacity: 1;
+        transform: translateX(10px);
+    }
+
+    .timeline-item-modern.completed {
+        opacity: 1;
+    }
+
+    .timeline-marker-modern {
+        position: absolute;
+        left: -20px;
+        top: 10px;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: white;
+        border: 4px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 1.8rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2;
+    }
+
+    .timeline-item-modern.active .timeline-marker-modern {
+        background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        border-color: #0d6efd;
+        color: white;
+        transform: scale(1.15);
+        box-shadow: 0 6px 30px rgba(13, 110, 253, 0.4);
+        animation: pulse-active 2s infinite;
+    }
+
+    .timeline-item-modern.completed .timeline-marker-modern {
+        background: linear-gradient(135deg, #198754 0%, #157347 100%);
+        border-color: #198754;
+        color: white;
+        box-shadow: 0 6px 30px rgba(25, 135, 84, 0.4);
+    }
+
+    .timeline-content-modern {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 15px;
+        border-left: 5px solid #dee2e6;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
+
+    .timeline-content-modern::before {
+        content: "";
+        position: absolute;
+        left: -15px;
+        top: 25px;
+        width: 0;
+        height: 0;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        border-right: 15px solid #f8f9fa;
+    }
+
+    .timeline-item-modern.active .timeline-content-modern {
+        border-left-color: #0d6efd;
+        background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
+        box-shadow: 0 4px 25px rgba(13, 110, 253, 0.15);
+        transform: translateX(5px);
+    }
+
+    .timeline-item-modern.active .timeline-content-modern::before {
+        border-right-color: #e7f3ff;
+    }
+
+    .timeline-item-modern.completed .timeline-content-modern {
+        border-left-color: #198754;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f0fff0 100%);
+        box-shadow: 0 4px 25px rgba(25, 135, 84, 0.15);
+    }
+
+    .timeline-item-modern.completed .timeline-content-modern::before {
+        border-right-color: #e8f5e8;
+    }
+
+    .timeline-title-modern {
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #495057;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .timeline-title-modern::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        margin-right: 10px;
+        opacity: 0.7;
+    }
+
+    .timeline-item-modern.active .timeline-title-modern {
+        color: #0d6efd;
+    }
+
+    .timeline-item-modern.completed .timeline-title-modern {
+        color: #198754;
+    }
+
+    .timeline-text-modern {
+        color: #6c757d;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+
+    .timeline-meta {
+        padding-top: 10px;
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .timeline-meta small {
+        font-size: 0.85rem;
+        color: #8e9297;
+    }
+
+    @keyframes pulse-active {
+        0% {
+            transform: scale(1.15);
+            box-shadow: 0 6px 30px rgba(13, 110, 253, 0.4);
+        }
+        50% {
+            transform: scale(1.2);
+            box-shadow: 0 8px 35px rgba(13, 110, 253, 0.6);
+        }
+        100% {
+            transform: scale(1.15);
+            box-shadow: 0 6px 30px rgba(13, 110, 253, 0.4);
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .timeline-modern {
+            padding-left: 60px;
+        }
+
+        .timeline-marker-modern {
+            width: 50px;
+            height: 50px;
+            font-size: 1.3rem;
+            left: -15px;
+        }
+
+        .timeline-content-modern {
+            padding: 20px;
+        }
+
+        .timeline-item-modern.active {
+            transform: translateX(5px);
+        }
+
+        .timeline-item-modern.active .timeline-marker-modern {
+            transform: scale(1.1);
+        }
+    }
+</style>
+
+    .timeline-item-modern.completed .timeline-title-modern {
+        color: #198754;
+    }
+
+    .timeline-text-modern {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+
+    @media print {
+        .btn, .modal, .card-header .btn {
+            display: none !important;
+        }
+        .card {
+            border: 1px solid #dee2e6 !important;
+            box-shadow: none !important;
+        }
+    }
+</style>
+
+<script>
+function cambiarEstado() {
+    new bootstrap.Modal(document.getElementById('cambiarEstadoModal')).show();
+}
+
+function cambiarEstadoRapido(nuevoEstado) {
+    if (confirm('¿Está seguro de cambiar el estado de la solicitud?')) {
+        fetch(`/admin/solicitudes/{{ solicitud.id }}/estado`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                estado: nuevoEstado,
+                comentario: 'Cambio de estado rápido desde la vista detallada'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al cambiar el estado: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión');
+        });
+    }
+}
+
+function agregarComentario() {
+    new bootstrap.Modal(document.getElementById('comentarioModal')).show();
+}
+
+document.getElementById('cambiarEstadoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const solicitudId = formData.get('solicitud_id');
+    const nuevoEstado = formData.get('estado');
+    const comentario = formData.get('comentario');
+
+    fetch(`/admin/solicitudes/${solicitudId}/estado`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            estado: nuevoEstado,
+            comentario: comentario
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('cambiarEstadoModal')).hide();
+            location.reload();
+        } else {
+            alert('Error al cambiar el estado: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
+});
+
+document.getElementById('comentarioForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const comentario = document.getElementById('comentarioTexto').value;
+
+    fetch(`/admin/solicitudes/{{ solicitud.id }}/comentario`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            comentario: comentario
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('comentarioModal')).hide();
+            document.getElementById('comentarioTexto').value = '';
+            // Aquí podrías actualizar la UI para mostrar el nuevo comentario
+            alert('Comentario agregado exitosamente');
+        } else {
+            alert('Error al agregar el comentario: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
+});
+
+function enviarEmail(email) {
+    window.location.href = `mailto:${email}?subject=Solicitud ${solicitud.numero_solicitud} - GMAO System`;
+}
+
+function llamar(telefono) {
+    window.location.href = `tel:${telefono}`;
+}
+</script>
+{% endblock %}

@@ -1,391 +1,531 @@
-/* Estilos específicos para la página de usuarios */
+/* Estilos para la página de usuarios */
 
-/* Variables necesarias para filtros colapsables */
+/* Variables de color coherentes con el sidebar */
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #34495e;
-    --success-color: #27ae60;
-    --warning-color: #f39c12;
-    --danger-color: #e74c3c;
-    --info-color: #3498db;
-    --border-radius: 8px;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
-    --light-bg: #ecf0f1;
-    --light-gray: #ecf0f1;
-    --medium-gray: #bdc3c7;
-    --dark-gray: #7f8c8d;
-}
-
-/* Tarjetas de estadísticas modernizadas */
-.stats-card {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
-    border: none;
-    transition: var(--transition);
-    overflow: hidden;
-}
-
-.stats-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.stats-card .card-body {
-    padding: 1.5rem;
-    position: relative;
-}
-
-.stats-card .stats-icon {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 2.5rem;
-    opacity: 0.3;
-}
-
-.stats-card .stats-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0;
-    line-height: 1;
-}
-
-.stats-card .stats-label {
-    color: var(--dark-gray);
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin-top: 0.5rem;
-}
-
-/* Colores específicos para las tarjetas */
-.stats-card.primary {
-    border-left: 4px solid var(--primary-color);
-}
-
-.stats-card.success {
-    border-left: 4px solid var(--success-color);
-}
-
-.stats-card.warning {
-    border-left: 4px solid var(--warning-color);
-}
-
-.stats-card.danger {
-    border-left: 4px solid var(--danger-color);
+  --primary-color: #1e40af;
+  --secondary-color: #64748b;
+  --accent-color: #3b82f6;
+  --light-bg: #f8fafc;
+  --muted-text: #64748b;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+  --border-radius: 8px;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+  --light-gray: #f1f5f9;
+  --medium-gray: #94a3b8;
+  --dark-gray: #475569;
 }
 
 /* Filtros modernos colapsables */
 .filtros-container {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 2rem;
-    overflow: hidden;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
 }
 
 .filtros-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: white;
-    padding: 1rem 1.25rem;
-    cursor: pointer;
-    transition: var(--transition);
-    user-select: none;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  );
+  color: white;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .filtros-header:hover {
-    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--secondary-color) 0%,
+    var(--primary-color) 100%
+  );
 }
 
 .filtros-header h6 {
-    margin: 0;
-    font-weight: 600;
-    font-size: 0.95rem;
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Botones de acción consistentes con el resto de la aplicación */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn i {
+  font-size: 14px;
+}
+
+.action-btn.view:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.action-btn.edit:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
+.action-btn.delete:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.action-btn.info:hover {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
 }
 
 /* Indicador de estado del collapse */
 .filtros-header::after {
-    content: "\F229";
-    /* bi-chevron-down */
-    font-family: "bootstrap-icons";
-    font-size: 1rem;
-    transition: transform 0.3s ease;
-    transform: rotate(0deg);
+  content: "\F229";
+  /* bi-chevron-down */
+  font-family: "bootstrap-icons";
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+  transform: rotate(0deg);
 }
 
 .filtros-header.collapsed::after {
-    transform: rotate(-90deg);
+  transform: rotate(-90deg);
 }
 
 .filtros-header[aria-expanded="true"]::after {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .filtros-body {
-    padding: 1.5rem;
-    background: var(--light-bg);
-    border-top: 1px solid #dee2e6;
+  padding: 1.5rem;
+  background: var(--light-bg);
+  border-top: 1px solid #dee2e6;
 }
 
-.form-group {
-    margin-bottom: 1rem;
-}
-
+/* Tarjetas de estadísticas modernizadas */
 .stats-card {
-    transition: transform 0.2s ease-in-out;
-    border: none;
-    box-shadow: 0 2px 4px rgba(44, 62, 80, 0.1);
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  border: none;
+  transition: var(--transition);
+  overflow: hidden;
 }
 
 .stats-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(44, 62, 80, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.stats-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
+.stats-card .card-body {
+  padding: 1.5rem;
+  position: relative;
 }
 
-/* Estilos para la tabla de usuarios */
-.table th {
-    background-color: #ecf0f1;
-    border-top: none;
-    font-weight: 600;
-    color: #2c3e50;
+.stats-card .stats-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 2.5rem;
+  opacity: 0.3;
+}
+
+.stats-card .stats-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+}
+
+.stats-card .stats-label {
+  color: var(--dark-gray);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+/* Colores específicos para las tarjetas */
+.stats-card.primary {
+  border-left: 4px solid var(--primary-color);
+}
+
+.stats-card.success {
+  border-left: 4px solid var(--success-color);
+}
+
+.stats-card.warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+.stats-card.danger {
+  border-left: 4px solid var(--danger-color);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Mejoras de responsividad */
+@media (max-width: 576px) {
+  .btn {
     font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .btn i {
+    font-size: 1rem;
+  }
+
+  .card-body {
+    padding: 0.75rem;
+  }
+
+  .table-responsive {
+    font-size: 0.85rem;
+  }
 }
 
-.table td {
-    vertical-align: middle;
-    font-size: 0.875rem;
-    color: #34495e;
+@media (max-width: 768px) {
+  .col-md-3,
+  .col-md-2,
+  .col-md-1 {
+    margin-bottom: 0.5rem;
+  }
 }
 
-.table tbody tr:hover {
-    background-color: rgba(44, 62, 80, 0.05);
+/* Estilos de las cards */
+.card {
+  border: 1px solid #dde4e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(44, 62, 80, 0.1);
+  transition: box-shadow 0.2s ease;
 }
 
-/* Estilos para badges */
-.badge {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
+.card:hover {
+  box-shadow: 0 4px 8px rgba(44, 62, 80, 0.15);
 }
 
-.badge.bg-primary {
-    background-color: #34495e !important;
+.card-header {
+  background-color: var(--light-bg);
+  border-bottom: 1px solid #dde4e6;
+  padding: 1rem 1.25rem;
 }
 
-.badge.bg-success {
-    background-color: #27ae60 !important;
+.card-header h6 {
+  color: var(--primary-color);
+  font-weight: 600;
 }
 
-.badge.bg-light {
-    background-color: #ecf0f1 !important;
-    color: #2c3e50 !important;
-}
-
-/* Estilos para botones de acción */
-.btn-outline-primary {
-    color: #2c3e50;
-    border-color: #2c3e50;
-}
-
-.btn-outline-primary:hover {
-    background-color: #2c3e50;
-    border-color: #2c3e50;
-}
-
-.btn-outline-warning {
-    color: #7f8c8d;
-    border-color: #7f8c8d;
-}
-
-.btn-outline-warning:hover {
-    background-color: #7f8c8d;
-    border-color: #7f8c8d;
-}
-
-.btn-outline-success {
-    color: #27ae60;
-    border-color: #27ae60;
-}
-
-.btn-outline-success:hover {
-    background-color: #27ae60;
-    border-color: #27ae60;
-}
-
+/* Botones con estilo coherente */
 .btn-primary {
-    background-color: #34495e;
-    border-color: #34495e;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
 }
 
 .btn-primary:hover {
-    background-color: #2c3e50;
-    border-color: #2c3e50;
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
 }
 
-/* Estilos para filtros */
-.form-label {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 0.25rem;
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
-.form-control:focus,
-.form-select:focus {
-    border-color: #34495e;
-    box-shadow: 0 0 0 0.2rem rgba(52, 73, 94, 0.25);
+.btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
 }
 
+.btn-outline-secondary {
+  color: var(--secondary-color);
+  border-color: #95a5a6;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: white;
+}
+
+/* Estilos de la tabla */
+.table {
+  margin-bottom: 0;
+}
+
+.table-light {
+  background-color: #f8f9fa;
+}
+
+.table th {
+  background-color: var(--light-bg);
+  color: var(--primary-color);
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+  padding: 0.75rem;
+}
+
+.table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-top: 1px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(52, 73, 94, 0.05);
+}
+
+/* Badges de estado */
+.badge {
+  padding: 0.5em 0.75em;
+  font-size: 0.875em;
+  font-weight: 500;
+}
+
+.badge.bg-success {
+  background-color: var(--success-color) !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--warning-color) !important;
+}
+
+.badge.bg-danger {
+  background-color: var(--danger-color) !important;
+}
+
+.badge.bg-secondary {
+  background-color: var(--muted-text) !important;
+}
+
+/* Formularios */
 .form-control,
 .form-select {
-    border-color: #bdc3c7;
-    color: #2c3e50;
+  border: 1px solid #bdc3c7;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* Override para form-select específicamente */
 .form-select {
-    padding-right: 2.5rem !important;
-    background-position: right 0.75rem center !important;
+  padding-right: 2.5rem !important;
+  background-position: right 0.75rem center !important;
 }
 
-/* Estilos para el modal */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.form-label {
+  color: var(--primary-color);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Input groups */
+.input-group .btn {
+  border: 1px solid #bdc3c7;
+}
+
+/* Modal */
+.modal-content {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(44, 62, 80, 0.15);
+}
+
 .modal-header {
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    border-bottom: none;
-    color: white;
+  background-color: var(--light-bg);
+  border-bottom: 1px solid #dde4e6;
+  border-radius: 8px 8px 0 0;
 }
 
 .modal-title {
-    color: white;
-    font-weight: 600;
+  color: var(--primary-color);
+  font-weight: 600;
 }
 
-/* Estilos para cards */
-.card {
-    border: none;
-    box-shadow: 0 2px 4px rgba(44, 62, 80, 0.1);
-    margin-bottom: 1.5rem;
+.modal-footer {
+  border-top: 1px solid #dde4e6;
+  background-color: #f8f9fa;
+  border-radius: 0 0 8px 8px;
 }
 
-.card-header {
-    background-color: #ecf0f1;
-    border-bottom: 1px solid #bdc3c7;
-    padding: 1rem 1.25rem;
+/* Iconos */
+.bi {
+  font-size: 1em;
+  vertical-align: -0.125em;
 }
 
-.card-header h6 {
-    margin: 0;
-    color: #2c3e50;
-    font-weight: 600;
+/* Texto muted personalizado */
+.text-muted {
+  color: var(--muted-text) !important;
 }
 
-/* Estilos para paginación */
-.pagination .page-link {
-    color: #2c3e50;
-    border-color: #bdc3c7;
+/* Estilos de código */
+.codigo-usuario {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--primary-color);
+  background-color: rgba(236, 240, 241, 0.7);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #bdc3c7;
 }
 
-.pagination .page-item.active .page-link {
-    background-color: #34495e;
-    border-color: #34495e;
-}
-
-.pagination .page-link:hover {
-    color: #2c3e50;
-    background-color: #ecf0f1;
-    border-color: #bdc3c7;
-}
-
-.pagination .page-link:hover {
-    color: #2c3e50;
-    background-color: #ecf0f1;
-    border-color: #bdc3c7;
-}
-
-/* Estilos para alertas flotantes */
-.alert {
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.15);
-}
-
-.alert-success {
-    background-color: #d5e8d4;
-    border-color: #27ae60;
-    color: #155724;
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    border-color: #e74c3c;
-    color: #721c24;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    border-color: #f39c12;
-    color: #856404;
-}
-
-.alert-info {
-    background-color: #d1ecf1;
-    border-color: #34495e;
-    color: #0c5460;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .table-responsive {
-        font-size: 0.8rem;
-    }
-
-    .card-body {
-        padding: 0.75rem;
-    }
-}
-
-/* Animaciones */
+/* Animaciones sutiles */
 .card,
 .btn,
 .form-control,
 .form-select {
-    transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease;
 }
 
-.btn:hover {
-    transform: translateY(-1px);
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .btn-group {
+    width: 100%;
+  }
+
+  .btn-group .btn {
+    flex: 1;
+  }
+
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
 }
 
-/* Estilos para iconos */
-.bi {
-    vertical-align: -0.125em;
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
-/* Mejoras visuales adicionales */
-.container-fluid {
-    padding: 1.5rem;
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
 }
 
-.table-responsive {
-    border-radius: 8px;
-    overflow: hidden;
+/* Tooltip styles */
+.tooltip {
+  font-size: 0.875rem;
 }
 
-.modal-content {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+.tooltip-inner {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+}
+
+/* Form validation */
+.is-invalid {
+  border-color: var(--danger-color);
+}
+
+.invalid-feedback {
+  color: var(--danger-color);
+  font-size: 0.875rem;
+}
+
+.is-valid {
+  border-color: var(--success-color);
+}
+
+.valid-feedback {
+  color: var(--success-color);
+  font-size: 0.875rem;
+}
+
+/* Estilos específicos para botones del filtro de búsqueda */
+.filtros-body .btn {
+  border-radius: 6px;
+  border: 1px solid #bdc3c7;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  height: 38px;
+  /* Altura consistente con inputs para layout horizontal */
+  white-space: nowrap;
+  /* Evitar que el texto se rompa */
+}
+
+.filtros-body .btn i {
+  font-size: 0.8rem;
+  margin-right: 0.25rem;
+}
+
+.filtros-body .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.filtros-body .btn-primary:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filtros-body .btn-outline-secondary {
+  color: var(--secondary-color);
+  border-color: #bdc3c7;
+  background-color: white;
+}
+
+.filtros-body .btn-outline-secondary:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo específico para el botón limpiar del filtro */
+.btn-limpiar-filtro {
+  margin-left: 0.25rem !important;
 }

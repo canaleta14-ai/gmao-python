@@ -6,8 +6,6 @@
 {% endblock %}
 
 {% block content %}
-<!-- Wrapper para controlar el ancho total -->
-<div class="inventario-wrapper">
 <!-- Encabezado con estadísticas -->
 <div class="container-fluid">
     <div class="row mb-4">
@@ -29,9 +27,6 @@
                     </button>
                     <a href="{{ url_for('inventario.conteos_page') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-clipboard-check me-1"></i>Conteos
-                    </a>
-                    <a href="{{ url_for('inventario.reportes_page') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-bar-chart me-1"></i>Reportes
                     </a>
                     <button type="button" class="btn btn-primary" onclick="mostrarModalNuevoArticulo()">
                         <i class="bi bi-plus-circle me-1"></i>Nuevo Artículo
@@ -150,14 +145,12 @@
             </div>
         </div>
     </div>
-</div>
-</div>
 
-<!-- Tabla de Inventario -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
+    <!-- Tabla de Inventario -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h6 class="mb-0"><i class="bi bi-table me-2"></i>Listado de Artículos</h6>
                     <span class="badge bg-secondary" id="contador-articulos">0 artículos</span>
@@ -194,13 +187,14 @@
     </div>
 </div>
 </div>
+</div>
 
 <!-- Modal Nuevo Artículo -->
 <div class="modal fade modal-modern" id="modalNuevoArticulo" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Nuevo Artículo</h5>
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Nuevo Artículo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -319,7 +313,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" onclick="guardarNuevoArticulo()">
-                    <i class="fas fa-save"></i> Guardar
+                    <i class="bi bi-save me-1"></i>Guardar
                 </button>
             </div>
         </div>
@@ -332,7 +326,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-exchange-alt me-2"></i>Registrar Movimiento
+                    <i class="bi bi-arrow-left-right me-2"></i>Registrar Movimiento
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -368,7 +362,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="guardarMovimiento()">
-                    <i class="fas fa-save"></i> Registrar
+                    <i class="bi bi-save me-1"></i>Registrar
                 </button>
             </div>
         </div>
@@ -381,7 +375,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-edit me-2"></i>Editar Artículo
+                    <i class="bi bi-pencil me-2"></i>Editar Artículo
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -503,7 +497,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" onclick="guardarEdicionArticulo()">
-                    <i class="fas fa-save"></i> Guardar Cambios
+                    <i class="bi bi-save me-1"></i>Guardar Cambios
                 </button>
             </div>
         </div>
@@ -516,7 +510,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-history me-2"></i>Historial de Movimientos
+                    <i class="bi bi-clock-history me-2"></i>Historial de Movimientos
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -552,7 +546,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-exchange-alt me-2"></i>Movimientos de Inventario
+                    <i class="bi bi-arrow-left-right me-2"></i>Movimientos de Inventario
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -583,9 +577,6 @@
     </div>
 </div>
 
-</div>
-<!-- Fin wrapper inventario -->
-
 {% endblock %}
 
 {% block scripts %}
@@ -593,5 +584,4 @@
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventario-categorias.js') }}"></script>
 <script src="{{ url_for('static', filename='js/diagnostico-autocomplete.js') }}"></script>
-<script src="/test-autocomplete-browser.js"></script>
 {% endblock %}

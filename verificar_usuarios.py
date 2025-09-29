@@ -24,7 +24,7 @@ with app.app_context():
             for user in usuarios:
                 print(f"  - ID: {user.id}")
                 print(f"    Username: {user.username}")
-                print(f"    Nombre: {user.nombre} {user.apellido or ''}")
+                print(f"    Nombre: {user.nombre}")
                 print(f"    Email: {user.email}")
                 print(f"    Rol: {user.rol}")
                 print(f"    Activo: {user.activo}")
@@ -41,7 +41,6 @@ with app.app_context():
                 email="admin@test.com",
                 password=generate_password_hash("admin123"),
                 nombre="Administrador",
-                apellido="Sistema",
                 rol="Administrador",
                 activo=True,
             )

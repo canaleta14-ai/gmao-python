@@ -8,8 +8,12 @@ from flask import (
     jsonify,
     send_from_directory,
 )
-from flask_login import login_required, current_user, logout_user
+from flask_login import login_required, current_user
+
+# Importar función de autenticación desde el controlador
 from app.controllers.usuarios_controller import autenticar_usuario
+
+
 from app.models.orden_trabajo import (
     OrdenTrabajo,
 )  # Ensure this model is defined correctly and properly initialized
@@ -20,13 +24,19 @@ from app.models.plan_mantenimiento import PlanMantenimiento
 from datetime import datetime, timedelta
 import os
 
-web_bp = Blueprint("web", __name__)
+web_bp = Blueprint("web_routes", __name__)
 
 
 @web_bp.route("/test-dashboard")
 def test_dashboard():
     """Página de test independiente para diagnosticar problemas"""
     return render_template("test-dashboard.html")
+
+
+@web_bp.route("/test-notificaciones")
+def test_notificaciones():
+    """Página de prueba para las nuevas notificaciones de Bootstrap"""
+    return render_template("test-notificaciones.html")
 
 
 @web_bp.route("/alertas-test")
@@ -38,76 +48,16 @@ def alertas_test():
 @web_bp.route("/")
 def index():
     if current_user.is_authenticated:
-        return redirect(url_for("web.dashboard"))
-    return redirect(url_for("web.login"))
+        return redirect(url_for("web_routes.dashboard"))
+    return redirect(url_for("usuarios_controller.login"))
 
 
 @web_bp.route("/dashboard")
 @login_required
 def dashboard():
-    from datetime import date
-    from sqlalchemy import func
-    from app.models.orden_trabajo import OrdenTrabajo
-
-    hoy = date.today()
-    stats: dict[str, int] = {
-        "ordenes_activas": OrdenTrabajo.query.filter_by(estado="En Proceso").count(),
-        "ordenes_completadas_hoy": OrdenTrabajo.query.filter(
-            OrdenTrabajo.estado == "Completada",
-            func.date(OrdenTrabajo.fecha_completada) == hoy,
-        ).count(),
-        "ordenes_pendientes": OrdenTrabajo.query.filter_by(estado="Pendiente").count(),
-        "total_activos": Activo.query.count(),
-        "activos_operativos": Activo.query.filter_by(estado="Operativo").count(),
-        "activos_mantenimiento": Activo.query.filter_by(
-            estado="En Mantenimiento"
-        ).count(),
-        "inventario_bajo": Inventario.query.filter(
-            Inventario.stock_actual <= Inventario.stock_minimo
-        ).count(),
-    }
-
-    ordenes_recientes = (
-        OrdenTrabajo.query.order_by(OrdenTrabajo.fecha_creacion.desc()).limit(10).all()
-    )
-    return render_template(
-        "dashboard/dashboard.html", stats=stats, ordenes_recientes=ordenes_recientes
-    )
-
-
-@web_bp.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        data = request.get_json() if request.is_json else request.form
-        username = data.get("username")
-        password = data.get("password")
-        user = autenticar_usuario(username, password)
-        if user:
-            if request.is_json:
-                return jsonify({"success": True, "message": "Login exitoso"})
-            flash("Login exitoso", "success")
-            return redirect(url_for("web.dashboard"))
-        else:
-            if request.is_json:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "message": "Usuario o contraseña incorrectos",
-                        }
-                    ),
-                    401,
-                )
-            flash("Usuario o contraseña incorrectos", "danger")
-            return render_template("web/login.html", no_sidebar=True, login_bg=True)
-    return render_template("web/login.html", no_sidebar=True, login_bg=True)
-
-
-@web_bp.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for("web.login"))
+    # El dashboard ahora obtiene los datos via JavaScript/API
+    # No necesitamos hacer consultas aquí
+    return render_template("dashboard/dashboard.html")
 
 
 @web_bp.route("/api/user/info")
@@ -131,13 +81,6 @@ def get_user_info():
         )
     else:
         return jsonify({"success": False, "error": "Usuario no autenticado"}), 401
-
-
-@web_bp.route("/reportes")
-@login_required
-def reportes():
-    """Página de reportes de mantenimiento"""
-    return render_template("reportes/reportes.html")
 
 
 @web_bp.route("/api/alertas-mantenimiento")
@@ -272,3 +215,124 @@ def alertas_mantenimiento():
 def test_codigo_automatico():
     """Página de prueba para generación automática de códigos"""
     return render_template("test_codigo_automatico.html")
+
+
+@web_bp.route("/api/notificaciones")
+@login_required
+def get_notificaciones():
+    """Obtener notificaciones del sistema para el usuario actual"""
+    try:
+        notificaciones = []
+
+        # 1. Planes de mantenimiento próximos a vencer (dentro de 7 días)
+        hoy = datetime.now().date()
+        fecha_limite = hoy + timedelta(days=7)
+
+        planes_proximos = PlanMantenimiento.query.filter(
+            PlanMantenimiento.proxima_ejecucion <= fecha_limite,
+            PlanMantenimiento.proxima_ejecucion >= hoy,
+            PlanMantenimiento.estado == "Activo",
+        ).all()
+
+        for plan in planes_proximos:
+            dias_restantes = (plan.proxima_ejecucion - hoy).days
+            notificaciones.append(
+                {
+                    "id": f"plan_{plan.id}",
+                    "tipo": "warning",
+                    "titulo": "Mantenimiento Próximo",
+                    "mensaje": f'Plan "{plan.nombre}" vence en {dias_restantes} día(s)',
+                    "url": f"/planes",
+                    "icono": "bi-calendar-event",
+                    "fecha": plan.proxima_ejecucion.isoformat(),
+                }
+            )
+
+        # 2. Planes de mantenimiento vencidos
+        planes_vencidos = PlanMantenimiento.query.filter(
+            PlanMantenimiento.proxima_ejecucion < hoy,
+            PlanMantenimiento.estado == "Activo",
+        ).all()
+
+        for plan in planes_vencidos:
+            dias_vencido = (hoy - plan.proxima_ejecucion).days
+            notificaciones.append(
+                {
+                    "id": f"plan_vencido_{plan.id}",
+                    "tipo": "danger",
+                    "titulo": "Mantenimiento Vencido",
+                    "mensaje": f'Plan "{plan.nombre}" venció hace {dias_vencido} día(s)',
+                    "url": f"/planes",
+                    "icono": "bi-exclamation-triangle",
+                    "fecha": plan.proxima_ejecucion.isoformat(),
+                }
+            )
+
+        # 3. Órdenes de trabajo pendientes
+        ordenes_pendientes = OrdenTrabajo.query.filter(
+            OrdenTrabajo.estado.in_(["Pendiente", "En Progreso"])
+        ).all()
+
+        for orden in ordenes_pendientes:
+            notificaciones.append(
+                {
+                    "id": f"orden_{orden.id}",
+                    "tipo": "info",
+                    "titulo": "Orden Pendiente",
+                    "mensaje": f'Orden "{orden.titulo}" requiere atención',
+                    "url": f"/ordenes",
+                    "icono": "bi-clipboard-check",
+                    "fecha": (
+                        orden.fecha_creacion.isoformat()
+                        if orden.fecha_creacion
+                        else None
+                    ),
+                }
+            )
+
+        # 4. Inventario bajo (si hay productos con stock bajo)
+        try:
+            inventario_bajo = Inventario.query.filter(
+                Inventario.stock_actual <= Inventario.stock_minimo
+            ).all()
+
+            for item in inventario_bajo:
+                notificaciones.append(
+                    {
+                        "id": f"inventario_{item.id}",
+                        "tipo": "warning",
+                        "titulo": "Inventario Bajo",
+                        "mensaje": f'Producto "{item.descripcion}" tiene stock bajo ({item.stock_actual})',
+                        "url": f"/inventario",
+                        "icono": "bi-box-seam",
+                        "fecha": None,
+                    }
+                )
+        except:
+            # Si hay error con inventario, continuar sin esta notificación
+            pass
+
+        # Ordenar notificaciones por prioridad (danger > warning > info) y fecha
+        prioridad_orden = {"danger": 0, "warning": 1, "info": 2, "success": 3}
+        notificaciones.sort(
+            key=lambda x: (
+                prioridad_orden.get(x["tipo"], 4),
+                x.get("fecha") or "9999-99-99",
+            )
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "notificaciones": notificaciones,
+                "total": len(notificaciones),
+            }
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {"success": False, "error": str(e), "notificaciones": [], "total": 0}
+            ),
+            500,
+        )

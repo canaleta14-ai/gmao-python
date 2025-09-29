@@ -147,28 +147,33 @@ def calcular_proxima_ejecucion(data, fecha_base=None):
                 )
                 print(f"DEBUG semanal - dias_numericos: {dias_numericos}")
 
-                # Buscar el próximo día de la lista que es ESTRICTAMENTE mayor al día actual
-                # Para asegurar que siempre sea en el futuro
-                proximos_dias = [d for d in dias_numericos if d > dia_actual]
-                print(f"DEBUG semanal - proximos_dias: {proximos_dias}")
+                # Buscar el próximo día válido
+                proxima_ejecucion = None
 
-                if proximos_dias:
-                    # Hay un día en esta semana que aún no ha pasado
-                    proximo_dia = min(proximos_dias)
-                    dias_hasta_proximo = proximo_dia - dia_actual
+                # 1. Buscar en esta semana (solo días futuros)
+                for dia_objetivo in dias_numericos:
+                    if dia_objetivo > dia_actual:
+                        dias_hasta = dia_objetivo - dia_actual
+                        proxima_ejecucion = fecha_base + timedelta(days=dias_hasta)
+                        print(
+                            f"DEBUG semanal - ESTA SEMANA: día {dia_objetivo}, en {dias_hasta} días"
+                        )
+                        break
+
+                # 2. Si no se encontró en esta semana, ir a próxima semana
+                if proxima_ejecucion is None:
+                    primer_dia = min(dias_numericos)
+                    # Días hasta lunes de próxima semana + días desde lunes hasta día objetivo
+                    dias_hasta_lunes_siguiente = 7 - dia_actual
+                    dias_total = dias_hasta_lunes_siguiente + primer_dia
+                    proxima_ejecucion = fecha_base + timedelta(days=dias_total)
                     print(
-                        f"DEBUG semanal - ESTA SEMANA: proximo_dia={proximo_dia}, dias_hasta={dias_hasta_proximo}"
+                        f"DEBUG semanal - PRÓXIMA SEMANA: día {primer_dia}, en {dias_total} días"
                     )
-                    proxima_ejecucion = fecha_base + timedelta(days=dias_hasta_proximo)
-                else:
-                    # No hay días en esta semana que no hayan pasado, ir a la próxima semana
-                    proximo_dia = min(dias_numericos)
-                    # Calcular días hasta el mismo día de la próxima semana
-                    dias_hasta_proximo = (7 - dia_actual) + proximo_dia
-                    print(
-                        f"DEBUG semanal - PROXIMA SEMANA: proximo_dia={proximo_dia}, dias_hasta={dias_hasta_proximo}"
-                    )
-                    proxima_ejecucion = fecha_base + timedelta(days=dias_hasta_proximo)
+
+                print(
+                    f"DEBUG semanal - RESULTADO: {proxima_ejecucion.strftime('%Y-%m-%d %A')}"
+                )
 
                 # Si se especificó intervalo de semanas > 1, ajustar
                 if intervalo_semanas > 1:
@@ -370,6 +375,8 @@ def crear_plan(data):
             else None
         ),
         frecuencia_personalizada=data.get("frecuencia_personalizada"),
+        # Campo de generación automática
+        generacion_automatica=data.get("generacion_automatica", True),
     )
 
     db.session.add(nuevo_plan)
@@ -402,6 +409,7 @@ def obtener_plan_por_id(plan_id):
             if plan.proxima_ejecucion
             else None
         ),
+        "generacion_automatica": plan.generacion_automatica,
     }
 
 
@@ -490,6 +498,10 @@ def editar_plan(plan_id, data):
     if "frecuencia_personalizada" in data:
         plan.frecuencia_personalizada = data["frecuencia_personalizada"]
 
+    # Actualizar generación automática
+    if "generacion_automatica" in data:
+        plan.generacion_automatica = data["generacion_automatica"]
+
     db.session.commit()
     return plan
 
@@ -535,4 +547,278 @@ def obtener_estadisticas_planes():
         "planes_vencidos": vencidos,
         "planes_completados": completados,
         "total_planes": activos + inactivos + pausados,
+    }
+
+
+def generar_ordenes_automaticas():
+    """
+    Genera órdenes de trabajo automáticamente para planes vencidos
+    """
+    from app.models.orden_trabajo import OrdenTrabajo
+    from app.models.activo import Activo
+
+    print("🔄 Iniciando generación automática de órdenes...")
+
+    ahora = datetime.now()
+    ordenes_generadas = []
+
+    # Buscar planes vencidos que estén activos Y tengan generación automática habilitada
+    planes_vencidos = PlanMantenimiento.query.filter(
+        PlanMantenimiento.estado == "Activo",
+        PlanMantenimiento.proxima_ejecucion <= ahora,
+        PlanMantenimiento.generacion_automatica
+        == True,  # Solo planes con generación automática
+    ).all()
+
+    print(f"📋 Encontrados {len(planes_vencidos)} planes vencidos")
+
+    for plan in planes_vencidos:
+        try:
+            # Verificar si ya existe una orden pendiente para este plan
+            orden_existente = OrdenTrabajo.query.filter(
+                OrdenTrabajo.tipo == "Mantenimiento Preventivo",
+                OrdenTrabajo.activo_id == plan.activo_id,
+                OrdenTrabajo.descripcion.contains(f"Plan: {plan.codigo_plan}"),
+                OrdenTrabajo.estado.in_(["Pendiente", "En Proceso"]),
+            ).first()
+
+            if orden_existente:
+                print(f"⚠️ Ya existe orden pendiente para plan {plan.codigo_plan}")
+                continue
+
+            # Obtener información del activo
+            activo = None
+            if plan.activo_id:
+                activo = Activo.query.get(plan.activo_id)
+
+            # Crear nueva orden de trabajo
+            nueva_orden = OrdenTrabajo(
+                tipo="Mantenimiento Preventivo",
+                prioridad="Media",  # Puede ajustarse según el plan
+                estado="Pendiente",
+                descripcion=f"Mantenimiento preventivo - Plan: {plan.codigo_plan} - {plan.nombre}",
+                fecha_creacion=ahora,
+                fecha_programada=ahora.date(),
+                activo_id=plan.activo_id,
+                tiempo_estimado=(
+                    plan.tiempo_estimado if hasattr(plan, "tiempo_estimado") else None
+                ),
+                observaciones=f"Orden generada automáticamente desde plan preventivo.\n\nInstrucciones:\n{plan.instrucciones or 'Sin instrucciones específicas'}",
+            )
+
+            # Generar número de orden único
+            nueva_orden.numero_orden = generar_numero_orden()
+
+            db.session.add(nueva_orden)
+
+            # Actualizar fecha de última ejecución y calcular próxima
+            plan.ultima_ejecucion = ahora
+
+            # Recalcular próxima ejecución
+            datos_plan = {
+                "tipo_frecuencia": plan.tipo_frecuencia,
+                "intervalo_dias": plan.frecuencia_dias,
+                "intervalo_semanas": plan.intervalo_semanas,
+                "dias_semana": plan.dias_semana,
+                "tipo_mensual": plan.tipo_mensual,
+                "dia_mes": plan.dia_mes,
+                "semana_mes": plan.semana_mes,
+                "dia_semana_mes": plan.dia_semana_mes,
+                "intervalo_meses": plan.intervalo_meses,
+                "frecuencia": plan.frecuencia,
+            }
+
+            try:
+                nueva_proxima = calcular_proxima_ejecucion(datos_plan, ahora)
+                plan.proxima_ejecucion = nueva_proxima
+                print(
+                    f"✅ Plan {plan.codigo_plan}: próxima ejecución actualizada a {nueva_proxima}"
+                )
+            except Exception as e:
+                print(
+                    f"⚠️ Error calculando próxima ejecución para plan {plan.codigo_plan}: {e}"
+                )
+                # Si hay error, programar para el próximo día por defecto
+                if plan.tipo_frecuencia == "diaria" or plan.frecuencia == "Diario":
+                    plan.proxima_ejecucion = ahora + timedelta(days=1)
+                else:
+                    plan.proxima_ejecucion = ahora + timedelta(
+                        days=7
+                    )  # Por defecto semanal
+
+            ordenes_generadas.append(
+                {
+                    "numero_orden": nueva_orden.numero_orden,
+                    "plan_codigo": plan.codigo_plan,
+                    "activo_nombre": activo.nombre if activo else "Sin activo",
+                    "descripcion": nueva_orden.descripcion,
+                }
+            )
+
+        except Exception as e:
+            print(f"❌ Error generando orden para plan {plan.codigo_plan}: {e}")
+            db.session.rollback()
+            continue
+
+    # Guardar todos los cambios
+    try:
+        db.session.commit()
+        print(f"🎉 Generación completada: {len(ordenes_generadas)} órdenes creadas")
+    except Exception as e:
+        print(f"❌ Error guardando cambios: {e}")
+        db.session.rollback()
+        return {"success": False, "error": str(e)}
+
+    return {
+        "success": True,
+        "ordenes_generadas": len(ordenes_generadas),
+        "detalles": ordenes_generadas,
+    }
+
+
+def generar_numero_orden():
+    """Generar un número de orden único"""
+    from app.models.orden_trabajo import OrdenTrabajo
+
+    # Obtener el último ID para generar el número
+    ultimo_numero = db.session.query(db.func.max(OrdenTrabajo.id)).scalar() or 0
+    numero_orden = f"OT-{ultimo_numero + 1:06d}"
+
+    return numero_orden
+
+
+def generar_ordenes_manuales(usuario="Sistema"):
+    """
+    Genera órdenes de trabajo manualmente para el día siguiente
+    Solo incluye planes que NO tengan generación automática activada
+    """
+    from app.models.orden_trabajo import OrdenTrabajo
+    from app.models.activo import Activo
+
+    print("🔄 Iniciando generación MANUAL de órdenes...")
+
+    # Calcular fecha objetivo (día siguiente)
+    ahora = datetime.now()
+    fecha_objetivo = ahora + timedelta(days=1)
+
+    ordenes_generadas = []
+
+    # Buscar planes que estén activos y NO tengan generación automática
+    planes_manuales = PlanMantenimiento.query.filter(
+        PlanMantenimiento.estado == "Activo",
+        PlanMantenimiento.generacion_automatica
+        == False,  # Solo planes SIN generación automática
+        PlanMantenimiento.proxima_ejecucion <= fecha_objetivo,
+    ).all()
+
+    print(f"📋 Encontrados {len(planes_manuales)} planes para generación manual")
+
+    for plan in planes_manuales:
+        try:
+            # Verificar si ya existe una orden pendiente para este plan
+            orden_existente = OrdenTrabajo.query.filter(
+                OrdenTrabajo.tipo == "Mantenimiento Preventivo",
+                OrdenTrabajo.activo_id == plan.activo_id,
+                OrdenTrabajo.descripcion.contains(f"Plan: {plan.codigo_plan}"),
+                OrdenTrabajo.estado.in_(["Pendiente", "En Proceso"]),
+            ).first()
+
+            if orden_existente:
+                print(f"⚠️ Ya existe orden pendiente para plan {plan.codigo_plan}")
+                continue
+
+            # Obtener información del activo
+            activo = None
+            if plan.activo_id:
+                activo = Activo.query.get(plan.activo_id)
+
+            # Crear nueva orden de trabajo
+            nueva_orden = OrdenTrabajo(
+                tipo="Mantenimiento Preventivo",
+                prioridad="Media",
+                estado="Pendiente",
+                descripcion=f"Mantenimiento preventivo MANUAL - Plan: {plan.codigo_plan} - {plan.nombre}",
+                fecha_creacion=ahora,
+                fecha_programada=fecha_objetivo.date(),
+                activo_id=plan.activo_id,
+                tiempo_estimado=(
+                    plan.tiempo_estimado if hasattr(plan, "tiempo_estimado") else None
+                ),
+                observaciones=f"Orden generada MANUALMENTE por {usuario}.\n\nInstrucciones:\n{plan.instrucciones or 'Sin instrucciones específicas'}",
+            )
+
+            # Generar número de orden único
+            nuevo_numero = generar_numero_orden()
+            nueva_orden.numero_orden = nuevo_numero
+
+            # Agregar orden a la sesión
+            db.session.add(nueva_orden)
+
+            print(f"✅ Orden creada: {nuevo_numero} para plan {plan.codigo_plan}")
+
+            # Actualizar próxima ejecución del plan
+            try:
+                # Usar la configuración del plan para calcular próxima ejecución
+                configuracion = {
+                    "tipo_frecuencia": plan.tipo_frecuencia,
+                    "dias_semana": (
+                        json.loads(plan.dias_semana) if plan.dias_semana else []
+                    ),
+                    "intervalo_semanas": plan.intervalo_semanas or 1,
+                    "tipo_mensual": plan.tipo_mensual,
+                    "dia_mes": plan.dia_mes,
+                    "semana_mes": plan.semana_mes,
+                    "dia_semana_mes": plan.dia_semana_mes,
+                    "intervalo_meses": plan.intervalo_meses or 1,
+                }
+
+                nueva_proxima = calcular_proxima_ejecucion(configuracion, ahora)
+                plan.proxima_ejecucion = nueva_proxima
+                plan.ultima_ejecucion = ahora
+
+                print(
+                    f"📅 Próxima ejecución actualizada: {nueva_proxima.strftime('%Y-%m-%d')}"
+                )
+
+            except Exception as e:
+                print(
+                    f"⚠️ Error calculando próxima ejecución para plan {plan.codigo_plan}: {e}"
+                )
+                # Fallback por defecto
+                if plan.tipo_frecuencia == "diaria" or plan.frecuencia == "Diario":
+                    plan.proxima_ejecucion = ahora + timedelta(days=1)
+                else:
+                    plan.proxima_ejecucion = ahora + timedelta(days=7)
+
+            ordenes_generadas.append(
+                {
+                    "numero_orden": nueva_orden.numero_orden,
+                    "plan_codigo": plan.codigo_plan,
+                    "activo_nombre": activo.nombre if activo else "Sin activo",
+                    "descripcion": nueva_orden.descripcion,
+                }
+            )
+
+        except Exception as e:
+            print(f"❌ Error generando orden para plan {plan.codigo_plan}: {e}")
+            db.session.rollback()
+            continue
+
+    # Guardar todos los cambios
+    try:
+        db.session.commit()
+        print(
+            f"🎉 Generación MANUAL completada: {len(ordenes_generadas)} órdenes creadas"
+        )
+    except Exception as e:
+        print(f"❌ Error guardando cambios: {e}")
+        db.session.rollback()
+        return {"success": False, "error": str(e)}
+
+    return {
+        "success": True,
+        "tipo": "manual",
+        "ordenes_generadas": len(ordenes_generadas),
+        "detalles": ordenes_generadas,
+        "usuario": usuario,
     }

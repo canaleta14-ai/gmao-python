@@ -1,0 +1,57 @@
+steps:
+  # Verificar configuración
+  - name: "bash"
+    script: |
+      #!/bin/bash
+      echo "🔍 Verificando configuración..."
+      if [ ! -f "app.yaml" ]; then
+        echo "❌ app.yaml no encontrado"
+        exit 1
+      fi
+      if [ ! -f "main.py" ]; then
+        echo "❌ main.py no encontrado"
+        exit 1
+      fi
+      echo "✅ Archivos de configuración encontrados"
+
+  # Instalar dependencias
+  - name: "python:3.11-slim"
+    entrypoint: pip
+    args: ["install", "-r", "requirements.txt", "--user", "--quiet"]
+
+  # Ejecutar pruebas (opcional - deshabilitado por defecto)
+  # - name: "python:3.11-slim"
+  #   entrypoint: python
+  #   args: ["-m", "pytest", "test_*.py", "-v", "--tb=short"]
+  #   env:
+  #     - "FLASK_ENV=test"
+
+  # Verificar sintaxis de Python
+  - name: "python:3.11-slim"
+    entrypoint: python
+    args: ["-m", "py_compile", "main.py", "app/__init__.py"]
+
+  # Desplegar a App Engine
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - "app"
+      - "deploy"
+      - "--version=${_VERSION:-prod}"
+      - "--quiet"
+      - "--no-promote"
+
+# Configuración de variables de sustitución
+substitutions:
+  _VERSION: prod
+
+# Configuración de timeout
+timeout: "1800s"
+
+# Configuración de opciones
+options:
+  machineType: "E2_HIGHCPU_8"
+  logging: CLOUD_LOGGING_ONLY
+
+# Configuración de logs
+logsBucket: "gs://${PROJECT_ID}-logs"

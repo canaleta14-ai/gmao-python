@@ -9,8 +9,11 @@ Un sistema completo de gestión de mantenimiento asistido por ordenador (GMAO) d
 - Python 3.11+
 - Git
 - VS Code (recomendado)
+- PostgreSQL (para producción)
 
 ### Instalación
+
+#### Desarrollo Local (SQLite)
 
 1. **Clonar el repositorio**
    ```bash
@@ -33,7 +36,7 @@ Un sistema completo de gestión de mantenimiento asistido por ordenador (GMAO) d
 4. **Configurar variables de entorno**
    ```bash
    cp .env.example .env
-   # Editar .env con tus configuraciones
+   # El archivo .env.example ya está configurado para desarrollo con SQLite
    ```
 
 5. **Inicializar base de datos**
@@ -47,6 +50,42 @@ Un sistema completo de gestión de mantenimiento asistido por ordenador (GMAO) d
    ```
 
    O usando VS Code: `Ctrl+Shift+B` → "Run Flask App"
+
+#### Producción (PostgreSQL)
+
+Para migrar a PostgreSQL en producción:
+
+1. **Instalar y configurar PostgreSQL**
+   ```bash
+   # Ejecutar script de configuración automática
+   chmod +x setup_postgres.sh
+   ./setup_postgres.sh
+   ```
+
+2. **Migrar datos desde SQLite**
+   ```bash
+   python migrate_to_postgres.py
+   ```
+
+3. **Configurar variables de entorno para producción**
+   ```bash
+   # Editar .env para PostgreSQL
+   DB_TYPE=postgresql
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=gmao_db
+   DB_USER=gmao_user
+   DB_PASSWORD=tu_password_seguro
+   FLASK_ENV=production
+   SESSION_COOKIE_SECURE=True
+   ```
+
+4. **Ejecutar en modo producción**
+   ```bash
+   python run.py
+   ```
+
+📖 **Documentación completa de migración**: [MIGRACION_POSTGRESQL.md](MIGRACION_POSTGRESQL.md)
 
 ## 🛠️ Desarrollo
 

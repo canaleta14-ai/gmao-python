@@ -5,3 +5,13 @@ Flask-WTF==1.2.1
 WTForms==3.1.2
 python-dateutil==2.9.0.post0
 Werkzeug==3.0.4
+APScheduler==3.10.4
+schedule==1.2.0
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+# Google Cloud Dependencies
+google-cloud-storage==2.18.2
+google-cloud-secret-manager==2.20.2
+google-cloud-sql==0.1.0
+google-auth==2.35.0
+gunicorn==23.0.0

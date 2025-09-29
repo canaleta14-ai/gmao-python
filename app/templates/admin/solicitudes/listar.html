@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Solicitudes - GMAO{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-clipboard-check me-2 text-primary"></i>
+                        Gestión de Solicitudes de Servicio
+                    </h1>
+                    <p class="text-muted mb-0">Administre las solicitudes de mantenimiento enviadas por los usuarios</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="exportarSolicitudes()">
+                        <i class="bi bi-download me-1"></i>Exportar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="location.reload()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card h-100 border-start border-primary border-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="bi bi-clock-history fs-2 text-primary"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1 text-primary">{{ estadisticas.total_pendientes }}</h4>
+                                    <small class="text-muted">Pendientes</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-start border-warning border-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="bi bi-eye fs-2 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1 text-warning">{{ estadisticas.total_revision }}</h4>
+                                    <small class="text-muted">En Revisión</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-start border-info border-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="bi bi-gear fs-2 text-info"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1 text-info">{{ estadisticas.total_progreso }}</h4>
+                                    <small class="text-muted">En Progreso</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-start border-success border-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="bi bi-check-circle fs-2 text-success"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1 text-success">{{ estadisticas.total_completadas }}</h4>
+                                    <small class="text-muted">Completadas</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros modernos colapsables -->
+            <div class="filtros-container">
+                <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-collapse">
+                    <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
+                </div>
+                <div id="filtros-collapse" class="collapse">
+                    <div class="filtros-body">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="estado" class="form-label">Estado</label>
+                                    <select class="form-select" id="estado" name="estado">
+                                        <option value="">Todos los estados</option>
+                                        <option value="pendiente" {{ 'selected' if request.args.get('estado') == 'pendiente' }}>Pendiente</option>
+                                        <option value="en_revision" {{ 'selected' if request.args.get('estado') == 'en_revision' }}>En Revisión</option>
+                                        <option value="aprobada" {{ 'selected' if request.args.get('estado') == 'aprobada' }}>Aprobada</option>
+                                        <option value="en_progreso" {{ 'selected' if request.args.get('estado') == 'en_progreso' }}>En Progreso</option>
+                                        <option value="completada" {{ 'selected' if request.args.get('estado') == 'completada' }}>Completada</option>
+                                        <option value="rechazada" {{ 'selected' if request.args.get('estado') == 'rechazada' }}>Rechazada</option>
+                                        <option value="cancelada" {{ 'selected' if request.args.get('estado') == 'cancelada' }}>Cancelada</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="prioridad" class="form-label">Prioridad</label>
+                                    <select class="form-select" id="prioridad" name="prioridad">
+                                        <option value="">Todas las prioridades</option>
+                                        <option value="baja" {{ 'selected' if request.args.get('prioridad') == 'baja' }}>Baja</option>
+                                        <option value="normal" {{ 'selected' if request.args.get('prioridad') == 'normal' }}>Normal</option>
+                                        <option value="alta" {{ 'selected' if request.args.get('prioridad') == 'alta' }}>Alta</option>
+                                        <option value="urgente" {{ 'selected' if request.args.get('prioridad') == 'urgente' }}>Urgente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="tipo_servicio" class="form-label">Tipo de Servicio</label>
+                                    <select class="form-select" id="tipo_servicio" name="tipo_servicio">
+                                        <option value="">Todos los tipos</option>
+                                        <option value="mantenimiento" {{ 'selected' if request.args.get('tipo_servicio') == 'mantenimiento' }}>Mantenimiento</option>
+                                        <option value="reparacion" {{ 'selected' if request.args.get('tipo_servicio') == 'reparacion' }}>Reparación</option>
+                                        <option value="instalacion" {{ 'selected' if request.args.get('tipo_servicio') == 'instalacion' }}>Instalación</option>
+                                        <option value="otro" {{ 'selected' if request.args.get('tipo_servicio') == 'otro' }}>Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="busqueda" class="form-label">Buscar</label>
+                                    <input type="text" class="form-control" id="busqueda" name="busqueda"
+                                           value="{{ request.args.get('busqueda', '') }}"
+                                           placeholder="Número, nombre, email...">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-search me-1"></i>Filtrar
+                                    </button>
+                                    <a href="{{ url_for('solicitudes_admin.listar_solicitudes') }}" class="btn btn-outline-secondary btn-limpiar-filtro">
+                                        <i class="bi bi-x-circle me-1"></i>Limpiar Filtros
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Solicitudes -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Solicitudes ({{ solicitudes.total }})
+                    </h6>
+                    <small class="text-muted">Mostrando {{ solicitudes.items|length }} de {{ solicitudes.total }} solicitudes</small>
+                </div>
+                <div class="card-body p-0">
+                    {% if solicitudes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0">#</th>
+                                        <th class="border-0">Solicitante</th>
+                                        <th class="border-0">Tipo</th>
+                                        <th class="border-0">Prioridad</th>
+                                        <th class="border-0">Estado</th>
+                                        <th class="border-0">Fecha</th>
+                                        <th class="border-0">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for solicitud in solicitudes %}
+                                    <tr>
+                                        <td>
+                                            <strong class="text-primary">{{ solicitud.numero_solicitud }}</strong>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ solicitud.nombre_solicitante }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ solicitud.email_solicitante }}</small>
+                                                {% if solicitud.telefono_solicitante %}
+                                                <br>
+                                                <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ solicitud.telefono_solicitante }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ solicitud.tipo_servicio_display }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'secondary' if solicitud.prioridad == 'baja' else 'primary' if solicitud.prioridad == 'normal' else 'warning' if solicitud.prioridad == 'alta' else 'danger' }}">
+                                                {{ solicitud.prioridad_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'primary' if solicitud.estado == 'pendiente' else 'warning' if solicitud.estado == 'en_revision' else 'success' if solicitud.estado == 'aprobada' else 'info' if solicitud.estado == 'en_progreso' else 'success' if solicitud.estado == 'completada' else 'danger' if solicitud.estado == 'rechazada' else 'secondary' }}">
+                                                {{ solicitud.estado_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>{{ solicitud.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                                            <br>
+                                            <small class="text-muted">{{ solicitud.fecha_creacion.strftime('%H:%M') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <button class="btn btn-sm btn-outline-primary action-btn view"
+                                                        onclick="window.location.href='{{ url_for('solicitudes_admin.ver_solicitud', id=solicitud.id) }}'"
+                                                        title="Ver detalles">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary action-btn edit"
+                                                        onclick="window.location.href='{{ url_for('solicitudes_admin.editar_solicitud', id=solicitud.id) }}'"
+                                                        title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info action-btn info"
+                                                        onclick="cambiarEstado({{ solicitud.id }}, '{{ solicitud.estado }}')"
+                                                        title="Cambiar estado">
+                                                    <i class="bi bi-arrow-right-circle"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if total_paginas > 1 %}
+                        <div class="card-footer">
+                            <nav aria-label="Navegación de páginas">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% set pagina_actual = request.args.get('pagina', 1, type=int) %}
+                                    {% if pagina_actual > 1 %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('solicitudes_admin.listar_solicitudes', pagina=pagina_actual-1, **request.args) }}">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num_pagina in range(max(1, pagina_actual-2), min(total_paginas+1, pagina_actual+3)) %}
+                                    <li class="page-item {{ 'active' if num_pagina == pagina_actual }}">
+                                        <a class="page-link" href="{{ url_for('solicitudes_admin.listar_solicitudes', pagina=num_pagina, **request.args) }}">
+                                            {{ num_pagina }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+
+                                    {% if pagina_actual < total_paginas %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('solicitudes_admin.listar_solicitudes', pagina=pagina_actual+1, **request.args) }}">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                            <h5 class="text-muted">No se encontraron solicitudes</h5>
+                            <p class="text-muted mb-0">No hay solicitudes que coincidan con los criterios de búsqueda.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para cambiar estado -->
+<div class="modal fade" id="cambiarEstadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado de Solicitud</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="cambiarEstadoForm">
+                <div class="modal-body">
+                    <input type="hidden" id="solicitudId" name="solicitud_id">
+                    <div class="mb-3">
+                        <label for="nuevoEstado" class="form-label">Nuevo Estado</label>
+                        <select class="form-select" id="nuevoEstado" name="estado" required>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="en_revision">En Revisión</option>
+                            <option value="aprobada">Aprobada</option>
+                            <option value="en_progreso">En Progreso</option>
+                            <option value="completada">Completada</option>
+                            <option value="rechazada">Rechazada</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comentarioEstado" class="form-label">Comentario (opcional)</label>
+                        <textarea class="form-control" id="comentarioEstado" name="comentario" rows="3"
+                                  placeholder="Agregue un comentario sobre el cambio de estado..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cambiar Estado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function cambiarEstado(solicitudId, estadoActual) {
+    document.getElementById('solicitudId').value = solicitudId;
+    document.getElementById('nuevoEstado').value = estadoActual;
+    new bootstrap.Modal(document.getElementById('cambiarEstadoModal')).show();
+}
+
+document.getElementById('cambiarEstadoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const solicitudId = formData.get('solicitud_id');
+    const nuevoEstado = formData.get('estado');
+    const comentario = formData.get('comentario');
+
+    fetch(`/admin/solicitudes/${solicitudId}/estado`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            estado: nuevoEstado,
+            comentario: comentario
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('cambiarEstadoModal')).hide();
+            location.reload();
+        } else {
+            alert('Error al cambiar el estado: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
+});
+
+function exportarSolicitudes() {
+    const url = new URL(window.location);
+    url.pathname = '/admin/solicitudes/exportar';
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}
