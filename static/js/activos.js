@@ -1182,10 +1182,11 @@ async function previsualizarManual(manualId) {
 
 // Eliminar manual
 async function eliminarManual(manualId) {
-    if (!confirm('¿Está seguro de que desea eliminar este manual? Esta acción no se puede deshacer.')) {
-        return;
-    }
+    mostrarConfirmacionEliminarManual(manualId);
+}
 
+// Función auxiliar para eliminar manual confirmado
+async function eliminarManualConfirmado(manualId) {
     try {
         const response = await fetch(`/activos/api/manuales/${manualId}`, {
             method: 'DELETE'
@@ -1284,4 +1285,24 @@ async function eliminarActivoConfirmado(id) {
     } finally {
         mostrarCargando(false);
     }
+}
+
+// Variables y funciones para eliminar manual
+let manualAEliminar = null;
+
+function confirmarEliminarManual() {
+  if (manualAEliminar) {
+    eliminarManualConfirmado(manualAEliminar);
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminarManual'));
+    if (modal) {
+      modal.hide();
+    }
+    manualAEliminar = null;
+  }
+}
+
+function mostrarConfirmacionEliminarManual(manualId) {
+  manualAEliminar = manualId;
+  const modal = new bootstrap.Modal(document.getElementById('modalEliminarManual'));
+  modal.show();
 }

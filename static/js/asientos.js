@@ -371,17 +371,7 @@ function eliminarAsiento(id) {
         return;
     }
 
-    if (confirm(`¿Está seguro de que desea eliminar el asiento ${asiento.numero}?`)) {
-        // Aquí iría la llamada a la API para eliminar
-        const index = asientosData.findIndex(a => a.id === id);
-        if (index > -1) {
-            asientosData.splice(index, 1);
-            mostrarAsientos();
-            actualizarEstadisticas();
-            generarPaginacion();
-            mostrarMensaje('Asiento eliminado correctamente', 'success');
-        }
-    }
+    mostrarConfirmacionEliminarAsiento(id, asiento.numero);
 }
 
 // Agregar línea al asiento
@@ -774,3 +764,45 @@ window.alternarVista = alternarVista;
 window.cambiarPagina = cambiarPagina;
 window.exportarAsientos = exportarAsientos;
 window.imprimirAsiento = imprimirAsiento;
+
+// Variable para el asiento a eliminar
+let asientoAEliminar = null;
+
+function confirmarEliminarAsiento() {
+  if (asientoAEliminar) {
+    eliminarAsientoConfirmado(asientoAEliminar.id);
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminarAsiento'));
+    if (modal) {
+      modal.hide();
+    }
+    asientoAEliminar = null;
+  }
+}
+
+// Mostrar modal de confirmación antes de eliminar
+function mostrarConfirmacionEliminarAsiento(id, numero) {
+  asientoAEliminar = { id, numero };
+
+  // Actualizar número en el modal
+  const numeroElement = document.getElementById('numero-asiento-eliminar');
+  if (numeroElement) {
+    numeroElement.textContent = numero;
+  }
+
+  // Mostrar modal
+  const modal = new bootstrap.Modal(document.getElementById('modalEliminarAsiento'));
+  modal.show();
+}
+
+// Eliminar asiento confirmado
+function eliminarAsientoConfirmado(id) {
+  // Aquí iría la llamada a la API para eliminar
+  const index = asientosData.findIndex(a => a.id === id);
+  if (index > -1) {
+    asientosData.splice(index, 1);
+    mostrarAsientos();
+    actualizarEstadisticas();
+    generarPaginacion();
+    mostrarMensaje('Asiento eliminado correctamente', 'success');
+  }
+}

@@ -1719,10 +1719,17 @@ async function actualizarCantidadRecambio(recambioId, cantidadUtilizada) {
 
 // Eliminar recambio
 async function eliminarRecambio(recambioId) {
-  if (!confirm("¿Está seguro de eliminar este recambio?")) {
-    return;
-  }
+  mostrarConfirmacionEliminarRecambio(recambioId);
+}
 
+// Descontar recambios del stock
+// Descontar recambios del stock (MANUAL)
+async function descontarRecambios() {
+  mostrarConfirmacionDescontarRecambios();
+}
+
+// Función auxiliar para eliminar recambio confirmado
+async function eliminarRecambioConfirmado(recambioId) {
   try {
     const response = await fetch(`/api/recambios/${recambioId}`, {
       method: "DELETE",
@@ -1741,17 +1748,8 @@ async function eliminarRecambio(recambioId) {
   }
 }
 
-// Descontar recambios del stock
-// Descontar recambios del stock (MANUAL)
-async function descontarRecambios() {
-  if (
-    !confirm(
-      "¿Confirma descontar todos los recambios pendientes del stock? Esta acción no se puede deshacer."
-    )
-  ) {
-    return;
-  }
-
+// Función auxiliar para descontar recambios confirmado
+async function descontarRecambiosConfirmado() {
   try {
     const response = await fetch(
       `/api/ordenes/${ordenActualId}/recambios/descontar`,
@@ -1854,4 +1852,37 @@ async function descontarRecambiosAutomaticamente(ordenId) {
     console.error("Error descontando recambios automáticamente:", error);
     // No mostrar error al usuario para no interrumpir flujo de completar orden
   }
+}
+
+// Variables para los modales
+let recambioAEliminar = null;
+
+function confirmarEliminarRecambio() {
+  if (recambioAEliminar) {
+    eliminarRecambioConfirmado(recambioAEliminar);
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminarRecambio'));
+    if (modal) {
+      modal.hide();
+    }
+    recambioAEliminar = null;
+  }
+}
+
+function mostrarConfirmacionEliminarRecambio(recambioId) {
+  recambioAEliminar = recambioId;
+  const modal = new bootstrap.Modal(document.getElementById('modalEliminarRecambio'));
+  modal.show();
+}
+
+function confirmarDescontarRecambios() {
+  descontarRecambiosConfirmado();
+  const modal = bootstrap.Modal.getInstance(document.getElementById('modalDescontarRecambios'));
+  if (modal) {
+    modal.hide();
+  }
+}
+
+function mostrarConfirmacionDescontarRecambios() {
+  const modal = new bootstrap.Modal(document.getElementById('modalDescontarRecambios'));
+  modal.show();
 }
