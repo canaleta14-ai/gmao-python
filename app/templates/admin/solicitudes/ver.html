@@ -304,7 +304,7 @@
 
                             <div class="d-grid gap-2">
                                 <button type="button" class="btn btn-outline-primary btn-sm"
-                                        onclick="enviarEmail('{{ solicitud.email_solicitante }}')">
+                                        onclick="enviarEmail('{{ solicitud.email_solicitante }}', '{{ solicitud.numero_solicitud }}')">
                                     <i class="bi bi-envelope me-1"></i>Enviar Email
                                 </button>
                                 {% if solicitud.telefono_solicitante %}
@@ -760,8 +760,8 @@ document.getElementById('comentarioForm').addEventListener('submit', function(e)
     });
 });
 
-function enviarEmail(email) {
-    window.location.href = `mailto:${email}?subject=Solicitud ${solicitud.numero_solicitud} - GMAO System`;
+function enviarEmail(email, numeroSolicitud) {
+    window.location.href = `mailto:${email}?subject=Solicitud ${numeroSolicitud} - GMAO System`;
 }
 
 function llamar(telefono) {
