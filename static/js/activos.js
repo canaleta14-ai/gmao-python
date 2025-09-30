@@ -932,21 +932,22 @@ function inicializarAutocompletado() {
 
 // Mostrar mensaje de notificación
 function mostrarMensaje(mensaje, tipo = 'info') {
-    // Crear elemento de alerta
-    const alerta = document.createElement('div');
-    alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
-    alerta.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
-    alerta.innerHTML = `
+    // Crear alerta Bootstrap
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
         ${mensaje}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
 
-    document.body.appendChild(alerta);
+    // Agregar al inicio del contenedor principal
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
 
     // Auto-remover después de 5 segundos
     setTimeout(() => {
-        if (alerta.parentNode) {
-            alerta.parentNode.removeChild(alerta);
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
         }
     }, 5000);
 }

@@ -738,17 +738,7 @@ function debounce(func, wait) {
 }
 
 function mostrarMensaje(mensaje, tipo) {
-    // Crear contenedor si no existe
-    let alertContainer = document.getElementById('alert-container');
-    if (!alertContainer) {
-        alertContainer = document.createElement('div');
-        alertContainer.id = 'alert-container';
-        alertContainer.className = 'position-fixed top-0 end-0 p-3';
-        alertContainer.style.zIndex = '1055';
-        document.body.appendChild(alertContainer);
-    }
-
-    // Crear alerta
+    // Crear alerta Bootstrap
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
     alertDiv.innerHTML = `
@@ -756,9 +746,11 @@ function mostrarMensaje(mensaje, tipo) {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
 
-    alertContainer.appendChild(alertDiv);
+    // Agregar al inicio del contenedor principal
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
 
-    // Auto-eliminar después de 5 segundos
+    // Auto-remover después de 5 segundos
     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();
