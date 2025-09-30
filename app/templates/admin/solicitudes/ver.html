@@ -434,6 +434,31 @@
     </div>
 </div>
 
+<!-- Modal Confirmación Cambiar Estado -->
+<div class="modal fade" id="modalCambiarEstado" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirmar Cambio de Estado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de cambiar el estado de la solicitud <strong id="numero-solicitud-estado"></strong>?</p>
+                <p>Nuevo estado: <strong id="nuevo-estado-display"></strong></p>
+                <p class="text-muted">Esta acción actualizará el estado de la solicitud.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarCambiarEstado()">
+                    <i class="bi bi-check-circle me-1"></i>Confirmar Cambio
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .timeline-modern {
         position: relative;
@@ -666,30 +691,7 @@ function cambiarEstado() {
 }
 
 function cambiarEstadoRapido(nuevoEstado) {
-    if (confirm('¿Está seguro de cambiar el estado de la solicitud?')) {
-        fetch(`/admin/solicitudes/{{ solicitud.id }}/estado`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                estado: nuevoEstado,
-                comentario: 'Cambio de estado rápido desde la vista detallada'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                mostrarMensaje('Error al cambiar el estado: ' + data.message, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('Error de conexión', 'danger');
-        });
-    }
+    mostrarConfirmacionCambiarEstado(nuevoEstado);
 }
 
 function agregarComentario() {
@@ -759,6 +761,72 @@ document.getElementById('comentarioForm').addEventListener('submit', function(e)
         mostrarMensaje('Error de conexión', 'danger');
     });
 });
+
+// Variables y funciones para cambiar estado
+let nuevoEstadoSolicitud = null;
+
+function confirmarCambiarEstado() {
+    if (nuevoEstadoSolicitud) {
+        cambiarEstadoConfirmado(nuevoEstadoSolicitud);
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalCambiarEstado'));
+        if (modal) {
+            modal.hide();
+        }
+        nuevoEstadoSolicitud = null;
+    }
+}
+
+function mostrarConfirmacionCambiarEstado(nuevoEstado) {
+    nuevoEstadoSolicitud = nuevoEstado;
+
+    // Actualizar información en el modal
+    const numeroElement = document.getElementById('numero-solicitud-estado');
+    const estadoElement = document.getElementById('nuevo-estado-display');
+
+    if (numeroElement) {
+        numeroElement.textContent = '{{ solicitud.numero_solicitud }}';
+    }
+
+    if (estadoElement) {
+        // Mapear el estado a su nombre display
+        const estados = {
+            'en_revision': 'En Revisión',
+            'aprobada': 'Aprobada',
+            'rechazada': 'Rechazada',
+            'completada': 'Completada'
+        };
+        estadoElement.textContent = estados[nuevoEstado] || nuevoEstado;
+    }
+
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalCambiarEstado'));
+    modal.show();
+}
+
+function cambiarEstadoConfirmado(nuevoEstado) {
+    fetch(`/admin/solicitudes/{{ solicitud.id }}/estado`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            estado: nuevoEstado,
+            comentario: 'Cambio de estado rápido desde la vista detallada'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            mostrarMensaje('Error al cambiar el estado: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error de conexión', 'danger');
+    });
+}
 
 function enviarEmail(email, numeroSolicitud) {
     window.location.href = `mailto:${email}?subject=Solicitud ${numeroSolicitud} - GMAO System`;
