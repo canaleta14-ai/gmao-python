@@ -237,14 +237,14 @@ document.getElementById('solicitudForm').addEventListener('submit', function(e) 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         e.preventDefault();
-        alert('Por favor ingrese un email válido.');
+        mostrarMensaje('Por favor ingrese un email válido.', 'warning');
         return false;
     }
 
     // Validar teléfono si se proporciona
     if (telefono && !/^[\d\s\-\+\(\)]{7,20}$/.test(telefono)) {
         e.preventDefault();
-        alert('Por favor ingrese un teléfono válido.');
+        mostrarMensaje('Por favor ingrese un teléfono válido.', 'warning');
         return false;
     }
 

@@ -358,12 +358,12 @@ document.getElementById('cambiarEstadoForm').addEventListener('submit', function
             bootstrap.Modal.getInstance(document.getElementById('cambiarEstadoModal')).hide();
             location.reload();
         } else {
-            alert('Error al cambiar el estado: ' + data.message);
+            mostrarMensaje('Error al cambiar el estado: ' + data.message, 'danger');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        mostrarMensaje('Error de conexión', 'danger');
     });
 });
 

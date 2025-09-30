@@ -682,12 +682,12 @@ function cambiarEstadoRapido(nuevoEstado) {
             if (data.success) {
                 location.reload();
             } else {
-                alert('Error al cambiar el estado: ' + data.message);
+                mostrarMensaje('Error al cambiar el estado: ' + data.message, 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error de conexión');
+            mostrarMensaje('Error de conexión', 'danger');
         });
     }
 }
@@ -720,12 +720,12 @@ document.getElementById('cambiarEstadoForm').addEventListener('submit', function
             bootstrap.Modal.getInstance(document.getElementById('cambiarEstadoModal')).hide();
             location.reload();
         } else {
-            alert('Error al cambiar el estado: ' + data.message);
+            mostrarMensaje('Error al cambiar el estado: ' + data.message, 'danger');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        mostrarMensaje('Error de conexión', 'danger');
     });
 });
 
@@ -749,14 +749,14 @@ document.getElementById('comentarioForm').addEventListener('submit', function(e)
             bootstrap.Modal.getInstance(document.getElementById('comentarioModal')).hide();
             document.getElementById('comentarioTexto').value = '';
             // Aquí podrías actualizar la UI para mostrar el nuevo comentario
-            alert('Comentario agregado exitosamente');
+            mostrarMensaje('Comentario agregado exitosamente', 'success');
         } else {
-            alert('Error al agregar el comentario: ' + data.message);
+            mostrarMensaje('Error al agregar el comentario: ' + data.message, 'danger');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        mostrarMensaje('Error de conexión', 'danger');
     });
 });
 
