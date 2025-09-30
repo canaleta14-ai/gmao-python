@@ -829,7 +829,30 @@ function cambiarEstadoConfirmado(nuevoEstado) {
 }
 
 function enviarEmail(email, numeroSolicitud) {
-    window.location.href = `mailto:${email}?subject=Solicitud ${numeroSolicitud} - GMAO System`;
+    console.log('Enviando email a:', email, 'para solicitud:', numeroSolicitud);
+
+    const subject = encodeURIComponent(`Solicitud ${numeroSolicitud} - GMAO System`);
+    const mailtoUrl = `mailto:${email}?subject=${subject}`;
+
+    console.log('URL mailto:', mailtoUrl);
+
+    try {
+        // Usar window.open para mejor compatibilidad
+        const mailWindow = window.open(mailtoUrl, '_blank');
+
+        // Si window.open retorna null, significa que fue bloqueado por popup blocker
+        if (!mailWindow) {
+            // Fallback: copiar al portapapeles
+            navigator.clipboard.writeText(email).then(() => {
+                mostrarMensaje('Email copiado al portapapeles: ' + email, 'info');
+            }).catch(() => {
+                mostrarMensaje('No se pudo abrir el cliente de email. Email: ' + email, 'warning');
+            });
+        }
+    } catch (error) {
+        console.error('Error al abrir cliente de email:', error);
+        mostrarMensaje('Error al abrir cliente de email: ' + error.message, 'danger');
+    }
 }
 
 function llamar(telefono) {
