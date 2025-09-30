@@ -63,7 +63,10 @@ function inicializarEventListeners() {
       if (action === "editar") {
         editarUsuario(id);
       } else if (action === "eliminar") {
-        eliminarUsuario(id);
+        const usuario = usuarios.find(u => u.id == id);
+        if (usuario) {
+          eliminarUsuario(id, usuario.nombre);
+        }
       }
     }
   });
@@ -701,55 +704,9 @@ function actualizarUsuario(id) {
     });
 }
 
-function confirmarEliminacion(id, nombre) {
-  if (confirm(`¿Estás seguro de eliminar al usuario "${nombre}"?`)) {
-    eliminarUsuario(id);
-  }
-}
-
-function eliminarUsuario(id) {
-  console.log("Eliminando usuario con ID:", id, typeof id);
-  const usuario = usuarios.find((u) => u.id == id);
-  console.log("Usuario a eliminar:", usuario);
-  if (!usuario) {
-    mostrarMensaje("Usuario no encontrado", "error");
-    return;
-  }
-
-  // Solo una confirmación
-  if (confirm(`¿Estás seguro de eliminar al usuario "${usuario.nombre}"?`)) {
-    console.log("Usuario confirmó eliminación, enviando DELETE request...");
-
-    fetch(`/usuarios/api/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        console.log("DELETE Response status:", response.status);
-        console.log("DELETE Response headers:", response.headers);
-        return response.json();
-      })
-      .then((data) => {
-        console.log("DELETE Response data:", data);
-        if (data.success) {
-          mostrarMensaje("Usuario eliminado correctamente", "success");
-          cargarUsuarios();
-        } else {
-          mostrarMensaje(
-            "Error: " + (data.error || "Error al eliminar usuario"),
-            "danger"
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error en DELETE:", error);
-        mostrarMensaje("Error de conexión al servidor", "danger");
-      });
-  } else {
-    console.log("Usuario canceló la eliminación");
-  }
+function eliminarUsuario(id, nombre) {
+  console.log('Solicitud de eliminar usuario:', id, nombre);
+  mostrarConfirmacionEliminarUsuario(id, nombre);
 }
 
 function cerrarModalUsuario() {
@@ -1264,4 +1221,64 @@ function generarCodigoUsuario() {
     .toString()
     .padStart(3, "0"); // 3 dígitos aleatorios
   return `USR${timestamp}${random}`;
+}
+
+// Variable para el usuario a eliminar
+let usuarioAEliminar = null;
+
+function confirmarEliminarUsuario() {
+  if (usuarioAEliminar) {
+    eliminarUsuarioConfirmado(usuarioAEliminar.id);
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminarUsuario'));
+    if (modal) {
+      modal.hide();
+    }
+    usuarioAEliminar = null;
+  }
+}
+
+// Mostrar modal de confirmación antes de eliminar
+function mostrarConfirmacionEliminarUsuario(id, nombre) {
+  usuarioAEliminar = { id, nombre };
+
+  // Actualizar nombre en el modal
+  const nombreElement = document.getElementById('nombre-usuario-eliminar');
+  if (nombreElement) {
+    nombreElement.textContent = nombre;
+  }
+
+  // Mostrar modal
+  const modal = new bootstrap.Modal(document.getElementById('modalEliminarUsuario'));
+  modal.show();
+}
+
+// Eliminar usuario confirmado
+async function eliminarUsuarioConfirmado(id) {
+  try {
+    mostrarCargando(true);
+
+    const response = await fetch(`/usuarios/api/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      mostrarMensaje("Usuario eliminado correctamente", "success");
+      cargarUsuarios();
+    } else {
+      mostrarMensaje(
+        "Error: " + (data.error || "Error al eliminar usuario"),
+        "danger"
+      );
+    }
+  } catch (error) {
+    console.error("Error al eliminar usuario:", error);
+    mostrarMensaje("Error de conexión al eliminar usuario", "danger");
+  } finally {
+    mostrarCargando(false);
+  }
 }
