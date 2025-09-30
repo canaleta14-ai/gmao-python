@@ -831,28 +831,32 @@ function cambiarEstadoConfirmado(nuevoEstado) {
 function enviarEmail(email, numeroSolicitud) {
     console.log('Enviando email a:', email, 'para solicitud:', numeroSolicitud);
 
-    const subject = encodeURIComponent(`Solicitud ${numeroSolicitud} - GMAO System`);
-    const mailtoUrl = `mailto:${email}?subject=${subject}`;
+    // Copiar email al portapapeles inmediatamente
+    navigator.clipboard.writeText(email).then(() => {
+        mostrarMensaje(`Email copiado al portapapeles: ${email}`, 'success');
 
-    console.log('URL mailto:', mailtoUrl);
+        // Intentar abrir cliente de email (puede no funcionar en algunos navegadores)
+        const subject = encodeURIComponent(`Solicitud ${numeroSolicitud} - GMAO System`);
+        const mailtoUrl = `mailto:${email}?subject=${subject}`;
 
-    try {
-        // Usar window.open para mejor compatibilidad
-        const mailWindow = window.open(mailtoUrl, '_blank');
-
-        // Si window.open retorna null, significa que fue bloqueado por popup blocker
-        if (!mailWindow) {
-            // Fallback: copiar al portapapeles
-            navigator.clipboard.writeText(email).then(() => {
-                mostrarMensaje('Email copiado al portapapeles: ' + email, 'info');
-            }).catch(() => {
-                mostrarMensaje('No se pudo abrir el cliente de email. Email: ' + email, 'warning');
-            });
+        try {
+            // Crear un enlace temporal y hacer click
+            const link = document.createElement('a');
+            link.href = mailtoUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.log('Cliente de email no disponible, pero email copiado al portapapeles');
         }
-    } catch (error) {
-        console.error('Error al abrir cliente de email:', error);
-        mostrarMensaje('Error al abrir cliente de email: ' + error.message, 'danger');
-    }
+    }).catch((error) => {
+        console.error('Error al copiar email:', error);
+        mostrarMensaje(`Email: ${email} - Copia este email manualmente`, 'warning');
+
+        // Fallback: mostrar el email en un alert si no se puede copiar
+        alert(`Email del solicitante: ${email}\n\nCopia este email y envíalo manualmente.`);
+    });
 }
 
 function llamar(telefono) {
