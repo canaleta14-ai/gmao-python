@@ -1733,11 +1733,11 @@ async function eliminarRecambio(recambioId) {
     if (response.ok) {
       cargarRecambiosOrden(ordenActualId); // Recargar lista
     } else {
-      alert("Error: " + result.error);
+      mostrarMensaje("Error: " + result.error, "danger");
     }
   } catch (error) {
     console.error("Error eliminando recambio:", error);
-    alert("Error de conexión");
+    mostrarMensaje("Error de conexión", "danger");
   }
 }
 
@@ -1786,14 +1786,14 @@ async function descontarRecambios() {
         });
       }
 
-      alert(mensaje);
+      mostrarMensaje(mensaje, "success");
       cargarRecambiosOrden(ordenActualId); // Recargar lista
     } else {
-      alert("Error: " + result.error);
+      mostrarMensaje("Error: " + result.error, "danger");
     }
   } catch (error) {
     console.error("Error descontando recambios:", error);
-    alert("Error de conexión");
+    mostrarMensaje("Error de conexión", "danger");
   }
 }
 

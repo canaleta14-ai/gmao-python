@@ -71,7 +71,7 @@ function setupFormActivo() {
 
             // Aquí iría la lógica para enviar al servidor
             // Por ahora solo mostramos un mensaje
-            alert('Activo guardado correctamente (demo)');
+            mostrarMensaje('Activo guardado correctamente (demo)', 'success');
 
             // Cerrar modal y limpiar formulario
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalActivo'));

@@ -265,12 +265,12 @@ class InventarioCategoriasManager {
         // Implementar sistema de notificaciones
         console.log(`${tipo.toUpperCase()}: ${mensaje}`);
 
-        // Por ahora usar alert, después se puede mejorar con toasts
+        // Usar mostrarMensaje en lugar de alert
         if (tipo === 'error' || tipo === 'warning') {
-            alert(mensaje);
+            mostrarMensaje(mensaje, tipo === 'error' ? 'danger' : 'warning');
         } else {
-            // Para mensajes de éxito, podrían usar console.log solamente
-            console.log('ℹ️', mensaje);
+            // Para mensajes de éxito usar mostrarMensaje también
+            mostrarMensaje(mensaje, 'success');
         }
     }
 

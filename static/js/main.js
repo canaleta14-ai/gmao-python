@@ -974,10 +974,10 @@ function testAlertas() {
       console.log(`üß™ Alertas: ${data.alertas ? data.alertas.length : 0}`);
 
       // Resultado visual
-      alert(
+      mostrarMensaje(
         `✅ Test completado en ${totalTime.toFixed(2)}ms\nAlertas: ${
           data.alertas ? data.alertas.length : 0
-        }`
+        }`, "success"
       );
     })
     .catch((error) => {
@@ -985,7 +985,7 @@ function testAlertas() {
       console.error(
         `üß™ Error: ${error} después de ${errorTime.toFixed(2)}ms`
       );
-      alert(`❌ Error: ${error.message} (${errorTime.toFixed(2)}ms)`);
+      mostrarMensaje(`❌ Error: ${error.message} (${errorTime.toFixed(2)}ms)`, "danger");
     });
 }
 
@@ -2051,7 +2051,7 @@ class ActivosManager {
       this.render();
     } catch (error) {
       console.error("Error cargando activos:", error);
-      showAlert("Error al cargar activos", "danger");
+      mostrarMensaje("Error al cargar activos", "danger");
     }
   }
 

@@ -110,7 +110,7 @@ class InventarioApp {
     const codigoInput = document.getElementById("nuevo-codigo");
 
     if (!categoriaSelect || !categoriaSelect.value) {
-      alert("Por favor seleccione una categoría primero");
+      mostrarMensaje("Por favor seleccione una categoría primero", "warning");
       return;
     }
 
@@ -133,11 +133,11 @@ class InventarioApp {
 
         console.log("✅ Código generado:", data.codigo);
       } else {
-        alert("Error al generar código: " + data.message);
+        mostrarMensaje("Error al generar código: " + data.message, "danger");
       }
     } catch (error) {
       console.error("Error generando código:", error);
-      alert("Error de conexión");
+      mostrarMensaje("Error de conexión", "danger");
     }
   }
 
@@ -150,7 +150,7 @@ class InventarioApp {
     const color = document.getElementById("rapida-color").value;
 
     if (!nombre || !prefijo) {
-      alert("El nombre y prefijo son requeridos");
+      mostrarMensaje("El nombre y prefijo son requeridos", "warning");
       return;
     }
 
@@ -183,13 +183,13 @@ class InventarioApp {
         // Limpiar formulario
         document.getElementById("formCategoriaRapida").reset();
 
-        alert("Categoría creada exitosamente");
+        mostrarMensaje("Categoría creada exitosamente", "success");
       } else {
-        alert("Error: " + data.message);
+        mostrarMensaje("Error: " + data.message, "danger");
       }
     } catch (error) {
       console.error("Error creando categoría:", error);
-      alert("Error de conexión");
+      mostrarMensaje("Error de conexión", "danger");
     }
   }
 

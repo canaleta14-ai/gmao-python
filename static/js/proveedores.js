@@ -207,7 +207,7 @@ function setupFormProveedor() {
 
             // Aquí iría la lógica para enviar al servidor
             // Por ahora solo mostramos un mensaje
-            alert('Proveedor guardado correctamente (demo)');
+            mostrarMensaje('Proveedor guardado correctamente (demo)', 'success');
 
             // Cerrar modal y limpiar formulario
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalProveedor'));
@@ -407,7 +407,7 @@ function mostrarValidacion(campo, valido, mensaje) {
 function testEditarProveedor(id) {
     console.log('=== TEST EDITAR PROVEEDOR ===');
     console.log('Función llamada correctamente con ID:', id);
-    alert(`Test: Editar proveedor ${id}`);
+    mostrarMensaje(`Test: Editar proveedor ${id}`, 'info');
 
     // Llamar a la función real
     editarProveedor(id);

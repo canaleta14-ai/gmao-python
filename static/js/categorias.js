@@ -286,13 +286,13 @@ class CategoriasManager {
 
             if (result.success) {
                 // Mostrar el código generado en un modal o alert
-                alert(`Próximo código: ${result.codigo}`);
+                mostrarMensaje(`Próximo código: ${result.codigo}`, "info");
             } else {
-                this.mostrarError(result.message);
+                mostrarMensaje(result.message, "danger");
             }
         } catch (error) {
             console.error('Error generando código:', error);
-            this.mostrarError('Error de conexión');
+            mostrarMensaje('Error de conexión', "danger");
         }
     }
 
@@ -333,13 +333,13 @@ class CategoriasManager {
     mostrarError(mensaje) {
         // Implementar sistema de notificaciones
         console.error(mensaje);
-        alert(`Error: ${mensaje}`);
+        mostrarMensaje(`Error: ${mensaje}`, "danger");
     }
 
     mostrarExito(mensaje) {
         // Implementar sistema de notificaciones
         console.log(mensaje);
-        alert(`Éxito: ${mensaje}`);
+        mostrarMensaje(`Éxito: ${mensaje}`, "success");
     }
 }
 
