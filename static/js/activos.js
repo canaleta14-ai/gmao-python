@@ -260,7 +260,7 @@ function mostrarActivos(activosAMostrar) {
                     <button class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarActivo(${activo.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarActivo(${activo.id})" title="Eliminar">
+                    <button class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarActivo(${activo.id}, '${activo.nombre}')" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -648,26 +648,9 @@ async function editarActivo(id) {
     }
 }
 
-async function eliminarActivo(id) {
-    if (confirm('¿Está seguro de que desea eliminar este activo? Esta acción no se puede deshacer.')) {
-        try {
-            const response = await fetch(`/activos/api/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                mostrarMensaje('Activo eliminado exitosamente', 'success');
-                cargarActivos(currentPage); // Recargar la lista
-                cargarEstadisticasActivos(); // Actualizar estadísticas
-            } else {
-                const error = await response.json();
-                mostrarMensaje(error.error || 'Error al eliminar activo', 'danger');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            mostrarMensaje('Error de conexión al eliminar activo', 'danger');
-        }
-    }
+async function eliminarActivo(id, nombre) {
+    console.log('Solicitud de eliminar activo:', id, nombre);
+    mostrarConfirmacionEliminarActivo(id, nombre);
 }
 
 // Mostrar detalles del activo en un modal
@@ -1244,4 +1227,61 @@ function formatearTamano(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Variable para el activo a eliminar
+let activoAEliminar = null;
+
+function confirmarEliminarActivo() {
+    if (activoAEliminar) {
+        eliminarActivoConfirmado(activoAEliminar.id);
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminarActivo'));
+        if (modal) {
+            modal.hide();
+        }
+        activoAEliminar = null;
+    }
+}
+
+// Mostrar modal de confirmación antes de eliminar
+function mostrarConfirmacionEliminarActivo(id, nombre) {
+    activoAEliminar = { id, nombre };
+
+    // Actualizar nombre en el modal
+    const nombreElement = document.getElementById('nombre-activo-eliminar');
+    if (nombreElement) {
+        nombreElement.textContent = nombre;
+    }
+
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalEliminarActivo'));
+    modal.show();
+}
+
+// Eliminar activo confirmado
+async function eliminarActivoConfirmado(id) {
+    try {
+        mostrarCargando(true);
+
+        const response = await fetch(`/activos/api/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.ok) {
+            mostrarMensaje('Activo eliminado exitosamente', 'success');
+            cargarActivos(currentPage); // Recargar la lista
+            cargarEstadisticasActivos(); // Actualizar estadísticas
+        } else {
+            const error = await response.json();
+            mostrarMensaje(error.error || 'Error al eliminar activo', 'danger');
+        }
+    } catch (error) {
+        console.error('Error al eliminar activo:', error);
+        mostrarMensaje('Error de conexión al eliminar activo', 'danger');
+    } finally {
+        mostrarCargando(false);
+    }
 }
