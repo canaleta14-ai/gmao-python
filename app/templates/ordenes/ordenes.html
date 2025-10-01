@@ -4,6 +4,10 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/ordenes.css') }}"
 />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/seleccion-masiva.css') }}"
+/>
 {% endblock %} {% block content %}
 <!-- Encabezado con estadísticas -->
 <div class="container-fluid">
@@ -161,12 +165,38 @@
       <div class="card">
         <div class="card-header">
           <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">
-              <i class="bi bi-list-ul me-2"></i>Lista de Órdenes de Trabajo
-            </h6>
-            <span class="badge bg-primary" id="contador-ordenes"
-              >0 órdenes</span
-            >
+            <div>
+              <h6 class="mb-0">
+                <i class="bi bi-list-ul me-2"></i>Lista de Órdenes de Trabajo
+                <span class="badge bg-primary ms-2" id="contador-ordenes">0 órdenes</span>
+                <span class="badge bg-info ms-1" id="contador-seleccion" style="display: none;">
+                  0 seleccionados
+                </span>
+              </h6>
+            </div>
+            <!-- Barra de acciones masivas -->
+            <div id="acciones-masivas" style="display: none;" class="btn-group btn-group-sm">
+              <button class="btn btn-success" onclick="asignarTecnicoMasivo()" 
+                      title="Asignar técnico">
+                <i class="bi bi-person-check me-1"></i>Asignar
+              </button>
+              <button class="btn btn-warning" onclick="cambiarEstadoMasivo('En Proceso')" 
+                      title="Cambiar a En Proceso">
+                <i class="bi bi-gear me-1"></i>En Proceso
+              </button>
+              <button class="btn btn-primary" onclick="cambiarPrioridadMasiva()" 
+                      title="Cambiar prioridad">
+                <i class="bi bi-flag me-1"></i>Prioridad
+              </button>
+              <button class="btn btn-info" onclick="exportarSeleccionados()" 
+                      title="Exportar seleccionados">
+                <i class="bi bi-download me-1"></i>Exportar
+              </button>
+              <button class="btn btn-danger" onclick="cancelarSeleccionados()" 
+                      title="Cancelar órdenes">
+                <i class="bi bi-x-circle me-1"></i>Cancelar
+              </button>
+            </div>
           </div>
         </div>
         <div class="card-body p-0">
@@ -174,6 +204,10 @@
             <table class="table table-striped table-hover mb-0">
               <thead class="table-dark">
                 <tr>
+                  <th style="width: 50px;">
+                    <input type="checkbox" class="form-check-input" id="select-all" 
+                           title="Seleccionar todos">
+                  </th>
                   <th><i class="bi bi-hash me-1"></i>Número</th>
                   <th><i class="bi bi-calendar me-1"></i>Fecha</th>
                   <th><i class="bi bi-cpu me-1"></i>Activo</th>
@@ -796,5 +830,6 @@
 
 {% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
+<script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ordenes.js') }}"></script>
 {% endblock %}
