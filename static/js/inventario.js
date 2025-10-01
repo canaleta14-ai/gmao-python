@@ -9,6 +9,7 @@ let articulosPorPagina = 10;
 let filtrosAplicados = {};
 let paginacionInventario;
 let categoriasDisponibles = []; // Nuevo: array para categorías dinámicas
+let seleccionMasiva; // Sistema de selección masiva
 
 // Clase principal de la aplicación de inventario
 class InventarioApp {
@@ -444,7 +445,7 @@ function actualizarTablaArticulos(articulos) {
   if (!articulos || articulos.length === 0) {
     tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="text-center py-4">
+                <td colspan="11" class="text-center py-4">
                     <div class="text-muted">
                         <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
                         <p class="mb-0">No se encontraron artículos</p>
@@ -480,6 +481,9 @@ function actualizarTablaArticulos(articulos) {
     }
 
     tr.innerHTML = `
+            <td>
+                <input type="checkbox" class="form-check-input item-checkbox" data-id="${articulo.id}">
+            </td>
             <td><code>${articulo.codigo}</code></td>
             <td>
                 <strong>${articulo.descripcion}</strong>
@@ -1863,6 +1867,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Inicializar sistema de selección masiva
+  initSeleccionMasiva({
+    checkboxSelector: '.item-checkbox',
+    selectAllId: 'select-all',
+    contadorId: 'contador-seleccion',
+    accionesId: 'acciones-masivas',
+    tablaId: 'tabla-inventario-body'
+  });
+
   // Listener para cambio de tipo de movimiento (mostrar/ocultar precio unitario)
   const tipoMovimientoSelect = document.getElementById("movimiento-tipo");
   if (tipoMovimientoSelect) {
@@ -1881,3 +1894,445 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+// ============================================================================
+// FUNCIONES DE ACCIONES MASIVAS
+// ============================================================================
+
+/**
+ * Marcar artículos seleccionados como críticos
+ */
+function marcarCriticosMasivo() {
+  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+  
+  if (seleccionados.length === 0) {
+    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    return;
+  }
+
+  seleccionMasiva.confirmarAccionMasiva({
+    titulo: '¿Marcar como críticos?',
+    mensaje: `Se marcarán ${seleccionados.length} artículo(s) como críticos. Los artículos críticos tienen prioridad en el inventario.`,
+    textoBotonConfirmar: 'Sí, marcar como críticos',
+    colorBotonConfirmar: 'warning',
+    onConfirmar: async () => {
+      let exitosos = 0;
+      let fallidos = 0;
+
+      for (const id of seleccionados) {
+        try {
+          const response = await fetch(`/inventario/articulos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ critico: true })
+          });
+
+          if (response.ok) {
+            exitosos++;
+          } else {
+            fallidos++;
+          }
+        } catch (error) {
+          console.error(`Error al marcar artículo ${id} como crítico:`, error);
+          fallidos++;
+        }
+      }
+
+      if (exitosos > 0) {
+        mostrarAlerta(`${exitosos} artículo(s) marcado(s) como críticos correctamente`, 'success');
+        cargarArticulos();
+        cargarEstadisticas();
+        seleccionMasiva.limpiarSeleccion();
+      }
+
+      if (fallidos > 0) {
+        mostrarAlerta(`${fallidos} artículo(s) no pudieron ser marcados`, 'danger');
+      }
+    }
+  });
+}
+
+/**
+ * Ajuste masivo de stock - Muestra modal para especificar operación
+ */
+function ajustarStockMasivo() {
+  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+  
+  if (seleccionados.length === 0) {
+    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    return;
+  }
+
+  // Crear modal para ajuste de stock
+  const modalHtml = `
+    <div class="modal fade" id="modalAjusteStockMasivo" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-boxes me-2"></i>Ajuste Masivo de Stock
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Se ajustará el stock de ${seleccionados.length} artículo(s) seleccionado(s)
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-bold">Tipo de Operación</label>
+              <select class="form-select" id="ajuste-operacion">
+                <option value="entrada">➕ Entrada de Stock</option>
+                <option value="salida">➖ Salida de Stock</option>
+                <option value="establecer">📌 Establecer Stock Fijo</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="ajuste-cantidad" class="form-label fw-bold">Cantidad</label>
+              <input type="number" class="form-control" id="ajuste-cantidad" min="0" step="1" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="ajuste-motivo" class="form-label fw-bold">Motivo</label>
+              <textarea class="form-control" id="ajuste-motivo" rows="2" placeholder="Motivo del ajuste..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="confirmarAjusteStockMasivo()">
+              <i class="bi bi-check-circle me-1"></i>Aplicar Ajuste
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Eliminar modal existente si lo hay
+  const modalExistente = document.getElementById('modalAjusteStockMasivo');
+  if (modalExistente) {
+    modalExistente.remove();
+  }
+
+  // Agregar modal al DOM
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  // Mostrar modal
+  const modal = new bootstrap.Modal(document.getElementById('modalAjusteStockMasivo'));
+  modal.show();
+}
+
+/**
+ * Confirmar y ejecutar ajuste de stock masivo
+ */
+async function confirmarAjusteStockMasivo() {
+  const operacion = document.getElementById('ajuste-operacion').value;
+  const cantidad = parseInt(document.getElementById('ajuste-cantidad').value);
+  const motivo = document.getElementById('ajuste-motivo').value;
+
+  if (!cantidad || cantidad <= 0) {
+    mostrarAlerta('Debe ingresar una cantidad válida', 'warning');
+    return;
+  }
+
+  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+  let exitosos = 0;
+  let fallidos = 0;
+
+  // Cerrar modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('modalAjusteStockMasivo'));
+  modal.hide();
+
+  for (const id of seleccionados) {
+    try {
+      // Obtener stock actual
+      const responseGet = await fetch(`/inventario/articulos/${id}`);
+      if (!responseGet.ok) {
+        fallidos++;
+        continue;
+      }
+      
+      const articulo = await responseGet.json();
+      let nuevoStock = articulo.stock_actual;
+
+      // Calcular nuevo stock según operación
+      switch(operacion) {
+        case 'entrada':
+          nuevoStock += cantidad;
+          break;
+        case 'salida':
+          nuevoStock = Math.max(0, nuevoStock - cantidad);
+          break;
+        case 'establecer':
+          nuevoStock = cantidad;
+          break;
+      }
+
+      // Actualizar stock
+      const responsePut = await fetch(`/inventario/articulos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          stock_actual: nuevoStock,
+          observaciones: motivo || `Ajuste masivo: ${operacion} de ${cantidad} unidades`
+        })
+      });
+
+      if (responsePut.ok) {
+        exitosos++;
+      } else {
+        fallidos++;
+      }
+    } catch (error) {
+      console.error(`Error al ajustar stock del artículo ${id}:`, error);
+      fallidos++;
+    }
+  }
+
+  if (exitosos > 0) {
+    mostrarAlerta(`Stock ajustado correctamente en ${exitosos} artículo(s)`, 'success');
+    cargarArticulos();
+    cargarEstadisticas();
+    seleccionMasiva.limpiarSeleccion();
+  }
+
+  if (fallidos > 0) {
+    mostrarAlerta(`${fallidos} artículo(s) no pudieron ser actualizados`, 'danger');
+  }
+}
+
+/**
+ * Cambiar categoría masiva - Muestra modal con selector de categoría
+ */
+function cambiarCategoriaMasiva() {
+  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+  
+  if (seleccionados.length === 0) {
+    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    return;
+  }
+
+  // Crear modal con selector de categorías
+  const modalHtml = `
+    <div class="modal fade" id="modalCambiarCategoriaMasivo" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-secondary text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-tag me-2"></i>Cambiar Categoría
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Se cambiará la categoría de ${seleccionados.length} artículo(s)
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-bold">Nueva Categoría</label>
+              <select class="form-select" id="nueva-categoria-masiva">
+                <option value="">Seleccionar categoría...</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="confirmarCambiarCategoriaMasiva()">
+              <i class="bi bi-check-circle me-1"></i>Cambiar Categoría
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Eliminar modal existente si lo hay
+  const modalExistente = document.getElementById('modalCambiarCategoriaMasivo');
+  if (modalExistente) {
+    modalExistente.remove();
+  }
+
+  // Agregar modal al DOM
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+  // Cargar categorías en el selector
+  const selectCategoria = document.getElementById('nueva-categoria-masiva');
+  if (categoriasDisponibles && categoriasDisponibles.length > 0) {
+    categoriasDisponibles.forEach(cat => {
+      if (cat.activo) {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = `${cat.nombre} (${cat.prefijo})`;
+        selectCategoria.appendChild(option);
+      }
+    });
+  }
+  
+  // Mostrar modal
+  const modal = new bootstrap.Modal(document.getElementById('modalCambiarCategoriaMasivo'));
+  modal.show();
+}
+
+/**
+ * Confirmar cambio de categoría masivo
+ */
+async function confirmarCambiarCategoriaMasiva() {
+  const categoriaId = document.getElementById('nueva-categoria-masiva').value;
+
+  if (!categoriaId) {
+    mostrarAlerta('Debe seleccionar una categoría', 'warning');
+    return;
+  }
+
+  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+  let exitosos = 0;
+  let fallidos = 0;
+
+  // Cerrar modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('modalCambiarCategoriaMasivo'));
+  modal.hide();
+
+  for (const id of seleccionados) {
+    try {
+      const response = await fetch(`/inventario/articulos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoria_id: parseInt(categoriaId) })
+      });
+
+      if (response.ok) {
+        exitosos++;
+      } else {
+        fallidos++;
+      }
+    } catch (error) {
+      console.error(`Error al cambiar categoría del artículo ${id}:`, error);
+      fallidos++;
+    }
+  }
+
+  if (exitosos > 0) {
+    mostrarAlerta(`Categoría cambiada correctamente en ${exitosos} artículo(s)`, 'success');
+    cargarArticulos();
+    seleccionMasiva.limpiarSeleccion();
+  }
+
+  if (fallidos > 0) {
+    mostrarAlerta(`${fallidos} artículo(s) no pudieron ser actualizados`, 'danger');
+  }
+}
+
+/**
+ * Exportar artículos seleccionados a CSV
+ */
+async function exportarSeleccionados() {
+  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+  
+  if (seleccionados.length === 0) {
+    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    return;
+  }
+
+  try {
+    // Obtener datos de los artículos seleccionados
+    const articulos = [];
+    for (const id of seleccionados) {
+      const response = await fetch(`/inventario/articulos/${id}`);
+      if (response.ok) {
+        const articulo = await response.json();
+        articulos.push(articulo);
+      }
+    }
+
+    if (articulos.length === 0) {
+      mostrarAlerta('No se pudieron obtener los datos de los artículos', 'danger');
+      return;
+    }
+
+    // Generar CSV
+    let csv = 'Código,Descripción,Categoría,Stock Actual,Stock Mínimo,Stock Máximo,Ubicación,Precio Unitario,Valor Stock,Crítico\n';
+    
+    articulos.forEach(art => {
+      csv += `"${art.codigo}",`;
+      csv += `"${art.descripcion}",`;
+      csv += `"${art.categoria || ''}",`;
+      csv += `${art.stock_actual},`;
+      csv += `${art.stock_minimo},`;
+      csv += `${art.stock_maximo},`;
+      csv += `"${art.ubicacion || ''}",`;
+      csv += `${art.precio_unitario || 0},`;
+      csv += `${art.valor_stock || 0},`;
+      csv += `${art.critico ? 'Sí' : 'No'}\n`;
+    });
+
+    // Descargar archivo
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `inventario_seleccion_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    mostrarAlerta(`${articulos.length} artículo(s) exportados correctamente`, 'success');
+  } catch (error) {
+    console.error('Error al exportar artículos:', error);
+    mostrarAlerta('Error al exportar artículos', 'danger');
+  }
+}
+
+/**
+ * Eliminar artículos seleccionados
+ */
+function eliminarSeleccionados() {
+  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+  
+  if (seleccionados.length === 0) {
+    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    return;
+  }
+
+  seleccionMasiva.confirmarAccionMasiva({
+    titulo: '¿Eliminar artículos?',
+    mensaje: `⚠️ Se eliminarán permanentemente ${seleccionados.length} artículo(s) del inventario. Esta acción no se puede deshacer.`,
+    textoBotonConfirmar: 'Sí, eliminar',
+    colorBotonConfirmar: 'danger',
+    onConfirmar: async () => {
+      let exitosos = 0;
+      let fallidos = 0;
+
+      for (const id of seleccionados) {
+        try {
+          const response = await fetch(`/inventario/articulos/${id}`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            exitosos++;
+          } else {
+            fallidos++;
+          }
+        } catch (error) {
+          console.error(`Error al eliminar artículo ${id}:`, error);
+          fallidos++;
+        }
+      }
+
+      if (exitosos > 0) {
+        mostrarAlerta(`${exitosos} artículo(s) eliminado(s) correctamente`, 'success');
+        cargarArticulos();
+        cargarEstadisticas();
+        seleccionMasiva.limpiarSeleccion();
+      }
+
+      if (fallidos > 0) {
+        mostrarAlerta(`${fallidos} artículo(s) no pudieron ser eliminados`, 'danger');
+      }
+    }
+  });
+}

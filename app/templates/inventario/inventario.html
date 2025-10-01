@@ -3,6 +3,7 @@
 {% set section = 'inventarios' %}
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/seleccion-masiva.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -152,8 +153,30 @@
             <div class="card">
                 <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0"><i class="bi bi-table me-2"></i>Listado de Artículos</h6>
-                    <span class="badge bg-secondary" id="contador-articulos">0 artículos</span>
+                    <div>
+                        <h6 class="mb-0"><i class="bi bi-table me-2"></i>Listado de Artículos</h6>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary" id="contador-articulos">0 artículos</span>
+                        <span class="badge bg-info" id="contador-seleccion" style="display:none;">0 seleccionados</span>
+                        <div class="btn-group" id="acciones-masivas" style="display:none;">
+                            <button class="btn btn-sm btn-warning" onclick="marcarCriticosMasivo()" title="Marcar como críticos">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Críticos
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="ajustarStockMasivo()" title="Ajuste masivo de stock">
+                                <i class="bi bi-boxes me-1"></i>Ajustar Stock
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="cambiarCategoriaMasiva()" title="Cambiar categoría">
+                                <i class="bi bi-tag me-1"></i>Categoría
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="exportarSeleccionados()" title="Exportar seleccionados">
+                                <i class="bi bi-download me-1"></i>Exportar
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarSeleccionados()" title="Eliminar seleccionados">
+                                <i class="bi bi-trash me-1"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -161,6 +184,9 @@
                     <table class="table table-striped table-hover mb-0">
                         <thead class="table-dark">
                             <tr>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" id="select-all" class="form-check-input" title="Seleccionar todos">
+                                </th>
                                 <th><i class="bi bi-hash me-1"></i>Código</th>
                                 <th><i class="bi bi-box me-1"></i>Artículo</th>
                                 <th><i class="bi bi-tag me-1"></i>Categoría</th>
@@ -629,6 +655,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
+<script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventario-categorias.js') }}"></script>
 <script src="{{ url_for('static', filename='js/diagnostico-autocomplete.js') }}"></script>
