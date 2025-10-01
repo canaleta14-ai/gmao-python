@@ -6,6 +6,7 @@ let proveedores = [];
 let proveedoresFiltrados = [];
 let proveedorEditando = null;
 let filtrosActivos = {};
+let seleccionMasiva; // Sistema de selección masiva
 
 // Configuración de paginación
 let currentPage = 1;
@@ -48,6 +49,15 @@ document.addEventListener('DOMContentLoaded', function () {
             filtroHeader.classList.add('collapsed');
         });
     }
+
+    // Inicializar sistema de selección masiva
+    initSeleccionMasiva({
+        checkboxSelector: '.item-checkbox',
+        selectAllId: 'select-all',
+        contadorId: 'contador-seleccion',
+        accionesId: 'acciones-masivas',
+        tablaId: 'tabla-proveedores'
+    });
 
     // Inicializar funcionalidades adicionales
     setupFormProveedor();
@@ -126,7 +136,7 @@ function mostrarProveedores(proveedoresAMostrar) {
         console.log('No hay proveedores para mostrar');
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center text-muted py-4">
+                <td colspan="9" class="text-center text-muted py-4">
                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                     No se encontraron proveedores
                 </td>
@@ -139,6 +149,9 @@ function mostrarProveedores(proveedoresAMostrar) {
     proveedoresAMostrar.forEach(proveedor => {
         const fila = document.createElement('tr');
         fila.innerHTML = `
+            <td>
+                <input type="checkbox" class="form-check-input item-checkbox" data-id="${proveedor.id}">
+            </td>
             <td>
                 <div class="fw-bold">${proveedor.nombre}</div>
             </td>
@@ -928,4 +941,368 @@ async function toggleProveedor(id) {
         console.error('Error al cambiar estado del proveedor:', error);
         mostrarMensaje('Error de conexión al cambiar estado del proveedor', 'danger');
     }
+}
+
+// ============================================================================
+// FUNCIONES DE ACCIONES MASIVAS
+// ============================================================================
+
+/**
+ * Activar proveedores seleccionados
+ */
+function activarProveedoresMasivo() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('Debe seleccionar al menos un proveedor', 'warning');
+        return;
+    }
+
+    seleccionMasiva.confirmarAccionMasiva({
+        titulo: '¿Activar proveedores?',
+        mensaje: `Se activarán ${seleccionados.length} proveedor(es). Podrán ser utilizados en el sistema.`,
+        textoBotonConfirmar: 'Sí, activar',
+        colorBotonConfirmar: 'success',
+        onConfirmar: async () => {
+            let exitosos = 0;
+            let fallidos = 0;
+
+            for (const id of seleccionados) {
+                try {
+                    const response = await fetch(`/proveedores/api/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ activo: true })
+                    });
+
+                    if (response.ok) {
+                        exitosos++;
+                    } else {
+                        fallidos++;
+                    }
+                } catch (error) {
+                    console.error(`Error al activar proveedor ${id}:`, error);
+                    fallidos++;
+                }
+            }
+
+            if (exitosos > 0) {
+                mostrarMensaje(`${exitosos} proveedor(es) activado(s) correctamente`, 'success');
+                cargarProveedores();
+                actualizarEstadisticas();
+                seleccionMasiva.limpiarSeleccion();
+            }
+
+            if (fallidos > 0) {
+                mostrarMensaje(`${fallidos} proveedor(es) no pudieron ser activados`, 'danger');
+            }
+        }
+    });
+}
+
+/**
+ * Desactivar proveedores seleccionados
+ */
+function desactivarProveedoresMasivo() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('Debe seleccionar al menos un proveedor', 'warning');
+        return;
+    }
+
+    seleccionMasiva.confirmarAccionMasiva({
+        titulo: '¿Desactivar proveedores?',
+        mensaje: `Se desactivarán ${seleccionados.length} proveedor(es). No estarán disponibles para nuevas operaciones.`,
+        textoBotonConfirmar: 'Sí, desactivar',
+        colorBotonConfirmar: 'warning',
+        onConfirmar: async () => {
+            let exitosos = 0;
+            let fallidos = 0;
+
+            for (const id of seleccionados) {
+                try {
+                    const response = await fetch(`/proveedores/api/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ activo: false })
+                    });
+
+                    if (response.ok) {
+                        exitosos++;
+                    } else {
+                        fallidos++;
+                    }
+                } catch (error) {
+                    console.error(`Error al desactivar proveedor ${id}:`, error);
+                    fallidos++;
+                }
+            }
+
+            if (exitosos > 0) {
+                mostrarMensaje(`${exitosos} proveedor(es) desactivado(s) correctamente`, 'success');
+                cargarProveedores();
+                actualizarEstadisticas();
+                seleccionMasiva.limpiarSeleccion();
+            }
+
+            if (fallidos > 0) {
+                mostrarMensaje(`${fallidos} proveedor(es) no pudieron ser desactivados`, 'danger');
+            }
+        }
+    });
+}
+
+/**
+ * Enviar email masivo a proveedores seleccionados
+ */
+function enviarEmailMasivo() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('Debe seleccionar al menos un proveedor', 'warning');
+        return;
+    }
+
+    // Crear modal para envío de email
+    const modalHtml = `
+        <div class="modal fade" id="modalEmailMasivo" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-envelope me-2"></i>Enviar Email Masivo
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Se enviará el email a ${seleccionados.length} proveedor(es) seleccionado(s)
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email-asunto" class="form-label fw-bold">Asunto *</label>
+                            <input type="text" class="form-control" id="email-asunto" placeholder="Asunto del email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email-mensaje" class="form-label fw-bold">Mensaje *</label>
+                            <textarea class="form-control" id="email-mensaje" rows="8" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                            <div class="form-text">Puedes usar variables: {nombre_proveedor}, {nif}</div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="email-copia" checked>
+                            <label class="form-check-label" for="email-copia">
+                                Enviar copia a mi email
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="confirmarEnviarEmailMasivo()">
+                            <i class="bi bi-send me-1"></i>Enviar Emails
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Eliminar modal existente si lo hay
+    const modalExistente = document.getElementById('modalEmailMasivo');
+    if (modalExistente) {
+        modalExistente.remove();
+    }
+
+    // Agregar modal al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalEmailMasivo'));
+    modal.show();
+}
+
+/**
+ * Confirmar y enviar email masivo
+ */
+async function confirmarEnviarEmailMasivo() {
+    const asunto = document.getElementById('email-asunto').value;
+    const mensaje = document.getElementById('email-mensaje').value;
+    const enviarCopia = document.getElementById('email-copia').checked;
+
+    if (!asunto || !mensaje) {
+        mostrarMensaje('Debe completar el asunto y el mensaje', 'warning');
+        return;
+    }
+
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEmailMasivo'));
+    modal.hide();
+
+    // Obtener datos de proveedores
+    let proveedoresConEmail = [];
+    let proveedoresSinEmail = 0;
+
+    for (const id of seleccionados) {
+        try {
+            const response = await fetch(`/proveedores/api/${id}`);
+            if (response.ok) {
+                const proveedor = await response.json();
+                if (proveedor.email) {
+                    proveedoresConEmail.push(proveedor);
+                } else {
+                    proveedoresSinEmail++;
+                }
+            }
+        } catch (error) {
+            console.error(`Error al obtener proveedor ${id}:`, error);
+        }
+    }
+
+    if (proveedoresConEmail.length === 0) {
+        mostrarMensaje('Ninguno de los proveedores seleccionados tiene email', 'warning');
+        return;
+    }
+
+    // Simular envío de emails (en producción, aquí iría la llamada al backend)
+    let exitosos = 0;
+    for (const proveedor of proveedoresConEmail) {
+        // Reemplazar variables en el mensaje
+        let mensajePersonalizado = mensaje
+            .replace(/{nombre_proveedor}/g, proveedor.nombre)
+            .replace(/{nif}/g, proveedor.nif);
+
+        // Aquí iría la lógica real de envío de email
+        console.log(`Enviando email a ${proveedor.email}:`, {
+            asunto,
+            mensaje: mensajePersonalizado
+        });
+        
+        exitosos++;
+        
+        // Simular delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    let mensajeResultado = `${exitosos} email(s) enviado(s) correctamente`;
+    if (proveedoresSinEmail > 0) {
+        mensajeResultado += `. ${proveedoresSinEmail} proveedor(es) sin email`;
+    }
+
+    mostrarMensaje(mensajeResultado, 'success');
+    seleccionMasiva.limpiarSeleccion();
+}
+
+/**
+ * Exportar proveedores seleccionados a CSV
+ */
+async function exportarSeleccionados() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('Debe seleccionar al menos un proveedor', 'warning');
+        return;
+    }
+
+    try {
+        // Obtener datos de los proveedores seleccionados
+        const proveedoresExportar = [];
+        for (const id of seleccionados) {
+            const response = await fetch(`/proveedores/api/${id}`);
+            if (response.ok) {
+                const proveedor = await response.json();
+                proveedoresExportar.push(proveedor);
+            }
+        }
+
+        if (proveedoresExportar.length === 0) {
+            mostrarMensaje('No se pudieron obtener los datos de los proveedores', 'danger');
+            return;
+        }
+
+        // Generar CSV
+        let csv = 'Nombre,NIF,Dirección,Contacto,Teléfono,Email,Cuenta Contable,Estado\n';
+        
+        proveedoresExportar.forEach(p => {
+            csv += `"${p.nombre}",`;
+            csv += `"${p.nif}",`;
+            csv += `"${p.direccion || ''}",`;
+            csv += `"${p.contacto || ''}",`;
+            csv += `"${p.telefono || ''}",`;
+            csv += `"${p.email || ''}",`;
+            csv += `"${p.cuenta_contable}",`;
+            csv += `"${p.activo ? 'Activo' : 'Inactivo'}"\n`;
+        });
+
+        // Descargar archivo
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `proveedores_seleccion_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        mostrarMensaje(`${proveedoresExportar.length} proveedor(es) exportado(s) correctamente`, 'success');
+    } catch (error) {
+        console.error('Error al exportar proveedores:', error);
+        mostrarMensaje('Error al exportar proveedores', 'danger');
+    }
+}
+
+/**
+ * Eliminar proveedores seleccionados
+ */
+function eliminarSeleccionados() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('Debe seleccionar al menos un proveedor', 'warning');
+        return;
+    }
+
+    seleccionMasiva.confirmarAccionMasiva({
+        titulo: '¿Eliminar proveedores?',
+        mensaje: `⚠️ Se eliminarán permanentemente ${seleccionados.length} proveedor(es). Esta acción no se puede deshacer.`,
+        textoBotonConfirmar: 'Sí, eliminar',
+        colorBotonConfirmar: 'danger',
+        onConfirmar: async () => {
+            let exitosos = 0;
+            let fallidos = 0;
+
+            for (const id of seleccionados) {
+                try {
+                    const response = await fetch(`/proveedores/api/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        exitosos++;
+                    } else {
+                        fallidos++;
+                    }
+                } catch (error) {
+                    console.error(`Error al eliminar proveedor ${id}:`, error);
+                    fallidos++;
+                }
+            }
+
+            if (exitosos > 0) {
+                mostrarMensaje(`${exitosos} proveedor(es) eliminado(s) correctamente`, 'success');
+                cargarProveedores();
+                actualizarEstadisticas();
+                seleccionMasiva.limpiarSeleccion();
+            }
+
+            if (fallidos > 0) {
+                mostrarMensaje(`${fallidos} proveedor(es) no pudieron ser eliminados`, 'danger');
+            }
+        }
+    });
 }
