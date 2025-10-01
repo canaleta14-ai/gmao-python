@@ -514,8 +514,8 @@ function actualizarTablaArticulos(articulos) {
               articulo.ubicacion || '<span class="text-muted">-</span>'
             }</td>
             <td class="text-end">${
-              articulo.precio_promedio
-                ? formatearMoneda(articulo.precio_promedio)
+              articulo.precio_unitario
+                ? formatearMoneda(articulo.precio_unitario)
                 : '<span class="text-muted">-</span>'
             }</td>
             <td class="text-end"><strong class="text-success">${formatearMoneda(
@@ -666,9 +666,31 @@ function configurarGrupoContable() {
 async function guardarNuevoArticulo() {
   const form = document.getElementById("formNuevoArticulo");
 
+  if (!form) {
+    console.error("❌ Formulario formNuevoArticulo no encontrado");
+    mostrarAlerta("Error: Formulario no encontrado", "danger");
+    return;
+  }
+
   if (!form.checkValidity()) {
     form.reportValidity();
     return;
+  }
+
+  // Verificar que todos los elementos necesarios existan
+  const elementosRequeridos = [
+    "nuevo-codigo", "nuevo-descripcion", "nuevo-categoria",
+    "nuevo-stock-minimo", "nuevo-stock-maximo", "nuevo-ubicacion",
+    "nuevo-precio-unitario", "nuevo-unidad-medida", "nuevo-proveedor",
+    "nuevo-cuenta-contable", "nuevo-grupo-contable", "nuevo-critico", "nuevo-activo"
+  ];
+
+  for (const id of elementosRequeridos) {
+    if (!document.getElementById(id)) {
+      console.error(`❌ Elemento ${id} no encontrado`);
+      mostrarAlerta(`Error: Elemento ${id} no encontrado`, "danger");
+      return;
+    }
   }
 
   const data = {
@@ -730,6 +752,9 @@ function mostrarModalMovimiento(
     codigo,
     descripcion,
   });
+
+  // Inicializar motivos (inicialmente vacío) - ANTES del reset para evitar que se pierdan las opciones
+  actualizarMotivos("");
 
   // Limpiar formulario
   document.getElementById("formMovimiento").reset();
@@ -960,6 +985,47 @@ function validarStockParaSalida(articulo) {
   }
 }
 
+// Motivos predefinidos por tipo de movimiento
+const MOTIVOS_POR_TIPO = {
+  entrada: [
+    "Consumido",
+    "Rotura",
+    "Falta",
+    "Sobra"
+  ],
+  salida: [
+    "Consumido",
+    "Rotura",
+    "Falta",
+    "Sobra"
+  ],
+  regularizacion: [
+    "Consumido",
+    "Rotura",
+    "Falta",
+    "Sobra"
+  ]
+};
+
+// Función para actualizar motivos según el tipo de movimiento
+function actualizarMotivos(tipo) {
+  const motivoSelect = document.getElementById("movimiento-motivo");
+  if (!motivoSelect) return;
+
+  // Limpiar opciones actuales
+  motivoSelect.innerHTML = '<option value="">Seleccionar motivo...</option>';
+
+  // Agregar motivos del tipo seleccionado
+  if (tipo && MOTIVOS_POR_TIPO[tipo]) {
+    MOTIVOS_POR_TIPO[tipo].forEach(motivo => {
+      const option = document.createElement("option");
+      option.value = motivo;
+      option.textContent = motivo;
+      motivoSelect.appendChild(option);
+    });
+  }
+}
+
 // Inicializar listeners para el modal de movimiento
 function initializeMovimientoModalListeners() {
   const tipoSelect = document.getElementById("movimiento-tipo");
@@ -968,6 +1034,9 @@ function initializeMovimientoModalListeners() {
 
   if (tipoSelect) {
     tipoSelect.addEventListener("change", function () {
+      // Actualizar motivos según el tipo seleccionado
+      actualizarMotivos(this.value);
+
       const articuloId = document.getElementById(
         "movimiento-articulo-id"
       ).value;
@@ -1003,13 +1072,38 @@ async function guardarMovimiento() {
     return;
   }
 
+  // Validar que se haya seleccionado un artículo
+  const articuloId = document.getElementById("movimiento-articulo-id").value;
+  if (!articuloId) {
+    mostrarAlerta("Debe seleccionar un artículo antes de registrar el movimiento", "warning");
+    document.getElementById("movimiento-articulo-info").focus();
+    return;
+  }
+
+  // Validar que la cantidad sea mayor a 0
+  const cantidad = parseInt(document.getElementById("movimiento-cantidad").value);
+  if (!cantidad || cantidad <= 0) {
+    mostrarAlerta("La cantidad debe ser mayor a 0", "warning");
+    document.getElementById("movimiento-cantidad").focus();
+    return;
+  }
+
   const data = {
     tipo: document.getElementById("movimiento-tipo").value,
-    cantidad: parseInt(document.getElementById("movimiento-cantidad").value),
-    motivo: document.getElementById("movimiento-motivo").value,
+    cantidad: cantidad,
+    precio_unitario: parseFloat(document.getElementById("movimiento-precio-unitario").value) || null,
+    observaciones: document.getElementById("movimiento-motivo").value,
   };
 
   try {
+    console.log("📦 Registrando movimiento:", {
+      tipo: data.tipo,
+      cantidad: data.cantidad,
+      precio_unitario: data.precio_unitario,
+      inventario_id: articuloId,
+      observaciones: data.observaciones
+    });
+
     const response = await fetch("/inventario/api/movimientos", {
       method: "POST",
       headers: {
@@ -1017,9 +1111,7 @@ async function guardarMovimiento() {
       },
       body: JSON.stringify({
         ...data,
-        inventario_id: parseInt(
-          document.getElementById("movimiento-articulo-id").value
-        ),
+        inventario_id: parseInt(articuloId),
       }),
     });
 
@@ -1767,6 +1859,24 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(
           "ℹ️ Artículo pre-seleccionado, no se inicializa autocompletado"
         );
+      }
+    });
+  }
+
+  // Listener para cambio de tipo de movimiento (mostrar/ocultar precio unitario)
+  const tipoMovimientoSelect = document.getElementById("movimiento-tipo");
+  if (tipoMovimientoSelect) {
+    tipoMovimientoSelect.addEventListener("change", function() {
+      const precioContainer = document.getElementById("precio-unitario-container");
+      const tipo = this.value;
+
+      // Mostrar precio unitario solo para entradas y regularizaciones
+      if (tipo === "entrada" || tipo === "regularizacion") {
+        precioContainer.style.display = "block";
+      } else {
+        precioContainer.style.display = "none";
+        // Limpiar el valor cuando se oculta
+        document.getElementById("movimiento-precio-unitario").value = "";
       }
     });
   }

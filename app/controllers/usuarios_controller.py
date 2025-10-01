@@ -27,7 +27,7 @@ def login():
     Ruta de login - maneja tanto GET (mostrar formulario) como POST (procesar login)
     """
     if current_user.is_authenticated:
-        return redirect(url_for("web.dashboard"))
+        return redirect(url_for("web_routes.dashboard"))
 
     if request.method == "POST":
         data = request.get_json() if request.is_json else request.form
@@ -59,7 +59,7 @@ def login():
                 "/"
             ):  # Solo redirigir a rutas locales
                 return redirect(next_page)
-            return redirect(url_for("web.dashboard"))
+            return redirect(url_for("web_routes.dashboard"))
         else:
             if request.is_json:
                 return (

@@ -2,7 +2,9 @@ from app.models.activo import Activo
 from app.extensions import db
 from flask import jsonify
 import csv
-from io import StringIO
+from io import StringIO, BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 
 def listar_activos(filtros=None):
@@ -77,7 +79,13 @@ def listar_activos(filtros=None):
 
 
 def listar_activos_paginado(
-    page=1, per_page=10, q=None, departamento=None, estado=None
+    page=1,
+    per_page=10,
+    q=None,
+    departamento=None,
+    estado=None,
+    tipo=None,
+    prioridad=None,
 ):
     """Listar activos con paginación y filtros"""
     query = Activo.query
@@ -89,6 +97,14 @@ def listar_activos_paginado(
     # Filtro por estado
     if estado:
         query = query.filter_by(estado=estado)
+
+    # Filtro por tipo
+    if tipo:
+        query = query.filter_by(tipo=tipo)
+
+    # Filtro por prioridad
+    if prioridad:
+        query = query.filter_by(prioridad=prioridad)
 
     # Filtro de búsqueda general
     if q:
@@ -248,60 +264,87 @@ def obtener_departamentos():
 
 
 def exportar_activos_csv():
-    """Genera un archivo CSV con todos los activos"""
+    """Genera un archivo Excel con todos los activos"""
     activos = Activo.query.all()
     departamentos = Activo.get_departamentos()
 
-    output = StringIO()
-    writer = csv.writer(output)
+    # Crear workbook y hoja
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Activos"
 
-    # Escribir encabezados
-    writer.writerow(
-        [
-            "Código",
-            "Departamento",
-            "Nombre Departamento",
-            "Nombre Activo",
-            "Tipo",
-            "Ubicación",
-            "Estado",
-            "Prioridad",
-            "Modelo",
-            "Número Serie",
-            "Fabricante",
-            "Proveedor",
-            "Último Mantenimiento",
-        ]
+    # Estilos para el encabezado
+    header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color="4F81BD", end_color="4F81BD", fill_type="solid"
     )
+    header_alignment = Alignment(horizontal="center", vertical="center")
 
-    # Escribir datos
-    for activo in activos:
-        writer.writerow(
-            [
-                activo.codigo,
-                activo.departamento,
-                departamentos.get(activo.departamento, "Desconocido"),
-                activo.nombre,
-                activo.tipo or "",
-                activo.ubicacion or "",
-                activo.estado,
-                activo.prioridad or "",
-                activo.modelo or "",
-                activo.numero_serie or "",
-                activo.fabricante or "",
-                activo.proveedor or "",
-                (
-                    activo.ultimo_mantenimiento.strftime("%d/%m/%Y")
-                    if activo.ultimo_mantenimiento
-                    else ""
-                ),
-            ]
+    # Encabezados
+    headers = [
+        "Código",
+        "Departamento",
+        "Nombre Departamento",
+        "Nombre Activo",
+        "Tipo",
+        "Ubicación",
+        "Estado",
+        "Prioridad",
+        "Modelo",
+        "Número Serie",
+        "Fabricante",
+        "Proveedor",
+        "Último Mantenimiento",
+    ]
+
+    # Aplicar encabezados con estilo
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    # Datos
+    for row_num, activo in enumerate(activos, 2):
+        ws.cell(row=row_num, column=1, value=activo.codigo)
+        ws.cell(row=row_num, column=2, value=activo.departamento)
+        ws.cell(
+            row=row_num,
+            column=3,
+            value=departamentos.get(activo.departamento, "Desconocido"),
+        )
+        ws.cell(row=row_num, column=4, value=activo.nombre)
+        ws.cell(row=row_num, column=5, value=activo.tipo or "")
+        ws.cell(row=row_num, column=6, value=activo.ubicacion or "")
+        ws.cell(row=row_num, column=7, value=activo.estado)
+        ws.cell(row=row_num, column=8, value=activo.prioridad or "")
+        ws.cell(row=row_num, column=9, value=activo.modelo or "")
+        ws.cell(row=row_num, column=10, value=activo.numero_serie or "")
+        ws.cell(row=row_num, column=11, value=activo.fabricante or "")
+        ws.cell(row=row_num, column=12, value=activo.proveedor or "")
+        ws.cell(
+            row=row_num,
+            column=13,
+            value=(
+                activo.ultimo_mantenimiento.strftime("%d/%m/%Y")
+                if activo.ultimo_mantenimiento
+                else ""
+            ),
         )
 
-    csv_data = output.getvalue()
+    # Ajustar ancho de columnas
+    column_widths = [15, 12, 20, 25, 15, 20, 12, 12, 20, 20, 20, 25, 20]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = width
+
+    # Guardar en BytesIO
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    excel_data = output.getvalue()
     output.close()
 
-    return csv_data
+    return excel_data
 
 
 def validar_codigo_unico(codigo):

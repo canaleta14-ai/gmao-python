@@ -96,62 +96,55 @@
                 </div>
                 <div id="filtros-collapse" class="collapse">
                     <div class="filtros-body">
-                        <form method="GET" class="row g-3">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="estado" class="form-label">Estado</label>
-                                    <select class="form-select" id="estado" name="estado">
-                                        <option value="">Todos los estados</option>
-                                        <option value="pendiente" {{ 'selected' if request.args.get('estado') == 'pendiente' }}>Pendiente</option>
-                                        <option value="en_revision" {{ 'selected' if request.args.get('estado') == 'en_revision' }}>En Revisión</option>
-                                        <option value="aprobada" {{ 'selected' if request.args.get('estado') == 'aprobada' }}>Aprobada</option>
-                                        <option value="en_progreso" {{ 'selected' if request.args.get('estado') == 'en_progreso' }}>En Progreso</option>
-                                        <option value="completada" {{ 'selected' if request.args.get('estado') == 'completada' }}>Completada</option>
-                                        <option value="rechazada" {{ 'selected' if request.args.get('estado') == 'rechazada' }}>Rechazada</option>
-                                        <option value="cancelada" {{ 'selected' if request.args.get('estado') == 'cancelada' }}>Cancelada</option>
-                                    </select>
-                                </div>
+                        <form id="filtrosForm" class="row g-3">
+                            <div class="col-lg-3 col-md-6">
+                                <label for="estado" class="form-label fw-bold">Estado</label>
+                                <select class="form-select" id="estado" name="estado">
+                                    <option value="">Todos los estados</option>
+                                    <option value="pendiente" {{ 'selected' if request.args.get('estado') == 'pendiente' }}>Pendiente</option>
+                                    <option value="en_revision" {{ 'selected' if request.args.get('estado') == 'en_revision' }}>En Revisión</option>
+                                    <option value="aprobada" {{ 'selected' if request.args.get('estado') == 'aprobada' }}>Aprobada</option>
+                                    <option value="en_progreso" {{ 'selected' if request.args.get('estado') == 'en_progreso' }}>En Progreso</option>
+                                    <option value="completada" {{ 'selected' if request.args.get('estado') == 'completada' }}>Completada</option>
+                                    <option value="rechazada" {{ 'selected' if request.args.get('estado') == 'rechazada' }}>Rechazada</option>
+                                    <option value="cancelada" {{ 'selected' if request.args.get('estado') == 'cancelada' }}>Cancelada</option>
+                                </select>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="prioridad" class="form-label">Prioridad</label>
-                                    <select class="form-select" id="prioridad" name="prioridad">
-                                        <option value="">Todas las prioridades</option>
-                                        <option value="baja" {{ 'selected' if request.args.get('prioridad') == 'baja' }}>Baja</option>
-                                        <option value="normal" {{ 'selected' if request.args.get('prioridad') == 'normal' }}>Normal</option>
-                                        <option value="alta" {{ 'selected' if request.args.get('prioridad') == 'alta' }}>Alta</option>
-                                        <option value="urgente" {{ 'selected' if request.args.get('prioridad') == 'urgente' }}>Urgente</option>
-                                    </select>
-                                </div>
+                            <div class="col-lg-3 col-md-6">
+                                <label for="prioridad" class="form-label fw-bold">Prioridad</label>
+                                <select class="form-select" id="prioridad" name="prioridad">
+                                    <option value="">Todas las prioridades</option>
+                                    <option value="baja" {{ 'selected' if request.args.get('prioridad') == 'baja' }}>Baja</option>
+                                    <option value="normal" {{ 'selected' if request.args.get('prioridad') == 'normal' }}>Normal</option>
+                                    <option value="alta" {{ 'selected' if request.args.get('prioridad') == 'alta' }}>Alta</option>
+                                    <option value="urgente" {{ 'selected' if request.args.get('prioridad') == 'urgente' }}>Urgente</option>
+                                </select>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="tipo_servicio" class="form-label">Tipo de Servicio</label>
-                                    <select class="form-select" id="tipo_servicio" name="tipo_servicio">
-                                        <option value="">Todos los tipos</option>
-                                        <option value="mantenimiento" {{ 'selected' if request.args.get('tipo_servicio') == 'mantenimiento' }}>Mantenimiento</option>
-                                        <option value="reparacion" {{ 'selected' if request.args.get('tipo_servicio') == 'reparacion' }}>Reparación</option>
-                                        <option value="instalacion" {{ 'selected' if request.args.get('tipo_servicio') == 'instalacion' }}>Instalación</option>
-                                        <option value="otro" {{ 'selected' if request.args.get('tipo_servicio') == 'otro' }}>Otro</option>
-                                    </select>
-                                </div>
+                            <div class="col-lg-3 col-md-6">
+                                <label for="tipo_servicio" class="form-label fw-bold">Tipo de Servicio</label>
+                                <select class="form-select" id="tipo_servicio" name="tipo_servicio">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="mantenimiento" {{ 'selected' if request.args.get('tipo_servicio') == 'mantenimiento' }}>Mantenimiento</option>
+                                    <option value="reparacion" {{ 'selected' if request.args.get('tipo_servicio') == 'reparacion' }}>Reparación</option>
+                                    <option value="instalacion" {{ 'selected' if request.args.get('tipo_servicio') == 'instalacion' }}>Instalación</option>
+                                    <option value="otro" {{ 'selected' if request.args.get('tipo_servicio') == 'otro' }}>Otro</option>
+                                </select>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="busqueda" class="form-label">Buscar</label>
-                                    <input type="text" class="form-control" id="busqueda" name="busqueda"
-                                           value="{{ request.args.get('busqueda', '') }}"
-                                           placeholder="Número, nombre, email...">
-                                </div>
+                            <div class="col-lg-3 col-md-6">
+                                <label for="busqueda" class="form-label fw-bold">Buscar</label>
+                                <input type="text" class="form-control" id="busqueda" name="busqueda"
+                                       value="{{ request.args.get('busqueda', '') }}"
+                                       placeholder="Número, nombre, email...">
                             </div>
                             <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-search me-1"></i>Filtrar
+                                <hr class="mb-3">
+                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                    <button type="button" class="btn btn-primary" onclick="aplicarFiltros()">
+                                        <i class="bi bi-search me-1"></i>Buscar
                                     </button>
-                                    <a href="{{ url_for('solicitudes_admin.listar_solicitudes') }}" class="btn btn-outline-secondary btn-limpiar-filtro">
-                                        <i class="bi bi-x-circle me-1"></i>Limpiar Filtros
-                                    </a>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+                                        <i class="bi bi-x-circle me-1"></i>Limpiar
+                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -243,39 +236,12 @@
                             </table>
                         </div>
 
-                        <!-- Paginación -->
-                        {% if total_paginas > 1 %}
+                        <!-- Paginación dinámica -->
                         <div class="card-footer">
-                            <nav aria-label="Navegación de páginas">
-                                <ul class="pagination justify-content-center mb-0">
-                                    {% set pagina_actual = request.args.get('pagina', 1, type=int) %}
-                                    {% if pagina_actual > 1 %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('solicitudes_admin.listar_solicitudes', pagina=pagina_actual-1, **request.args) }}">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                    {% endif %}
-
-                                    {% for num_pagina in range(max(1, pagina_actual-2), min(total_paginas+1, pagina_actual+3)) %}
-                                    <li class="page-item {{ 'active' if num_pagina == pagina_actual }}">
-                                        <a class="page-link" href="{{ url_for('solicitudes_admin.listar_solicitudes', pagina=num_pagina, **request.args) }}">
-                                            {{ num_pagina }}
-                                        </a>
-                                    </li>
-                                    {% endfor %}
-
-                                    {% if pagina_actual < total_paginas %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('solicitudes_admin.listar_solicitudes', pagina=pagina_actual+1, **request.args) }}">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
+                            <div class="pagination-container">
+                                <!-- La paginación se actualizará dinámicamente con JavaScript -->
+                            </div>
                         </div>
-                        {% endif %}
                     {% else %}
                         <div class="text-center py-5">
                             <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
@@ -372,5 +338,300 @@ function exportarSolicitudes() {
     url.pathname = '/admin/solicitudes/exportar';
     window.open(url, '_blank');
 }
+
+// ========== FUNCIONES PARA FILTROS DINÁMICOS ==========
+
+let currentPage = 1;
+let currentFilters = {};
+
+// Función para aplicar filtros
+function aplicarFiltros(page = 1) {
+    const filtros = {
+        estado: document.getElementById('estado').value,
+        prioridad: document.getElementById('prioridad').value,
+        tipo_servicio: document.getElementById('tipo_servicio').value,
+        busqueda: document.getElementById('busqueda').value.trim(),
+        page: page
+    };
+
+    currentFilters = filtros;
+    currentPage = page;
+
+    // Mostrar loading
+    mostrarCargando();
+
+    const url = '/admin/solicitudes/api/filtrar?' + new URLSearchParams(filtros);
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Sesión expirada
+                    throw new Error('Sesión expirada. Por favor, recarga la página e inicia sesión nuevamente.');
+                } else if (response.status === 403) {
+                    // Sin permisos
+                    throw new Error('No tienes permisos para realizar esta acción.');
+                } else {
+                    throw new Error('Error HTTP: ' + response.status);
+                }
+            }
+            return response.json();
+        })
+        .then(data => {
+            actualizarTabla(data);
+            actualizarPaginacion(data);
+            ocultarCargando();
+        })
+        .catch(error => {
+            console.error('Error al filtrar:', error);
+            ocultarCargando();
+            
+            // Mostrar mensaje de error
+            if (typeof mostrarMensaje === 'function') {
+                mostrarMensaje('Error al aplicar filtros: ' + error.message, 'danger');
+            } else {
+                alert('Error al aplicar filtros: ' + error.message);
+            }
+        });
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('estado').value = '';
+    document.getElementById('prioridad').value = '';
+    document.getElementById('tipo_servicio').value = '';
+    document.getElementById('busqueda').value = '';
+    currentFilters = {};
+    currentPage = 1;
+    aplicarFiltros(1);
+}
+
+// Función para actualizar la tabla con los resultados
+function actualizarTabla(data) {
+    const tbody = document.querySelector('.table tbody');
+    const header = document.querySelector('.card-header small');
+
+    if (!tbody) {
+        console.error('No se encontró el tbody de la tabla');
+        return;
+    }
+
+    if (data.solicitudes.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="bi bi-inbox fs-1 text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No se encontraron solicitudes con los filtros aplicados</p>
+                </td>
+            </tr>
+        `;
+        if (header) {
+            header.textContent = `Mostrando 0 de ${data.total} solicitudes`;
+        }
+        return;
+    }
+
+    let html = '';
+    data.solicitudes.forEach(solicitud => {
+        const estadoClass = getEstadoClass(solicitud.estado);
+        const prioridadClass = getPrioridadClass(solicitud.prioridad);
+
+        html += `
+            <tr>
+                <td>
+                    <strong class="text-primary">${solicitud.numero_solicitud}</strong>
+                </td>
+                <td>
+                    <div>
+                        <strong>${solicitud.nombre_solicitante}</strong>
+                        <br>
+                        <small class="text-muted">${solicitud.email_solicitante}</small>
+                        ${solicitud.telefono_solicitante ? `<br><small class="text-muted"><i class="bi bi-telephone me-1"></i>${solicitud.telefono_solicitante}</small>` : ''}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-secondary">${solicitud.tipo_servicio || 'N/A'}</span>
+                </td>
+                <td>
+                    <span class="badge ${prioridadClass}">${solicitud.prioridad || 'N/A'}</span>
+                </td>
+                <td>
+                    <span class="badge ${estadoClass}">${getEstadoTexto(solicitud.estado)}</span>
+                </td>
+                <td>
+                    <small class="text-muted">${solicitud.fecha_creacion}</small>
+                </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="/admin/solicitudes/${solicitud.id}" class="btn btn-sm btn-outline-primary" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/admin/solicitudes/${solicitud.id}/editar" class="btn btn-sm btn-outline-warning" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="cambiarEstado(${solicitud.id})" title="Cambiar Estado">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    if (header) {
+        header.textContent = `Mostrando ${data.solicitudes.length} de ${data.total} solicitudes`;
+    }
+}
+
+// Función para actualizar la paginación
+function actualizarPaginacion(data) {
+    const paginationContainer = document.querySelector('.pagination-container');
+    if (!paginationContainer) return;
+
+    if (data.pages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '<nav><ul class="pagination justify-content-center">';
+
+    // Botón anterior
+    if (data.has_prev) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${data.prev_page})">Anterior</a></li>`;
+    } else {
+        html += '<li class="page-item disabled"><span class="page-link">Anterior</span></li>';
+    }
+
+    // Páginas
+    for (let i = Math.max(1, data.current_page - 2); i <= Math.min(data.pages, data.current_page + 2); i++) {
+        if (i === data.current_page) {
+            html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+        } else {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${i})">${i}</a></li>`;
+        }
+    }
+
+    // Botón siguiente
+    if (data.has_next) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${data.next_page})">Siguiente</a></li>`;
+    } else {
+        html += '<li class="page-item disabled"><span class="page-link">Siguiente</span></li>';
+    }
+
+    html += '</ul></nav>';
+    paginationContainer.innerHTML = html;
+}
+
+// Funciones auxiliares para estilos
+function getEstadoClass(estado) {
+    const classes = {
+        'pendiente': 'bg-warning text-dark',
+        'en_revision': 'bg-info',
+        'aprobada': 'bg-success',
+        'en_progreso': 'bg-primary',
+        'completada': 'bg-success',
+        'rechazada': 'bg-danger',
+        'cancelada': 'bg-secondary'
+    };
+    return classes[estado] || 'bg-secondary';
+}
+
+function getEstadoTexto(estado) {
+    const textos = {
+        'pendiente': 'Pendiente',
+        'en_revision': 'En Revisión',
+        'aprobada': 'Aprobada',
+        'en_progreso': 'En Progreso',
+        'completada': 'Completada',
+        'rechazada': 'Rechazada',
+        'cancelada': 'Cancelada'
+    };
+    return textos[estado] || estado;
+}
+
+function getPrioridadClass(prioridad) {
+    const classes = {
+        'baja': 'bg-success',
+        'normal': 'bg-warning text-dark',
+        'alta': 'bg-danger',
+        'urgente': 'bg-danger'
+    };
+    return classes[prioridad] || 'bg-secondary';
+}
+
+// Función para mostrar loading
+function mostrarCargando() {
+    const tabla = document.querySelector('.table-responsive');
+    if (tabla) {
+        tabla.style.opacity = '0.5';
+        tabla.style.pointerEvents = 'none';
+    }
+}
+
+// Función para ocultar loading
+function ocultarCargando() {
+    const tabla = document.querySelector('.table-responsive');
+    if (tabla) {
+        tabla.style.opacity = '1';
+        tabla.style.pointerEvents = 'auto';
+    }
+}
+
+// Inicializar filtros dinámicos cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Prevenir submit del formulario de filtros
+    const filtrosForm = document.getElementById('filtrosForm');
+    if (filtrosForm) {
+        filtrosForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            aplicarFiltros(1);
+        });
+    }
+
+    // Agregar event listeners para los selects de filtro
+    const estadoSelect = document.getElementById('estado');
+    const prioridadSelect = document.getElementById('prioridad');
+    const tipoServicioSelect = document.getElementById('tipo_servicio');
+
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', () => aplicarFiltros(1));
+    }
+    if (prioridadSelect) {
+        prioridadSelect.addEventListener('change', () => aplicarFiltros(1));
+    }
+    if (tipoServicioSelect) {
+        tipoServicioSelect.addEventListener('change', () => aplicarFiltros(1));
+    }
+
+    // Agregar event listeners para búsqueda en tiempo real
+    const busquedaInput = document.getElementById('busqueda');
+    if (busquedaInput) {
+        let timeoutId;
+        busquedaInput.addEventListener('input', function() {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                aplicarFiltros(1);
+            }, 500);
+        });
+    }
+
+    // Aplicar filtros iniciales (vacíos) - esto carga todos los datos
+    setTimeout(() => aplicarFiltros(1), 100);
+});
+
+function exportarSolicitudes() {
+    const url = new URL(window.location);
+    url.pathname = '/admin/solicitudes/exportar';
+    window.open(url, '_blank');
+}
 </script>
+
+<!-- Los scripts principales (main.js, etc.) ya están cargados en base.html -->
 {% endblock %}

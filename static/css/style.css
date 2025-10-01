@@ -18,6 +18,67 @@
   --border-color-light: #f1f5f9; /* Borde más claro */
 }
 
+/* ============================================
+   ELIMINAR TODOS LOS BORDES REDONDEADOS
+   ============================================ */
+*,
+*::before,
+*::after,
+.card,
+.card-header,
+.card-footer,
+.card-body,
+.btn,
+.form-control,
+.form-select,
+.input-group,
+.input-group-text,
+.modal-content,
+.modal-header,
+.modal-body,
+.modal-footer,
+.alert,
+.badge,
+.dropdown-menu,
+.dropdown-item,
+.nav-tabs,
+.nav-pills,
+.nav-link,
+.pagination,
+.page-link,
+.table,
+.list-group,
+.list-group-item,
+.toast,
+.tooltip,
+.popover,
+.progress,
+.progress-bar,
+.accordion,
+.accordion-item,
+.accordion-button,
+.breadcrumb,
+.navbar,
+.navbar-toggler,
+.offcanvas,
+.stats-card,
+.filtros-container,
+.filtros-header,
+.filtros-body,
+.autocomplete-dropdown,
+.autocomplete-item,
+img,
+.avatar,
+.rounded,
+.rounded-circle,
+.rounded-pill,
+.rounded-top,
+.rounded-bottom,
+.rounded-start,
+.rounded-end {
+  border-radius: 0 !important;
+}
+
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--light-color);
@@ -351,14 +412,16 @@ body {
 
 .stats-card {
   border-radius: 10px;
-  border: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
+  border: 1px solid #e2e8f0;
+  border-left-width: 5px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  background: white;
 }
 
 .stats-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
 }
 
 .stats-icon {
@@ -1056,25 +1119,25 @@ body.login-bg .main-content {
   background: transparent;
 }
 
-/* Bordes coloreados para las tarjetas de estadísticas */
+/* Bordes coloreados para las tarjetas de estadísticas - Franja lateral */
 .stats-card.primary {
-  border-left: 4px solid var(--primary-color);
+  border-left: 5px solid var(--primary-color) !important;
 }
 
 .stats-card.success {
-  border-left: 4px solid var(--success-color);
+  border-left: 5px solid var(--success-color) !important;
 }
 
 .stats-card.warning {
-  border-left: 4px solid var(--warning-color);
+  border-left: 5px solid var(--warning-color) !important;
 }
 
 .stats-card.danger {
-  border-left: 4px solid var(--danger-color);
+  border-left: 5px solid var(--danger-color) !important;
 }
 
 .stats-card.info {
-  border-left: 4px solid var(--info-color);
+  border-left: 5px solid var(--info-color) !important;
 }
 
 /* Estilos para páginas de error */
@@ -1132,7 +1195,7 @@ body.login-bg .main-content {
   border-radius: 6px;
   box-shadow: var(--shadow-sm);
   margin-bottom: 1.5rem;
-  overflow: hidden;
+  overflow: visible;
 }
 .filtros-header {
   background: linear-gradient(
@@ -1148,6 +1211,7 @@ body.login-bg .main-content {
   position: relative;
   display: flex;
   align-items: center;
+  overflow: hidden;
   justify-content: space-between;
 }
 
@@ -1188,6 +1252,12 @@ body.login-bg .main-content {
   padding: 1.5rem;
   background: #f8f9fa;
   border-top: 1px solid #e9ecef;
+}
+
+/* Asegurar que el collapse no oculte el dropdown del autocompletado */
+.collapse,
+.collapsing {
+  overflow: visible !important;
 }
 
 .filtros-body .form-group {
@@ -1571,36 +1641,37 @@ body.login-bg .main-content {
 
 /* ===== DASHBOARD STYLES ===== */
 .stats-card {
-  border: none;
+  border: 1px solid #e2e8f0;
+  border-left-width: 5px !important;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   background: var(--surface-color);
 }
 
 .stats-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
 }
 
 .stats-card.primary {
-  border-left: 4px solid var(--primary-color);
+  border-left: 5px solid var(--primary-color) !important;
 }
 
 .stats-card.success {
-  border-left: 4px solid var(--success-color);
+  border-left: 5px solid var(--success-color) !important;
 }
 
 .stats-card.warning {
-  border-left: 4px solid var(--warning-color);
+  border-left: 5px solid var(--warning-color) !important;
 }
 
 .stats-card.info {
-  border-left: 4px solid var(--info-color);
+  border-left: 5px solid var(--info-color) !important;
 }
 
 .stats-card.danger {
-  border-left: 4px solid var(--danger-color);
+  border-left: 5px solid var(--danger-color) !important;
 }
 
 .stats-card .card-body {
@@ -1680,6 +1751,49 @@ body.login-bg .main-content {
 /* ===========================================
    ESTILOS PARA CALENDARIO
    =========================================== */
+
+/* Tarjetas de estadísticas más pequeñas y compactas solo en el módulo calendario */
+#estadisticas-cards .stats-card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+#estadisticas-cards .stats-card .card-body {
+  padding: 0.75rem !important;
+  text-align: center;
+}
+
+#estadisticas-cards .stats-card .stats-icon {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 1.125rem !important;
+  margin: 0 auto 0.4rem auto !important;
+}
+
+#estadisticas-cards .stats-card .stats-number {
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.2rem !important;
+  line-height: 1.2;
+}
+
+#estadisticas-cards .stats-card .stats-label {
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+#estadisticas-cards .stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Ajustar altura mínima de las tarjetas del calendario */
+#estadisticas-cards .card {
+  min-height: auto;
+}
 
 /* FullCalendar Events */
 .fc-event {

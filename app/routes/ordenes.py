@@ -52,11 +52,15 @@ def listar_ordenes_api():
         page = request.args.get("page", type=int)
         per_page = request.args.get("per_page", type=int)
         q = request.args.get("q")
+        tipo = request.args.get("tipo")
+        prioridad = request.args.get("prioridad")
 
         if page is not None:
             # Usar paginación
             per_page = per_page or 10
-            resultado = listar_ordenes_paginado(page, per_page, q, estado)
+            resultado = listar_ordenes_paginado(
+                page, per_page, q, estado, tipo, prioridad
+            )
             return jsonify(resultado)
         else:
             # Usar listado tradicional sin paginación
@@ -192,14 +196,16 @@ def obtener_estadisticas():
 @ordenes_bp.route("/exportar-csv", methods=["GET"])
 @login_required
 def exportar_csv():
-    """Exportar órdenes de trabajo a CSV"""
+    """Exportar órdenes de trabajo a Excel"""
     try:
-        csv_data = exportar_ordenes_csv()
+        excel_data = exportar_ordenes_csv()
 
-        response = make_response(csv_data)
-        response.headers["Content-Type"] = "text/csv; charset=utf-8"
+        response = make_response(excel_data)
+        response.headers["Content-Type"] = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
         response.headers["Content-Disposition"] = (
-            "attachment; filename=ordenes_trabajo.csv"
+            "attachment; filename=ordenes_trabajo.xlsx"
         )
 
         return response

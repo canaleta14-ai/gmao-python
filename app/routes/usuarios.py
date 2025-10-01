@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify, render_template, Response
 from flask_login import login_required
 import csv
-from io import StringIO
+from io import StringIO, BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 usuarios_bp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
 
@@ -17,23 +19,57 @@ def usuarios_page():
 def api_usuarios():
     try:
         from app.models.usuario import Usuario
+        from app.extensions import db
 
-        # Obtener usuarios reales de la base de datos
-        usuarios_db = Usuario.query.all()
+        # Obtener parámetros de filtrado
+        q = request.args.get("q", "").strip()
+        rol = request.args.get("rol", "").strip()
+        cargo = request.args.get("cargo", "").strip()
+        estado = request.args.get("estado", "").strip()
+
+        # Construir query base
+        query = Usuario.query
+
+        # Aplicar filtros
+        if q:
+            search_term = f"%{q}%"
+            query = query.filter(
+                db.or_(
+                    Usuario.nombre.ilike(search_term),
+                    Usuario.email.ilike(search_term),
+                    Usuario.username.ilike(search_term),
+                )
+            )
+
+        if rol:
+            query = query.filter_by(rol=rol)
+
+        if estado:
+            activo = estado == "Activo"
+            query = query.filter_by(activo=activo)
+
+        # Obtener usuarios filtrados
+        usuarios_db = query.all()
 
         usuarios_data = []
         for usuario in usuarios_db:
+            cargo_usuario = (
+                "Técnico" if usuario.rol != "Administrador" else "Administrador"
+            )
+
+            # Aplicar filtro de cargo si existe
+            if cargo and cargo.lower() not in cargo_usuario.lower():
+                continue
+
             usuarios_data.append(
                 {
                     "id": usuario.id,
-                    "codigo": f"USR{str(usuario.id).zfill(3)}",  # Generar código basado en ID
+                    "codigo": f"USR{str(usuario.id).zfill(3)}",
                     "nombre": usuario.nombre,
                     "email": usuario.email,
-                    "telefono": "",  # No tenemos teléfono en la DB actual
-                    "departamento": "Mantenimiento",  # Valor por defecto
-                    "cargo": (
-                        "Técnico" if usuario.rol != "Administrador" else "Administrador"
-                    ),
+                    "telefono": "",
+                    "departamento": "Mantenimiento",
+                    "cargo": cargo_usuario,
                     "estado": "Activo" if usuario.activo else "Inactivo",
                     "fecha_ingreso": (
                         usuario.fecha_creacion.strftime("%Y-%m-%d")
@@ -319,64 +355,93 @@ def api_roles():
 @usuarios_bp.route("/exportar-csv", methods=["GET"])
 @login_required
 def exportar_csv():
-    """Exporta todos los usuarios a CSV"""
+    """Exporta todos los usuarios a Excel"""
     try:
         from app.models.usuario import Usuario
 
         # Obtener todos los usuarios
         usuarios = Usuario.query.all()
 
-        output = StringIO()
-        writer = csv.writer(output)
+        # Crear workbook y hoja
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Usuarios"
 
-        # Escribir encabezados
-        writer.writerow(
-            [
-                "ID",
-                "Código",
-                "Nombre",
-                "Email",
-                "Teléfono",
-                "Departamento",
-                "Cargo",
-                "Rol",
-                "Estado",
-                "Fecha Ingreso",
-            ]
+        # Estilos para el encabezado
+        header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+        header_fill = PatternFill(
+            start_color="4F81BD", end_color="4F81BD", fill_type="solid"
         )
+        header_alignment = Alignment(horizontal="center", vertical="center")
 
-        # Escribir datos de usuarios
-        for usuario in usuarios:
-            writer.writerow(
-                [
-                    usuario.id,
-                    f"USR{str(usuario.id).zfill(3)}",  # Código generado
-                    usuario.nombre,
-                    usuario.email,
-                    "",  # Teléfono (no disponible en el modelo actual)
-                    "Mantenimiento",  # Departamento por defecto
-                    (
-                        "Técnico" if usuario.rol != "Administrador" else "Administrador"
-                    ),  # Cargo
-                    usuario.rol,
-                    "Activo" if usuario.activo else "Inactivo",
-                    (
-                        usuario.fecha_creacion.strftime("%Y-%m-%d")
-                        if usuario.fecha_creacion
-                        else "2023-01-01"
-                    ),
-                ]
+        # Encabezados
+        headers = [
+            "ID",
+            "Código",
+            "Nombre",
+            "Email",
+            "Teléfono",
+            "Departamento",
+            "Cargo",
+            "Rol",
+            "Estado",
+            "Fecha Ingreso",
+        ]
+
+        # Aplicar encabezados con estilo
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+
+        # Datos
+        for row_num, usuario in enumerate(usuarios, 2):
+            ws.cell(row=row_num, column=1, value=usuario.id)
+            ws.cell(row=row_num, column=2, value=f"USR{str(usuario.id).zfill(3)}")
+            ws.cell(row=row_num, column=3, value=usuario.nombre)
+            ws.cell(row=row_num, column=4, value=usuario.email)
+            ws.cell(row=row_num, column=5, value="")
+            ws.cell(row=row_num, column=6, value="Mantenimiento")
+            ws.cell(
+                row=row_num,
+                column=7,
+                value=(
+                    "Técnico" if usuario.rol != "Administrador" else "Administrador"
+                ),
+            )
+            ws.cell(row=row_num, column=8, value=usuario.rol)
+            ws.cell(
+                row=row_num, column=9, value="Activo" if usuario.activo else "Inactivo"
+            )
+            ws.cell(
+                row=row_num,
+                column=10,
+                value=(
+                    usuario.fecha_creacion.strftime("%Y-%m-%d")
+                    if usuario.fecha_creacion
+                    else "2023-01-01"
+                ),
             )
 
-        # Preparar respuesta
+        # Ajustar ancho de columnas
+        column_widths = [8, 12, 25, 30, 15, 15, 15, 12, 10, 15]
+        for col_num, width in enumerate(column_widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = (
+                width
+            )
+
+        # Guardar en BytesIO
+        output = BytesIO()
+        wb.save(output)
         output.seek(0)
-        csv_data = output.getvalue()
+        excel_data = output.getvalue()
         output.close()
 
         response = Response(
-            csv_data,
-            mimetype="text/csv",
-            headers={"Content-disposition": "attachment; filename=usuarios.csv"},
+            excel_data,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-disposition": "attachment; filename=usuarios.xlsx"},
         )
         return response
     except Exception as e:

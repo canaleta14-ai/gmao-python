@@ -418,11 +418,12 @@ function inicializarAutocompletadoUsuarios() {
             usuarioInput._autocomplete.destroy();
         }
 
-        const autocomplete = new AutoComplete(usuarioInput, {
+        const autocomplete = new AutoComplete({
+            element: usuarioInput,
             apiUrl: '/usuarios/api/autocomplete',
             searchKey: 'q',
             minChars: 2,
-            delay: 300,
+            debounceTime: 300,
             renderItem: function (item) {
                 return `
                     <div class="autocomplete-item">
@@ -439,7 +440,7 @@ function inicializarAutocompletadoUsuarios() {
                 usuarioInput.dataset.userId = item.id;
             },
             // Agregar fallback para datos estáticos si la API falla
-            fallbackData: [
+            localData: [
                 { id: 1, username: 'admin', nombre: 'Administrador', rol: 'admin' },
                 { id: 2, username: 'supervisor', nombre: 'Supervisor', rol: 'supervisor' },
                 { id: 3, username: 'tecnico1', nombre: 'Técnico Principal', rol: 'tecnico' },
@@ -548,11 +549,12 @@ function inicializarAutocompletadoUsuarioPeriodo() {
             usuarioInput._autocomplete.destroy();
         }
 
-        const autocomplete = new AutoComplete(usuarioInput, {
+        const autocomplete = new AutoComplete({
+            element: usuarioInput,
             apiUrl: '/usuarios/api/autocomplete',
             searchKey: 'q',
             minChars: 2,
-            delay: 300,
+            debounceTime: 300,
             renderItem: function (item) {
                 return `
                     <div class="autocomplete-item">
@@ -569,7 +571,7 @@ function inicializarAutocompletadoUsuarioPeriodo() {
                 usuarioInput.dataset.userId = item.id;
             },
             // Agregar fallback para datos estáticos si la API falla
-            fallbackData: [
+            localData: [
                 { id: 1, username: 'admin', nombre: 'Administrador', rol: 'admin' },
                 { id: 2, username: 'supervisor', nombre: 'Supervisor', rol: 'supervisor' },
                 { id: 3, username: 'tecnico1', nombre: 'Técnico Principal', rol: 'tecnico' },

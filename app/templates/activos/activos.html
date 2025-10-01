@@ -3,6 +3,7 @@
 {% set section = 'activos' %}
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/activos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/seleccion-masiva.css') }}">
 {% endblock %}
 {% block content %}
 <!-- Encabezado con estadísticas -->
@@ -149,11 +150,39 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="bi bi-table me-2"></i>Listado de Activos
-                        <span class="badge bg-secondary ms-2" id="contador-activos">0 activos</span>
-                    </h6>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">
+                            <i class="bi bi-table me-2"></i>Listado de Activos
+                            <span class="badge bg-secondary ms-2" id="contador-activos">0 activos</span>
+                            <span class="badge bg-primary ms-1" id="contador-seleccion" style="display: none;">
+                                0 seleccionados
+                            </span>
+                        </h6>
+                    </div>
+                    <!-- Barra de acciones masivas -->
+                    <div id="acciones-masivas" style="display: none;" class="btn-group btn-group-sm">
+                        <button class="btn btn-success" onclick="cambiarEstadoMasivo('Operativo')" 
+                                title="Marcar como operativos">
+                            <i class="bi bi-check-circle me-1"></i>Operativo
+                        </button>
+                        <button class="btn btn-warning" onclick="cambiarEstadoMasivo('En Mantenimiento')" 
+                                title="Marcar en mantenimiento">
+                            <i class="bi bi-gear me-1"></i>Mantenimiento
+                        </button>
+                        <button class="btn btn-info" onclick="cambiarPrioridadMasiva()" 
+                                title="Cambiar prioridad">
+                            <i class="bi bi-flag me-1"></i>Prioridad
+                        </button>
+                        <button class="btn btn-primary" onclick="exportarSeleccionados()" 
+                                title="Exportar seleccionados">
+                            <i class="bi bi-download me-1"></i>Exportar
+                        </button>
+                        <button class="btn btn-danger" onclick="eliminarSeleccionados()" 
+                                title="Eliminar seleccionados">
+                            <i class="bi bi-trash me-1"></i>Eliminar
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -161,6 +190,10 @@
                             style="table-layout: fixed; min-width: 1250px;">
                             <thead class="table-dark">
                                 <tr>
+                                    <th style="width: 50px;">
+                                        <input type="checkbox" class="form-check-input" id="select-all" 
+                                               title="Seleccionar todos">
+                                    </th>
                                     <th style="width: 80px;"><i class="bi bi-hash me-1"></i>Código</th>
                                     <th style="width: 140px;"><i class="bi bi-building me-1"></i>Departamento</th>
                                     <th style="width: 180px;"><i class="bi bi-cpu me-1"></i>Activo</th>
@@ -177,7 +210,7 @@
                             <tbody id="tabla-activos">
                                 <!-- Indicador de carga inicial -->
                                 <tr id="loading-initial">
-                                    <td colspan="10" class="text-center py-4">
+                                    <td colspan="11" class="text-center py-4">
                                         <div class="d-flex justify-content-center align-items-center">
                                             <div class="spinner-border spinner-border-sm text-primary me-2"
                                                 role="status">
@@ -460,5 +493,6 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
+<script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>
 <script src="{{ url_for('static', filename='js/activos.js') }}"></script>
 {% endblock %}

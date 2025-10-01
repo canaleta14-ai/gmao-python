@@ -1,8 +1,9 @@
 from app.models.proveedor import Proveedor
 from app.extensions import db
 from flask import jsonify
-import csv
-from io import StringIO
+from io import BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 
 def listar_proveedores(filtros=None):
@@ -202,45 +203,61 @@ def obtener_proveedor(id):
 
 
 def exportar_proveedores_csv():
-    """Genera un archivo CSV con todos los proveedores activos"""
+    """Genera un archivo Excel con todos los proveedores activos"""
     proveedores = Proveedor.query.filter_by(activo=True).all()
 
-    output = StringIO()
-    writer = csv.writer(output)
+    # Crear un nuevo workbook de Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Proveedores"
 
-    # Escribir encabezados
-    writer.writerow(
-        [
-            "ID",
-            "Nombre",
-            "NIF",
-            "Cuenta Contable",
-            "Dirección",
-            "Teléfono",
-            "Email",
-            "Contacto",
-        ]
+    # Estilos para el encabezado
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color="4F81BD", end_color="4F81BD", fill_type="solid"
     )
+    header_alignment = Alignment(horizontal="center", vertical="center")
 
-    # Escribir datos de proveedores
-    for proveedor in proveedores:
-        writer.writerow(
-            [
-                proveedor.id,
-                proveedor.nombre,
-                proveedor.nif,
-                proveedor.cuenta_contable,
-                proveedor.direccion or "",
-                proveedor.telefono or "",
-                proveedor.email or "",
-                proveedor.contacto or "",
-            ]
-        )
+    # Encabezados
+    headers = [
+        "ID",
+        "Nombre",
+        "NIF",
+        "Cuenta Contable",
+        "Dirección",
+        "Teléfono",
+        "Email",
+        "Contacto",
+    ]
 
-    csv_data = output.getvalue()
-    output.close()
+    # Aplicar estilos al encabezado
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
 
-    return csv_data
+    # Ajustar ancho de columnas
+    column_widths = [8, 30, 12, 15, 40, 15, 25, 20]
+    for i, width in enumerate(column_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+
+    # Escribir datos
+    for row_num, proveedor in enumerate(proveedores, 2):
+        ws.cell(row=row_num, column=1, value=proveedor.id)
+        ws.cell(row=row_num, column=2, value=proveedor.nombre)
+        ws.cell(row=row_num, column=3, value=proveedor.nif)
+        ws.cell(row=row_num, column=4, value=proveedor.cuenta_contable)
+        ws.cell(row=row_num, column=5, value=proveedor.direccion or "")
+        ws.cell(row=row_num, column=6, value=proveedor.telefono or "")
+        ws.cell(row=row_num, column=7, value=proveedor.email or "")
+        ws.cell(row=row_num, column=8, value=proveedor.contacto or "")
+
+    # Guardar el workbook en memoria
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
 
 
 def validar_nif(nif):

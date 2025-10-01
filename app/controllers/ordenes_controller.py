@@ -5,13 +5,19 @@ from app.models.plan_mantenimiento import PlanMantenimiento
 from app.controllers.planes_controller import calcular_proxima_ejecucion
 from app.extensions import db
 from datetime import datetime, timezone
-import csv
-import io
+from io import BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 
 def listar_ordenes(estado=None, limit=None):
     """Listar órdenes de trabajo con filtro opcional por estado y límite"""
-    query = OrdenTrabajo.query
+    from sqlalchemy.orm import joinedload
+
+    # Cargar las relaciones de forma eager para evitar N+1 queries
+    query = OrdenTrabajo.query.options(
+        joinedload(OrdenTrabajo.activo), joinedload(OrdenTrabajo.tecnico)
+    )
 
     if estado:
         query = query.filter_by(estado=estado)
@@ -60,13 +66,28 @@ def listar_ordenes(estado=None, limit=None):
     ]
 
 
-def listar_ordenes_paginado(page=1, per_page=10, q=None, estado=None):
+def listar_ordenes_paginado(
+    page=1, per_page=10, q=None, estado=None, tipo=None, prioridad=None
+):
     """Listar órdenes de trabajo con paginación y filtros"""
-    query = OrdenTrabajo.query
+    from sqlalchemy.orm import joinedload
+
+    # Cargar las relaciones de forma eager para evitar N+1 queries
+    query = OrdenTrabajo.query.options(
+        joinedload(OrdenTrabajo.activo), joinedload(OrdenTrabajo.tecnico)
+    )
 
     # Filtro por estado
     if estado:
         query = query.filter_by(estado=estado)
+
+    # Filtro por tipo
+    if tipo:
+        query = query.filter_by(tipo=tipo)
+
+    # Filtro por prioridad
+    if prioridad:
+        query = query.filter_by(prioridad=prioridad)
 
     # Filtro de búsqueda general
     if q:
@@ -479,62 +500,96 @@ def obtener_estadisticas_ordenes():
 
 
 def exportar_ordenes_csv():
-    """Exportar órdenes de trabajo a CSV"""
+    """Exportar órdenes de trabajo a Excel"""
     ordenes = OrdenTrabajo.query.order_by(OrdenTrabajo.fecha_creacion.desc()).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
+    # Crear workbook y hoja
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Órdenes de Trabajo"
+
+    # Estilos para el encabezado
+    header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color="4F81BD", end_color="4F81BD", fill_type="solid"
+    )
+    header_alignment = Alignment(horizontal="center", vertical="center")
 
     # Encabezados
-    writer.writerow(
-        [
-            "Número",
-            "Fecha Creación",
-            "Fecha Programada",
-            "Fecha Completada",
-            "Tipo",
-            "Prioridad",
-            "Estado",
-            "Descripción",
-            "Observaciones",
-            "Tiempo Estimado",
-            "Tiempo Real",
-            "Activo",
-            "Técnico",
-        ]
-    )
+    headers = [
+        "Número",
+        "Fecha Creación",
+        "Fecha Programada",
+        "Fecha Completada",
+        "Tipo",
+        "Prioridad",
+        "Estado",
+        "Descripción",
+        "Observaciones",
+        "Tiempo Estimado",
+        "Tiempo Real",
+        "Activo",
+        "Técnico",
+    ]
+
+    # Aplicar encabezados con estilo
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
 
     # Datos
-    for orden in ordenes:
-        writer.writerow(
-            [
-                orden.numero_orden,
-                (
-                    orden.fecha_creacion.strftime("%d/%m/%Y %H:%M")
-                    if orden.fecha_creacion
-                    else ""
-                ),
-                (
-                    orden.fecha_programada.strftime("%d/%m/%Y")
-                    if orden.fecha_programada
-                    else ""
-                ),
-                (
-                    orden.fecha_completada.strftime("%d/%m/%Y %H:%M")
-                    if orden.fecha_completada
-                    else ""
-                ),
-                orden.tipo or "",
-                orden.prioridad or "",
-                orden.estado or "",
-                orden.descripcion or "",
-                orden.observaciones or "",
-                orden.tiempo_estimado or "",
-                orden.tiempo_real or "",
-                orden.activo.nombre if orden.activo else "",
-                orden.tecnico.nombre if orden.tecnico else "",
-            ]
+    for row_num, orden in enumerate(ordenes, 2):
+        ws.cell(row=row_num, column=1, value=orden.numero_orden)
+        ws.cell(
+            row=row_num,
+            column=2,
+            value=(
+                orden.fecha_creacion.strftime("%d/%m/%Y %H:%M")
+                if orden.fecha_creacion
+                else ""
+            ),
+        )
+        ws.cell(
+            row=row_num,
+            column=3,
+            value=(
+                orden.fecha_programada.strftime("%d/%m/%Y")
+                if orden.fecha_programada
+                else ""
+            ),
+        )
+        ws.cell(
+            row=row_num,
+            column=4,
+            value=(
+                orden.fecha_completada.strftime("%d/%m/%Y %H:%M")
+                if orden.fecha_completada
+                else ""
+            ),
+        )
+        ws.cell(row=row_num, column=5, value=orden.tipo or "")
+        ws.cell(row=row_num, column=6, value=orden.prioridad or "")
+        ws.cell(row=row_num, column=7, value=orden.estado or "")
+        ws.cell(row=row_num, column=8, value=orden.descripcion or "")
+        ws.cell(row=row_num, column=9, value=orden.observaciones or "")
+        ws.cell(row=row_num, column=10, value=orden.tiempo_estimado or "")
+        ws.cell(row=row_num, column=11, value=orden.tiempo_real or "")
+        ws.cell(
+            row=row_num, column=12, value=orden.activo.nombre if orden.activo else ""
+        )
+        ws.cell(
+            row=row_num, column=13, value=orden.tecnico.nombre if orden.tecnico else ""
         )
 
+    # Ajustar ancho de columnas
+    column_widths = [15, 20, 18, 20, 12, 12, 12, 40, 40, 18, 15, 25, 20]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col_num)].width = width
+
+    # Guardar en BytesIO
+    output = BytesIO()
+    wb.save(output)
     output.seek(0)
     return output.getvalue()

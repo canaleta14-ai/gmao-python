@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block section_title %}Test Modales{% endblock %}
+{% set section = 'test' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Prueba de Modales de Confirmación</h1>
+    <p>Haz clic en los botones para ver los diferentes tipos de modales con títulos en blanco.</p>
+    
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <button class="btn btn-danger w-100" onclick="testDangerModal()">
+                <i class="bi bi-trash me-2"></i>Modal Danger (Rojo)
+            </button>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-warning w-100" onclick="testWarningModal()">
+                <i class="bi bi-exclamation-triangle me-2"></i>Modal Warning (Amarillo)
+            </button>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-success w-100" onclick="testSuccessModal()">
+                <i class="bi bi-check-circle me-2"></i>Modal Success (Verde)
+            </button>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-info w-100" onclick="testInfoModal()">
+                <i class="bi bi-info-circle me-2"></i>Modal Info (Azul)
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function testDangerModal() {
+    showConfirmModal({
+        title: "Eliminar Usuario",
+        message: "¿Está seguro de que desea eliminar este usuario?<br><br>Esta acción no se puede deshacer.",
+        confirmText: "Eliminar",
+        cancelText: "Cancelar",
+        type: "danger",
+        onConfirm: function() {
+            showNotificationToast("Acción confirmada (Modal Danger)", "success");
+        },
+        onCancel: function() {
+            console.log("Cancelado");
+        }
+    });
+}
+
+function testWarningModal() {
+    showConfirmModal({
+        title: "Activar Usuarios",
+        message: "¿Está seguro de activar 5 usuarios?",
+        confirmText: "Activar",
+        cancelText: "Cancelar",
+        type: "warning",
+        onConfirm: function() {
+            showNotificationToast("Acción confirmada (Modal Warning)", "success");
+        },
+        onCancel: function() {
+            console.log("Cancelado");
+        }
+    });
+}
+
+function testSuccessModal() {
+    showConfirmModal({
+        title: "Operación Exitosa",
+        message: "¿Desea continuar con esta operación?",
+        confirmText: "Continuar",
+        cancelText: "Cancelar",
+        type: "success",
+        onConfirm: function() {
+            showNotificationToast("Acción confirmada (Modal Success)", "success");
+        },
+        onCancel: function() {
+            console.log("Cancelado");
+        }
+    });
+}
+
+function testInfoModal() {
+    showConfirmModal({
+        title: "Información",
+        message: "¿Desea proceder con esta acción?",
+        confirmText: "Proceder",
+        cancelText: "Cancelar",
+        type: "info",
+        onConfirm: function() {
+            showNotificationToast("Acción confirmada (Modal Info)", "success");
+        },
+        onCancel: function() {
+            console.log("Cancelado");
+        }
+    });
+}
+</script>
+{% endblock %}

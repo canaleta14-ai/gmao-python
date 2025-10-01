@@ -10,14 +10,44 @@ let modoEdicionActivo = false; // Nueva variable para trackear modo edición
 let currentPage = 1;
 let perPage = 10;
 let paginacionActivos;
+let filtrosActivos = {}; // Variable global para mantener filtros activos
+
+// Variable para selección masiva
+let seleccionMasiva;
+
+// Función de debounce para optimizar búsquedas
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function () {
-    // Crear instancia de paginación
-    paginacionActivos = createPagination('paginacion-activos', cargarActivos, {
+    // Crear instancia de paginación con wrapper para preservar filtros
+    paginacionActivos = createPagination('paginacion-activos', (page) => {
+        cargarActivos(page, filtrosActivos);
+    }, {
         perPage: 10,
         showInfo: true,
         showSizeSelector: true
+    });
+
+    // Inicializar sistema de selección masiva
+    seleccionMasiva = initSeleccionMasiva({
+        selectAllId: 'select-all',
+        tableBodyId: 'tabla-activos',
+        contadorId: 'contador-seleccion',
+        accionesMasivasId: 'acciones-masivas',
+        entityName: 'activos',
+        entityNameSingular: 'activo',
+        getData: () => activos
     });
 
     // Solo cargar datos esenciales al inicio
@@ -26,12 +56,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Cargar activos de forma diferida
     setTimeout(() => {
-        cargarActivos();
+        cargarActivos(1, {});
     }, 100);
 
     inicializarEventos();
 
-    // Inicializar autocompletado después de cargar datos
+    // Inicializar autocompletado después de cargar datos (solo para formularios)
     setTimeout(() => {
         inicializarAutocompletado();
     }, 200);
@@ -164,20 +194,35 @@ function actualizarEstadisticasActivos(estadisticas) {
     document.getElementById('activos-fuera-servicio').textContent = estadisticas.activos_fuera_servicio || 0;
 }
 
-// Cargar activos desde el servidor con paginación
-async function cargarActivos(page = 1) {
+// Cargar activos desde el servidor con paginación y filtros
+async function cargarActivos(page = 1, filtros = {}) {
     try {
+        console.log('📡 cargarActivos() - Página:', page, 'Filtros:', filtros);
         currentPage = page;
         mostrarCargando(true);
 
+        // Construir parámetros con filtros
         const params = new URLSearchParams({
             page: page,
-            per_page: perPage
+            per_page: perPage,
+            ...filtros
         });
 
-        const response = await fetch(`/activos/api?${params}`);
+        const url = `/activos/api?${params}`;
+        console.log('🌐 URL de petición:', url);
+        
+        const response = await fetch(url);
+        console.log('📥 Respuesta recibida - Status:', response.status);
+        
+        // Manejar redirección de autenticación
+        if (response.status === 401 || response.status === 302) {
+            window.location.href = '/login';
+            return;
+        }
+
         if (response.ok) {
             const data = await response.json();
+            console.log('✅ Datos recibidos:', data.total, 'total,', data.items.length, 'items en página');
             activos = data.items || [];
             mostrarActivos(activos);
             actualizarContadorActivos(data.total || activos.length);
@@ -185,11 +230,11 @@ async function cargarActivos(page = 1) {
             // Renderizar paginación
             paginacionActivos.render(data.page, data.per_page, data.total);
         } else {
-            console.error('Error al cargar activos');
+            console.error('❌ Error al cargar activos - Status:', response.status);
             mostrarMensaje('Error al cargar activos', 'danger');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error:', error);
         mostrarMensaje('Error de conexión al cargar activos', 'danger');
     } finally {
         mostrarCargando(false);
@@ -198,15 +243,21 @@ async function cargarActivos(page = 1) {
 
 // Mostrar activos en la tabla
 function mostrarActivos(activosAMostrar) {
+    console.log('📋 mostrarActivos() - Mostrando', activosAMostrar.length, 'activos');
+    if (activosAMostrar.length > 0) {
+        console.log('📄 Primer activo:', activosAMostrar[0]);
+    }
+    
     const tbody = document.getElementById('tabla-activos');
     if (!tbody) return;
 
     tbody.innerHTML = '';
 
     if (activosAMostrar.length === 0) {
+        console.log('⚠️ No hay activos para mostrar');
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="text-center text-muted py-4">
+                <td colspan="11" class="text-center text-muted py-4">
                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                     No se encontraron activos
                 </td>
@@ -217,31 +268,43 @@ function mostrarActivos(activosAMostrar) {
 
     activosAMostrar.forEach(activo => {
         const fila = document.createElement('tr');
+        
+        // Escapar HTML para evitar problemas de visualización
+        const escapeHtml = (text) => {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        
         fila.innerHTML = `
             <td>
-                <span class="codigo-activo">${activo.codigo || 'Sin código'}</span>
+                <input type="checkbox" class="form-check-input row-checkbox" data-id="${activo.id}">
             </td>
             <td>
-                <span class="fw-medium">${obtenerNombreDepartamento(activo.departamento)}</span>
+                <span class="codigo-activo">${escapeHtml(activo.codigo) || 'Sin código'}</span>
+            </td>
+            <td>
+                <span class="fw-medium">${escapeHtml(obtenerNombreDepartamento(activo.departamento))}</span>
                 <br>
-                <small class="text-muted">${activo.departamento}</small>
+                <small class="text-muted">${escapeHtml(activo.departamento)}</small>
             </td>
             <td>
-                <span class="fw-medium">${activo.nombre}</span>
-                ${activo.modelo ? `<br><small class="text-muted">${activo.modelo}</small>` : ''}
+                <span class="fw-medium">${escapeHtml(activo.nombre) || 'Sin nombre'}</span>
+                ${activo.modelo ? `<br><small class="text-muted">${escapeHtml(activo.modelo)}</small>` : ''}
             </td>
             <td>
-                <span class="badge bg-secondary">${activo.tipo || 'Sin tipo'}</span>
+                <span class="badge bg-secondary">${escapeHtml(activo.tipo) || 'Sin tipo'}</span>
             </td>
-            <td>${activo.ubicacion || '-'}</td>
+            <td>${escapeHtml(activo.ubicacion) || '-'}</td>
             <td>
-                <span class="text-muted">${activo.proveedor || '-'}</span>
-            </td>
-            <td>
-                <span class="badge ${obtenerClaseEstado(activo.estado)}">${activo.estado || 'Sin estado'}</span>
+                <span class="text-muted">${escapeHtml(activo.proveedor) || '-'}</span>
             </td>
             <td>
-                <span class="badge ${obtenerClasePrioridad(activo.prioridad)}">${activo.prioridad || 'Media'}</span>
+                <span class="badge ${obtenerClaseEstado(activo.estado)}">${escapeHtml(activo.estado) || 'Sin estado'}</span>
+            </td>
+            <td>
+                <span class="badge ${obtenerClasePrioridad(activo.prioridad)}">${escapeHtml(activo.prioridad) || 'Media'}</span>
             </td>
             <td>
                 ${activo.ultimo_mantenimiento ?
@@ -566,30 +629,54 @@ async function crearActivo() {
 }
 
 // Filtrar activos
+// Filtrar activos con búsqueda del lado del servidor
 function filtrarActivos() {
-    const buscar = document.getElementById('filtro-buscar').value.toLowerCase();
+    console.log('🔍 filtrarActivos() ejecutado');
+    const filtros = {};
+
+    // Filtro de búsqueda
+    const buscar = document.getElementById('filtro-buscar').value.trim();
+    if (buscar) {
+        filtros.q = buscar;
+        console.log('📝 Filtro de búsqueda:', buscar);
+    }
+
+    // Filtros de selección
     const departamento = document.getElementById('filtro-departamento').value;
+    if (departamento) {
+        filtros.departamento = departamento;
+        console.log('🏢 Filtro de departamento:', departamento);
+    }
+
     const tipo = document.getElementById('filtro-tipo').value;
+    if (tipo) {
+        filtros.tipo = tipo;
+        console.log('🔧 Filtro de tipo:', tipo);
+    }
+
     const estado = document.getElementById('filtro-estado').value;
+    if (estado) {
+        filtros.estado = estado;
+        console.log('📊 Filtro de estado:', estado);
+    }
+
     const prioridad = document.getElementById('filtro-prioridad').value;
+    if (prioridad) {
+        filtros.prioridad = prioridad;
+        console.log('⚡ Filtro de prioridad:', prioridad);
+    }
 
-    const activosFiltrados = activos.filter(activo => {
-        const coincideBusqueda = !buscar ||
-            (activo.codigo && activo.codigo.toLowerCase().includes(buscar)) ||
-            (activo.nombre && activo.nombre.toLowerCase().includes(buscar)) ||
-            (activo.descripcion && activo.descripcion.toLowerCase().includes(buscar));
+    // Guardar filtros globalmente
+    filtrosActivos = filtros;
+    console.log('💾 Filtros guardados:', filtros);
 
-        const coincideDepartamento = !departamento || activo.departamento === departamento;
-        const coincideTipo = !tipo || activo.tipo === tipo;
-        const coincideEstado = !estado || activo.estado === estado;
-        const coincidePrioridad = !prioridad || activo.prioridad === prioridad;
+    // Reiniciar a la primera página y cargar con filtros
+    currentPage = 1;
+    console.log('🔄 Cargando activos con filtros...');
+    cargarActivos(1, filtros);
+}
 
-        return coincideBusqueda && coincideDepartamento && coincideTipo && coincideEstado && coincidePrioridad;
-    });
-
-    mostrarActivos(activosFiltrados);
-    actualizarContadorActivos(activosFiltrados.length);
-}// Limpiar filtros
+// Limpiar filtros
 function limpiarFiltros() {
     document.getElementById('filtro-buscar').value = '';
     document.getElementById('filtro-departamento').value = '';
@@ -597,8 +684,9 @@ function limpiarFiltros() {
     document.getElementById('filtro-estado').value = '';
     document.getElementById('filtro-prioridad').value = '';
 
-    mostrarActivos(activos);
-    actualizarContadorActivos(activos.length);
+    // Recargar datos sin filtros
+    currentPage = 1;
+    cargarActivos(1, {});
 }
 
 // Exportar activos a CSV
@@ -798,16 +886,15 @@ function obtenerColorEstado(estado) {
     return colores[estado] || 'secondary';
 }
 
+// Crear versión debounced de filtrarActivos
+const debouncedFiltrarActivos = debounce(filtrarActivos, 500);
+
 // Inicializar eventos
 function inicializarEventos() {
-    // Evento de búsqueda en tiempo real
+    // Evento de búsqueda en tiempo real con debounce de 500ms
     const campoBuscar = document.getElementById('filtro-buscar');
     if (campoBuscar) {
-        let timeoutBusqueda;
-        campoBuscar.addEventListener('input', function () {
-            clearTimeout(timeoutBusqueda);
-            timeoutBusqueda = setTimeout(filtrarActivos, 300);
-        });
+        campoBuscar.addEventListener('input', debouncedFiltrarActivos);
     }
 
     // Eventos de filtros
@@ -827,24 +914,6 @@ function inicializarAutocompletado() {
     if (!window.AutoComplete) {
         console.log('AutoComplete no disponible');
         return;
-    }
-
-    // Autocompletado para filtro de búsqueda general
-    const filtroBuscar = document.getElementById('filtro-buscar');
-    if (filtroBuscar) {
-        new AutoComplete({
-            element: filtroBuscar,
-            apiUrl: '/activos/api',
-            searchKey: 'q',
-            displayKey: item => `${item.nombre} (${item.codigo}) - ${item.ubicacion || 'Sin ubicación'}`,
-            valueKey: 'nombre',
-            placeholder: 'Buscar activo por nombre, código o ubicación...',
-            allowFreeText: true,
-            onSelect: (item) => {
-                console.log('Activo seleccionado para filtro:', item);
-                filtrarActivos();
-            }
-        });
     }
 
     // Autocompletado para ubicaciones en formulario de nuevo activo
@@ -1305,4 +1374,263 @@ function mostrarConfirmacionEliminarManual(manualId) {
   manualAEliminar = manualId;
   const modal = new bootstrap.Modal(document.getElementById('modalEliminarManual'));
   modal.show();
+}
+
+// ====================================================================
+// FUNCIONES DE ACCIONES MASIVAS
+// ====================================================================
+
+/**
+ * Cambiar estado de múltiples activos
+ */
+async function cambiarEstadoMasivo(nuevoEstado) {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('No hay activos seleccionados', 'warning');
+        return;
+    }
+
+    const confirmacion = await seleccionMasiva.confirmarAccionMasiva(
+        `¿Cambiar estado a "${nuevoEstado}"?`,
+        `Se cambiará el estado de ${seleccionados.length} activo(s) a "${nuevoEstado}".`
+    );
+
+    if (!confirmacion) return;
+
+    mostrarCargando(true);
+    let exitosos = 0;
+    let errores = 0;
+
+    for (const activo of seleccionados) {
+        try {
+            const response = await fetch(`/activos/editar/${activo.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...activo, estado: nuevoEstado })
+            });
+
+            if (response.ok) {
+                exitosos++;
+            } else {
+                errores++;
+            }
+        } catch (error) {
+            console.error(`Error al actualizar activo ${activo.id}:`, error);
+            errores++;
+        }
+    }
+
+    mostrarCargando(false);
+
+    if (exitosos > 0) {
+        mostrarMensaje(
+            `${exitosos} activo(s) actualizado(s) exitosamente${errores > 0 ? `. ${errores} error(es).` : ''}`,
+            errores > 0 ? 'warning' : 'success'
+        );
+        cargarActivos(currentPage, filtrosActivos);
+        cargarEstadisticasActivos();
+    } else {
+        mostrarMensaje('No se pudieron actualizar los activos', 'danger');
+    }
+}
+
+/**
+ * Cambiar prioridad de múltiples activos
+ */
+async function cambiarPrioridadMasiva() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('No hay activos seleccionados', 'warning');
+        return;
+    }
+
+    // Crear modal dinámico para seleccionar prioridad
+    const prioridades = ['Baja', 'Media', 'Alta', 'Crítica'];
+    const modalHtml = `
+        <div class="modal fade" id="modalPrioridadMasiva" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-flag me-2"></i>Cambiar Prioridad
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Seleccione la nueva prioridad para ${seleccionados.length} activo(s):</p>
+                        <select class="form-select" id="select-prioridad-masiva">
+                            ${prioridades.map(p => `<option value="${p}">${p}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="confirmarCambioPrioridadMasiva()">
+                            <i class="bi bi-check-circle me-1"></i>Cambiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Eliminar modal anterior si existe
+    const modalAnterior = document.getElementById('modalPrioridadMasiva');
+    if (modalAnterior) modalAnterior.remove();
+
+    // Agregar modal al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('modalPrioridadMasiva'));
+    modal.show();
+
+    // Limpiar modal al cerrarse
+    document.getElementById('modalPrioridadMasiva').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+/**
+ * Confirmar cambio de prioridad masiva
+ */
+async function confirmarCambioPrioridadMasiva() {
+    const nuevaPrioridad = document.getElementById('select-prioridad-masiva').value;
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalPrioridadMasiva'));
+    modal.hide();
+
+    mostrarCargando(true);
+    let exitosos = 0;
+    let errores = 0;
+
+    for (const activo of seleccionados) {
+        try {
+            const response = await fetch(`/activos/editar/${activo.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...activo, prioridad: nuevaPrioridad })
+            });
+
+            if (response.ok) {
+                exitosos++;
+            } else {
+                errores++;
+            }
+        } catch (error) {
+            console.error(`Error al actualizar activo ${activo.id}:`, error);
+            errores++;
+        }
+    }
+
+    mostrarCargando(false);
+
+    if (exitosos > 0) {
+        mostrarMensaje(
+            `${exitosos} activo(s) actualizado(s) a prioridad "${nuevaPrioridad}"${errores > 0 ? `. ${errores} error(es).` : ''}`,
+            errores > 0 ? 'warning' : 'success'
+        );
+        cargarActivos(currentPage, filtrosActivos);
+    } else {
+        mostrarMensaje('No se pudieron actualizar los activos', 'danger');
+    }
+}
+
+/**
+ * Exportar activos seleccionados a CSV
+ */
+function exportarSeleccionados() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('No hay activos seleccionados', 'warning');
+        return;
+    }
+
+    // Crear CSV
+    const headers = ['Código', 'Nombre', 'Departamento', 'Tipo', 'Ubicación', 'Estado', 'Prioridad', 'Modelo', 'Proveedor'];
+    const rows = seleccionados.map(activo => [
+        activo.codigo || '',
+        activo.nombre || '',
+        obtenerNombreDepartamento(activo.departamento),
+        activo.tipo || '',
+        activo.ubicacion || '',
+        activo.estado || '',
+        activo.prioridad || '',
+        activo.modelo || '',
+        activo.proveedor || ''
+    ]);
+
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+
+    // Descargar archivo
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `activos_seleccionados_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    mostrarMensaje(`${seleccionados.length} activo(s) exportado(s) exitosamente`, 'success');
+}
+
+/**
+ * Eliminar múltiples activos
+ */
+async function eliminarSeleccionados() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+    
+    if (seleccionados.length === 0) {
+        mostrarMensaje('No hay activos seleccionados', 'warning');
+        return;
+    }
+
+    const confirmacion = await seleccionMasiva.confirmarAccionMasiva(
+        '¿Eliminar activos seleccionados?',
+        `Se eliminarán permanentemente ${seleccionados.length} activo(s). Esta acción no se puede deshacer.`,
+        'danger'
+    );
+
+    if (!confirmacion) return;
+
+    mostrarCargando(true);
+    let exitosos = 0;
+    let errores = 0;
+
+    for (const activo of seleccionados) {
+        try {
+            const response = await fetch(`/activos/eliminar/${activo.id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                exitosos++;
+            } else {
+                errores++;
+            }
+        } catch (error) {
+            console.error(`Error al eliminar activo ${activo.id}:`, error);
+            errores++;
+        }
+    }
+
+    mostrarCargando(false);
+
+    if (exitosos > 0) {
+        mostrarMensaje(
+            `${exitosos} activo(s) eliminado(s) exitosamente${errores > 0 ? `. ${errores} error(es).` : ''}`,
+            errores > 0 ? 'warning' : 'success'
+        );
+        cargarActivos(currentPage, filtrosActivos);
+        cargarEstadisticasActivos();
+    } else {
+        mostrarMensaje('No se pudieron eliminar los activos', 'danger');
+    }
 }

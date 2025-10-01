@@ -3,6 +3,9 @@ from app.extensions import db
 from flask import request
 from datetime import datetime, timezone
 from sqlalchemy import func
+from io import BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 
 def obtener_estadisticas_inventario():
@@ -105,72 +108,101 @@ def crear_articulo_simple(data):
 
 
 def exportar_inventario_csv():
-    """Genera un archivo CSV con todos los artículos del inventario"""
-    from io import StringIO
-    import csv
-
+    """Genera un archivo Excel con todos los artículos del inventario"""
     articulos = Inventario.query.filter_by(activo=True).all()
 
-    output = StringIO()
-    writer = csv.writer(output)
+    # Crear un nuevo workbook de Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Inventario"
 
-    # Escribir encabezados
-    writer.writerow(
-        [
-            "Código",
-            "Descripción",
-            "Categoría",
-            "Stock Actual",
-            "Stock Mínimo",
-            "Stock Máximo",
-            "Ubicación",
-            "Precio Unitario",
-            "Precio Promedio",
-            "Valor Stock",
-            "Unidad Medida",
-            "Proveedor Principal",
-            "Cuenta Contable",
-            "Grupo Contable",
-            "Crítico",
-            "Fecha Creación",
-        ]
+    # Estilos para el encabezado
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color="4F81BD", end_color="4F81BD", fill_type="solid"
     )
+    header_alignment = Alignment(horizontal="center", vertical="center")
+
+    # Encabezados
+    headers = [
+        "Código",
+        "Descripción",
+        "Categoría",
+        "Stock Actual",
+        "Stock Mínimo",
+        "Stock Máximo",
+        "Ubicación",
+        "Precio Unitario",
+        "Precio Promedio",
+        "Valor Stock",
+        "Unidad Medida",
+        "Proveedor Principal",
+        "Cuenta Contable",
+        "Grupo Contable",
+        "Crítico",
+        "Fecha Creación",
+    ]
+
+    # Aplicar estilos al encabezado
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    # Ajustar ancho de columnas
+    column_widths = [15, 40, 15, 12, 12, 12, 20, 15, 15, 15, 12, 25, 15, 15, 8, 12]
+    for i, width in enumerate(column_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
 
     # Escribir datos
-    for articulo in articulos:
-        writer.writerow(
-            [
-                articulo.codigo,
-                articulo.descripcion,
-                articulo.categoria or "",
-                articulo.stock_actual,
-                articulo.stock_minimo,
-                articulo.stock_maximo or "",
-                articulo.ubicacion or "",
-                articulo.precio_unitario,
-                articulo.precio_promedio,
-                (
-                    articulo.stock_actual * articulo.precio_promedio
-                    if articulo.precio_promedio
-                    else 0
-                ),
-                articulo.unidad_medida,
-                articulo.proveedor_principal or "",
-                articulo.cuenta_contable_compra,
-                articulo.grupo_contable or "",
-                "Sí" if articulo.critico else "No",
-                (
-                    articulo.fecha_creacion.strftime("%d/%m/%Y")
-                    if articulo.fecha_creacion
-                    else ""
-                ),
-            ]
+    for row_num, articulo in enumerate(articulos, 2):
+        ws.cell(row=row_num, column=1, value=articulo.codigo)
+        ws.cell(row=row_num, column=2, value=articulo.descripcion)
+        ws.cell(row=row_num, column=3, value=articulo.categoria or "")
+        ws.cell(row=row_num, column=4, value=articulo.stock_actual)
+        ws.cell(row=row_num, column=5, value=articulo.stock_minimo)
+        ws.cell(row=row_num, column=6, value=articulo.stock_maximo or "")
+        ws.cell(row=row_num, column=7, value=articulo.ubicacion or "")
+        ws.cell(
+            row=row_num,
+            column=8,
+            value=float(articulo.precio_unitario) if articulo.precio_unitario else "",
+        )
+        ws.cell(
+            row=row_num,
+            column=9,
+            value=float(articulo.precio_promedio) if articulo.precio_promedio else "",
+        )
+        ws.cell(
+            row=row_num,
+            column=10,
+            value=(
+                float(articulo.stock_actual * articulo.precio_promedio)
+                if articulo.precio_promedio
+                else 0
+            ),
+        )
+        ws.cell(row=row_num, column=11, value=articulo.unidad_medida)
+        ws.cell(row=row_num, column=12, value=articulo.proveedor_principal or "")
+        ws.cell(row=row_num, column=13, value=articulo.cuenta_contable_compra)
+        ws.cell(row=row_num, column=14, value=articulo.grupo_contable or "")
+        ws.cell(row=row_num, column=15, value="Sí" if articulo.critico else "No")
+        ws.cell(
+            row=row_num,
+            column=16,
+            value=(
+                articulo.fecha_creacion.strftime("%d/%m/%Y")
+                if articulo.fecha_creacion
+                else ""
+            ),
         )
 
-    csv_data = output.getvalue()
-    output.close()
-
-    return csv_data
+    # Guardar el workbook en memoria
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
 
 
 # Funciones para movimientos de inventario
@@ -210,18 +242,75 @@ def registrar_movimiento_inventario(data):
         )
 
         # Actualizar stock del artículo según el tipo de movimiento
+        stock_anterior = float(articulo.stock_actual)
+
         if movimiento.tipo == "entrada":
             articulo.stock_actual += movimiento.cantidad
+
+            # Actualizar precio promedio ponderado si hay precio unitario
+            if movimiento.precio_unitario and movimiento.precio_unitario > 0:
+                valor_stock_anterior = stock_anterior * float(
+                    articulo.precio_promedio or 0
+                )
+                valor_entrada = float(movimiento.cantidad) * float(
+                    movimiento.precio_unitario
+                )
+                valor_total_nuevo = valor_stock_anterior + valor_entrada
+
+                if articulo.stock_actual > 0:
+                    articulo.precio_promedio = valor_total_nuevo / float(
+                        articulo.stock_actual
+                    )
+                else:
+                    articulo.precio_promedio = float(movimiento.precio_unitario)
+
         elif movimiento.tipo == "salida":
             if articulo.stock_actual < movimiento.cantidad:
                 raise ValueError("Stock insuficiente para la salida")
             articulo.stock_actual -= movimiento.cantidad
+            # Para salidas, mantener el precio promedio (no cambiar)
+
         elif movimiento.tipo == "ajuste":
             # Para ajustes, la cantidad puede ser positiva o negativa
             articulo.stock_actual += movimiento.cantidad
+
+            # Si es ajuste positivo con precio, actualizar precio promedio
+            if (
+                movimiento.cantidad > 0
+                and movimiento.precio_unitario
+                and movimiento.precio_unitario > 0
+            ):
+                valor_stock_anterior = stock_anterior * float(
+                    articulo.precio_promedio or 0
+                )
+                valor_ajuste = float(movimiento.cantidad) * float(
+                    movimiento.precio_unitario
+                )
+                valor_total_nuevo = valor_stock_anterior + valor_ajuste
+
+                if articulo.stock_actual > 0:
+                    articulo.precio_promedio = valor_total_nuevo / float(
+                        articulo.stock_actual
+                    )
+
         elif movimiento.tipo == "regularizacion":
             # Regularización suma al stock (corrige inventario)
             articulo.stock_actual += movimiento.cantidad
+
+            # Si hay precio, actualizar precio promedio
+            if movimiento.precio_unitario and movimiento.precio_unitario > 0:
+                valor_stock_anterior = stock_anterior * float(
+                    articulo.precio_promedio or 0
+                )
+                valor_regularizacion = float(movimiento.cantidad) * float(
+                    movimiento.precio_unitario
+                )
+                valor_total_nuevo = valor_stock_anterior + valor_regularizacion
+
+                if articulo.stock_actual > 0:
+                    articulo.precio_promedio = valor_total_nuevo / float(
+                        articulo.stock_actual
+                    )
 
         # Calcular valor total si no se proporciona
         if not movimiento.valor_total and movimiento.precio_unitario:

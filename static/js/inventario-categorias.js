@@ -5,6 +5,126 @@
 
 console.log('🔧 inventario-categorias.js cargado correctamente');
 
+// Función global para mostrar mensajes - sistema moderno de notificaciones
+window.mostrarMensaje = function(mensaje, tipo = 'info') {
+    console.log(`📢 ${tipo.toUpperCase()}: ${mensaje}`);
+
+    // Crear notificación moderna usando Bootstrap alert o toast
+    mostrarNotificacionModerna(mensaje, tipo);
+};
+
+// Función auxiliar para mostrar notificaciones modernas
+function mostrarNotificacionModerna(mensaje, tipo = 'info') {
+    // Crear contenedor de notificaciones si no existe
+    let container = document.getElementById('notificaciones-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notificaciones-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+
+    // Crear toast
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = 'toast align-items-center text-white border-0';
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+
+    // Establecer colores según el tipo
+    let bgClass = 'bg-primary';
+    let iconClass = 'bi-info-circle-fill';
+
+    switch (tipo) {
+        case 'success':
+            bgClass = 'bg-success';
+            iconClass = 'bi-check-circle-fill';
+            break;
+        case 'error':
+        case 'danger':
+            bgClass = 'bg-danger';
+            iconClass = 'bi-exclamation-triangle-fill';
+            break;
+        case 'warning':
+            bgClass = 'bg-warning text-dark';
+            iconClass = 'bi-exclamation-triangle-fill';
+            break;
+        case 'info':
+        default:
+            bgClass = 'bg-info';
+            iconClass = 'bi-info-circle-fill';
+            break;
+    }
+
+    toast.classList.add(bgClass);
+
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi ${iconClass} me-2"></i>
+                ${mensaje}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+
+    // Agregar al contenedor
+    container.appendChild(toast);
+
+    // Inicializar y mostrar el toast
+    const bsToast = new bootstrap.Toast(toast, {
+        delay: 5000 // 5 segundos
+    });
+    bsToast.show();
+
+    // Remover del DOM después de ocultar
+    toast.addEventListener('hidden.bs.toast', function() {
+        toast.remove();
+    });
+}
+
+// Función global para mostrar el modal de nueva categoría - definida inmediatamente
+window.mostrarModalNuevaCategoria = function() {
+    console.log('🔧 mostrarModalNuevaCategoria() llamada');
+
+    try {
+        console.log('🔧 Abriendo modal de nueva categoría...');
+
+        // Verificar que Bootstrap esté disponible
+        if (typeof bootstrap === 'undefined') {
+            console.error('❌ Bootstrap no está cargado');
+            return;
+        }
+
+        // Limpiar el formulario
+        const nombreInput = document.getElementById('rapida-nombre');
+        const prefijoInput = document.getElementById('rapida-prefijo');
+        const colorInput = document.getElementById('rapida-color');
+
+        if (nombreInput) nombreInput.value = '';
+        if (prefijoInput) prefijoInput.value = '';
+        if (colorInput) colorInput.value = '#007bff';
+
+        // Mostrar el modal
+        const modalElement = document.getElementById('modalNuevaCategoria');
+        if (!modalElement) {
+            console.error('❌ Modal modalNuevaCategoria no encontrado');
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        console.log('✅ Modal de nueva categoría abierto');
+
+    } catch (error) {
+        console.error('❌ Error abriendo modal de nueva categoría:', error);
+    }
+};
+
 // Clase principal para gestión de categorías en inventario
 class InventarioCategoriasManager {
     constructor() {
@@ -203,11 +323,12 @@ class InventarioCategoriasManager {
                 }
 
                 // Cerrar modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCategoria'));
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevaCategoria'));
                 if (modal) modal.hide();
 
                 // Limpiar formulario
-                document.getElementById('formCategoriaRapida').reset();
+                const form = document.getElementById('formCategoriaRapida');
+                if (form) form.reset();
 
                 this.mostrarMensaje('Categoría creada exitosamente', 'success');
             } else {
@@ -299,6 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Hacer global para acceso desde HTML
             window.inventarioApp = categoriasManager;
+            window.inventarioCategorias = categoriasManager; // Alias para compatibilidad
 
             console.log('✅ Gestor de categorías inicializado correctamente');
         } catch (error) {

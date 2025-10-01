@@ -100,47 +100,83 @@ def plan_individual(plan_id):
         # Eliminar un plan
         try:
             eliminar_plan(plan_id)
-            return jsonify({"success": True, "message": "Plan eliminado exitosamente"})
+            return jsonify(
+                {"success": True, "message": f"Plan {plan_id} eliminado exitosamente"}
+            )
         except Exception as e:
-            return jsonify({"success": False, "error": str(e)}), 500
+            print(f"Error al eliminar plan {plan_id}: {e}")  # Debug
+            return jsonify({"success": False, "error": str(e)}), 400
 
 
-@planes_bp.route("/api/estadisticas")
+@planes_bp.route("/api/estadisticas", methods=["GET"])
 @login_required
-def estadisticas_planes():
+def planes_estadisticas():
     """Obtener estadísticas de planes de mantenimiento"""
     try:
-        stats = obtener_estadisticas_planes()
-        return jsonify(stats)
+        estadisticas = obtener_estadisticas_planes()
+        return jsonify({"success": True, "estadisticas": estadisticas})
     except Exception as e:
-        return (
-            jsonify({"success": False, "error": "Error al obtener estadísticas"}),
-            500,
-        )
+        print(f"Error obteniendo estadísticas: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
-@planes_bp.route("/api/generar-ordenes", methods=["POST"])
+@planes_bp.route("/generar-ordenes", methods=["POST"])
 @login_required
-def generar_ordenes_preventivo():
-    """Generar órdenes automáticamente desde planes vencidos"""
+def generar_ordenes():
+    """Generar órdenes de trabajo automáticamente"""
     try:
-        resultado = generar_ordenes_automaticas()
-        return jsonify(resultado)
+        data = request.get_json() or {}
+        modo = data.get("modo", "automatico")  # "automatico" o "manual"
+
+        if modo == "automatico":
+            resultado = generar_ordenes_automaticas()
+        else:
+            # Para modo manual, se espera una lista de plan_ids
+            plan_ids = data.get("plan_ids", [])
+            if not plan_ids:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "Se requieren IDs de planes para modo manual",
+                        }
+                    ),
+                    400,
+                )
+            resultado = generar_ordenes_manuales(plan_ids)
+
+        return jsonify({"success": True, "resultado": resultado})
     except Exception as e:
-        print(f"Error en endpoint generar-ordenes: {e}")
+        print(f"Error generando órdenes: {e}")
+        import traceback
+
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 @planes_bp.route("/api/generar-ordenes-manual", methods=["POST"])
 @login_required
-def generar_ordenes_manual():
-    """Generar órdenes manualmente para planes sin generación automática"""
+def generar_ordenes_manual_api():
+    """Generar órdenes de trabajo para todos los planes sin generación automática"""
     try:
-        # Obtener usuario si está disponible (opcional)
-        usuario = "Usuario Manual"  # Se puede mejorar para obtener el usuario actual
+        # Llamar a la función que genera órdenes para planes manuales
+        # Esta función debería retornar el número de órdenes generadas
+        resultado = generar_ordenes_manuales()
 
-        resultado = generar_ordenes_manuales(usuario)
-        return jsonify(resultado)
+        ordenes_generadas = (
+            resultado.get("ordenes_generadas", 0) if isinstance(resultado, dict) else 0
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "ordenes_generadas": ordenes_generadas,
+                "mensaje": f"Se generaron {ordenes_generadas} órdenes de trabajo",
+            }
+        )
     except Exception as e:
-        print(f"Error en endpoint generar-ordenes-manual: {e}")
+        print(f"Error generando órdenes manuales: {e}")
+        import traceback
+
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500

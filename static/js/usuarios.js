@@ -5,6 +5,19 @@ let usuariosFiltrados = [];
 let paginaActual = 1;
 let usuariosPorPagina = 10;
 
+// Función debounce para optimizar búsquedas
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   console.log("Modulo Usuarios iniciado");
   cargarUsuarios();
@@ -12,17 +25,15 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function inicializarEventListeners() {
-  // Busqueda en tiempo real
+  // Busqueda en tiempo real con debounce
+  const filtrarUsuariosDebounced = debounce(filtrarUsuarios, 500);
+  
   const inputBuscar = document.getElementById("filtro-buscar");
   if (inputBuscar) {
-    let timeoutBusqueda;
-    inputBuscar.addEventListener("input", function () {
-      clearTimeout(timeoutBusqueda);
-      timeoutBusqueda = setTimeout(filtrarUsuarios, 300);
-    });
+    inputBuscar.addEventListener("input", filtrarUsuariosDebounced);
   }
 
-  // Event listeners para filtros
+  // Event listeners para filtros (sin debounce, cambio inmediato)
   const filtros = [
     "filtro-rol",
     "filtro-cargo",
@@ -87,10 +98,19 @@ function inicializarEventListeners() {
   }
 }
 
-function cargarUsuarios() {
-  console.log("Iniciando carga de usuarios...");
+function cargarUsuarios(filtros = {}) {
+  console.log("Iniciando carga de usuarios con filtros:", filtros);
 
-  fetch("/usuarios/api")
+  // Construir parámetros de consulta
+  const params = new URLSearchParams();
+  if (filtros.q) params.append("q", filtros.q);
+  if (filtros.rol) params.append("rol", filtros.rol);
+  if (filtros.cargo) params.append("cargo", filtros.cargo);
+  if (filtros.estado) params.append("estado", filtros.estado);
+
+  const url = `/usuarios/api${params.toString() ? '?' + params.toString() : ''}`;
+
+  fetch(url)
     .then((response) => {
       console.log("Status de respuesta:", response.status);
       console.log("Content-Type:", response.headers.get("Content-Type"));
@@ -428,86 +448,39 @@ function cambiarPagina(nuevaPagina) {
 }
 
 function filtrarUsuarios() {
-  const buscar = document.getElementById("filtro-buscar").value.toLowerCase();
-  const cargo = document.getElementById("filtro-cargo").value;
-  const rol = document.getElementById("filtro-rol").value;
-  const estado = document.getElementById("filtro-estado").value;
-  const telefono = document.getElementById("filtro-telefono").value;
-  const fecha = document.getElementById("filtro-fecha").value;
+  console.log("🔍 Filtrando usuarios...");
 
-  usuariosFiltrados = usuarios.filter((usuario) => {
-    const coincideBusqueda =
-      !buscar ||
-      (usuario.codigo && usuario.codigo.toLowerCase().includes(buscar)) ||
-      (usuario.nombre && usuario.nombre.toLowerCase().includes(buscar)) ||
-      (usuario.email && usuario.email.toLowerCase().includes(buscar));
+  const filtros = {
+    q: document.getElementById("filtro-buscar")?.value.trim() || "",
+    rol: document.getElementById("filtro-rol")?.value || "",
+    cargo: document.getElementById("filtro-cargo")?.value || "",
+    estado: document.getElementById("filtro-estado")?.value || "",
+  };
 
-    const coincideCargo =
-      !cargo ||
-      (usuario.cargo &&
-        usuario.cargo.toLowerCase().includes(cargo.toLowerCase()));
-    const coincideRol = !rol || usuario.rol === rol;
-    const coincideEstado = !estado || usuario.estado === estado;
-    const coincideTelefono =
-      !telefono || (usuario.telefono && usuario.telefono.includes(telefono));
+  console.log("Filtros aplicados:", filtros);
 
-    let coincideFecha = true;
-    if (fecha && usuario.fecha_ingreso) {
-      const fechaUsuario = new Date(usuario.fecha_ingreso);
-      const hoy = new Date();
-
-      switch (fecha) {
-        case "hoy":
-          coincideFecha = fechaUsuario.toDateString() === hoy.toDateString();
-          break;
-        case "semana":
-          const semanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
-          coincideFecha = fechaUsuario >= semanaAtras;
-          break;
-        case "mes":
-          const mesAtras = new Date(
-            hoy.getFullYear(),
-            hoy.getMonth() - 1,
-            hoy.getDate()
-          );
-          coincideFecha = fechaUsuario >= mesAtras;
-          break;
-        case "trimestre":
-          const trimestreAtras = new Date(
-            hoy.getFullYear(),
-            hoy.getMonth() - 3,
-            hoy.getDate()
-          );
-          coincideFecha = fechaUsuario >= trimestreAtras;
-          break;
-      }
-    }
-
-    return (
-      coincideBusqueda &&
-      coincideCargo &&
-      coincideRol &&
-      coincideEstado &&
-      coincideTelefono &&
-      coincideFecha
-    );
-  });
-
-  paginaActual = 1; // Resetear a la primera página
-  mostrarUsuarios();
-  actualizarContador();
+  // Cargar usuarios con filtros desde el servidor
+  cargarUsuarios(filtros);
 }
 
 function limpiarFiltros() {
+  console.log("🧹 Limpiando filtros...");
+  
   document.getElementById("filtro-buscar").value = "";
   document.getElementById("filtro-cargo").value = "";
   document.getElementById("filtro-rol").value = "";
   document.getElementById("filtro-estado").value = "";
-  document.getElementById("filtro-telefono").value = "";
-  document.getElementById("filtro-fecha").value = "";
+  
+  const filtroTelefono = document.getElementById("filtro-telefono");
+  if (filtroTelefono) filtroTelefono.value = "";
+  
+  const filtroFecha = document.getElementById("filtro-fecha");
+  if (filtroFecha) filtroFecha.value = "";
 
-  usuariosFiltrados = [...usuarios];
   paginaActual = 1;
+  
+  // Recargar usuarios sin filtros
+  cargarUsuarios();
   mostrarUsuarios();
   actualizarContador();
 }
@@ -865,16 +838,23 @@ function eliminarSeleccionados() {
   const mensaje =
     usuariosSeleccionados.length === 1
       ? `¿Estás seguro de eliminar al usuario "${nombres}"?`
-      : `¿Estás seguro de eliminar a los ${usuariosSeleccionados.length} usuarios seleccionados?\n\n${nombres}`;
+      : `¿Estás seguro de eliminar a los ${usuariosSeleccionados.length} usuarios seleccionados?<br><br>${nombres}`;
 
-  if (confirm(mensaje)) {
-    const promesas = usuariosSeleccionados.map((usuario) =>
-      fetch(`/usuarios/api/${usuario.id}`, { method: "DELETE" }).then(
-        (response) => response.json()
-      )
-    );
+  // Mostrar modal de confirmación en lugar de confirm()
+  showConfirmModal({
+    title: "Eliminar Usuarios",
+    message: mensaje,
+    confirmText: "Eliminar",
+    cancelText: "Cancelar",
+    type: "danger",
+    onConfirm: function () {
+      const promesas = usuariosSeleccionados.map((usuario) =>
+        fetch(`/usuarios/api/${usuario.id}`, { method: "DELETE" }).then(
+          (response) => response.json()
+        )
+      );
 
-    Promise.all(promesas)
+      Promise.all(promesas)
       .then((resultados) => {
         const exitosos = resultados.filter((r) => r.success).length;
         const fallidos = resultados.length - exitosos;
@@ -900,7 +880,11 @@ function eliminarSeleccionados() {
         console.error("Error:", error);
         mostrarMensaje("Error al eliminar usuarios", "danger");
       });
-  }
+    },
+    onCancel: function () {
+      console.log("❌ Eliminación cancelada por el usuario");
+    }
+  });
 }
 
 function cambiarEstadoSeleccionados(nuevoEstado) {
@@ -915,17 +899,24 @@ function cambiarEstadoSeleccionados(nuevoEstado) {
     usuariosSeleccionados.length
   } usuario${usuariosSeleccionados.length > 1 ? "s" : ""}?`;
 
-  if (confirm(mensaje)) {
-    const promesas = usuariosSeleccionados.map((usuario) => {
-      const userData = { ...usuario, estado: nuevoEstado };
-      return fetch(`/usuarios/api/${usuario.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      }).then((response) => response.json());
-    });
+  // Mostrar modal de confirmación en lugar de confirm()
+  showConfirmModal({
+    title: nuevoEstado === "Activo" ? "Activar Usuarios" : "Desactivar Usuarios",
+    message: mensaje,
+    confirmText: nuevoEstado === "Activo" ? "Activar" : "Desactivar",
+    cancelText: "Cancelar",
+    type: "warning",
+    onConfirm: function () {
+      const promesas = usuariosSeleccionados.map((usuario) => {
+        const userData = { ...usuario, estado: nuevoEstado };
+        return fetch(`/usuarios/api/${usuario.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        }).then((response) => response.json());
+      });
 
-    Promise.all(promesas)
+      Promise.all(promesas)
       .then((resultados) => {
         const exitosos = resultados.filter((r) => r.success).length;
         const fallidos = resultados.length - exitosos;
@@ -951,7 +942,11 @@ function cambiarEstadoSeleccionados(nuevoEstado) {
         console.error("Error:", error);
         mostrarMensaje(`Error al ${accion} usuarios`, "danger");
       });
-  }
+    },
+    onCancel: function () {
+      console.log("❌ Cambio de estado cancelado por el usuario");
+    }
+  });
 }
 
 function exportarSeleccionados() {
@@ -1184,34 +1179,39 @@ function eliminarUsuario(id) {
     return;
   }
 
-  if (
-    !confirm(
-      `¿Está seguro de que desea eliminar al usuario "${usuario.nombre}"? Esta acción no se puede deshacer.`
-    )
-  ) {
-    return;
-  }
-
-  fetch(`/usuarios/api/${id}`, {
-    method: "DELETE",
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        mostrarMensaje("Usuario eliminado correctamente", "success");
-        // Recargar usuarios
-        cargarUsuarios();
-      } else {
-        mostrarMensaje(
-          "Error al eliminar usuario: " + (data.error || "Error desconocido"),
-          "danger"
-        );
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      mostrarMensaje("Error de conexión al eliminar usuario", "danger");
-    });
+  // Mostrar modal de confirmación en lugar de confirm()
+  showConfirmModal({
+    title: "Eliminar Usuario",
+    message: `¿Está seguro de que desea eliminar al usuario "${usuario.nombre}"?<br><br>Esta acción no se puede deshacer.`,
+    confirmText: "Eliminar",
+    cancelText: "Cancelar",
+    type: "danger",
+    onConfirm: function () {
+      fetch(`/usuarios/api/${id}`, {
+        method: "DELETE",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            mostrarMensaje("Usuario eliminado correctamente", "success");
+            // Recargar usuarios
+            cargarUsuarios();
+          } else {
+            mostrarMensaje(
+              "Error al eliminar usuario: " + (data.error || "Error desconocido"),
+              "danger"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          mostrarMensaje("Error de conexión al eliminar usuario", "danger");
+        });
+    },
+    onCancel: function () {
+      console.log("❌ Eliminación de usuario cancelada");
+    }
+  });
 }
 
 // Función para generar un código de usuario único

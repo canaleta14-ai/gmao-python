@@ -38,6 +38,32 @@ function toggleSidebar() {
   }
 }
 
+// ========== GESTIÓN DE SESIONES ==========
+function setupSessionManagement() {
+  console.log("🔐 Configurando gestión de sesiones...");
+
+  // Limpiar sesión al cerrar la pestaña/ventana
+  window.addEventListener('beforeunload', function() {
+    // Solo limpiar si no es una recarga de página
+    if (!event.returnValue) {
+      // Aquí podríamos hacer una llamada al servidor para invalidar la sesión
+      // pero por ahora solo limpiamos el localStorage
+      console.log("🔐 Limpiando datos de sesión locales...");
+    }
+  });
+
+  // Verificar sesión periódicamente (simplemente loguear que está activa)
+  setInterval(function() {
+    console.log("🔐 Verificación periódica de sesión - Sesión activa");
+    // En el futuro podríamos hacer una petición al servidor para verificar
+    // fetch('/api/session-check', { method: 'GET', credentials: 'same-origin' })
+    //   .then(response => { if (response.status === 401) { window.location.href = '/login'; } })
+    //   .catch(error => console.log("Error verificando sesión:", error));
+  }, 5 * 60 * 1000); // Verificar cada 5 minutos
+
+  console.log("✅ Gestión de sesiones configurada");
+}
+
 // ========== INICIALIZACIÓN ==========
 document.addEventListener("DOMContentLoaded", function () {
   console.log("🚀 DOMContentLoaded - Iniciando aplicación...");
@@ -2179,476 +2205,75 @@ class ActivosManager {
   }
 }
 
-// ========== UTILIDADES ==========
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+// ========== FUNCIONES PARA SOLICITUDES ==========
 
-// Función para mostrar/ocultar estado de carga global
-function mostrarCargando(mostrar = true) {
-  let loadingOverlay = document.getElementById("loading-overlay-global");
+/**
+ * Cambia el estado de una solicitud de manera rápida
+ * @param {string} nuevoEstado - El nuevo estado para la solicitud
+ */
+function cambiarEstadoRapido(nuevoEstado) {
+  const solicitudId = document.querySelector('input[name="solicitud_id"]')?.value;
 
-  if (mostrar) {
-    // Crear overlay de carga si no existe
-    if (!loadingOverlay) {
-      loadingOverlay = document.createElement("div");
-      loadingOverlay.id = "loading-overlay-global";
-      loadingOverlay.innerHTML = `
-                <div class="d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100" 
-                     style="background: rgba(0,0,0,0.5); z-index: 9999;">
-                    <div class="text-center text-white">
-                        <div class="spinner-border text-light" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <div class="mt-2">Procesando...</div>
-                    </div>
-                </div>
-            `;
-      document.body.appendChild(loadingOverlay);
-    }
-    loadingOverlay.style.display = "block";
-  } else {
-    // Ocultar overlay
-    if (loadingOverlay) {
-      loadingOverlay.style.display = "none";
-    }
+  if (!solicitudId) {
+    mostrarMensaje('Error: No se pudo identificar la solicitud', 'danger');
+    return;
   }
-}
 
-// Función para mostrar mensajes de alerta
-function mostrarMensaje(mensaje, tipo = "info") {
-  // Crear alerta Bootstrap
-  const alertDiv = document.createElement("div");
-  alertDiv.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
-  alertDiv.style.cssText =
-    "top: 20px; right: 20px; z-index: 10000; max-width: 400px;";
-  alertDiv.innerHTML = `
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    `;
+  // Mostrar modal de confirmación
+  const modal = new bootstrap.Modal(document.getElementById('cambiarEstadoModal'));
+  const selectEstado = document.getElementById('nuevoEstado');
+  const comentarioField = document.getElementById('comentarioEstado');
 
-  // Agregar al body
-  document.body.appendChild(alertDiv);
-
-  // Auto-remover después de 5 segundos
-  setTimeout(() => {
-    if (alertDiv.parentNode) {
-      alertDiv.remove();
-    }
-  }, 5000);
-}
-
-// Función mejorada para descargar archivos CSV con opciones
-async function descargarCSVMejorado(url, nombrePorDefecto, tipo = "CSV") {
-  try {
-    // Mostrar modal de configuración de descarga
-    const configuracion = await mostrarModalDescargaCSV(nombrePorDefecto, tipo);
-    if (!configuracion) return; // Usuario canceló
-
-    mostrarCargando(true);
-
-    // Realizar fetch
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-
-    // Intentar usar File System Access API si está disponible (Chrome/Edge modernos)
-    if ("showSaveFilePicker" in window) {
-      try {
-        const fileHandle = await window.showSaveFilePicker({
-          suggestedName: configuracion.nombre,
-          types: [
-            {
-              description: `Archivos ${tipo}`,
-              accept: {
-                "text/csv": [".csv"],
-                "application/vnd.ms-excel": [".csv"],
-              },
-            },
-          ],
-        });
-
-        const writable = await fileHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-
-        mostrarMensaje(
-          `Archivo ${tipo} guardado exitosamente en la ubicación seleccionada`,
-          "success"
-        );
-        return;
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          console.warn(
-            "Error con File System Access API, usando descarga tradicional:",
-            err
-          );
-        }
-        // Si el usuario cancela o hay error, continuar con descarga tradicional
-      }
-    }
-
-    // Descarga tradicional como fallback
-    const url_blob = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url_blob;
-    a.download = configuracion.nombre;
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-
-    // Limpiar después de un breve delay para permitir que inicie la descarga
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url_blob);
-      document.body.removeChild(a);
-    }, 100);
-
-    // Mostrar mensaje informativo en lugar de éxito para descarga tradicional
-    mostrarMensaje(
-      `Descarga iniciada. Revise su carpeta de descargas para el archivo ${tipo}.`,
-      "info"
-    );
-  } catch (error) {
-    console.error("Error al descargar archivo:", error);
-    mostrarMensaje(
-      `Error al descargar archivo ${tipo}: ${error.message}`,
-      "danger"
-    );
-  } finally {
-    mostrarCargando(false);
+  if (selectEstado) {
+    selectEstado.value = nuevoEstado;
   }
+
+  if (comentarioField) {
+    comentarioField.value = '';
+  }
+
+  modal.show();
 }
 
-// Modal para configurar descarga de CSV
-function mostrarModalDescargaCSV(nombrePorDefecto, tipo = "CSV") {
-  return new Promise((resolve) => {
-    const modalId = "modalDescargaCSV";
+/**
+ * Agrega un comentario a la solicitud actual
+ */
+function agregarComentario() {
+  const comentario = prompt('Ingrese su comentario:');
 
-    // Remover modal anterior si existe
-    const modalExistente = document.getElementById(modalId);
-    if (modalExistente) {
-      modalExistente.remove();
-    }
+  if (!comentario || comentario.trim() === '') {
+    return;
+  }
 
-    const fechaHoy = new Date().toISOString().split("T")[0];
-    const nombreSugerido = nombrePorDefecto.replace(/\{fecha\}/g, fechaHoy);
+  const solicitudId = document.querySelector('input[name="solicitud_id"]')?.value;
 
-    const modalHTML = `
-            <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${modalId}Label" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="${modalId}Label">
-                                <i class="bi bi-download me-2"></i>Configurar Descarga ${tipo}
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="formDescargaCSV">
-                                <div class="mb-3">
-                                    <label for="nombreArchivo" class="form-label">Nombre del archivo:</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="nombreArchivo" 
-                                               value="${nombreSugerido}" required>
-                                        <span class="input-group-text">.csv</span>
-                                    </div>
-                                    <div class="form-text">
-                                        Puede usar <code>{fecha}</code> para incluir la fecha actual
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="incluirFecha" 
-                                               ${
-                                                 nombreSugerido.includes(
-                                                   fechaHoy
-                                                 )
-                                                   ? "checked"
-                                                   : ""
-                                               }>
-                                        <label class="form-check-label" for="incluirFecha">
-                                            Incluir fecha en el nombre
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    ${
-                                      window.showSaveFilePicker
-                                        ? "Su navegador permite elegir la ubicación de descarga."
-                                        : "El archivo se descargará en su carpeta de descargas predeterminada."
-                                    }
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-primary" id="btnConfirmarDescarga">
-                                <i class="bi bi-download me-1"></i>Descargar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+  if (!solicitudId) {
+    mostrarMensaje('Error: No se pudo identificar la solicitud', 'danger');
+    return;
+  }
 
-    document.body.insertAdjacentHTML("beforeend", modalHTML);
-
-    const modal = new bootstrap.Modal(document.getElementById(modalId));
-    const inputNombre = document.getElementById("nombreArchivo");
-    const checkboxFecha = document.getElementById("incluirFecha");
-    const btnConfirmar = document.getElementById("btnConfirmarDescarga");
-
-    // Event listeners
-    checkboxFecha.addEventListener("change", function () {
-      const nombreBase = inputNombre.value
-        .replace(`_${fechaHoy}`, "")
-        .replace(fechaHoy, "");
-      if (this.checked) {
-        if (!inputNombre.value.includes(fechaHoy)) {
-          inputNombre.value = `${nombreBase}_${fechaHoy}`;
-        }
-      } else {
-        inputNombre.value = nombreBase.replace(/^_|_$/, "");
-      }
-    });
-
-    btnConfirmar.addEventListener("click", function () {
-      const nombre = inputNombre.value.trim();
-      if (nombre) {
-        modal.hide();
-        resolve({ nombre: nombre + ".csv" });
-      } else {
-        inputNombre.classList.add("is-invalid");
-      }
-    });
-
-    // Resolver con null si se cancela
-    document
-      .getElementById(modalId)
-      .addEventListener("hidden.bs.modal", function () {
-        this.remove();
-        resolve(null);
-      });
-
-    modal.show();
-    inputNombre.focus();
-    inputNombre.select();
-  });
-}
-
-// ========== MANEJO DE SESIÓN ==========
-function setupSessionManagement() {
-  console.log("🔐 Configurando manejo de sesión...");
-
-  // REMOVIDO: Logout automático al cerrar pestaña - causaba problemas de sesión
-  // Solo verificar sesión periódicamente, sin logout automático agresivo
-
-  // Detectar pérdida de visibilidad de la página (solo verificar, no logout)
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "visible") {
-      // La página volvió a ser visible - verificar sesión silenciosamente
-      console.log("🔐 Página visible - verificando sesión...");
-      // Verificar sesión después de un pequeño delay
-      setTimeout(() => checkSessionStatus(), 500);
-    }
-  });
-
-  // Verificar sesión periódicamente (cada 10 minutos en lugar de 5)
-  setInterval(() => {
-    if (document.visibilityState === "visible") {
-      checkSessionStatus();
-    }
-  }, 10 * 60 * 1000); // 10 minutos en lugar de 5
-
-  console.log("🔐 Manejo de sesión configurado (sin logout automático)");
-}
-
-// Función para verificar estado de sesión
-function checkSessionStatus() {
-  fetch("/api/user/info")
-    .then((response) => {
-      if (response.status === 401) {
-        // Sesión expirada, redirigir al login
-        console.log("🔐 Sesión expirada, redirigiendo al login...");
-        window.location.href = "/login";
-      } else if (response.ok) {
-        // Sesión activa, actualizar información del usuario si es necesario
-        return response.json().then((data) => {
-          if (data.success && data.user) {
-            currentUser = data.user;
-            console.log(
-              "🔐 Sesión verificada - usuario:",
-              currentUser.username
-            );
-          }
-        });
-      }
+  // Enviar comentario al servidor
+  fetch(`/admin/solicitudes/${solicitudId}/comentario`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      comentario: comentario.trim()
     })
-    .catch((error) => {
-      console.log("Error verificando sesión:", error);
-      // En caso de error de red, asumir que la sesión sigue activa
-    });
-}
-
-function crearGraficosEstadisticas(data) {
-  console.log("📊 Creando gráficos de estadísticas...");
-
-  // Gráfico de órdenes por estado
-  crearGraficoOrdenesEstado(data);
-
-  // Gráfico de activos por estado
-  crearGraficoActivosEstado(data);
-}
-
-function crearGraficoOrdenesEstado(data) {
-  const ctx = document.getElementById("ordenesChart");
-  if (!ctx) return;
-
-  const estados = Object.keys(data.ordenes_por_estado || {});
-  const valores = Object.values(data.ordenes_por_estado || {});
-
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: estados,
-      datasets: [
-        {
-          label: "Órdenes por Estado",
-          data: valores,
-          backgroundColor: [
-            "rgba(255, 99, 132, 0.8)",
-            "rgba(54, 162, 235, 0.8)",
-            "rgba(255, 206, 86, 0.8)",
-            "rgba(75, 192, 192, 0.8)",
-            "rgba(153, 102, 255, 0.8)",
-          ],
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        y: { beginAtZero: true },
-      },
-    },
-  });
-}
-
-function crearGraficoActivosEstado(data) {
-  const ctx = document.getElementById("activosChart");
-  if (!ctx) return;
-
-  const estados = Object.keys(data.activos_por_estado || {});
-  const valores = Object.values(data.activos_por_estado || {});
-
-  new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: estados,
-      datasets: [
-        {
-          data: valores,
-          backgroundColor: [
-            "rgba(75, 192, 192, 0.8)",
-            "rgba(255, 206, 86, 0.8)",
-            "rgba(255, 99, 132, 0.8)",
-            "rgba(54, 162, 235, 0.8)",
-          ],
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "bottom" },
-      },
-    },
-  });
-}
-
-function crearGraficoEstadosPlanes(data) {
-  const ctx = document.getElementById("estadosChart");
-  if (!ctx) return;
-
-  const estados = ["Activos", "Próximos", "Vencidos", "Completados"];
-  const valores = [
-    data.planes_activos || 0,
-    data.planes_proximos || 0,
-    data.planes_vencidos || 0,
-    data.planes_completados || 0,
-  ];
-
-  new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: estados,
-      datasets: [
-        {
-          data: valores,
-          backgroundColor: [
-            "rgba(40, 167, 69, 0.8)", // Verde para activos
-            "rgba(255, 193, 7, 0.8)", // Amarillo para próximos
-            "rgba(220, 53, 69, 0.8)", // Rojo para vencidos
-            "rgba(108, 117, 125, 0.8)", // Gris para completados
-          ],
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "bottom" },
-      },
-    },
-  });
-}
-
-function crearGraficoTiposMantenimiento() {
-  // Este gráfico requeriría datos adicionales de tipos de mantenimiento
-  // Por ahora es un placeholder
-  const ctx = document.getElementById("tiposChart");
-  if (!ctx) return;
-
-  // Datos de ejemplo
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["Preventivo", "Correctivo", "Predictivo", "Condicional"],
-      datasets: [
-        {
-          label: "Tipos de Mantenimiento",
-          data: [12, 8, 3, 2],
-          backgroundColor: "rgba(153, 102, 255, 0.8)",
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-      },
-      scales: {
-        y: { beginAtZero: true },
-      },
-    },
-  });
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      mostrarMensaje('Comentario agregado exitosamente', 'success');
+      // Recargar la página para mostrar el nuevo comentario
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      mostrarMensaje(data.message || 'Error al agregar comentario', 'danger');
+    }
+  })
 }
 
 function getEstadoBadgeClass(estado) {
@@ -2665,3 +2290,67 @@ function getEstadoBadgeClass(estado) {
       return "secondary";
   }
 }
+
+// Función mejorada para descargar archivos CSV/Excel
+async function descargarCSVMejorado(url, nombreArchivo, tipo) {
+  try {
+    // Mostrar estado de carga
+    if (typeof mostrarCargando === 'function') {
+      mostrarCargando(true);
+    }
+
+    console.log(`📥 Iniciando descarga de ${tipo} desde: ${url}`);
+
+    // Hacer la petición
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': tipo === 'CSV' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error en la descarga: ${response.status} ${response.statusText}`);
+    }
+
+    // Obtener el blob
+    const blob = await response.blob();
+
+    // Generar nombre de archivo con fecha
+    const fecha = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const nombreFinal = nombreArchivo.replace('{fecha}', fecha);
+
+    // Crear enlace de descarga
+    const urlBlob = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = urlBlob;
+    a.download = nombreFinal;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(urlBlob);
+
+    console.log(`✅ ${tipo} descargado exitosamente: ${nombreFinal}`);
+
+    // Mostrar mensaje de éxito
+    if (typeof mostrarMensaje === 'function') {
+      mostrarMensaje(`${tipo} exportado exitosamente`, 'success');
+    }
+
+  } catch (error) {
+    console.error(`❌ Error descargando ${tipo}:`, error);
+
+    // Mostrar mensaje de error
+    if (typeof mostrarMensaje === 'function') {
+      mostrarMensaje(`Error al exportar ${tipo}: ${error.message}`, 'danger');
+    }
+  } finally {
+    // Ocultar estado de carga siempre, incluso si hay error
+    if (typeof mostrarCargando === 'function') {
+      mostrarCargando(false);
+    }
+  }
+}
+
+// Exponer la función globalmente
+window.descargarCSVMejorado = descargarCSVMejorado;

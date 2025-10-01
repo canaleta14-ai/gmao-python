@@ -19,6 +19,9 @@ class OrdenTrabajo(db.Model):
     activo_id = db.Column(db.Integer, db.ForeignKey("activo.id"))
     tecnico_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
 
+    # Nota: La relación 'activo' está definida en el modelo Activo con backref
+    # Nota: La relación 'tecnico' está definida en el modelo Usuario con backref
+
     # Relación con archivos adjuntos
     archivos_adjuntos = db.relationship(
         "ArchivoAdjunto",

@@ -45,6 +45,12 @@ def alertas_test():
     return render_template("alertas-test.html")
 
 
+@web_bp.route("/test-modales")
+def test_modales():
+    """Página de prueba para modales de confirmación modernos"""
+    return render_template("test-modales.html")
+
+
 @web_bp.route("/")
 def index():
     if current_user.is_authenticated:

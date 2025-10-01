@@ -46,11 +46,15 @@ def activos_list_api():
         q = request.args.get("q")
         departamento = request.args.get("departamento")
         estado = request.args.get("estado")
+        tipo = request.args.get("tipo")
+        prioridad = request.args.get("prioridad")
 
         if page is not None:
             # Usar paginación
             per_page = per_page or 10
-            resultado = listar_activos_paginado(page, per_page, q, departamento, estado)
+            resultado = listar_activos_paginado(
+                page, per_page, q, departamento, estado, tipo, prioridad
+            )
             return jsonify(resultado)
         else:
             # Usar listado tradicional sin paginación
@@ -141,14 +145,14 @@ def validar_codigo():
 
 @activos_bp.route("/exportar-csv", methods=["GET"])
 def exportar_csv():
-    """Exporta todos los activos a CSV"""
+    """Exporta todos los activos a Excel"""
     try:
-        csv_data = exportar_activos_csv()
+        excel_data = exportar_activos_csv()
 
         response = Response(
-            csv_data,
-            mimetype="text/csv",
-            headers={"Content-disposition": "attachment; filename=activos.csv"},
+            excel_data,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-disposition": "attachment; filename=activos.xlsx"},
         )
         return response
     except Exception as e:

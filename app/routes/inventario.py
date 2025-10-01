@@ -131,20 +131,20 @@ def obtener_articulos():
 @inventario_bp.route("/exportar-csv", methods=["GET"])
 @login_required
 def exportar_csv():
-    """Exporta los artículos del inventario a CSV"""
+    """Exporta los artículos del inventario a Excel"""
     try:
         from flask import Response
 
-        csv_data = exportar_inventario_csv()
+        excel_data = exportar_inventario_csv()
 
         response = Response(
-            csv_data,
-            mimetype="text/csv",
-            headers={"Content-Disposition": "attachment; filename=inventario.csv"},
+            excel_data,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=inventario.xlsx"},
         )
         return response
     except Exception as e:
-        return jsonify({"success": False, "error": "Error al exportar CSV"}), 500
+        return jsonify({"success": False, "error": "Error al exportar Excel"}), 500
 
 
 @inventario_bp.route("/api/articulos", methods=["POST"])

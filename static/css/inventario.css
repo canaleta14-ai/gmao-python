@@ -32,20 +32,21 @@
   box-shadow: var(--shadow-md) !important;
 }
 
+/* Franja lateral coloreada en tarjetas de estadísticas */
 .stats-card.primary {
-  border-left: 4px solid var(--bs-primary) !important;
+  border-left: 5px solid var(--bs-primary) !important;
 }
 
 .stats-card.success {
-  border-left: 4px solid var(--bs-success) !important;
+  border-left: 5px solid var(--bs-success) !important;
 }
 
 .stats-card.warning {
-  border-left: 4px solid var(--bs-warning) !important;
+  border-left: 5px solid var(--bs-warning) !important;
 }
 
 .stats-card.danger {
-  border-left: 4px solid var(--bs-danger) !important;
+  border-left: 5px solid var(--bs-danger) !important;
 }
 
 .stats-card .card-body {

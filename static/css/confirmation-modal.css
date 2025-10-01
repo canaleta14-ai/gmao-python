@@ -1,0 +1,168 @@
+/* Estilos para los modales de confirmación modernos */
+
+/* Modal de confirmación - Estructura general */
+.modal-content {
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Headers de modales de confirmación con colores según tipo */
+.modal-header {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Títulos de modal siempre en blanco por defecto */
+.modal-header .modal-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* Botón cerrar en blanco */
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+/* Modal Warning (amarillo/naranja) */
+.modal-header:has(.text-warning) {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  border-bottom: 3px solid #d68910;
+}
+
+.modal-header:has(.text-warning) .modal-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.modal-header:has(.text-warning) .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.modal-header:has(.text-warning) .btn-close:hover {
+  opacity: 1;
+}
+
+/* Modal Danger (rojo) */
+.modal-header:has(.text-danger) {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border-bottom: 3px solid #a93226;
+}
+
+.modal-header:has(.text-danger) .modal-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.modal-header:has(.text-danger) .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.modal-header:has(.text-danger) .btn-close:hover {
+  opacity: 1;
+}
+
+/* Modal Success (verde) */
+.modal-header:has(.text-success) {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  border-bottom: 3px solid #1e8449;
+}
+
+.modal-header:has(.text-success) .modal-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.modal-header:has(.text-success) .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.modal-header:has(.text-success) .btn-close:hover {
+  opacity: 1;
+}
+
+/* Modal Info (azul) */
+.modal-header:has(.text-info) {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border-bottom: 3px solid #1f6391;
+}
+
+.modal-header:has(.text-info) .modal-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.modal-header:has(.text-info) .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.modal-header:has(.text-info) .btn-close:hover {
+  opacity: 1;
+}
+
+/* Iconos en títulos de modales */
+.modal-title i {
+  font-size: 1.3rem;
+  vertical-align: middle;
+}
+
+/* Asegurar que los iconos sean blancos */
+.modal-header .text-warning,
+.modal-header .text-danger,
+.modal-header .text-success,
+.modal-header .text-info {
+  color: #ffffff !important;
+}
+
+/* Cuerpo del modal */
+.modal-body {
+  padding: 1.5rem;
+  color: #2c3e50;
+  line-height: 1.6;
+}
+
+/* Footer del modal */
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Animación de entrada */
+.modal.fade .modal-dialog {
+  transform: scale(0.9);
+  opacity: 0;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+  
+  .modal-title {
+    font-size: 1.1rem;
+  }
+}

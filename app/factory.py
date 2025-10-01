@@ -290,8 +290,8 @@ def create_app():
     try:
         from app.routes.estadisticas import estadisticas_bp
 
-        print("✅ Blueprint de estadísticas disponible")
+        print("[OK] Blueprint de estadísticas disponible")
     except ImportError as e:
-        print(f"❌ Error importando blueprint de estadísticas: {e}")
+        print(f"[ERROR] Error importando blueprint de estadísticas: {e}")
 
     return app

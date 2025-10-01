@@ -219,9 +219,9 @@
                             </div>
                             <!-- Enlace para abrir modal de nueva categoría -->
                             <small class="text-muted">
-                                <a href="#" onclick="mostrarModalNuevaCategoria()" class="text-decoration-none">
+                                <button type="button" onclick="mostrarModalNuevaCategoria()" class="btn btn-link btn-sm text-decoration-none p-0" style="font-size: inherit; color: inherit;">
                                     + Nueva categoría
-                                </a>
+                                </button>
                             </small>
                         </div>
                         <div class="col-12">
@@ -234,14 +234,12 @@
                             <input type="text" class="form-control" id="nuevo-ubicacion" placeholder="Ej: Almacén A-1">
                         </div>
                         <div class="col-md-4">
-                            <label for="nuevo-unidad" class="form-label">Unidad de Medida</label>
-                            <select class="form-select" id="nuevo-unidad">
+                            <label for="nuevo-unidad-medida" class="form-label">Unidad de Medida</label>
+                            <select class="form-select" id="nuevo-unidad-medida">
                                 <option value="UNI">Unidad</option>
                                 <option value="KG">Kilogramos</option>
                                 <option value="LT">Litros</option>
                                 <option value="MT">Metros</option>
-                                <option value="M2">Metros²</option>
-                                <option value="M3">Metros³</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -353,9 +351,16 @@
                         <input type="number" class="form-control" id="movimiento-cantidad" required min="1">
                         <div id="stock-alert" style="display: none;"></div>
                     </div>
+                    <div class="mb-3" id="precio-unitario-container" style="display: none;">
+                        <label for="movimiento-precio-unitario" class="form-label">Precio Unitario (€)</label>
+                        <input type="number" class="form-control" id="movimiento-precio-unitario" min="0" step="0.01">
+                        <div class="form-text">Precio por unidad para actualizar el valor del stock</div>
+                    </div>
                     <div class="mb-3">
                         <label for="movimiento-motivo" class="form-label">Motivo</label>
-                        <textarea class="form-control" id="movimiento-motivo" rows="3"></textarea>
+                        <select class="form-select" id="movimiento-motivo" required>
+                            <option value="">Seleccionar motivo...</option>
+                        </select>
                     </div>
                 </form>
             </div>
@@ -396,8 +401,6 @@
                                     <option value="KG">Kilogramo</option>
                                     <option value="LT">Litro</option>
                                     <option value="M">Metro</option>
-                                    <option value="M2">Metro cuadrado</option>
-                                    <option value="M3">Metro cúbico</option>
                                 </select>
                             </div>
                         </div>
@@ -572,6 +575,51 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear nueva categoría -->
+<div class="modal fade modal-modern" id="modalNuevaCategoria" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-tags-fill me-2"></i>Nueva Categoría
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCategoriaRapida">
+                    <div class="mb-3">
+                        <label for="rapida-nombre" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="rapida-nombre" required maxlength="100">
+                        <div class="form-text">Nombre descriptivo de la categoría</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="rapida-prefijo" class="form-label">Prefijo *</label>
+                        <input type="text" class="form-control" id="rapida-prefijo" required maxlength="10" style="text-transform: uppercase">
+                        <div class="form-text">Prefijo para códigos automáticos (ej: HER, MAT, ELE)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="rapida-color" class="form-label">Color</label>
+                        <div class="d-flex align-items-center">
+                            <input type="color" class="form-control form-control-color" id="rapida-color" value="#007bff">
+                            <span class="ms-2">Color para identificación visual</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="inventarioCategorias.crearCategoriaRapida()">
+                    <i class="bi bi-check-circle me-1"></i>Crear Categoría
+                </button>
             </div>
         </div>
     </div>

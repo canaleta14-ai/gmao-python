@@ -1,4 +1,5 @@
 from app.models.plan_mantenimiento import PlanMantenimiento
+from app.models.activo import Activo
 from app.extensions import db
 from datetime import datetime, timedelta
 from flask import request
@@ -245,19 +246,59 @@ def generar_codigo_plan():
 def listar_planes():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
-    search = request.args.get("q", "", type=str)
+    q = request.args.get("q", "", type=str)  # Parámetro de búsqueda
+    estado = request.args.get("estado", "", type=str)
+    frecuencia = request.args.get("frecuencia", "", type=str)
+    vencimiento = request.args.get("vencimiento", "", type=str)
 
     query = PlanMantenimiento.query
 
-    # Aplicar filtros de búsqueda
-    if search:
-        query = query.filter(
-            db.or_(
-                PlanMantenimiento.codigo_plan.ilike(f"%{search}%"),
-                PlanMantenimiento.nombre.ilike(f"%{search}%"),
-                PlanMantenimiento.frecuencia.ilike(f"%{search}%"),
-            )
+    # Aplicar filtro de búsqueda general
+    if q:
+        search_filter = db.or_(
+            PlanMantenimiento.codigo_plan.ilike(f"%{q}%"),
+            PlanMantenimiento.nombre.ilike(f"%{q}%"),
+            PlanMantenimiento.descripcion.ilike(f"%{q}%"),
+            # Buscar también en el nombre del activo relacionado
+            PlanMantenimiento.activo.has(Activo.nombre.ilike(f"%{q}%")),
+            PlanMantenimiento.activo.has(Activo.codigo.ilike(f"%{q}%")),
         )
+        query = query.filter(search_filter)
+
+    # Aplicar filtro de estado
+    if estado:
+        query = query.filter(PlanMantenimiento.estado == estado)
+
+    # Aplicar filtro de frecuencia
+    if frecuencia:
+        query = query.filter(PlanMantenimiento.frecuencia.ilike(f"%{frecuencia}%"))
+
+    # Aplicar filtro de vencimiento
+    if vencimiento:
+        from datetime import datetime, timedelta
+
+        hoy = datetime.now().date()
+        if vencimiento == "vencido":
+            query = query.filter(PlanMantenimiento.proxima_ejecucion < hoy)
+        elif vencimiento == "hoy":
+            query = query.filter(PlanMantenimiento.proxima_ejecucion == hoy)
+        elif vencimiento == "esta_semana":
+            semana_siguiente = hoy + timedelta(days=7)
+            query = query.filter(
+                db.and_(
+                    PlanMantenimiento.proxima_ejecucion >= hoy,
+                    PlanMantenimiento.proxima_ejecucion <= semana_siguiente,
+                )
+            )
+        elif vencimiento == "este_mes":
+            mes_siguiente = hoy.replace(day=1) + timedelta(days=32)
+            mes_siguiente = mes_siguiente.replace(day=1)
+            query = query.filter(
+                db.and_(
+                    PlanMantenimiento.proxima_ejecucion >= hoy,
+                    PlanMantenimiento.proxima_ejecucion < mes_siguiente,
+                )
+            )
 
     # Paginación
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -591,6 +632,9 @@ def generar_ordenes_automaticas():
             if plan.activo_id:
                 activo = Activo.query.get(plan.activo_id)
 
+            # Asignar técnico de manera equilibrada
+            tecnico_id = asignar_tecnico_equilibrado()
+
             # Crear nueva orden de trabajo
             nueva_orden = OrdenTrabajo(
                 tipo="Mantenimiento Preventivo",
@@ -600,6 +644,7 @@ def generar_ordenes_automaticas():
                 fecha_creacion=ahora,
                 fecha_programada=ahora.date(),
                 activo_id=plan.activo_id,
+                tecnico_id=tecnico_id,  # Asignación automática de técnico
                 tiempo_estimado=(
                     plan.tiempo_estimado if hasattr(plan, "tiempo_estimado") else None
                 ),
@@ -687,6 +732,53 @@ def generar_numero_orden():
     return numero_orden
 
 
+def asignar_tecnico_equilibrado():
+    """
+    Asigna un técnico de manera equilibrada basado en:
+    1. Carga de trabajo actual (órdenes pendientes/en proceso)
+    2. Rotación equitativa entre técnicos disponibles
+
+    Retorna el ID del técnico asignado o None si no hay técnicos disponibles
+    """
+    from app.models.usuario import Usuario
+    from app.models.orden_trabajo import OrdenTrabajo
+
+    # Obtener todos los técnicos activos
+    tecnicos = Usuario.query.filter(
+        Usuario.activo == True, Usuario.rol.in_(["Técnico", "Supervisor"])
+    ).all()
+
+    if not tecnicos:
+        print("⚠️ No hay técnicos disponibles para asignación")
+        return None
+
+    print(f"👥 Encontrados {len(tecnicos)} técnicos disponibles")
+
+    # Calcular carga de trabajo de cada técnico
+    # (contar órdenes Pendientes y En Proceso)
+    cargas = []
+    for tecnico in tecnicos:
+        carga = OrdenTrabajo.query.filter(
+            OrdenTrabajo.tecnico_id == tecnico.id,
+            OrdenTrabajo.estado.in_(["Pendiente", "En Proceso"]),
+        ).count()
+
+        cargas.append(
+            {"tecnico_id": tecnico.id, "nombre": tecnico.nombre, "carga": carga}
+        )
+        print(f"   👤 {tecnico.nombre}: {carga} órdenes activas")
+
+    # Ordenar por carga (menor a mayor) y tomar el menos cargado
+    cargas.sort(key=lambda x: x["carga"])
+    tecnico_asignado = cargas[0]
+
+    print(
+        f"✅ Técnico asignado: {tecnico_asignado['nombre']} (carga actual: {tecnico_asignado['carga']})"
+    )
+
+    return tecnico_asignado["tecnico_id"]
+
+
 def generar_ordenes_manuales(usuario="Sistema"):
     """
     Genera órdenes de trabajo manualmente para el día siguiente
@@ -732,6 +824,9 @@ def generar_ordenes_manuales(usuario="Sistema"):
             if plan.activo_id:
                 activo = Activo.query.get(plan.activo_id)
 
+            # Asignar técnico de manera equilibrada
+            tecnico_id = asignar_tecnico_equilibrado()
+
             # Crear nueva orden de trabajo
             nueva_orden = OrdenTrabajo(
                 tipo="Mantenimiento Preventivo",
@@ -741,6 +836,7 @@ def generar_ordenes_manuales(usuario="Sistema"):
                 fecha_creacion=ahora,
                 fecha_programada=fecha_objetivo.date(),
                 activo_id=plan.activo_id,
+                tecnico_id=tecnico_id,  # Asignación automática de técnico
                 tiempo_estimado=(
                     plan.tiempo_estimado if hasattr(plan, "tiempo_estimado") else None
                 ),

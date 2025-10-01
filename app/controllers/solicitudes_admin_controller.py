@@ -1,11 +1,44 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    flash,
+    redirect,
+    url_for,
+    jsonify,
+    Response,
+)
 from flask_login import login_required, current_user
+from functools import wraps
 from app.extensions import db
 from app.models.solicitud_servicio import SolicitudServicio
 from app.models.usuario import Usuario
 from app.utils.email_utils import enviar_email
-from datetime import datetime
+from datetime import datetime, timezone
 import os
+from io import BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
+
+
+def login_required_ajax(f):
+    """Decorador personalizado para endpoints AJAX que devuelve JSON en lugar de redirigir"""
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return (
+                jsonify(
+                    {
+                        "error": "Sesión expirada. Por favor, recarga la página e inicia sesión nuevamente."
+                    }
+                ),
+                401,
+            )
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 
 # Crear blueprint para gestión administrativa de solicitudes
 solicitudes_admin_bp = Blueprint(
@@ -20,22 +53,38 @@ def listar_solicitudes():
     # Solo administradores pueden acceder
     if current_user.rol != "Administrador":
         flash("No tiene permisos para acceder a esta sección.", "error")
-        return redirect(url_for("web.index"))
+        return redirect(url_for("web_routes.index"))
 
     # Obtener filtros
-    estado = request.args.get("estado", "todos")
-    tipo = request.args.get("tipo", "todos")
+    estado = request.args.get("estado", "")
+    prioridad = request.args.get("prioridad", "")
+    tipo_servicio = request.args.get("tipo_servicio", "")
+    busqueda = request.args.get("busqueda", "").strip()
     page = int(request.args.get("page", 1))
     per_page = 25
 
     # Construir query
     query = SolicitudServicio.query
 
-    if estado != "todos":
+    if estado:
         query = query.filter_by(estado=estado)
 
-    if tipo != "todos":
-        query = query.filter_by(tipo_servicio=tipo)
+    if prioridad:
+        query = query.filter_by(prioridad=prioridad)
+
+    if tipo_servicio:
+        query = query.filter_by(tipo_servicio=tipo_servicio)
+
+    if busqueda:
+        # Buscar en número de solicitud, nombre, email o teléfono
+        query = query.filter(
+            db.or_(
+                SolicitudServicio.numero_solicitud.ilike(f"%{busqueda}%"),
+                SolicitudServicio.nombre_solicitante.ilike(f"%{busqueda}%"),
+                SolicitudServicio.email_solicitante.ilike(f"%{busqueda}%"),
+                SolicitudServicio.telefono_solicitante.ilike(f"%{busqueda}%"),
+            )
+        )
 
     # Ordenar por fecha de creación (más recientes primero)
     query = query.order_by(SolicitudServicio.fecha_creacion.desc())
@@ -64,7 +113,9 @@ def listar_solicitudes():
         solicitudes=solicitudes,
         estadisticas=estadisticas,
         estado=estado,
-        tipo=tipo,
+        prioridad=prioridad,
+        tipo_servicio=tipo_servicio,
+        busqueda=busqueda,
         total_paginas=solicitudes.pages,
     )
 
@@ -75,7 +126,7 @@ def ver_solicitud(id):
     """Ver detalles de una solicitud específica"""
     if current_user.rol != "Administrador":
         flash("No tiene permisos para acceder a esta sección.", "error")
-        return redirect(url_for("web.index"))
+        return redirect(url_for("web_routes.index"))
 
     solicitud = SolicitudServicio.query.get_or_404(id)
 
@@ -88,7 +139,7 @@ def editar_solicitud(id):
     """Editar una solicitud específica"""
     if current_user.rol != "Administrador":
         flash("No tiene permisos para acceder a esta sección.", "error")
-        return redirect(url_for("web.index"))
+        return redirect(url_for("web_routes.index"))
 
     solicitud = SolicitudServicio.query.get_or_404(id)
 
@@ -308,3 +359,258 @@ def enviar_notificacion_estado(solicitud, estado_anterior):
     except Exception as e:
         print(f"Error enviando notificación de estado: {e}")
         # No fallar la operación por error de email
+
+
+@solicitudes_admin_bp.route("/<int:id>/comentario", methods=["POST"])
+@login_required
+def agregar_comentario(id):
+    """Agregar un comentario a una solicitud"""
+    if current_user.rol != "Administrador":
+        return jsonify({"error": "No autorizado"}), 403
+
+    solicitud = SolicitudServicio.query.get_or_404(id)
+
+    data = request.get_json()
+    comentario = data.get("comentario", "").strip()
+
+    if not comentario:
+        return jsonify({"error": "El comentario no puede estar vacío"}), 400
+
+    # Agregar el comentario a las observaciones internas
+    observaciones_actuales = solicitud.observaciones_internas or ""
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    nuevo_comentario = f"[{timestamp}] {current_user.nombre}: {comentario}"
+
+    if observaciones_actuales:
+        solicitud.observaciones_internas = (
+            observaciones_actuales + "\n\n" + nuevo_comentario
+        )
+    else:
+        solicitud.observaciones_internas = nuevo_comentario
+
+    solicitud.fecha_actualizacion = datetime.now(timezone.utc)
+
+    try:
+        db.session.commit()
+        return jsonify({"success": True, "message": "Comentario agregado exitosamente"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+def exportar_solicitudes_csv():
+    """Genera un archivo Excel con todas las solicitudes de servicio"""
+    solicitudes = SolicitudServicio.query.order_by(
+        SolicitudServicio.fecha_creacion.desc()
+    ).all()
+
+    # Crear un nuevo workbook de Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Solicitudes de Servicio"
+
+    # Estilos para el encabezado
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color="4F81BD", end_color="4F81BD", fill_type="solid"
+    )
+    header_alignment = Alignment(horizontal="center", vertical="center")
+
+    # Encabezados
+    headers = [
+        "Número Solicitud",
+        "Fecha Creación",
+        "Fecha Actualización",
+        "Estado",
+        "Prioridad",
+        "Tipo Servicio",
+        "Título",
+        "Descripción",
+        "Nombre Solicitante",
+        "Email Solicitante",
+        "Teléfono Solicitante",
+        "Empresa Solicitante",
+        "Ubicación",
+        "Activo Afectado",
+        "Costo Estimado",
+        "Tiempo Estimado",
+        "Observaciones Internas",
+    ]
+
+    # Aplicar estilos al encabezado
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    # Ajustar ancho de columnas
+    column_widths = [18, 18, 18, 12, 10, 15, 30, 40, 20, 25, 15, 20, 20, 20, 15, 15, 40]
+    for i, width in enumerate(column_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+
+    # Escribir datos
+    for row_num, solicitud in enumerate(solicitudes, 2):
+        ws.cell(row=row_num, column=1, value=solicitud.numero_solicitud)
+        ws.cell(
+            row=row_num,
+            column=2,
+            value=(
+                solicitud.fecha_creacion.strftime("%d/%m/%Y %H:%M")
+                if solicitud.fecha_creacion
+                else ""
+            ),
+        )
+        ws.cell(
+            row=row_num,
+            column=3,
+            value=(
+                solicitud.fecha_actualizacion.strftime("%d/%m/%Y %H:%M")
+                if solicitud.fecha_actualizacion
+                else ""
+            ),
+        )
+        ws.cell(row=row_num, column=4, value=solicitud.estado_display)
+        ws.cell(
+            row=row_num,
+            column=5,
+            value=solicitud.prioridad.title() if solicitud.prioridad else "",
+        )
+        ws.cell(
+            row=row_num,
+            column=6,
+            value=solicitud.tipo_servicio.title() if solicitud.tipo_servicio else "",
+        )
+        ws.cell(row=row_num, column=7, value=solicitud.titulo)
+        ws.cell(row=row_num, column=8, value=solicitud.descripcion)
+        ws.cell(row=row_num, column=9, value=solicitud.nombre_solicitante)
+        ws.cell(row=row_num, column=10, value=solicitud.email_solicitante)
+        ws.cell(row=row_num, column=11, value=solicitud.telefono_solicitante or "")
+        ws.cell(row=row_num, column=12, value=solicitud.empresa_solicitante or "")
+        ws.cell(row=row_num, column=13, value=solicitud.ubicacion or "")
+        ws.cell(row=row_num, column=14, value=solicitud.activo_afectado or "")
+        ws.cell(
+            row=row_num,
+            column=15,
+            value=float(solicitud.costo_estimado) if solicitud.costo_estimado else "",
+        )
+        ws.cell(row=row_num, column=16, value=solicitud.tiempo_estimado or "")
+        ws.cell(row=row_num, column=17, value=solicitud.observaciones_internas or "")
+
+    # Guardar el workbook en memoria
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
+
+
+@solicitudes_admin_bp.route("/api/filtrar", methods=["GET"])
+@login_required_ajax
+def filtrar_solicitudes_ajax():
+    """Endpoint AJAX para filtrar solicitudes dinámicamente"""
+    if current_user.rol != "Administrador":
+        return jsonify({"error": "No tiene permisos para acceder a esta sección"}), 403
+
+    # Verificar si es una petición AJAX
+    if not request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"error": "Esta endpoint solo acepta peticiones AJAX"}), 400
+
+    # Obtener filtros
+    estado = request.args.get("estado", "")
+    prioridad = request.args.get("prioridad", "")
+    tipo_servicio = request.args.get("tipo_servicio", "")
+    busqueda = request.args.get("busqueda", "").strip()
+    page = int(request.args.get("page", 1))
+    per_page = 25
+
+    # Construir query
+    query = SolicitudServicio.query
+
+    if estado:
+        query = query.filter_by(estado=estado)
+
+    if prioridad:
+        query = query.filter_by(prioridad=prioridad)
+
+    if tipo_servicio:
+        query = query.filter_by(tipo_servicio=tipo_servicio)
+
+    if busqueda:
+        # Buscar en número de solicitud, nombre, email o teléfono
+        query = query.filter(
+            db.or_(
+                SolicitudServicio.numero_solicitud.ilike(f"%{busqueda}%"),
+                SolicitudServicio.nombre_solicitante.ilike(f"%{busqueda}%"),
+                SolicitudServicio.email_solicitante.ilike(f"%{busqueda}%"),
+                SolicitudServicio.telefono_solicitante.ilike(f"%{busqueda}%"),
+            )
+        )
+
+    # Ordenar por fecha de creación (más recientes primero)
+    query = query.order_by(SolicitudServicio.fecha_creacion.desc())
+
+    # Paginación
+    solicitudes = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Convertir resultados a JSON
+    solicitudes_data = []
+    for solicitud in solicitudes.items:
+        solicitudes_data.append(
+            {
+                "id": solicitud.id,
+                "numero_solicitud": solicitud.numero_solicitud,
+                "nombre_solicitante": solicitud.nombre_solicitante,
+                "email_solicitante": solicitud.email_solicitante,
+                "telefono_solicitante": solicitud.telefono_solicitante,
+                "tipo_servicio": solicitud.tipo_servicio,
+                "prioridad": solicitud.prioridad,
+                "estado": solicitud.estado,
+                "fecha_creacion": (
+                    solicitud.fecha_creacion.strftime("%d/%m/%Y %H:%M")
+                    if solicitud.fecha_creacion
+                    else ""
+                ),
+                "descripcion": (
+                    solicitud.descripcion[:100] + "..."
+                    if solicitud.descripcion and len(solicitud.descripcion) > 100
+                    else solicitud.descripcion or ""
+                ),
+            }
+        )
+
+    return jsonify(
+        {
+            "solicitudes": solicitudes_data,
+            "total": solicitudes.total,
+            "pages": solicitudes.pages,
+            "current_page": solicitudes.page,
+            "has_next": solicitudes.has_next,
+            "has_prev": solicitudes.has_prev,
+            "next_page": solicitudes.next_num if solicitudes.has_next else None,
+            "prev_page": solicitudes.prev_num if solicitudes.has_prev else None,
+        }
+    )
+
+
+@solicitudes_admin_bp.route("/exportar", methods=["GET"])
+@login_required
+def exportar_solicitudes():
+    """Exporta todas las solicitudes a Excel"""
+    if current_user.rol != "Administrador":
+        flash("No tiene permisos para acceder a esta sección.", "error")
+        return redirect(url_for("web_routes.index"))
+
+    try:
+        excel_data = exportar_solicitudes_csv()
+
+        response = Response(
+            excel_data,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-disposition": "attachment; filename=solicitudes_servicio.xlsx"
+            },
+        )
+        return response
+    except Exception as e:
+        flash(f"Error al exportar solicitudes: {str(e)}", "error")
+        return redirect(url_for("solicitudes_admin.listar_solicitudes"))

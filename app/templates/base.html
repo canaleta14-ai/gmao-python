@@ -12,6 +12,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/autocomplete.css') }}">
     {% block extra_css %}{% endblock %}
     {% block extra_head %}{% endblock %}
+    <!-- IMPORTANTE: Cargar al final para eliminar todos los bordes redondeados -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/no-rounded.css') }}">
+    <!-- Estilos para modales de confirmación modernos -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/confirmation-modal.css') }}">
 </head>
 
 <body{% if login_bg %} class="login-bg" {% endif %}{% if no_sidebar %} data-no-sidebar="true" {% endif %}>

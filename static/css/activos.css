@@ -24,6 +24,11 @@
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
   margin-bottom: 1.5rem;
+  overflow: visible;
+}
+
+/* Solo ocultar overflow en el header para el border-radius */
+.filtros-container .filtros-header {
   overflow: hidden;
 }
 
@@ -82,6 +87,15 @@
   border-top: 1px solid #dee2e6;
 }
 
+/* Asegurar que el collapse no oculte el dropdown del autocompletado */
+#filtros-collapse {
+  overflow: visible !important;
+}
+
+#filtros-collapse.collapsing {
+  overflow: visible !important;
+}
+
 /* Tarjetas de estadísticas modernizadas */
 .stats-card {
   background: white;
@@ -124,21 +138,21 @@
   margin-top: 0.5rem;
 }
 
-/* Colores específicos para las tarjetas */
+/* Franja lateral coloreada en tarjetas de estadísticas */
 .stats-card.primary {
-  border-left: 4px solid var(--primary-color);
+  border-left: 5px solid var(--primary-color) !important;
 }
 
 .stats-card.success {
-  border-left: 4px solid var(--success-color);
+  border-left: 5px solid var(--success-color) !important;
 }
 
 .stats-card.warning {
-  border-left: 4px solid var(--warning-color);
+  border-left: 5px solid var(--warning-color) !important;
 }
 
 .stats-card.danger {
-  border-left: 4px solid var(--danger-color);
+  border-left: 5px solid var(--danger-color) !important;
 }
 
 .form-group {

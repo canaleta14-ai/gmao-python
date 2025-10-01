@@ -11,6 +11,19 @@ let currentPage = 1;
 let perPage = 10;
 let paginacionOrdenes;
 
+// Función debounce para optimizar búsquedas
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 // Inicialización cuando se carga la página
 document.addEventListener("DOMContentLoaded", function () {
   console.log("Módulo de órdenes cargado");
@@ -38,14 +51,35 @@ document.addEventListener("DOMContentLoaded", function () {
   cargarOrdenes();
 });
 
-// Cargar lista de órdenes con paginación
-async function cargarOrdenes(page = 1) {
+// Función debounce para optimizar búsquedas
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Cargar lista de órdenes con paginación y filtros
+async function cargarOrdenes(page = 1, perPageParam = null, filtros = {}) {
   try {
     currentPage = page;
+    if (perPageParam) perPage = perPageParam;
+
     const params = new URLSearchParams({
       page: page,
       per_page: perPage,
     });
+
+    // Agregar filtros si existen
+    if (filtros.q) params.append("q", filtros.q);
+    if (filtros.estado) params.append("estado", filtros.estado);
+    if (filtros.tipo) params.append("tipo", filtros.tipo);
+    if (filtros.prioridad) params.append("prioridad", filtros.prioridad);
 
     const response = await fetch(`/ordenes/api?${params}`);
     if (response.ok) {
@@ -600,32 +634,6 @@ function inicializarAutocompletado() {
     });
   }
 
-  // Autocompletado para filtros de búsqueda
-  const filtroBuscar = document.getElementById("filtro-buscar");
-  if (filtroBuscar && window.AutoComplete) {
-    new AutoComplete({
-      element: filtroBuscar,
-      localData: ordenes,
-      displayKey: (item) => `#${item.id} - ${item.descripcion}`,
-      valueKey: "descripcion",
-      placeholder: "Buscar orden por descripción...",
-      allowFreeText: true,
-      customFilter: (item, query) => {
-        if (!query || typeof query !== "string") return false;
-        const q = query.toLowerCase();
-        return (
-          (item.descripcion && item.descripcion.toLowerCase().includes(q)) ||
-          (item.id && item.id.toString().toLowerCase().includes(q)) ||
-          (item.activo_nombre && item.activo_nombre.toLowerCase().includes(q))
-        );
-      },
-      onSelect: (item) => {
-        console.log("Orden filtrada:", item);
-        aplicarFiltros(); // Aplicar filtros después de selección
-      },
-    });
-  }
-
   console.log("Autocompletado inicializado en órdenes");
 
   // Configurar filtros en tiempo real
@@ -636,22 +644,42 @@ function inicializarAutocompletado() {
 function configurarFiltrosOrdenes() {
   console.log("🔍 Configurando filtros de órdenes...");
 
-  // Campo de búsqueda
+  // Crear función de filtrado con debounce
+  const filtrarOrdenesDebounced = debounce(filtrarOrdenes, 500);
+
+  // Campo de búsqueda con debounce
   const filtroBuscar = document.getElementById("filtro-buscar");
   if (filtroBuscar) {
-    filtroBuscar.addEventListener("input", aplicarFiltros);
-    console.log("✅ Filtro de búsqueda configurado");
+    filtroBuscar.addEventListener("input", filtrarOrdenesDebounced);
+    console.log("✅ Filtro de búsqueda configurado con debounce");
   }
 
-  // Selectores de filtro
+  // Selectores de filtro sin debounce (cambio inmediato)
   const filtros = ["filtro-estado", "filtro-tipo", "filtro-prioridad"];
   filtros.forEach((filtroId) => {
     const elemento = document.getElementById(filtroId);
     if (elemento) {
-      elemento.addEventListener("change", aplicarFiltros);
+      elemento.addEventListener("change", filtrarOrdenes);
       console.log(`✅ Filtro ${filtroId} configurado`);
     }
   });
+}
+
+// Función para filtrar órdenes (ejecuta búsqueda en servidor)
+function filtrarOrdenes() {
+  console.log("🔍 Filtrando órdenes...");
+
+  const filtros = {
+    q: document.getElementById("filtro-buscar")?.value.trim() || "",
+    estado: document.getElementById("filtro-estado")?.value || "",
+    tipo: document.getElementById("filtro-tipo")?.value || "",
+    prioridad: document.getElementById("filtro-prioridad")?.value || "",
+  };
+
+  console.log("Filtros aplicados:", filtros);
+
+  // Cargar órdenes con filtros desde el servidor
+  cargarOrdenes(1, perPage, filtros);
 }
 
 // Aplicar filtros a la lista de órdenes
@@ -1456,8 +1484,8 @@ function limpiarFiltros() {
     }
   });
 
-  // Aplicar filtros (mostrarà todas las órdenes sin filtros)
-  aplicarFiltros();
+  // Recargar órdenes sin filtros
+  cargarOrdenes(1);
   console.log("✅ Filtros limpiados y vista actualizada");
 }
 

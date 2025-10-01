@@ -1,6 +1,20 @@
 // Variables y funciones específicas de Planes
 let planesData = [];
 let paginacionPlanes;
+let filtrosPlanes = {}; // Almacenar filtros globalmente
+
+// Función debounce para optimizar búsquedas
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 // Inicializar cuando se carga la página
 document.addEventListener("DOMContentLoaded", function () {
@@ -16,11 +30,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Configurar búsqueda y filtros
   configurarFiltrosPreventivo();
+  
+  // Configurar búsqueda en tiempo real
+  configurarBusquedaPreventivo();
 
-  // Configurar autocompletado
-  setTimeout(() => {
-    inicializarAutocompletadoPreventivo();
-  }, 500);
+  // Configurar autocompletado (deshabilitado)
+  // setTimeout(() => {
+  //   inicializarAutocompletadoPreventivo();
+  // }, 500);
 
   // Cargar datos iniciales
   cargarPlanes(1);
@@ -84,20 +101,6 @@ document.addEventListener("DOMContentLoaded", function () {
 function configurarFiltrosPreventivo() {
   console.log("🔍 Configurando filtros de mantenimiento preventivo...");
 
-  // Campo de búsqueda
-  const campoBuscar = document.getElementById("search-planes");
-  if (campoBuscar) {
-    let timeoutBusqueda;
-    campoBuscar.addEventListener("input", function () {
-      clearTimeout(timeoutBusqueda);
-      timeoutBusqueda = setTimeout(() => {
-        console.log("🔍 Búsqueda en planes:", this.value);
-        aplicarFiltrosPreventivo();
-      }, 300);
-    });
-    console.log("✅ Campo de búsqueda configurado");
-  }
-
   // Selectores de filtro
   const filtros = ["filtro-estado", "filtro-frecuencia", "filtro-vencimiento"];
   filtros.forEach((filtroId) => {
@@ -109,9 +112,135 @@ function configurarFiltrosPreventivo() {
   });
 }
 
+// Configurar búsqueda en tiempo real con debounce
+function configurarBusquedaPreventivo() {
+  console.log("🔍 Configurando búsqueda en tiempo real para preventivo...");
+  
+  const campoBusqueda = document.getElementById("filtro-buscar");
+  
+  if (campoBusqueda) {
+    // Crear función debounced para la búsqueda
+    const busquedaDebounced = debounce(() => {
+      console.log("🔎 Ejecutando búsqueda...");
+      filtrarPlanes();
+    }, 500);
+    
+    // Agregar event listener con debounce
+    campoBusqueda.addEventListener("input", busquedaDebounced);
+    console.log("✅ Búsqueda en tiempo real configurada");
+  } else {
+    console.warn("⚠️ Campo filtro-buscar no encontrado");
+  }
+}
+
+// Filtrar planes con búsqueda del lado del servidor
+function filtrarPlanes() {
+  console.log("🔍 filtrarPlanes() ejecutado");
+  const filtros = {};
+
+  // Filtro de búsqueda
+  const buscar = document.getElementById("filtro-buscar");
+  if (buscar && buscar.value.trim()) {
+    filtros.q = buscar.value.trim();
+    console.log("📝 Filtro de búsqueda:", filtros.q);
+  }
+
+  // Filtros de selección
+  const estado = document.getElementById("filtro-estado");
+  if (estado && estado.value) {
+    filtros.estado = estado.value;
+    console.log("📊 Filtro de estado:", filtros.estado);
+  }
+
+  const frecuencia = document.getElementById("filtro-frecuencia");
+  if (frecuencia && frecuencia.value) {
+    filtros.frecuencia = frecuencia.value;
+    console.log("🔧 Filtro de frecuencia:", filtros.frecuencia);
+  }
+
+  const vencimiento = document.getElementById("filtro-vencimiento");
+  if (vencimiento && vencimiento.value) {
+    filtros.vencimiento = vencimiento.value;
+    console.log("⚡ Filtro de vencimiento:", filtros.vencimiento);
+  }
+
+  // Guardar filtros globalmente
+  filtrosPlanes = filtros;
+  console.log("💾 Filtros guardados:", filtros);
+
+  // Reiniciar a la primera página y cargar con filtros
+  console.log("🔄 Cargando planes con filtros...");
+  cargarPlanes(1, null, filtros);
+}
+
+// Limpiar filtros
+function limpiarFiltros() {
+  document.getElementById("filtro-buscar").value = "";
+  document.getElementById("filtro-estado").value = "";
+  document.getElementById("filtro-frecuencia").value = "";
+  document.getElementById("filtro-vencimiento").value = "";
+
+  // Recargar datos sin filtros
+  filtrosPlanes = {};
+  cargarPlanes(1);
+}
+
+// Alias para compatibilidad con el botón HTML
+function aplicarFiltros() {
+  filtrarPlanes();
+}
+
+// Función para mostrar/ocultar estado de carga en la tabla de planes
+function mostrarCargandoPlanes(mostrar = true) {
+  const tbody = document.getElementById("planesTableBody");
+  if (!tbody) return;
+
+  if (mostrar) {
+    // Solo mostrar loading si no hay ya un loading-row
+    if (!tbody.querySelector("#loading-row-planes")) {
+      tbody.innerHTML = `
+                <tr id="loading-row-planes">
+                    <td colspan="8" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando planes de mantenimiento...</p>
+                    </td>
+                </tr>
+            `;
+    }
+  } else {
+    // Ocultar loading: eliminar solo la fila de loading si existe
+    const loadingRow = tbody.querySelector("#loading-row-planes");
+    if (loadingRow) {
+      loadingRow.remove();
+    }
+  }
+}
+
 // Aplicar filtros a la lista de planes
 function aplicarFiltrosPreventivo() {
   console.log("🔍 Aplicando filtros de preventivo...");
+  // Construir objeto de filtros
+  const filtros = {};
+
+  // Filtros adicionales
+  const filtroEstado = document.getElementById("filtro-estado");
+  if (filtroEstado && filtroEstado.value) {
+    filtros.estado = filtroEstado.value;
+  }
+
+  const filtroFrecuencia = document.getElementById("filtro-frecuencia");
+  if (filtroFrecuencia && filtroFrecuencia.value) {
+    filtros.frecuencia = filtroFrecuencia.value;
+  }
+
+  const filtroVencimiento = document.getElementById("filtro-vencimiento");
+  if (filtroVencimiento && filtroVencimiento.value) {
+    filtros.vencimiento = filtroVencimiento.value;
+  }
+
+  console.log("🔍 Filtros aplicados:", filtros);
   cargarPlanes(1); // Recargar con filtros aplicados
 }
 
@@ -177,37 +306,40 @@ function limpiarFiltrosPreventivo() {
   console.log("✅ Filtros limpiados y vista actualizada");
 }
 
-function cargarPlanes(page = 1, per_page = null) {
+function cargarPlanes(page = 1, per_page = null, filtros = null) {
   if (per_page) {
     paginacionPlanes.setPerPage(per_page);
   }
+
+  // Mostrar indicador de carga
+  mostrarCargandoPlanes(true);
 
   const params = new URLSearchParams({
     page: page,
     per_page: paginacionPlanes.perPage,
   });
 
-  // Agregar filtros de búsqueda si existen
-  const searchInput = document.getElementById("search-planes");
-  if (searchInput && searchInput.value.trim()) {
-    params.append("q", searchInput.value.trim());
+  // Usar filtros pasados como parámetro o filtros globales
+  const filtrosActuales = filtros || filtrosPlanes || {};
+
+  // Agregar filtros de búsqueda desde el objeto de filtros
+  if (filtrosActuales.q) {
+    params.append("q", filtrosActuales.q);
   }
 
-  // Agregar filtros adicionales
-  const filtroEstado = document.getElementById("filtro-estado");
-  if (filtroEstado && filtroEstado.value) {
-    params.append("estado", filtroEstado.value);
+  if (filtrosActuales.estado) {
+    params.append("estado", filtrosActuales.estado);
   }
 
-  const filtroFrecuencia = document.getElementById("filtro-frecuencia");
-  if (filtroFrecuencia && filtroFrecuencia.value) {
-    params.append("frecuencia", filtroFrecuencia.value);
+  if (filtrosActuales.frecuencia) {
+    params.append("frecuencia", filtrosActuales.frecuencia);
   }
 
-  const filtroVencimiento = document.getElementById("filtro-vencimiento");
-  if (filtroVencimiento && filtroVencimiento.value) {
-    params.append("vencimiento", filtroVencimiento.value);
+  if (filtrosActuales.vencimiento) {
+    params.append("vencimiento", filtrosActuales.vencimiento);
   }
+
+  console.log("📡 Petición a /planes/api con params:", params.toString());
 
   fetch(`/planes/api?${params}`)
     .then((response) => response.json())
@@ -219,10 +351,15 @@ function cargarPlanes(page = 1, per_page = null) {
       if (data.page && data.per_page && data.total) {
         paginacionPlanes.render(data.page, data.per_page, data.total);
       }
+
+      // Ocultar indicador de carga
+      mostrarCargandoPlanes(false);
     })
     .catch((error) => {
       console.error("Error cargando planes:", error);
       showNotificationToast("Error al cargar planes de mantenimiento", "error");
+      // Ocultar indicador de carga en caso de error
+      mostrarCargandoPlanes(false);
     });
 }
 
@@ -1504,22 +1641,23 @@ function generarOrdenesManual() {
 
 // Función separada para ejecutar la generación después de la confirmación
 function ejecutarGeneracionManual() {
-  // Mostrar loading
-  const boton = event.target;
-  const textoOriginal = boton.innerHTML;
-  boton.disabled = true;
-  boton.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generando...';
+  console.log("⏳ Ejecutando generación manual...");
 
-  // Hacer la petición
+  // Hacer la petición sin manipular el botón (el modal ya maneja el loading)
   fetch("/planes/api/generar-ordenes-manual", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
   })
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((result) => {
-      console.log("Resultado generación manual:", result);
+      console.log("✅ Resultado generación manual:", result);
 
       if (result.success) {
         const cantidad = result.ordenes_generadas || 0;
@@ -1529,26 +1667,24 @@ function ejecutarGeneracionManual() {
             : "ℹ️ No había planes pendientes para generación manual";
 
         showNotificationToast(mensaje, cantidad > 0 ? "success" : "info");
+        
+        // Recargar datos después de un momento
+        setTimeout(() => {
+          cargarPlanes(paginacionPlanes?.currentPage || 1);
+          cargarEstadisticasPlanes();
+        }, 1000);
       } else {
         showNotificationToast(
-          `❌ Error en generación manual: ${result.error}`,
+          `❌ Error en generación manual: ${result.error || "Error desconocido"}`,
           "error"
         );
       }
     })
     .catch((error) => {
-      console.error("Error en generación manual:", error);
-      showNotificationToast("❌ Error al generar órdenes manualmente", "error");
-    })
-    .finally(() => {
-      // Restaurar botón
-      boton.disabled = false;
-      boton.innerHTML = textoOriginal;
-
-      // Recargar datos
-      setTimeout(() => {
-        cargarPlanes(paginacionPlanes?.currentPage || 1);
-        cargarEstadisticasPlanes();
-      }, 1000);
+      console.error("❌ Error en generación manual:", error);
+      showNotificationToast(
+        `❌ Error al generar órdenes: ${error.message}`,
+        "error"
+      );
     });
 }

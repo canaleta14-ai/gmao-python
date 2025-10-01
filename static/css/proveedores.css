@@ -124,21 +124,21 @@
   margin-top: 0.5rem;
 }
 
-/* Colores específicos para las tarjetas */
+/* Franja lateral coloreada en tarjetas de estadísticas */
 .stats-card.primary {
-  border-left: 4px solid var(--primary-color);
+  border-left: 5px solid var(--primary-color) !important;
 }
 
 .stats-card.success {
-  border-left: 4px solid var(--success-color);
+  border-left: 5px solid var(--success-color) !important;
 }
 
 .stats-card.warning {
-  border-left: 4px solid var(--warning-color);
+  border-left: 5px solid var(--warning-color) !important;
 }
 
 .stats-card.danger {
-  border-left: 4px solid var(--danger-color);
+  border-left: 5px solid var(--danger-color) !important;
 }
 
 .form-group {

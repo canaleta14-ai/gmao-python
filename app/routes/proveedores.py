@@ -117,14 +117,14 @@ def validar_nif_route():
 
 @proveedores_bp.route("/exportar-csv", methods=["GET"])
 def exportar_csv():
-    """Exporta todos los proveedores a CSV"""
+    """Exporta todos los proveedores a Excel"""
     try:
-        csv_data = exportar_proveedores_csv()
+        excel_data = exportar_proveedores_csv()
 
         response = Response(
-            csv_data,
-            mimetype="text/csv",
-            headers={"Content-disposition": "attachment; filename=proveedores.csv"},
+            excel_data,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-disposition": "attachment; filename=proveedores.xlsx"},
         )
         return response
     except Exception as e:
