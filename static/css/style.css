@@ -13,70 +13,183 @@
   --accent-color: #3b82f6; /* Azul accent */
   --surface-color: #ffffff; /* Blanco puro para superficies */
   --text-primary: #1e293b; /* Texto principal oscuro */
-  --text-secondary: #64748b; /* Texto secundario */
+  --text-secondary: #475569; /* Texto secundario - MEJORADO para accesibilidad (contraste 7:1) */
   --border-color: #e2e8f0; /* Color de bordes sutil */
   --border-color-light: #f1f5f9; /* Borde más claro */
 }
 
 /* ============================================
-   ELIMINAR TODOS LOS BORDES REDONDEADOS
+   BORDES REDONDEADOS SUTILES Y PROFESIONALES
+   Diseño moderno 2025 - Balance entre profesionalismo y calidez
    ============================================ */
-*,
-*::before,
-*::after,
+
+/* Cards y contenedores principales - Borde sutil */
 .card,
-.card-header,
-.card-footer,
-.card-body,
-.btn,
-.form-control,
-.form-select,
-.input-group,
-.input-group-text,
-.modal-content,
-.modal-header,
-.modal-body,
-.modal-footer,
-.alert,
-.badge,
-.dropdown-menu,
-.dropdown-item,
-.nav-tabs,
-.nav-pills,
-.nav-link,
-.pagination,
-.page-link,
-.table,
-.list-group,
-.list-group-item,
-.toast,
-.tooltip,
-.popover,
-.progress,
-.progress-bar,
-.accordion,
-.accordion-item,
-.accordion-button,
-.breadcrumb,
-.navbar,
-.navbar-toggler,
-.offcanvas,
 .stats-card,
 .filtros-container,
-.filtros-header,
-.filtros-body,
+.modal-content,
+.alert,
 .autocomplete-dropdown,
-.autocomplete-item,
-img,
+.offcanvas {
+  border-radius: 8px !important;
+}
+
+/* Headers de cards - Solo bordes superiores redondeados */
+.card-header,
+.filtros-header {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+/* Footers de cards - Solo bordes inferiores redondeados */
+.card-footer {
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* Botones - Borde más sutil para mantener profesionalismo */
+.btn {
+  border-radius: 6px !important;
+}
+
+/* Inputs y selects - Borde sutil */
+.form-control,
+.form-select,
+.input-group-text {
+  border-radius: 6px !important;
+}
+
+/* Input groups - Bordes conectados */
+.input-group > .form-control:not(:last-child),
+.input-group > .form-select:not(:last-child) {
+  border-radius: 6px 0 0 6px !important;
+}
+
+.input-group > .form-control:not(:first-child),
+.input-group > .form-select:not(:first-child) {
+  border-radius: 0 6px 6px 0 !important;
+}
+
+.input-group > .input-group-text:first-child {
+  border-radius: 6px 0 0 6px !important;
+}
+
+.input-group > .input-group-text:last-child {
+  border-radius: 0 6px 6px 0 !important;
+}
+
+/* Badges - Más pill-like (redondeado) */
+.badge {
+  border-radius: 12px !important;
+}
+
+/* Dropdowns y menús */
+.dropdown-menu {
+  border-radius: 8px !important;
+}
+
+.dropdown-item:first-child {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* Items de autocomplete */
+.autocomplete-item:first-child {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.autocomplete-item:last-child {
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* Navegación - Pills */
+.nav-pills .nav-link {
+  border-radius: 8px !important;
+}
+
+/* Tablas - Bordes sutiles en las esquinas */
+.table {
+  border-radius: 8px !important;
+  overflow: hidden; /* Para que los bordes interiores no sobresalgan */
+}
+
+/* Listas */
+.list-group {
+  border-radius: 8px !important;
+}
+
+.list-group-item:first-child {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.list-group-item:last-child {
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* Paginación */
+.pagination {
+  gap: 4px; /* Pequeño espacio entre botones */
+}
+
+.page-link {
+  border-radius: 6px !important;
+}
+
+/* Accordions */
+.accordion-item {
+  border-radius: 8px !important;
+  margin-bottom: 8px;
+}
+
+.accordion-button {
+  border-radius: 8px !important;
+}
+
+.accordion-button:not(.collapsed) {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+/* Progress bars */
+.progress {
+  border-radius: 8px !important;
+}
+
+.progress-bar {
+  border-radius: 8px !important;
+}
+
+/* Avatares e imágenes circulares - Mantener redondos */
 .avatar,
-.rounded,
-.rounded-circle,
-.rounded-pill,
-.rounded-top,
-.rounded-bottom,
-.rounded-start,
-.rounded-end {
-  border-radius: 0 !important;
+.rounded-circle {
+  border-radius: 50% !important;
+}
+
+/* Pills - Muy redondeados */
+.rounded-pill {
+  border-radius: 50rem !important;
+}
+
+/* Toasts y tooltips */
+.toast,
+.tooltip,
+.popover {
+  border-radius: 8px !important;
+}
+
+/* Navbar toggler */
+.navbar-toggler {
+  border-radius: 6px !important;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  border-radius: 8px !important;
+}
+
+/* Imágenes normales - Borde muy sutil */
+img:not(.avatar):not(.rounded-circle) {
+  border-radius: 4px !important;
 }
 
 body {
@@ -250,6 +363,17 @@ body {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
+/* Nombre de usuario en sidebar - Color brillante para visibilidad */
+#current-user {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Rol de usuario en sidebar - Color blanco con opacidad */
+.user-role {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
 /* Header de contenido simplificado */
 .content-header {
   border-left: 4px solid var(--primary-color);
@@ -400,14 +524,16 @@ body {
   border-color: var(--primary-color);
 }
 
+/* Botón outline-primary con mejor contraste para WCAG AA */
 .btn-outline-primary {
-  color: var(--primary-color);
-  border-color: var(--primary-color);
+  color: #1e40af !important; /* Azul oscuro con contraste 7:1 sobre fondo blanco */
+  border-color: #1e40af !important;
 }
 
 .btn-outline-primary:hover {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: #1e40af !important;
+  border-color: #1e40af !important;
+  color: #ffffff !important;
 }
 
 .stats-card {
@@ -1958,3 +2084,179 @@ body.login-bg .main-content {
   border-color: var(--primary-color) !important;
   color: white !important;
 }
+
+/* ============================================
+   MEJORAS DE ACCESIBILIDAD
+   Lighthouse Score: 79 -> 90+
+   ============================================ */
+
+/* Mejorar contraste de texto muted (WCAG AA: 4.5:1) */
+.text-muted {
+  color: #6c757d !important; /* Contraste 4.6:1 - cumple WCAG AA */
+}
+
+/* Mejorar contraste de texto secundario en formularios */
+.form-text {
+  color: #6c757d !important;
+}
+
+/* Asegurar tamaño mínimo de botones touch (44x44px) */
+.btn-sm,
+.btn-icon {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem;
+}
+
+/* Iconos de acción en tablas - touch friendly */
+.table .btn-sm {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+
+/* Links pequeños también touch-friendly */
+a.btn-sm,
+a.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Focus visible mejorado para accesibilidad */
+:focus-visible {
+  outline: 3px solid var(--primary-color) !important;
+  outline-offset: 2px;
+}
+
+/* Botones outline con mejor contraste */
+.btn-outline-secondary {
+  color: #495057;
+  border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* ============================================
+   MEJORAS DE ACCESIBILIDAD - WCAG 2.1 Level AA
+   Target: Lighthouse Score 90+
+   ============================================ */
+
+/* Contraste mejorado para textos secundarios */
+.text-muted {
+  color: #475569 !important; /* 7:1 contrast ratio */
+}
+
+small, .small {
+  color: #475569 !important;
+}
+
+/* Asegurar touch targets mínimos (44x44px) para TODOS los botones pequeños */
+.btn-sm,
+.badge,
+button.btn-icon,
+.pagination .page-link {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.5rem !important;
+}
+
+/* Iconos en botones pequeños - tamaño aumentado para mejor visibilidad */
+.btn-sm i.bi,
+.btn-icon i.bi {
+  font-size: 1.1rem;
+}
+
+/* Skip links para navegación por teclado (screen readers) */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #1e40af;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 10000;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #fbbf24;
+}
+
+/* Mejor contraste para enlaces */
+a {
+  color: #1e40af; /* Mejor contraste que el azul por defecto */
+}
+
+a:hover {
+  color: #1e3a8a;
+}
+
+/* Asegurar que los placeholders tengan suficiente contraste */
+::placeholder {
+  color: #6b7280 !important; /* 4.5:1 contrast ratio */
+  opacity: 1;
+}
+
+/* Alerts con mejor contraste */
+.alert-info {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.alert-warning {
+  background-color: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.alert-success {
+  background-color: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.alert-danger {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+/* Tablas con mejor contraste en headers */
+.table thead th {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: #f8fafc;
+}
+
+/* Indicadores de estado con mejor contraste */
+.badge {
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+}
+
+.badge.bg-warning {
+  background-color: #f59e0b !important;
+  color: #1f2937 !important;
+}
+
+.badge.bg-info {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+

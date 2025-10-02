@@ -996,16 +996,21 @@ const MOTIVOS_POR_TIPO = {
     "Donación recibida"
   ],
   salida: [
-    "Consumido",
-    "Rotura",
-    "Falta",
-    "Sobra"
+    "Venta",
+    "Consumo en mantenimiento",
+    "Transferencia a otra ubicación",
+    "Baja por deterioro",
+    "Baja por obsolescencia",
+    "Devolución a proveedor",
+    "Donación"
   ],
   regularizacion: [
-    "Consumido",
-    "Rotura",
-    "Falta",
-    "Sobra"
+    "Ajuste por inventario físico",
+    "Corrección por error de registro",
+    "Merma detectada",
+    "Excedente detectado",
+    "Reconteo de stock",
+    "Cambio de valoración"
   ]
 };
 
