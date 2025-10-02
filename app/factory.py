@@ -169,6 +169,12 @@ def create_app():
 
     db.init_app(app)
 
+    # Inicializar Flask-Migrate
+    from app.extensions import migrate
+
+    migrate.init_app(app, db)
+    app.logger.info("✅ Flask-Migrate inicializado")
+
     # Inicializar CSRF Protection
     from app.extensions import csrf
 
