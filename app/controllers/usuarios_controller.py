@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user, logout_user, login_user
 from app.models.usuario import Usuario
-from app.extensions import db
+from app.extensions import db, limiter
 
 usuarios_controller = Blueprint("usuarios_controller", __name__)
 
@@ -22,9 +22,11 @@ def autenticar_usuario(username, password):
 
 
 @usuarios_controller.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")  # Máximo 10 intentos por minuto por IP
 def login():
     """
     Ruta de login - maneja tanto GET (mostrar formulario) como POST (procesar login)
+    Protegido con rate limiting: 10 intentos por minuto
     """
     if current_user.is_authenticated:
         return redirect(url_for("web_routes.dashboard"))

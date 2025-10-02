@@ -80,7 +80,21 @@ def create_app():
     app.config["SESSION_COOKIE_HTTPONLY"] = (
         True  # Solo accesible via HTTP, no JavaScript
     )
-    app.config["SESSION_COOKIE_SECURE"] = False  # Deshabilitar HTTPS en desarrollo
+
+    # Activar HTTPS solo en producción
+    is_production = (
+        os.getenv("GAE_ENV", "").startswith("standard")
+        or os.getenv("FLASK_ENV") == "production"
+    )
+    app.config["SESSION_COOKIE_SECURE"] = is_production
+    app.config["REMEMBER_COOKIE_SECURE"] = is_production
+
+    # Log de configuración de seguridad
+    if is_production:
+        app.logger.info("🔒 Modo producción: Cookies seguras activadas (HTTPS)")
+    else:
+        app.logger.info("🔓 Modo desarrollo: Cookies seguras desactivadas")
+
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # Protección CSRF
 
     # Configuración de codificación UTF-8
@@ -154,6 +168,18 @@ def create_app():
     app.config["ADMIN_EMAILS"] = os.getenv("ADMIN_EMAILS", "")
 
     db.init_app(app)
+
+    # Inicializar CSRF Protection
+    from app.extensions import csrf
+
+    csrf.init_app(app)
+    app.logger.info("✅ CSRF Protection inicializado")
+
+    # Inicializar Rate Limiting
+    from app.extensions import limiter
+
+    limiter.init_app(app)
+    app.logger.info("✅ Rate Limiting inicializado")
 
     # Inicializar LoginManager
     login_manager = LoginManager()
