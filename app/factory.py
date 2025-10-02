@@ -35,44 +35,20 @@ def create_app():
         # Crear directorio de logs si no existe
         os.makedirs("logs", exist_ok=True)
 
-    # Configuración de SECRET_KEY desde variables de entorno o Secret Manager
-    if os.getenv("GAE_ENV", "").startswith("standard"):
-        # En GCP App Engine, usar Secret Manager
-        try:
-            from google.cloud import secretmanager
+    # Configuración de SECRET_KEY desde Secret Manager (producción) o .env (desarrollo)
+    from app.utils.secrets import get_secret_or_env
 
-            client = secretmanager.SecretManagerServiceClient()
-            project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "gmao-sistema")
+    app.config["SECRET_KEY"] = get_secret_or_env(
+        secret_id="gmao-secret-key",
+        env_var="SECRET_KEY",
+        default="dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION",
+    )
 
-            # Obtener SECRET_KEY desde Secret Manager
-            secret_name = (
-                f"projects/{project_id}/secrets/gmao-secret-key/versions/latest"
-            )
-            secret_key_response = client.access_secret_version(
-                request={"name": secret_name}
-            )
-            app.config["SECRET_KEY"] = secret_key_response.payload.data.decode("UTF-8")
-
-            # Obtener DB_PASSWORD desde Secret Manager
-            db_secret_name = (
-                f"projects/{project_id}/secrets/gmao-db-password/versions/latest"
-            )
-            db_response = client.access_secret_version(request={"name": db_secret_name})
-            db_password = db_response.payload.data.decode("UTF-8")
-
-        except Exception as e:
-            logger.error(f"Error accediendo a Secret Manager: {e}")
-            # Fallback a variables de entorno
-            app.config["SECRET_KEY"] = os.getenv(
-                "SECRET_KEY", "fallback_secret_key_gcp"
-            )
-            db_password = os.getenv("DB_PASSWORD", "")
+    # Log de advertencia si se usa clave por defecto
+    if app.config["SECRET_KEY"] == "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION":
+        app.logger.warning("⚠️  Usando SECRET_KEY por defecto - NO USAR EN PRODUCCIÓN")
     else:
-        # Desarrollo local
-        app.config["SECRET_KEY"] = os.getenv(
-            "SECRET_KEY", "clave_secreta_fija_para_sesiones_2025_gmao"
-        )
-        db_password = os.getenv("DB_PASSWORD", "")
+        app.logger.info("✅ SECRET_KEY configurada correctamente")
 
     # Configuración de sesión para cerrar al cerrar navegador
     app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 24 horas
@@ -120,6 +96,11 @@ def create_app():
     db_type = os.getenv("DB_TYPE", "sqlite")  # 'sqlite' o 'postgresql'
 
     if db_type == "postgresql":
+        # Obtener DB_PASSWORD desde Secret Manager (producción) o .env (desarrollo)
+        db_password = get_secret_or_env(
+            secret_id="gmao-db-password", env_var="DB_PASSWORD", default=""
+        )
+
         # Detectar si estamos en GCP App Engine
         if os.getenv("GAE_ENV", "").startswith("standard"):
             # Configuración Cloud SQL para App Engine
@@ -138,7 +119,6 @@ def create_app():
             db_port = os.getenv("DB_PORT", "5432")
             db_name = os.getenv("DB_NAME", "gmao_db")
             db_user = os.getenv("DB_USER", "postgres")
-            db_password = os.getenv("DB_PASSWORD", "")
 
             app.config["SQLALCHEMY_DATABASE_URI"] = (
                 f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
@@ -164,7 +144,12 @@ def create_app():
     app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", "587"))
     app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS", "True").lower() == "true"
     app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME", "")
-    app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD", "")
+
+    # MAIL_PASSWORD desde Secret Manager (producción) o .env (desarrollo)
+    app.config["MAIL_PASSWORD"] = get_secret_or_env(
+        secret_id="gmao-mail-password", env_var="MAIL_PASSWORD", default=""
+    )
+
     app.config["ADMIN_EMAILS"] = os.getenv("ADMIN_EMAILS", "")
 
     db.init_app(app)
