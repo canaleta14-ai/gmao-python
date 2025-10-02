@@ -6,10 +6,11 @@ import os
 import uuid
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from flask import send_file, jsonify, current_app
+from flask import send_file, jsonify, current_app, redirect
 from app.models.manual import Manual
 from app.models.activo import Activo
 from app.extensions import db
+from app.utils.storage import upload_file, delete_file, get_signed_url
 
 
 # Extensiones permitidas
@@ -57,17 +58,19 @@ def crear_manual(activo_id, archivo, tipo, descripcion):
         # Generar nombre único para el archivo
         filename = secure_filename(archivo.filename)
         extension = filename.rsplit(".", 1)[1].lower()
-        unique_filename = f"{uuid.uuid4().hex}.{extension}"
 
-        # Crear directorio si no existe
-        upload_folder = os.path.join(
-            current_app.config.get("UPLOAD_FOLDER", "uploads"), "manuales"
+        # Nombre único basado en código del activo
+        codigo_activo = (
+            secure_filename(activo.codigo) if activo.codigo else f"ACT{activo_id}"
         )
-        os.makedirs(upload_folder, exist_ok=True)
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        unique_filename = f"{codigo_activo}_{tipo}_{timestamp}.{extension}"
 
-        # Guardar archivo
-        file_path = os.path.join(upload_folder, unique_filename)
-        archivo.save(file_path)
+        # Subir archivo a Cloud Storage (o local en desarrollo)
+        file_url = upload_file(archivo, "manuales", unique_filename)
+
+        if not file_url:
+            raise Exception("Error al subir el archivo")
 
         # Crear registro en base de datos
         manual = Manual(
@@ -76,7 +79,7 @@ def crear_manual(activo_id, archivo, tipo, descripcion):
             nombre_unico=unique_filename,
             tipo=tipo,
             descripcion=descripcion,
-            ruta_archivo=file_path,
+            ruta_archivo=file_url,  # Ahora es URL de GCS o path local
             tamano=size,
             extension=extension,
             fecha_subida=datetime.utcnow(),
@@ -89,9 +92,12 @@ def crear_manual(activo_id, archivo, tipo, descripcion):
 
     except Exception as e:
         db.session.rollback()
-        # Eliminar archivo si se creó
-        if "file_path" in locals() and os.path.exists(file_path):
-            os.remove(file_path)
+        # Si hubo error, intentar eliminar archivo
+        if "file_url" in locals() and file_url:
+            try:
+                delete_file(file_url, "manuales")
+            except:
+                pass  # Ignorar errores de limpieza
         raise Exception(f"Error al crear manual: {str(e)}")
 
 
@@ -102,6 +108,14 @@ def descargar_manual_archivo(manual_id):
         if not manual:
             raise Exception("Manual no encontrado")
 
+        # Si es GCS, generar URL firmada y redirigir
+        if manual.ruta_archivo.startswith("gs://"):
+            url = get_signed_url(
+                manual.ruta_archivo, "manuales", expiration=300
+            )  # 5 min
+            return redirect(url)
+
+        # Si es local, verificar existencia y enviar
         if not os.path.exists(manual.ruta_archivo):
             raise Exception("Archivo no encontrado en el servidor")
 
@@ -123,12 +137,20 @@ def previsualizar_manual_archivo(manual_id):
         if not manual:
             raise Exception("Manual no encontrado")
 
-        if not os.path.exists(manual.ruta_archivo):
-            raise Exception("Archivo no encontrado en el servidor")
-
         # Solo permitir previsualización de ciertos tipos
         if manual.extension.lower() not in ["pdf", "png", "jpg", "jpeg"]:
             raise Exception("Tipo de archivo no soportado para previsualización")
+
+        # Si es GCS, generar URL firmada y redirigir
+        if manual.ruta_archivo.startswith("gs://"):
+            url = get_signed_url(
+                manual.ruta_archivo, "manuales", expiration=3600
+            )  # 1 hora
+            return redirect(url)
+
+        # Si es local, verificar y enviar
+        if not os.path.exists(manual.ruta_archivo):
+            raise Exception("Archivo no encontrado en el servidor")
 
         # Determinar mimetype
         mimetypes = {
@@ -153,9 +175,9 @@ def eliminar_manual_archivo(manual_id):
         if not manual:
             raise Exception("Manual no encontrado")
 
-        # Eliminar archivo físico
-        if os.path.exists(manual.ruta_archivo):
-            os.remove(manual.ruta_archivo)
+        # Eliminar archivo (de GCS o local)
+        if manual.ruta_archivo:
+            delete_file(manual.ruta_archivo, "manuales")
 
         # Eliminar registro de base de datos
         db.session.delete(manual)

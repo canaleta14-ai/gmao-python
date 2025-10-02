@@ -40,7 +40,11 @@ flatbuffers==25.9.23
 fsspec==2025.9.0
 google-api-core==2.25.1
 google-auth==2.40.3
+google-cloud-core==2.4.3
 google-cloud-secret-manager==2.24.0
+google-cloud-storage==2.18.2
+google-crc32c==1.7.1
+google-resumable-media==2.7.2
 googleapis-common-protos==1.70.0
 greenlet==3.2.4
 grpc-google-iam-v1==0.14.2
