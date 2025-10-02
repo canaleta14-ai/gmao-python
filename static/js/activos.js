@@ -320,9 +320,6 @@ function mostrarActivos(activosAMostrar) {
                     <button class="btn btn-sm btn-outline-info action-btn info" onclick="gestionarManuales(${activo.id})" title="Manuales">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarActivo(${activo.id})" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
                     <button class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarActivo(${activo.id}, '${activo.nombre}')" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>

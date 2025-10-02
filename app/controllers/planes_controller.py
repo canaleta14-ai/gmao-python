@@ -24,17 +24,35 @@ def calcular_proxima_ejecucion(data, fecha_base=None):
             # Día específico del mes (ej: día 15 de cada mes)
             dia_mes = int(data.get("dia_mes", 1))
 
-            # Calcular el próximo mes
-            fecha_objetivo = fecha_base.replace(day=1) + timedelta(days=32)
-            fecha_objetivo = fecha_objetivo.replace(day=1)  # Primer día del próximo mes
+            # Primero intentar con el mes actual
+            año_actual = fecha_base.year
+            mes_actual = fecha_base.month
 
-            # Ajustar el día específico
-            ultimo_dia_mes = calendar.monthrange(
-                fecha_objetivo.year, fecha_objetivo.month
-            )[1]
-            dia_final = min(dia_mes, ultimo_dia_mes)
+            # Verificar el último día del mes actual
+            ultimo_dia_mes_actual = calendar.monthrange(año_actual, mes_actual)[1]
+            dia_final_actual = min(dia_mes, ultimo_dia_mes_actual)
 
-            proxima_ejecucion = fecha_objetivo.replace(day=dia_final)
+            # Crear fecha candidata en el mes actual
+            fecha_candidata = fecha_base.replace(day=dia_final_actual)
+
+            # Si la fecha ya pasó o es hoy mismo (queremos la próxima), ir al próximo mes
+            if fecha_candidata.date() <= fecha_base.date():
+                # Calcular el próximo mes
+                if mes_actual == 12:
+                    año_objetivo = año_actual + 1
+                    mes_objetivo = 1
+                else:
+                    año_objetivo = año_actual
+                    mes_objetivo = mes_actual + intervalo_meses
+
+                # Ajustar el día específico para el próximo mes
+                ultimo_dia_mes = calendar.monthrange(año_objetivo, mes_objetivo)[1]
+                dia_final = min(dia_mes, ultimo_dia_mes)
+
+                proxima_ejecucion = datetime(año_objetivo, mes_objetivo, dia_final)
+            else:
+                # La fecha está en el futuro dentro del mes actual
+                proxima_ejecucion = fecha_candidata
 
         elif tipo_mensual == "dia_semana_mes":
             # Día específico de una semana específica (ej: primer sábado de cada mes)
@@ -357,6 +375,29 @@ def crear_plan(data):
     proxima_ejecucion = calcular_proxima_ejecucion(data)
     print(f"DEBUG crear_plan - Próxima ejecución calculada: {proxima_ejecucion}")
 
+    # Validar que no exista otro plan para el mismo activo en la misma fecha
+    if data.get("activo_id") and proxima_ejecucion:
+        from datetime import datetime, timedelta
+
+        # Verificar si hay otro plan para el mismo activo en la misma fecha (mismo día)
+        fecha_inicio = proxima_ejecucion.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        fecha_fin = fecha_inicio + timedelta(days=1)
+
+        plan_duplicado = PlanMantenimiento.query.filter(
+            PlanMantenimiento.activo_id == data.get("activo_id"),
+            PlanMantenimiento.proxima_ejecucion >= fecha_inicio,
+            PlanMantenimiento.proxima_ejecucion < fecha_fin,
+        ).first()
+
+        if plan_duplicado:
+            raise ValueError(
+                f"Ya existe un plan de mantenimiento para este activo "
+                f"programado para el {proxima_ejecucion.strftime('%d/%m/%Y')}. "
+                f"Plan existente: {plan_duplicado.codigo_plan} - {plan_duplicado.nombre}"
+            )
+
     # Mantener compatibilidad con el campo frecuencia_dias para frecuencias simples
     frecuencias_dias = {
         "Diario": 1,
@@ -468,6 +509,60 @@ def editar_plan(plan_id, data):
             raise ValueError(f"Ya existe otro plan con el código '{data['codigo']}'")
         plan.codigo_plan = data["codigo"]
 
+    # Calcular nueva próxima ejecución si se modificaron campos de frecuencia
+    nueva_proxima_ejecucion = None
+    if any(
+        key in data
+        for key in [
+            "tipo_frecuencia",
+            "intervalo_semanas",
+            "dias_semana",
+            "tipo_mensual",
+            "dia_mes",
+            "semana_mes",
+            "dia_semana_mes",
+            "intervalo_meses",
+        ]
+    ):
+        nueva_proxima_ejecucion = calcular_proxima_ejecucion(data)
+
+        # Validar que no exista otro plan para el mismo activo en la misma fecha
+        # SOLO si la fecha cambió (no es la misma que tenía originalmente)
+        activo_id = data.get("activo_id", plan.activo_id)
+        if activo_id and nueva_proxima_ejecucion:
+            from datetime import timedelta
+
+            # Verificar si la fecha realmente cambió
+            fecha_original = (
+                plan.proxima_ejecucion.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+                if plan.proxima_ejecucion
+                else None
+            )
+            fecha_nueva = nueva_proxima_ejecucion.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+
+            # Solo validar duplicados si la fecha cambió
+            if fecha_original is None or fecha_original != fecha_nueva:
+                fecha_inicio = fecha_nueva
+                fecha_fin = fecha_inicio + timedelta(days=1)
+
+                plan_duplicado = PlanMantenimiento.query.filter(
+                    PlanMantenimiento.activo_id == activo_id,
+                    PlanMantenimiento.proxima_ejecucion >= fecha_inicio,
+                    PlanMantenimiento.proxima_ejecucion < fecha_fin,
+                    PlanMantenimiento.id != plan_id,  # Excluir el plan actual
+                ).first()
+
+                if plan_duplicado:
+                    raise ValueError(
+                        f"Ya existe un plan de mantenimiento para este activo "
+                        f"programado para el {nueva_proxima_ejecucion.strftime('%d/%m/%Y')}. "
+                        f"Plan existente: {plan_duplicado.codigo_plan} - {plan_duplicado.nombre}"
+                    )
+
     # Actualizar campos
     if "nombre" in data:
         plan.nombre = data["nombre"]
@@ -542,6 +637,10 @@ def editar_plan(plan_id, data):
     # Actualizar generación automática
     if "generacion_automatica" in data:
         plan.generacion_automatica = data["generacion_automatica"]
+
+    # Actualizar próxima ejecución si se calculó una nueva
+    if nueva_proxima_ejecucion:
+        plan.proxima_ejecucion = nueva_proxima_ejecucion
 
     db.session.commit()
     return plan
@@ -743,9 +842,13 @@ def asignar_tecnico_equilibrado():
     from app.models.usuario import Usuario
     from app.models.orden_trabajo import OrdenTrabajo
 
-    # Obtener todos los técnicos activos
+    # Obtener todos los técnicos activos (soporta tanto mayúsculas como minúsculas)
     tecnicos = Usuario.query.filter(
-        Usuario.activo == True, Usuario.rol.in_(["Técnico", "Supervisor"])
+        Usuario.activo == True,
+        db.or_(
+            Usuario.rol.in_(["tecnico", "supervisor"]),  # Minúsculas (actual)
+            Usuario.rol.in_(["Técnico", "Supervisor"]),  # Mayúsculas (legacy)
+        ),
     ).all()
 
     if not tecnicos:
@@ -777,6 +880,123 @@ def asignar_tecnico_equilibrado():
     )
 
     return tecnico_asignado["tecnico_id"]
+
+
+def generar_orden_individual(plan_id, usuario="Sistema"):
+    """
+    Genera una orden de trabajo individual para un plan específico
+    """
+    from app.models.orden_trabajo import OrdenTrabajo
+    from app.models.activo import Activo
+    import json
+
+    print(f"🔧 Generando orden individual para plan ID: {plan_id}")
+
+    # Obtener el plan
+    plan = PlanMantenimiento.query.get(plan_id)
+    if not plan:
+        raise ValueError(f"Plan {plan_id} no encontrado")
+
+    # Verificar si ya existe una orden pendiente para este plan
+    orden_existente = OrdenTrabajo.query.filter(
+        OrdenTrabajo.tipo == "Mantenimiento Preventivo",
+        OrdenTrabajo.activo_id == plan.activo_id,
+        OrdenTrabajo.descripcion.contains(f"Plan: {plan.codigo_plan}"),
+        OrdenTrabajo.estado.in_(["Pendiente", "En Proceso"]),
+    ).first()
+
+    if orden_existente:
+        raise ValueError(
+            f"Ya existe una orden pendiente ({orden_existente.numero_orden}) para este plan"
+        )
+
+    # Obtener información del activo
+    activo = None
+    if plan.activo_id:
+        activo = Activo.query.get(plan.activo_id)
+
+    # Asignar técnico de manera equilibrada
+    tecnico_id = asignar_tecnico_equilibrado()
+
+    # Usar la próxima ejecución del plan como fecha programada
+    ahora = datetime.now()
+    fecha_programada = (
+        plan.proxima_ejecucion.date() if plan.proxima_ejecucion else ahora.date()
+    )
+
+    # Crear nueva orden de trabajo
+    nueva_orden = OrdenTrabajo(
+        tipo="Mantenimiento Preventivo",
+        prioridad="Media",
+        estado="Pendiente",
+        descripcion=f"Mantenimiento preventivo - Plan: {plan.codigo_plan} - {plan.nombre}",
+        fecha_creacion=ahora,
+        fecha_programada=fecha_programada,
+        activo_id=plan.activo_id,
+        tecnico_id=tecnico_id,
+        tiempo_estimado=(
+            plan.tiempo_estimado if hasattr(plan, "tiempo_estimado") else None
+        ),
+        observaciones=f"Orden generada manualmente por {usuario}.\n\nInstrucciones:\n{plan.instrucciones or 'Sin instrucciones específicas'}",
+    )
+
+    # Generar número de orden único
+    nuevo_numero = generar_numero_orden()
+    nueva_orden.numero_orden = nuevo_numero
+
+    # Agregar orden a la sesión
+    db.session.add(nueva_orden)
+
+    print(f"✅ Orden creada: {nuevo_numero} para plan {plan.codigo_plan}")
+
+    # Actualizar próxima ejecución del plan
+    try:
+        # Usar la configuración del plan para calcular próxima ejecución
+        configuracion = {
+            "tipo_frecuencia": plan.tipo_frecuencia,
+            "dias_semana": json.loads(plan.dias_semana) if plan.dias_semana else [],
+            "intervalo_semanas": plan.intervalo_semanas or 1,
+            "tipo_mensual": plan.tipo_mensual,
+            "dia_mes": plan.dia_mes,
+            "semana_mes": plan.semana_mes,
+            "dia_semana_mes": plan.dia_semana_mes,
+            "intervalo_meses": plan.intervalo_meses or 1,
+        }
+
+        print(f"🔍 DEBUG - Configuración del plan {plan.codigo_plan}:")
+        print(f"   tipo_frecuencia: {plan.tipo_frecuencia}")
+        print(
+            f"   frecuencia (legacy): {plan.frecuencia if hasattr(plan, 'frecuencia') else 'N/A'}"
+        )
+        print(f"   fecha_base (ahora): {ahora.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        nueva_proxima = calcular_proxima_ejecucion(configuracion, ahora)
+        plan.proxima_ejecucion = nueva_proxima
+        plan.ultima_ejecucion = ahora
+
+        print(
+            f"📅 Próxima ejecución actualizada: {nueva_proxima.strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+
+    except Exception as e:
+        print(f"⚠️ Error calculando próxima ejecución para plan {plan.codigo_plan}: {e}")
+        # Fallback por defecto
+        if plan.tipo_frecuencia == "diaria" or plan.frecuencia == "Diario":
+            plan.proxima_ejecucion = ahora + timedelta(days=1)
+        else:
+            plan.proxima_ejecucion = ahora + timedelta(days=7)
+
+    # Guardar cambios
+    db.session.commit()
+
+    return {
+        "success": True,
+        "orden_id": nueva_orden.id,
+        "numero_orden": nueva_orden.numero_orden,
+        "plan_codigo": plan.codigo_plan,
+        "activo_nombre": activo.nombre if activo else "Sin activo",
+        "descripcion": nueva_orden.descripcion,
+    }
 
 
 def generar_ordenes_manuales(usuario="Sistema"):

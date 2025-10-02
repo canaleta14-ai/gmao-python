@@ -528,11 +528,6 @@ function actualizarTablaArticulos(articulos) {
             <td><span class="badge ${estadoBadge}">${estadoText}</span></td>
             <td class="text-center">
                 <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarArticulo(${
-                      articulo.id
-                    })" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
                     <button type="button" class="btn btn-sm btn-outline-success action-btn special" onclick="mostrarModalMovimiento(${
                       articulo.id
                     }, '${articulo.codigo}', '${
@@ -992,10 +987,13 @@ function validarStockParaSalida(articulo) {
 // Motivos predefinidos por tipo de movimiento
 const MOTIVOS_POR_TIPO = {
   entrada: [
-    "Consumido",
-    "Rotura",
-    "Falta",
-    "Sobra"
+    "Compra",
+    "Devolución de cliente",
+    "Devolución a proveedor",
+    "Ajuste por inventario",
+    "Transferencia desde otra ubicación",
+    "Producción interna",
+    "Donación recibida"
   ],
   salida: [
     "Consumido",

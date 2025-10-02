@@ -144,14 +144,26 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js"></script>
 
 <script>
+  // Versión del script para verificar caché
+  console.log('🔧 Calendario Script v3.0 - Punto medio del rango');
+  
   document.addEventListener("DOMContentLoaded", function () {
+    console.log('📅 Inicializando calendario FullCalendar...');
     const calendarEl = document.getElementById("calendario");
+    
+    // Obtener fecha actual
+    const hoy = new Date();
+    console.log(`📆 Fecha actual: ${hoy.toLocaleDateString('es-ES')} (Mes: ${hoy.getMonth() + 1})`);
+
+    // Variable local para el calendario
     let calendar;
 
-    // Inicializar calendario
+    // Inicializar calendario (variable global para acceso desde consola)
     calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: "dayGridMonth",
+      initialDate: hoy, // Forzar fecha inicial a hoy
       locale: "es",
+      timeZone: 'local', // Usar zona horaria local
       headerToolbar: {
         left: "prev,next today",
         center: "title",
@@ -175,30 +187,68 @@
       },
       datesSet: function (info) {
         // Se ejecuta cuando cambia el mes/vista
+        console.log(`📅 datesSet llamado: ${info.start.toLocaleDateString('es-ES')} a ${info.end.toLocaleDateString('es-ES')}`);
         cargarEstadisticas(info.start);
       },
+      eventDidMount: function(info) {
+        console.log('🎨 Evento renderizado:', info.event.title, info.event.startStr);
+      },
+      loading: function(isLoading) {
+        if (isLoading) {
+          console.log('⏳ Cargando eventos del calendario...');
+        } else {
+          console.log('✅ Eventos cargados');
+        }
+      }
     });
 
-    calendar.render();
+    // Asignar a window DESPUÉS de crear el calendario
+    window.calendar = calendar;
+
+    window.calendar.render();
+    console.log('✅ Calendario renderizado');
 
     // Funciones auxiliares
     function cargarEventos(start, end, successCallback, failureCallback) {
-      fetch(
-        `/calendario/api/ordenes?year=${start.getFullYear()}&month=${
-          start.getMonth() + 1
-        }`
-      )
-        .then((response) => response.json())
+      // FullCalendar pasa el rango completo que incluye días del mes anterior/siguiente
+      // Para obtener el mes correcto, calculamos el punto medio del rango
+      const rangoMs = end.getTime() - start.getTime();
+      const puntoMedio = new Date(start.getTime() + rangoMs / 2);
+      
+      const year = puntoMedio.getFullYear();
+      const month = puntoMedio.getMonth() + 1; // 0-11 a 1-12
+      const url = `/calendario/api/ordenes?year=${year}&month=${month}`;
+      
+      console.log(`📡 Cargando eventos: ${url}`);
+      console.log(`   Punto medio del rango: ${puntoMedio.toLocaleDateString('es-ES')} (${month}/${year})`);
+      console.log(`   Rango FullCalendar: ${start.toLocaleDateString('es-ES')} - ${end.toLocaleDateString('es-ES')}`);
+      
+      fetch(url)
+        .then((response) => {
+          // Verificar si la respuesta es JSON o HTML (redirect a login)
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('⚠️ Respuesta no es JSON - Posible sesión expirada');
+            console.log('🔄 Recargando página para renovar sesión...');
+            setTimeout(() => location.reload(), 2000);
+            throw new Error('Sesión expirada - recargando página');
+          }
+          return response.json();
+        })
         .then((data) => {
           if (data.success) {
+            console.log(`✅ ${data.eventos.length} eventos recibidos de la API`);
+            if (data.eventos.length > 0) {
+              console.log('   Eventos:', data.eventos.map(e => `${e.title} (${e.start})`).join(', '));
+            }
             successCallback(data.eventos);
           } else {
-            console.error("Error cargando eventos:", data.error);
+            console.error("❌ Error cargando eventos:", data.error);
             failureCallback(data.error);
           }
         })
         .catch((error) => {
-          console.error("Error en la petición:", error);
+          console.error("❌ Error en la petición:", error);
           failureCallback(error);
         });
     }
@@ -282,36 +332,41 @@
 
     // Funciones globales
     window.generarOrdenesHoy = function () {
-      if (
-        confirm("¿Generar órdenes para todos los planes vencidos hasta hoy?")
-      ) {
-        const hoy = new Date().toISOString().split("T")[0];
+      showConfirmModal({
+        title: "Generar Órdenes de Trabajo",
+        message: "¿Generar órdenes para todos los planes vencidos hasta hoy?",
+        confirmText: "Sí, generar",
+        cancelText: "Cancelar",
+        type: "warning",
+        onConfirm: function () {
+          const hoy = new Date().toISOString().split("T")[0];
 
-        fetch(`/calendario/api/generar-ordenes-fecha?fecha=${hoy}`)
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              const ordenes = data.ordenes_generadas || 0;
-              mostrarMensaje(
-                `✅ Se generaron ${ordenes} órdenes correctamente`,
-                "success"
-              );
-              calendar.refetchEvents();
-              cargarEstadisticas(calendar.getDate());
-            } else {
-              mostrarMensaje(`❌ Error: ${data.error}`, "danger");
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            mostrarMensaje("❌ Error de conexión", "danger");
-          });
-      }
+          fetch(`/calendario/api/generar-ordenes-fecha?fecha=${hoy}`)
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                const ordenes = data.ordenes_generadas || 0;
+                mostrarMensaje(
+                  `✅ Se generaron ${ordenes} órdenes correctamente`,
+                  "success"
+                );
+                window.calendar.refetchEvents();
+                cargarEstadisticas(window.calendar.getDate());
+              } else {
+                mostrarMensaje(`❌ Error: ${data.error}`, "danger");
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              mostrarMensaje("❌ Error de conexión", "danger");
+            });
+        }
+      });
     };
 
     window.actualizarCalendario = function () {
-      calendar.refetchEvents();
-      cargarEstadisticas(calendar.getDate());
+      window.calendar.refetchEvents();
+      cargarEstadisticas(window.calendar.getDate());
       mostrarMensaje("🔄 Calendario actualizado", "info");
     };
 

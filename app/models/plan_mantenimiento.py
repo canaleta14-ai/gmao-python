@@ -20,7 +20,9 @@ class PlanMantenimiento(db.Model):
 
     # Configuración semanal
     intervalo_semanas = db.Column(db.Integer)
-    dias_semana = db.Column(db.String(50))  # JSON string de días seleccionados
+    dias_semana = db.Column(
+        db.String(200)
+    )  # JSON string de días seleccionados (aumentado de 50 a 200)
 
     # Configuración mensual
     tipo_mensual = db.Column(db.String(20))  # 'dia_mes' o 'dia_semana_mes'

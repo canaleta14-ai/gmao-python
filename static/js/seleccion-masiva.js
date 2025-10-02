@@ -213,7 +213,11 @@ class SeleccionMasiva {
       cancelText: 'Cancelar',
       type: 'warning',
       onConfirm: () => {
-        callback(seleccionados);
+        if (typeof callback === 'function') {
+          callback(seleccionados);
+        } else {
+          console.warn('⚠️ Callback no proporcionado para acción masiva');
+        }
         this.limpiarSeleccion();
       }
     });

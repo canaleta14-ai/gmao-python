@@ -21,6 +21,7 @@ from app.extensions import db  # Importar db correctamente desde extensions
 from app.models.activo import Activo
 from app.models.inventario import Inventario
 from app.models.plan_mantenimiento import PlanMantenimiento
+from app.models.usuario import Usuario
 from datetime import datetime, timedelta
 import os
 
@@ -38,10 +39,211 @@ def health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 
+@web_bp.route("/admin/asignar-tecnicos", methods=["POST"])
+@login_required
+def asignar_tecnicos_masivo():
+    """Endpoint de administración para asignar técnicos a órdenes sin técnico"""
+
+    # Solo administradores pueden ejecutar esto
+    if current_user.rol != "administrador":
+        return jsonify({"error": "Acceso denegado. Solo administradores."}), 403
+
+    try:
+        # Buscar órdenes sin técnico
+        ordenes_sin_tecnico = OrdenTrabajo.query.filter(
+            OrdenTrabajo.tecnico_id == None
+        ).all()
+
+        if not ordenes_sin_tecnico:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "No hay órdenes sin técnico asignado",
+                    "asignadas": 0,
+                }
+            )
+
+        # Verificar que hay técnicos disponibles
+        tecnicos_activos = Usuario.query.filter_by(rol="tecnico", activo=True).count()
+
+        if tecnicos_activos == 0:
+            return jsonify({"error": "No hay técnicos activos en el sistema"}), 400
+
+        asignadas = 0
+        detalles = []
+
+        for orden in ordenes_sin_tecnico:
+            # Usar el mismo algoritmo de balanceo de carga
+            tecnicos = Usuario.query.filter_by(rol="tecnico", activo=True).all()
+
+            # Contar órdenes pendientes por técnico
+            carga_tecnicos = {}
+            for tecnico in tecnicos:
+                ordenes_pendientes = OrdenTrabajo.query.filter(
+                    OrdenTrabajo.tecnico_id == tecnico.id,
+                    OrdenTrabajo.estado.in_(["Pendiente", "En Proceso"]),
+                ).count()
+                carga_tecnicos[tecnico.id] = ordenes_pendientes
+
+            # Asignar al técnico con menos carga
+            tecnico_id = min(carga_tecnicos, key=carga_tecnicos.get)
+            tecnico = Usuario.query.get(tecnico_id)
+
+            orden.tecnico_id = tecnico_id
+            asignadas += 1
+
+            detalles.append(
+                {
+                    "orden_id": orden.id,
+                    "numero_orden": orden.numero_orden,
+                    "tecnico": tecnico.nombre,
+                }
+            )
+
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Se asignaron técnicos a {asignadas} órdenes",
+                "asignadas": asignadas,
+                "detalles": detalles[:10],  # Mostrar solo las primeras 10
+            }
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@web_bp.route("/admin/asignar-tecnicos-page")
+@login_required
+def asignar_tecnicos_page():
+    """Página de administración para asignar técnicos"""
+    if current_user.rol != "administrador":
+        flash("Acceso denegado. Solo administradores.", "danger")
+        return redirect(url_for("web_routes.dashboard"))
+
+    return render_template("admin/asignar-tecnicos.html")
+
+
+@web_bp.route("/admin/hacerme-admin", methods=["POST"])
+@login_required
+def hacerme_admin():
+    """Endpoint temporal para convertir al usuario actual en administrador"""
+    try:
+        # Actualizar rol del usuario actual
+        current_user.rol = "administrador"
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Usuario '{current_user.username}' es ahora ADMINISTRADOR",
+                "nuevo_rol": current_user.rol,
+            }
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@web_bp.route("/admin/hacerme-tecnico", methods=["POST"])
+@login_required
+def hacerme_tecnico():
+    """Endpoint temporal para convertir al usuario actual en técnico"""
+    try:
+        # Actualizar rol del usuario actual
+        current_user.rol = "tecnico"
+        current_user.activo = True
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Usuario '{current_user.username}' es ahora TÉCNICO ACTIVO",
+                "nuevo_rol": current_user.rol,
+            }
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@web_bp.route("/admin/crear-tecnico-demo", methods=["POST"])
+@login_required
+def crear_tecnico_demo():
+    """Endpoint temporal para crear un técnico de demostración"""
+    try:
+        # Verificar si ya existe un técnico activo
+        tecnico_existente = Usuario.query.filter_by(rol="tecnico", activo=True).first()
+
+        if tecnico_existente:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": f"Ya existe un técnico activo: {tecnico_existente.nombre}",
+                    "tecnico": tecnico_existente.nombre,
+                }
+            )
+
+        # Crear técnico demo
+        from werkzeug.security import generate_password_hash
+
+        tecnico_demo = Usuario(
+            username="tecnico_demo",
+            nombre="Técnico Demo",
+            email="tecnico@demo.com",
+            password=generate_password_hash("demo123"),
+            rol="tecnico",
+            activo=True,
+        )
+
+        db.session.add(tecnico_demo)
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Técnico demo creado: {tecnico_demo.nombre}",
+                "tecnico": tecnico_demo.nombre,
+            }
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
 @web_bp.route("/test-dashboard")
 def test_dashboard():
     """Página de test independiente para diagnosticar problemas"""
     return render_template("test-dashboard.html")
+
+
+@web_bp.route("/admin/migrate-dias-semana", methods=["POST"])
+def migrate_dias_semana():
+    """Endpoint temporal para migrar el campo dias_semana a VARCHAR(200)"""
+    try:
+        sql = """
+        ALTER TABLE plan_mantenimiento 
+        ALTER COLUMN dias_semana TYPE VARCHAR(200);
+        """
+
+        db.session.execute(db.text(sql))
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Campo dias_semana migrado exitosamente a VARCHAR(200)",
+            }
+        )
+    except Exception as e:
+        db.session.rollback()
+        return (
+            jsonify({"success": False, "error": f"Error en migración: {str(e)}"}),
+            500,
+        )
 
 
 @web_bp.route("/test-notificaciones")

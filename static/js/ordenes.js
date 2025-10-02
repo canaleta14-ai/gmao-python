@@ -152,11 +152,6 @@ function mostrarOrdenes() {
                     })" title="Ver detalles">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarOrden(${
-                      orden.id
-                    })" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
                     <button type="button" class="btn btn-sm btn-outline-info action-btn info" onclick="mostrarModalEstado(${
                       orden.id
                     })" title="Cambiar estado">
@@ -522,7 +517,8 @@ async function cargarTecnicos() {
       // Filtrar solo usuarios activos con roles apropiados
       tecnicos = data.usuarios.filter((usuario) => {
         const esActivo = usuario.estado === "Activo";
-        const rolValido = ["Técnico", "Administrador"].includes(usuario.rol);
+        // Soporte para minúsculas y mayúsculas
+        const rolValido = ["tecnico", "supervisor", "administrador", "Técnico", "Supervisor", "Administrador"].includes(usuario.rol);
         return esActivo && rolValido;
       });
 
@@ -790,11 +786,6 @@ function mostrarOrdenesFiltradas(ordenesFiltradas) {
                     })" title="Ver detalles">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarOrden(${
-                      orden.id
-                    })" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
                     <button type="button" class="btn btn-sm btn-outline-info action-btn info" onclick="mostrarModalEstado(${
                       orden.id
                     })" title="Cambiar estado">
@@ -992,7 +983,7 @@ window.debugTecnicos = async function () {
       console.log("Técnicos activos:", tecnicosActivos);
 
       const tecnicosValidos = tecnicosActivos.filter((u) =>
-        ["Técnico", "Administrador"].includes(u.rol)
+        ["tecnico", "supervisor", "administrador", "Técnico", "Supervisor", "Administrador"].includes(u.rol)
       );
       console.log("Técnicos válidos:", tecnicosValidos);
     }

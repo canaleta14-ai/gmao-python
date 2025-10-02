@@ -26,20 +26,37 @@ def obtener_ordenes_calendario():
         year = request.args.get("year", datetime.now().year, type=int)
         month = request.args.get("month", datetime.now().month, type=int)
 
-        # Calcular rango de fechas para el mes
-        primer_dia = datetime(year, month, 1)
+        # Calcular rango de fechas para el mes (incluyendo todo el día)
+        primer_dia = datetime(year, month, 1, 0, 0, 0)
         if month == 12:
-            ultimo_dia = datetime(year + 1, 1, 1) - timedelta(days=1)
+            ultimo_dia = datetime(year + 1, 1, 1, 23, 59, 59)
         else:
-            ultimo_dia = datetime(year, month + 1, 1) - timedelta(days=1)
+            ultimo_dia = datetime(year, month + 1, 1, 23, 59, 59)
+
+        print(
+            f"🔍 DEBUG Calendario - Buscando órdenes entre {primer_dia} y {ultimo_dia}"
+        )
 
         # Obtener órdenes del mes
+        # Buscar tanto por fecha_programada como por fecha_creacion
         ordenes = OrdenTrabajo.query.filter(
-            and_(
-                OrdenTrabajo.fecha_programada >= primer_dia,
-                OrdenTrabajo.fecha_programada <= ultimo_dia,
+            or_(
+                and_(
+                    OrdenTrabajo.fecha_programada >= primer_dia,
+                    OrdenTrabajo.fecha_programada <= ultimo_dia,
+                ),
+                and_(
+                    OrdenTrabajo.fecha_creacion >= primer_dia,
+                    OrdenTrabajo.fecha_creacion <= ultimo_dia,
+                ),
             )
         ).all()
+
+        print(f"📊 DEBUG Calendario - Encontradas {len(ordenes)} órdenes")
+        for orden in ordenes[:10]:  # Mostrar primeras 10 para debug
+            print(
+                f"   - {orden.numero_orden}: ID={orden.id}, Programada={orden.fecha_programada}, Creada={orden.fecha_creacion}, Estado={orden.estado}"
+            )
 
         # Obtener planes próximos (para mostrar futuras generaciones)
         planes_proximos = PlanMantenimiento.query.filter(
@@ -63,17 +80,47 @@ def obtener_ordenes_calendario():
                 orden.estado, "#6c757d"
             )  # Gris por defecto
 
+            # Usar fecha_programada si existe, si no usar fecha_creacion
+            fecha_evento = (
+                orden.fecha_programada
+                if orden.fecha_programada
+                else orden.fecha_creacion
+            )
+
+            # Convertir a formato ISO para FullCalendar
+            fecha_iso = None
+            if fecha_evento:
+                try:
+                    if isinstance(fecha_evento, datetime):
+                        fecha_iso = fecha_evento.date().isoformat()
+                    elif isinstance(fecha_evento, str):
+                        # Si ya es string, intentar parsearlo
+                        dt = datetime.fromisoformat(fecha_evento.replace("Z", "+00:00"))
+                        fecha_iso = dt.date().isoformat()
+                    else:
+                        # Asumir que es objeto date
+                        fecha_iso = fecha_evento.isoformat()
+
+                    print(
+                        f"   📅 {orden.numero_orden}: fecha_evento={fecha_evento} -> fecha_iso={fecha_iso}"
+                    )
+                except Exception as e:
+                    print(
+                        f"   ⚠️ Error convirtiendo fecha para {orden.numero_orden}: {e}"
+                    )
+                    fecha_iso = None
+
+            if not fecha_iso:
+                print(f"   ❌ {orden.numero_orden}: Sin fecha válida, saltando...")
+                continue
+
             eventos.append(
                 {
                     "id": f"orden-{orden.id}",
                     "title": f"{orden.numero_orden}",
                     "description": orden.descripcion[:50]
                     + ("..." if len(orden.descripcion) > 50 else ""),
-                    "start": (
-                        orden.fecha_programada.isoformat()
-                        if orden.fecha_programada
-                        else None
-                    ),
+                    "start": fecha_iso,
                     "backgroundColor": color,
                     "borderColor": color,
                     "tipo": "orden",
@@ -100,6 +147,10 @@ def obtener_ordenes_calendario():
                     "frecuencia": plan.frecuencia,
                 }
             )
+
+        print(
+            f"✅ DEBUG Calendario - Total eventos creados: {len(eventos)} (órdenes: {len([e for e in eventos if e['tipo'] == 'orden'])}, planes: {len([e for e in eventos if e['tipo'] == 'plan_futuro'])})"
+        )
 
         return jsonify(
             {

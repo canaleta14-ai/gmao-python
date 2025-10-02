@@ -409,11 +409,6 @@ function renderPlanes(planes) {
                         })">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary action-btn edit" title="Editar" onclick="editPlan(${
-                          plan.id
-                        })">
-                            <i class="bi bi-pencil"></i>
-                        </button>
                         <button class="btn btn-sm btn-outline-danger action-btn delete" title="Eliminar" onclick="deletePlan(${
                           plan.id
                         }, '${plan.codigo}')">

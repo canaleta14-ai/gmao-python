@@ -173,9 +173,6 @@ function mostrarProveedores(proveedoresAMostrar) {
                     <button class="btn btn-sm ${proveedor.activo ? 'btn-outline-warning' : 'btn-outline-success'} action-btn toggle" onclick="toggleProveedor(${proveedor.id})" title="${proveedor.activo ? 'Desactivar' : 'Activar'}">
                         <i class="bi ${proveedor.activo ? 'bi-toggle-off' : 'bi-toggle-on'}"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarProveedor(${proveedor.id})" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
                     <button class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarProveedor(${proveedor.id}, '${proveedor.nombre}')" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>

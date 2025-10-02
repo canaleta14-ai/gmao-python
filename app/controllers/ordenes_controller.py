@@ -22,7 +22,8 @@ def listar_ordenes(estado=None, limit=None):
     if estado:
         query = query.filter_by(estado=estado)
 
-    query = query.order_by(OrdenTrabajo.fecha_creacion.desc())
+    # Ordenar por número de orden (ascendente) - de la OT-001 en adelante
+    query = query.order_by(OrdenTrabajo.numero_orden.asc())
 
     if limit:
         try:
@@ -107,8 +108,8 @@ def listar_ordenes_paginado(
             )
         )
 
-    # Ordenamiento por fecha de creación descendente
-    query = query.order_by(OrdenTrabajo.fecha_creacion.desc())
+    # Ordenamiento por número de orden ascendente (OT-001, OT-002, etc.)
+    query = query.order_by(OrdenTrabajo.numero_orden.asc())
 
     # Paginación
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
