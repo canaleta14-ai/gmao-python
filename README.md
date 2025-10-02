@@ -1,5 +1,10 @@
 # Sistema de Gestión de Mantenimiento (GMAO)
 
+[![CI/CD Pipeline](https://github.com/canaleta14-ai/gmao-sistema/actions/workflows/ci.yml/badge.svg)](https://github.com/canaleta14-ai/gmao-sistema/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/canaleta14-ai/gmao-sistema/branch/master/graph/badge.svg)](https://codecov.io/gh/canaleta14-ai/gmao-sistema)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Un sistema completo de gestión de mantenimiento asistido por ordenador (GMAO) desarrollado con Flask y SQLAlchemy.
 
 ## 🚀 Inicio Rápido

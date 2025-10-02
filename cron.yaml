@@ -1,0 +1,14 @@
+cron:
+# Generación diaria de órdenes preventivas
+- description: "Generar órdenes de mantenimiento preventivo"
+  url: /api/cron/generar-ordenes-preventivas
+  schedule: every day 00:00
+  timezone: America/Mexico_City
+  target: default
+  
+# Verificación semanal de alertas
+- description: "Verificar activos sin mantenimiento reciente"
+  url: /api/cron/verificar-alertas
+  schedule: every monday 08:00
+  timezone: America/Mexico_City
+  target: default

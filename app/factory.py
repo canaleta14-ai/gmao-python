@@ -264,6 +264,12 @@ def create_app():
     app.register_blueprint(solicitudes_admin_bp)
     app.register_blueprint(usuarios_controller)
 
+    # Registrar blueprint de cron (tareas programadas)
+    from app.routes.cron import cron_bp
+
+    app.register_blueprint(cron_bp)
+    app.logger.info("Blueprint de cron registrado")
+
     # Middleware para verificar sesión
     # @app.before_request
     # def check_session():

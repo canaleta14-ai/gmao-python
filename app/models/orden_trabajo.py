@@ -19,8 +19,14 @@ class OrdenTrabajo(db.Model):
     activo_id = db.Column(db.Integer, db.ForeignKey("activo.id"))
     tecnico_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
 
+    # Relación con plan de mantenimiento (opcional, para órdenes generadas automáticamente)
+    plan_mantenimiento_id = db.Column(
+        db.Integer, db.ForeignKey("plan_mantenimiento.id"), nullable=True
+    )
+
     # Nota: La relación 'activo' está definida en el modelo Activo con backref
     # Nota: La relación 'tecnico' está definida en el modelo Usuario con backref
+    # Nota: La relación 'plan_mantenimiento' se define con backref aquí abajo
 
     # Relación con archivos adjuntos
     archivos_adjuntos = db.relationship(
@@ -28,6 +34,11 @@ class OrdenTrabajo(db.Model):
         backref="orden_trabajo",
         lazy=True,
         cascade="all, delete-orphan",
+    )
+
+    # Relación con plan de mantenimiento
+    plan_mantenimiento = db.relationship(
+        "PlanMantenimiento", backref="ordenes_generadas", lazy=True
     )
 
     # Relación con recambios utilizados
