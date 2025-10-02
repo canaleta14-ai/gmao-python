@@ -27,6 +27,17 @@ import os
 web_bp = Blueprint("web_routes", __name__)
 
 
+@web_bp.route("/health")
+def health_check():
+    """Health check endpoint para App Engine"""
+    try:
+        # Verificar conexión a BD
+        db.session.execute(db.text("SELECT 1"))
+        return jsonify({"status": "healthy", "database": "connected"}), 200
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "error": str(e)}), 503
+
+
 @web_bp.route("/test-dashboard")
 def test_dashboard():
     """Página de test independiente para diagnosticar problemas"""
