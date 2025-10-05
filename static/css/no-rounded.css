@@ -1,44 +1,42 @@
 /* ============================================
-   ELIMINAR TODOS LOS BORDES REDONDEADOS
+   BORDES REDONDEADOS SUTILES Y PROFESIONALES
+   Diseño moderno 2025 - Balance entre profesionalismo y calidez
    Aplicar este archivo DESPUÉS de todos los demás CSS
    ============================================ */
 
-/* Selector universal para todos los elementos */
-*,
-*::before,
-*::after {
-  border-radius: 0 !important;
-}
+/* ============================================
+   CARDS Y CONTENEDORES PRINCIPALES
+   ============================================ */
 
-/* Elementos HTML básicos */
-html,
-body,
-div,
-span,
-img,
-button,
-input,
-textarea,
-select,
-label,
-form,
-table,
-thead,
-tbody,
-tr,
-td,
-th {
-  border-radius: 0 !important;
-}
-
-/* Clases de Bootstrap */
 .card,
+.stats-card,
+.filtros-container,
+.modal-content,
+.offcanvas,
+.popover,
+.toast {
+  border-radius: 8px !important;
+}
+
+/* Headers - Solo bordes superiores redondeados */
 .card-header,
+.modal-header,
+.filtros-header,
+.offcanvas-header {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+/* Footers - Solo bordes inferiores redondeados */
 .card-footer,
-.card-body,
-.card-img,
-.card-img-top,
-.card-img-bottom,
+.modal-footer,
+.offcanvas-footer {
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+
 .btn,
 .btn-primary,
 .btn-secondary,
@@ -48,7 +46,6 @@ th {
 .btn-info,
 .btn-light,
 .btn-dark,
-.btn-link,
 .btn-outline-primary,
 .btn-outline-secondary,
 .btn-outline-success,
@@ -57,24 +54,153 @@ th {
 .btn-outline-info,
 .btn-outline-light,
 .btn-outline-dark,
+.btn-link,
+.navbar-toggler,
+.dropdown-toggle {
+  border-radius: 6px !important;
+}
+
+/* Botones pequeños */
 .btn-sm,
-.btn-lg,
-.btn-group,
-.btn-group-sm,
-.btn-group-lg,
+.btn-lg {
+  border-radius: 6px !important;
+}
+
+/* ============================================
+   FORMULARIOS
+   ============================================ */
+
 .form-control,
 .form-select,
-.form-check-input,
-.input-group,
-.input-group-text,
-.input-group-prepend,
-.input-group-append,
-.modal,
-.modal-content,
-.modal-header,
-.modal-body,
-.modal-footer,
-.modal-dialog,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select {
+  border-radius: 6px !important;
+}
+
+/* Input groups */
+.input-group-text {
+  border-radius: 6px !important;
+}
+
+/* Input groups - Primer elemento */
+.input-group > .form-control:not(:last-child),
+.input-group > .form-select:not(:last-child),
+.input-group > .input-group-text:first-child {
+  border-radius: 6px 0 0 6px !important;
+}
+
+/* Input groups - Último elemento */
+.input-group > .form-control:not(:first-child),
+.input-group > .form-select:not(:first-child),
+.input-group > .input-group-text:last-child {
+  border-radius: 0 6px 6px 0 !important;
+}
+
+/* Input groups - Elemento único */
+.input-group > .form-control:only-child,
+.input-group > .form-select:only-child {
+  border-radius: 6px !important;
+}
+
+/* ============================================
+   BADGES Y PILLS
+   ============================================ */
+
+.badge {
+  border-radius: 12px !important;
+}
+
+.rounded-pill {
+  border-radius: 50rem !important;
+}
+
+/* ============================================
+   NAVEGACIÓN
+   ============================================ */
+
+.nav-pills .nav-link {
+  border-radius: 8px !important;
+}
+
+.nav-tabs .nav-link {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.breadcrumb {
+  border-radius: 8px !important;
+}
+
+/* ============================================
+   DROPDOWNS Y MENÚS
+   ============================================ */
+
+.dropdown-menu,
+.autocomplete-dropdown {
+  border-radius: 8px !important;
+}
+
+.dropdown-item:first-child,
+.autocomplete-item:first-child {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.dropdown-item:last-child,
+.autocomplete-item:last-child {
+  border-radius: 0 0 8px 8px !important;
+}
+
+.dropdown-item:only-child,
+.autocomplete-item:only-child {
+  border-radius: 8px !important;
+}
+
+/* ============================================
+   LISTAS
+   ============================================ */
+
+.list-group {
+  border-radius: 8px !important;
+}
+
+.list-group-item:first-child {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.list-group-item:last-child {
+  border-radius: 0 0 8px 8px !important;
+}
+
+.list-group-item:only-child {
+  border-radius: 8px !important;
+}
+
+/* ============================================
+   TABLAS
+   ============================================ */
+
+.table {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.table-responsive {
+  border-radius: 8px !important;
+}
+
+/* ============================================
+   ALERTS Y NOTIFICACIONES
+   ============================================ */
+
 .alert,
 .alert-primary,
 .alert-secondary,
@@ -83,265 +209,209 @@ th {
 .alert-warning,
 .alert-info,
 .alert-light,
-.alert-dark,
-.badge,
-.badge-primary,
-.badge-secondary,
-.badge-success,
-.badge-danger,
-.badge-warning,
-.badge-info,
-.badge-light,
-.badge-dark,
-.dropdown,
-.dropdown-menu,
-.dropdown-item,
-.dropdown-toggle,
-.dropdown-divider,
-.nav,
-.nav-tabs,
-.nav-pills,
-.nav-link,
-.navbar,
-.navbar-brand,
-.navbar-toggler,
-.navbar-nav,
-.pagination,
-.page-link,
-.page-item,
-.table,
-.table-bordered,
-.table-striped,
-.table-hover,
-.list-group,
-.list-group-item,
-.toast,
-.toast-header,
-.toast-body,
-.tooltip,
-.tooltip-inner,
-.popover,
-.popover-header,
-.popover-body,
-.progress,
-.progress-bar,
-.accordion,
-.accordion-item,
-.accordion-header,
-.accordion-button,
-.accordion-body,
-.breadcrumb,
-.breadcrumb-item,
-.offcanvas,
-.offcanvas-header,
-.offcanvas-body,
-.offcanvas-title {
-  border-radius: 0 !important;
+.alert-dark {
+  border-radius: 8px !important;
 }
 
-/* Clases de Bootstrap para bordes redondeados */
-.rounded,
-.rounded-top,
-.rounded-end,
-.rounded-bottom,
-.rounded-start,
-.rounded-circle,
-.rounded-pill,
-.rounded-0,
-.rounded-1,
-.rounded-2,
-.rounded-3,
-.rounded-4,
-.rounded-5 {
-  border-radius: 0 !important;
+/* ============================================
+   PAGINACIÓN
+   ============================================ */
+
+.pagination {
+  gap: 4px;
 }
 
-/* Clases personalizadas de la aplicación */
-.stats-card,
-.filtros-container,
-.filtros-header,
-.filtros-body,
-.filtros-collapse,
-.autocomplete-dropdown,
-.autocomplete-item,
-.avatar,
-.user-avatar,
-.profile-pic,
-.imagen-activo,
-.codigo-activo,
-.sidebar,
-.sidebar-header,
-.sidebar-footer,
-.main-content,
-.content-header,
-.search-box,
-.filter-box,
-.action-buttons,
-.status-badge,
-.priority-badge {
-  border-radius: 0 !important;
+.page-link {
+  border-radius: 6px !important;
 }
 
-/* Pseudoelementos */
-::before,
-::after {
-  border-radius: 0 !important;
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+  border-radius: 6px !important;
 }
 
-/* Estilos específicos para inputs y selects */
-input[type="text"],
-input[type="password"],
-input[type="email"],
-input[type="number"],
-input[type="tel"],
-input[type="url"],
-input[type="search"],
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="week"],
-input[type="file"],
-textarea,
-select {
-  border-radius: 0 !important;
+/* ============================================
+   ACCORDIONS
+   ============================================ */
+
+.accordion-item {
+  border-radius: 8px !important;
+  margin-bottom: 8px;
 }
 
-/* Elementos de formulario específicos */
-.form-control:focus,
-.form-select:focus,
-.btn:focus,
-.btn:hover,
-.btn:active {
-  border-radius: 0 !important;
+.accordion-button {
+  border-radius: 8px !important;
 }
 
-/* Tablas y sus elementos */
-.table thead th:first-child,
-.table tbody td:first-child,
-.table thead th:last-child,
-.table tbody td:last-child {
-  border-radius: 0 !important;
+.accordion-button:not(.collapsed) {
+  border-radius: 8px 8px 0 0 !important;
 }
 
-/* Cards específicas */
-.card-header:first-child,
-.card-footer:last-child {
-  border-radius: 0 !important;
+.accordion-collapse {
+  border-radius: 0 0 8px 8px !important;
 }
 
-/* Tooltips y popovers */
-.tooltip .tooltip-inner,
-.popover .popover-body,
-.popover .popover-header {
-  border-radius: 0 !important;
+/* ============================================
+   PROGRESS BARS
+   ============================================ */
+
+.progress {
+  border-radius: 8px !important;
 }
 
-/* Modales */
-.modal-content,
-.modal-header,
-.modal-footer {
-  border-radius: 0 !important;
-}
-
-/* Dropdowns */
-.dropdown-menu {
-  border-radius: 0 !important;
-}
-
-.dropdown-item:first-child,
-.dropdown-item:last-child {
-  border-radius: 0 !important;
-}
-
-/* Navegación */
-.nav-pills .nav-link,
-.nav-tabs .nav-link {
-  border-radius: 0 !important;
-}
-
-/* Paginación */
-.pagination .page-link,
-.pagination .page-item:first-child .page-link,
-.pagination .page-item:last-child .page-link {
-  border-radius: 0 !important;
-}
-
-/* Alertas */
-.alert {
-  border-radius: 0 !important;
-}
-
-/* Badges */
-.badge {
-  border-radius: 0 !important;
-}
-
-/* Progress bars */
-.progress,
 .progress-bar {
-  border-radius: 0 !important;
+  border-radius: 8px !important;
 }
 
-/* List groups */
-.list-group-item:first-child,
-.list-group-item:last-child {
-  border-radius: 0 !important;
-}
+/* ============================================
+   IMÁGENES Y AVATARES
+   ============================================ */
 
-/* Imágenes */
-img,
-.img-thumbnail,
-.img-fluid {
-  border-radius: 0 !important;
-}
-
-/* Avatares y fotos de perfil */
+/* Avatares circulares */
 .avatar,
-.user-avatar,
-.profile-picture,
-.profile-img {
-  border-radius: 0 !important;
+.rounded-circle {
+  border-radius: 50% !important;
 }
 
-/* Inputs de tipo checkbox y radio personalizados */
-.form-check-input {
-  border-radius: 0 !important;
+/* Imágenes en cards */
+.card-img,
+.card-img-top {
+  border-radius: 8px 8px 0 0 !important;
 }
 
-/* Botones con íconos */
-.btn i,
-.btn svg {
-  border-radius: 0 !important;
+.card-img-bottom {
+  border-radius: 0 0 8px 8px !important;
 }
 
-/* Spinner y loaders */
+/* Imágenes normales - Borde muy sutil */
+img:not(.avatar):not(.rounded-circle):not(.card-img):not(.card-img-top):not(.card-img-bottom) {
+  border-radius: 4px !important;
+}
+
+/* ============================================
+   TOOLTIPS
+   ============================================ */
+
+.tooltip-inner {
+  border-radius: 6px !important;
+}
+
+/* ============================================
+   SPINNERS Y LOADERS
+   ============================================ */
+
 .spinner-border,
 .spinner-grow {
+  border-radius: 50% !important;
+}
+
+/* ============================================
+   CLASES DE UTILIDAD ESPECÍFICAS
+   ============================================ */
+
+/* Redondeo completo */
+.rounded {
+  border-radius: 6px !important;
+}
+
+/* Redondeo en lados específicos */
+.rounded-top {
+  border-radius: 6px 6px 0 0 !important;
+}
+
+.rounded-bottom {
+  border-radius: 0 0 6px 6px !important;
+}
+
+.rounded-start {
+  border-radius: 6px 0 0 6px !important;
+}
+
+.rounded-end {
+  border-radius: 0 6px 6px 0 !important;
+}
+
+/* ============================================
+   ELEMENTOS PERSONALIZADOS DEL SISTEMA
+   ============================================ */
+
+/* Contenedor de filtros */
+.filtros-body {
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* Confirmation modal */
+.confirmation-modal .modal-content {
+  border-radius: 8px !important;
+}
+
+/* Stats cards específicos */
+.stats-card .card-body {
+  border-radius: 8px !important;
+}
+
+/* Sidebar si tiene bordes */
+.sidebar {
+  border-radius: 0 !important; /* Sidebar sin bordes para mantener layout */
+}
+
+/* Main content */
+.main-content {
+  border-radius: 0 !important; /* Sin bordes en contenedor principal */
+}
+
+/* ============================================
+   EXCEPCIONES - Elementos que NO deben tener bordes
+   ============================================ */
+
+/* Elementos de layout principal */
+html,
+body,
+.container,
+.container-fluid,
+.row,
+.col,
+div,
+span,
+[class*="col-"] {
   border-radius: 0 !important;
 }
 
-/* Toasts */
-.toast,
-.toast-header,
-.toast-body {
+/* Navbar */
+.navbar {
   border-radius: 0 !important;
 }
 
-/* Accordions */
-.accordion-button,
-.accordion-item {
+/* Tablas internas - solo el contenedor tiene bordes */
+table,
+thead,
+tbody,
+tr,
+td,
+th {
   border-radius: 0 !important;
 }
 
-/* Offcanvas */
-.offcanvas {
-  border-radius: 0 !important;
-}
+/* ============================================
+   NOTAS FINALES
+   ============================================ */
 
-/* Clases de utilidad adicionales */
-.shadow,
-.shadow-sm,
-.shadow-lg {
-  border-radius: 0 !important;
-}
+/*
+ * Este archivo implementa bordes redondeados sutiles y profesionales
+ * siguiendo las mejores prácticas de diseño web moderno.
+ * 
+ * Valores utilizados:
+ * - 4px: Imágenes (muy sutil)
+ * - 6px: Botones, inputs, páginas (sutil pero visible)
+ * - 8px: Cards, modales, dropdowns (balance perfecto)
+ * - 12px: Badges (pill-like)
+ * - 50%/50rem: Círculos y pills completos
+ * 
+ * Estos valores proporcionan:
+ * ✅ Diseño moderno y amigable
+ * ✅ Profesionalismo mantenido
+ * ✅ Mejor UX en dispositivos táctiles
+ * ✅ Cumplimiento con estándares de accesibilidad
+ * ✅ Coherencia visual en toda la aplicación
+ */
+

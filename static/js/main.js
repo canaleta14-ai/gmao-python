@@ -2318,7 +2318,13 @@ async function descargarCSVMejorado(url, nombreArchivo, tipo) {
 
     // Generar nombre de archivo con fecha
     const fecha = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const nombreFinal = nombreArchivo.replace('{fecha}', fecha);
+    let nombreFinal = nombreArchivo.replace('{fecha}', fecha);
+    // Asegurar extensión correcta
+    if (tipo === 'CSV' && !nombreFinal.toLowerCase().endsWith('.csv')) {
+      nombreFinal += '.csv';
+    } else if (tipo !== 'CSV' && !nombreFinal.toLowerCase().endsWith('.xlsx')) {
+      nombreFinal += '.xlsx';
+    }
 
     // Crear enlace de descarga
     const urlBlob = window.URL.createObjectURL(blob);

@@ -18,9 +18,14 @@ class ArchivoAdjunto(db.Model):
     descripcion = db.Column(db.Text)
     fecha_subida = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Relación con orden de trabajo
+    # Relación con orden de trabajo (opcional)
     orden_trabajo_id = db.Column(
-        db.Integer, db.ForeignKey("orden_trabajo.id"), nullable=False
+        db.Integer, db.ForeignKey("orden_trabajo.id"), nullable=True
+    )
+
+    # Relación con solicitud de servicio (opcional)
+    solicitud_servicio_id = db.Column(
+        db.Integer, db.ForeignKey("solicitud_servicio.id"), nullable=True
     )
 
     # Usuario que subió el archivo
@@ -45,6 +50,7 @@ class ArchivoAdjunto(db.Model):
                 self.fecha_subida.isoformat() if self.fecha_subida else None
             ),
             "orden_trabajo_id": self.orden_trabajo_id,
+            "solicitud_servicio_id": self.solicitud_servicio_id,
             "usuario_id": self.usuario_id,
         }
 

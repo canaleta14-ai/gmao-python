@@ -1,9 +1,12 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from app.extensions import db
 from app.models.solicitud_servicio import SolicitudServicio
+from app.models.archivo_adjunto import ArchivoAdjunto
 from datetime import datetime
 import re
 import os
+from werkzeug.utils import secure_filename
+import uuid
 
 # Importar utilidades de email
 from app.utils.email_utils import (
@@ -12,6 +15,15 @@ from app.utils.email_utils import (
 )
 
 solicitudes_bp = Blueprint("solicitudes", __name__, url_prefix="/solicitudes")
+
+# Configuración de archivos permitidos
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf", "doc", "docx"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+def allowed_file(filename):
+    """Verifica si el archivo tiene una extensión permitida"""
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @solicitudes_bp.route("/", methods=["GET", "POST"])
@@ -58,6 +70,14 @@ def procesar_solicitud():
 
         # Guardar en base de datos
         db.session.add(solicitud)
+        db.session.flush()  # Para obtener el ID de la solicitud
+
+        # Procesar archivos adjuntos
+        archivos_guardados = 0
+        if "archivos" in request.files:
+            archivos = request.files.getlist("archivos")
+            archivos_guardados = procesar_archivos_solicitud(archivos, solicitud.id)
+
         db.session.commit()
 
         # Enviar emails de confirmación
@@ -68,10 +88,12 @@ def procesar_solicitud():
             print(f"Error enviando emails: {e}")
             # No fallar la solicitud por error de email
 
-        flash(
-            "Su solicitud ha sido enviada exitosamente. Recibirá una confirmación por email.",
-            "success",
-        )
+        mensaje = f"Su solicitud ha sido enviada exitosamente."
+        if archivos_guardados > 0:
+            mensaje += f" Se adjuntaron {archivos_guardados} archivo(s)."
+        mensaje += " Recibirá una confirmación por email."
+
+        flash(mensaje, "success")
         return redirect(url_for("solicitudes.confirmacion", numero=numero_solicitud))
 
     except Exception as e:
@@ -222,3 +244,94 @@ def generar_numero_solicitud():
         numero_secuencial = 1
 
     return f"SOL-{año_actual}-{numero_secuencial:04d}"
+
+
+def procesar_archivos_solicitud(archivos, solicitud_id):
+    """
+    Procesa y guarda los archivos adjuntos de una solicitud.
+
+    Args:
+        archivos: Lista de archivos desde request.files.getlist()
+        solicitud_id: ID de la solicitud de servicio
+
+    Returns:
+        Número de archivos guardados exitosamente
+    """
+    archivos_guardados = 0
+
+    # Directorio base para archivos
+    from flask import current_app
+
+    # En App Engine, el sistema de archivos es de solo lectura excepto /tmp
+    # Por ahora guardamos en /tmp (temporal), posteriormente migrar a Cloud Storage
+    if os.getenv("FLASK_ENV") == "production":
+        upload_folder = "/tmp/uploads"
+    else:
+        upload_folder = current_app.config.get("UPLOAD_FOLDER", "static/uploads")
+
+    solicitudes_folder = os.path.join(upload_folder, "solicitudes", str(solicitud_id))
+
+    # Crear directorio si no existe
+    os.makedirs(solicitudes_folder, exist_ok=True)
+
+    for archivo in archivos:
+        # Validar que el archivo existe y tiene contenido
+        if not archivo or archivo.filename == "":
+            continue
+
+        # Validar extensión permitida
+        if not allowed_file(archivo.filename):
+            print(f"Archivo rechazado (extensión no permitida): {archivo.filename}")
+            continue
+
+        # Validar tamaño
+        archivo.seek(0, os.SEEK_END)
+        file_length = archivo.tell()
+        archivo.seek(0)
+
+        if file_length > MAX_FILE_SIZE:
+            print(
+                f"Archivo rechazado (tamaño excedido): {archivo.filename} ({file_length} bytes)"
+            )
+            continue
+
+        try:
+            # Generar nombre único para el archivo
+            filename = secure_filename(archivo.filename)
+            nombre_unico = f"{uuid.uuid4().hex[:8]}_{filename}"
+            ruta_archivo = os.path.join(solicitudes_folder, nombre_unico)
+
+            # Guardar archivo físicamente
+            archivo.save(ruta_archivo)
+
+            # Obtener información del archivo
+            extension = filename.rsplit(".", 1)[1].lower() if "." in filename else ""
+
+            # Determinar tipo de archivo
+            if extension in ["jpg", "jpeg", "png", "gif"]:
+                tipo_archivo = "imagen"
+            elif extension == "pdf":
+                tipo_archivo = "documento"
+            else:
+                tipo_archivo = "documento"
+
+            # Crear registro en base de datos
+            archivo_adjunto = ArchivoAdjunto(
+                nombre_original=filename,
+                nombre_archivo=nombre_unico,
+                tipo_archivo=tipo_archivo,
+                extension=extension,
+                tamaño=file_length,
+                ruta_archivo=ruta_archivo,
+                solicitud_servicio_id=solicitud_id,
+                usuario_id=None,  # Las solicitudes públicas no tienen usuario
+            )
+
+            db.session.add(archivo_adjunto)
+            archivos_guardados += 1
+
+        except Exception as e:
+            print(f"Error guardando archivo {archivo.filename}: {e}")
+            continue
+
+    return archivos_guardados

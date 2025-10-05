@@ -65,7 +65,8 @@ def enviar_email(destinatario, asunto, contenido_html, contenido_texto=None):
 
         # Enviar email
         print(f"Enviando email a {destinatario}")
-        server.sendmail(mail_username, destinatario, msg.as_string())
+        # Convertir a bytes con codificación UTF-8
+        server.send_message(msg)
 
         # Cerrar conexión
         server.quit()
@@ -203,9 +204,19 @@ def enviar_email_notificacion_admin(solicitud):
         admins = Usuario.query.filter_by(rol="Administrador", activo=True).all()
         admin_emails = [admin.email for admin in admins if admin.email]
 
+        # Si no hay administradores en BD, usar email de variable de entorno
         if not admin_emails:
-            print("No se encontraron administradores con email válido")
-            return
+            admin_email_env = os.getenv("ADMIN_EMAIL")
+            if admin_email_env:
+                admin_emails = [admin_email_env]
+                print(
+                    f"Usando email de administrador desde variable de entorno: {admin_email_env}"
+                )
+            else:
+                print(
+                    "No se encontraron administradores con email válido y ADMIN_EMAIL no está configurado"
+                )
+                return
 
         asunto = f"Nueva Solicitud de Servicio #{solicitud.numero_solicitud}"
 

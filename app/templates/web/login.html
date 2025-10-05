@@ -37,6 +37,7 @@
             <p class="text-muted mb-4">Por favor, ingresa tus credenciales para continuar</p>
             <div id="alertContainer"></div>
             <form class="login-form" id="loginForm" action="/login" method="post" autocomplete="on">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="mb-3">
                     <label for="username" class="form-label">Usuario</label>
                     <div class="input-group">
@@ -64,12 +65,31 @@
                     <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
                 </button>
             </form>
+            
+            <!-- Enlace a Solicitudes Públicas -->
+            <div class="mt-4 text-center">
+                <div class="divider-text">
+                    <span>o</span>
+                </div>
+                <a href="{{ url_for('solicitudes.nueva_solicitud') }}" class="btn btn-outline-primary btn-lg w-100 mt-3">
+                    <i class="bi bi-file-earmark-plus me-2"></i>
+                    Solicitar Servicio de Mantenimiento
+                </a>
+                <small class="d-block mt-2 text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    No necesitas iniciar sesión para solicitar un servicio
+                </small>
+            </div>
+            
             <div class="text-center mt-4">
-                <small class="text-muted">
+              <!-- Credenciales por defecto ocultadas por seguridad -->
+              <!--
+              <small class="text-muted">
                     <i class="bi bi-info-circle me-1"></i>
                     Usuario por defecto: <strong>admin</strong> / <strong>admin123</strong>
                 </small>
                 <br>
+              -->
                 <small class="text-muted">
                     <i class="bi bi-shield-check me-1"></i>
                     Conexión segura SSL
@@ -91,10 +111,15 @@
         const originalContent = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando sesión...';
         btn.disabled = true;
+
+        // Obtener el token CSRF
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
         fetch('/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify({
                 username: username,

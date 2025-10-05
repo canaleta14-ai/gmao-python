@@ -1,0 +1,75 @@
+runtime: python311
+
+# Configuración de la aplicación
+service: default
+instance_class: F2
+
+# Configuración de escalado automático
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 1
+  max_instances: 10
+  target_throughput_utilization: 0.7
+
+# Configuración de recursos
+resources:
+  cpu: 1
+  memory_gb: 2
+  disk_size_gb: 10
+
+# Variables de entorno
+env_variables:
+  FLASK_ENV: production
+  DB_TYPE: postgresql
+  DB_USER: gmao-user
+  DB_PASSWORD: "" # Se configurará en Secret Manager
+  DB_NAME: gmao
+  DB_HOST: "/cloudsql/gmao-sistema-2025:europe-west1:gmao-postgres"
+  SERVER_URL: https://gmao-sistema-2025.ew.r.appspot.com
+  ITEMS_PER_PAGE: 25
+  MAX_CONTENT_LENGTH: 16777216 # 16MB
+  SECRET_KEY: "" # Se configurará en Secret Manager
+  OPENAI_API_KEY: "" # Se configurará en Secret Manager
+
+# Configuración de base de datos Cloud SQL
+beta_settings:
+  cloud_sql_instances: gmao-sistema-2025:europe-west1:gmao-postgres
+
+# Handlers para archivos estáticos
+handlers:
+  - url: /static
+    static_dir: static
+    secure: always
+
+  - url: /uploads
+    static_dir: uploads
+    secure: always
+
+  # Handler principal
+  - url: /.*
+    script: auto
+    secure: always
+
+# Entry point con gunicorn
+entrypoint: gunicorn -b :$PORT -w 4 --timeout 300 run:app
+
+# Health checks
+readiness_check:
+  path: "/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  app_start_timeout_sec: 300
+
+liveness_check:
+  path: "/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  initial_delay_sec: 300
+
+# Configuración de red
+network:
+  session_affinity: true

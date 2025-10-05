@@ -785,8 +785,10 @@ function enviarEmail(email, numeroSolicitud) {
         console.error('Error al copiar email:', error);
         mostrarMensaje(`Email: ${email} - Copia este email manualmente`, 'warning');
 
-        // Fallback: mostrar el email en un alert si no se puede copiar
-        alert(`Email del solicitante: ${email}\n\nCopia este email y envíalo manualmente.`);
+        // Fallback: mostrar el email en un mensaje bonito si no se puede copiar
+        if (typeof mostrarMensaje === 'function') {
+            mostrarMensaje(`Email del solicitante: ${email}\n\nCopia este email y envíalo manualmente.`, 'info');
+        }
     });
 }
 

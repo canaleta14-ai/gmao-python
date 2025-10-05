@@ -49,6 +49,9 @@ class SolicitudServicio(db.Model):
     # Relaciones con objetos
     activo = db.relationship("Activo", backref="solicitudes_servicio", lazy=True)
     asignado_a = db.relationship("Usuario", backref="solicitudes_asignadas", lazy=True)
+    archivos = db.relationship(
+        "ArchivoAdjunto", backref="solicitud", lazy=True, cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<SolicitudServicio {self.numero_solicitud}: {self.titulo}>"

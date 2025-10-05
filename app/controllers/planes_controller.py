@@ -344,7 +344,8 @@ def listar_planes():
     ]
 
     return {
-        "items": planes_data,
+        "planes": planes_data,  # Cambiado de "items" a "planes" para compatibilidad frontend
+        "items": planes_data,  # Mantener "items" para compatibilidad
         "page": page,
         "per_page": per_page,
         "total": pagination.total,
@@ -702,6 +703,24 @@ def generar_ordenes_automaticas():
     ahora = datetime.now()
     ordenes_generadas = []
 
+    # DEBUG: Mostrar fecha/hora actual
+    print(f"🕐 Fecha/hora actual del servidor: {ahora}")
+    print(f"🕐 Fecha/hora ISO: {ahora.isoformat()}")
+
+    # DEBUG: Obtener TODOS los planes activos primero para diagnóstico
+    todos_planes = PlanMantenimiento.query.filter(
+        PlanMantenimiento.estado == "Activo"
+    ).all()
+
+    print(f"📋 Total planes activos: {len(todos_planes)}")
+    for p in todos_planes:
+        print(f"   Plan {p.codigo_plan}:")
+        print(f"      - Próxima ejecución: {p.proxima_ejecucion}")
+        print(f"      - Generación automática: {p.generacion_automatica}")
+        print(
+            f"      - ¿Vencido? {p.proxima_ejecucion <= ahora if p.proxima_ejecucion else 'Sin fecha'}"
+        )
+
     # Buscar planes vencidos que estén activos Y tengan generación automática habilitada
     planes_vencidos = PlanMantenimiento.query.filter(
         PlanMantenimiento.estado == "Activo",
@@ -710,7 +729,9 @@ def generar_ordenes_automaticas():
         == True,  # Solo planes con generación automática
     ).all()
 
-    print(f"📋 Encontrados {len(planes_vencidos)} planes vencidos")
+    print(
+        f"📋 Encontrados {len(planes_vencidos)} planes vencidos que cumplen todas las condiciones"
+    )
 
     for plan in planes_vencidos:
         try:
@@ -1009,21 +1030,33 @@ def generar_ordenes_manuales(usuario="Sistema"):
 
     print("🔄 Iniciando generación MANUAL de órdenes...")
 
-    # Calcular fecha objetivo (día siguiente)
+    # Calcular fecha objetivo (día actual o antes)
     ahora = datetime.now()
-    fecha_objetivo = ahora + timedelta(days=1)
 
     ordenes_generadas = []
 
-    # Buscar planes que estén activos y NO tengan generación automática
+    # DEBUG: Mostrar fecha/hora actual
+    print(f"🕐 Fecha/hora actual del servidor: {ahora}")
+    print(f"🕐 Fecha/hora ISO: {ahora.isoformat()}")
+
+    # Buscar planes que estén activos y vencidos (con o sin generación automática)
+    # La generación MANUAL puede forzar la creación de órdenes en cualquier momento
     planes_manuales = PlanMantenimiento.query.filter(
         PlanMantenimiento.estado == "Activo",
-        PlanMantenimiento.generacion_automatica
-        == False,  # Solo planes SIN generación automática
-        PlanMantenimiento.proxima_ejecucion <= fecha_objetivo,
+        PlanMantenimiento.proxima_ejecucion
+        <= ahora,  # Cambiado: solo planes vencidos HOY o antes
     ).all()
 
-    print(f"📋 Encontrados {len(planes_manuales)} planes para generación manual")
+    print(f"📋 Encontrados {len(planes_manuales)} planes activos vencidos")
+
+    # DEBUG: Mostrar detalles de cada plan
+    for p in planes_manuales:
+        print(f"   Plan {p.codigo_plan}:")
+        print(f"      - Próxima ejecución: {p.proxima_ejecucion}")
+        print(f"      - Generación automática: {p.generacion_automatica}")
+        print(
+            f"      - ¿Vencido? {p.proxima_ejecucion <= ahora if p.proxima_ejecucion else 'Sin fecha'}"
+        )
 
     for plan in planes_manuales:
         try:

@@ -59,6 +59,18 @@ def obtener_recambios_orden(orden_id):
 def descontar_recambios_orden(orden_id, usuario_id="sistema", es_automatico=False):
     """Descontar del stock todos los recambios utilizados en una orden"""
     try:
+        # Validar que la orden existe y obtener su estado
+        orden = OrdenTrabajo.query.get(orden_id)
+        if not orden:
+            raise ValueError("Orden de trabajo no encontrada")
+        
+        # Validar que la orden no esté cerrada para descuentos manuales
+        if not es_automatico and orden.estado in ["Completada", "Cancelada"]:
+            raise ValueError(
+                f"No se pueden descontar repuestos de una orden {orden.estado.lower()}. "
+                f"La orden debe estar en estado 'En Proceso', 'Pendiente' o 'En Espera'."
+            )
+        
         # Obtener todos los recambios no descontados de la orden
         recambios = OrdenRecambio.query.filter_by(
             orden_trabajo_id=orden_id, descontado=False

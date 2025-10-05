@@ -9,6 +9,7 @@ from app.controllers.planes_controller import (
     obtener_estadisticas_planes,
     generar_ordenes_automaticas,
     generar_ordenes_manuales,
+    generar_orden_individual,
 )
 
 planes_bp = Blueprint("planes", __name__, url_prefix="/planes")
@@ -176,6 +177,29 @@ def generar_ordenes_manual_api():
         )
     except Exception as e:
         print(f"Error generando órdenes manuales: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@planes_bp.route("/<int:plan_id>/generar-orden", methods=["POST"])
+@login_required
+def generar_orden_individual_api(plan_id):
+    """Generar una orden de trabajo individual para un plan específico"""
+    try:
+        from flask_login import current_user
+
+        usuario = current_user.nombre if hasattr(current_user, "nombre") else "Sistema"
+
+        resultado = generar_orden_individual(plan_id, usuario)
+
+        return jsonify(resultado)
+    except ValueError as e:
+        print(f"Error de validación: {e}")
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        print(f"Error generando orden individual: {e}")
         import traceback
 
         traceback.print_exc()

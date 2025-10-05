@@ -50,8 +50,8 @@ solicitudes_admin_bp = Blueprint(
 @login_required
 def listar_solicitudes():
     """Lista todas las solicitudes para administración"""
-    # Solo administradores pueden acceder
-    if current_user.rol != "Administrador":
+    # Permitir acceso a Administradores, Técnicos y Supervisores
+    if current_user.rol not in ["Administrador", "Técnico", "Supervisor"]:
         flash("No tiene permisos para acceder a esta sección.", "error")
         return redirect(url_for("web_routes.index"))
 
@@ -124,7 +124,7 @@ def listar_solicitudes():
 @login_required
 def ver_solicitud(id):
     """Ver detalles de una solicitud específica"""
-    if current_user.rol != "Administrador":
+    if current_user.rol not in ["Administrador", "Técnico", "Supervisor"]:
         flash("No tiene permisos para acceder a esta sección.", "error")
         return redirect(url_for("web_routes.index"))
 
@@ -137,7 +137,7 @@ def ver_solicitud(id):
 @login_required
 def editar_solicitud(id):
     """Editar una solicitud específica"""
-    if current_user.rol != "Administrador":
+    if current_user.rol not in ["Administrador", "Técnico", "Supervisor"]:
         flash("No tiene permisos para acceder a esta sección.", "error")
         return redirect(url_for("web_routes.index"))
 

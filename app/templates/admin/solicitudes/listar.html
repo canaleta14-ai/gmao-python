@@ -395,8 +395,10 @@ function aplicarFiltros(page = 1) {
             // Mostrar mensaje de error
             if (typeof mostrarMensaje === 'function') {
                 mostrarMensaje('Error al aplicar filtros: ' + error.message, 'danger');
+            } else if (typeof mostrarAlerta === 'function') {
+                mostrarAlerta('Error al aplicar filtros: ' + error.message, 'danger');
             } else {
-                alert('Error al aplicar filtros: ' + error.message);
+                console.error('Error al aplicar filtros:', error.message);
             }
         });
 }

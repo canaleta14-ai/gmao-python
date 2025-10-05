@@ -56,7 +56,9 @@
                     </div>
                 {% endif %}
 
-                <form id="solicitudForm" method="POST" action="{{ url_for('solicitudes.nueva_solicitud') }}">
+                <form id="solicitudForm" method="POST" action="{{ url_for('solicitudes.nueva_solicitud') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
                     <!-- Información del Solicitante -->
                     <div class="mb-4">
                         <div class="d-flex align-items-center mb-3">
@@ -171,6 +173,22 @@
                                   placeholder="Describa detalladamente el problema, síntomas, o servicio requerido..." required>{{ datos_form.descripcion if datos_form else '' }}</textarea>
                     </div>
 
+                    <!-- Campo de subida de archivos/fotos -->
+                    <div class="mt-3">
+                        <label for="archivos" class="form-label fw-semibold">
+                            <i class="bi bi-images me-1 text-info"></i>
+                            Fotos del Problema (Opcional)
+                        </label>
+                        <input type="file" class="form-control form-control-lg" id="archivos" name="archivos" 
+                               multiple accept="image/*,.pdf,.doc,.docx">
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Puede adjuntar fotos o documentos del problema (máximo 5 archivos, 10 MB cada uno).
+                            Formatos permitidos: JPG, PNG, PDF, DOC, DOCX
+                        </div>
+                        <div id="preview-archivos" class="mt-2 row g-2"></div>
+                    </div>
+
                     <div class="row g-3 mt-2">
                         <div class="col-md-6">
                             <label for="ubicacion" class="form-label fw-semibold">
@@ -228,6 +246,61 @@
 
 {% block extra_js %}
 <script>
+// Preview de archivos seleccionados
+document.getElementById('archivos').addEventListener('change', function(e) {
+    const previewContainer = document.getElementById('preview-archivos');
+    previewContainer.innerHTML = '';
+    const files = Array.from(e.target.files);
+    
+    if (files.length > 5) {
+        mostrarMensaje('Máximo 5 archivos permitidos', 'warning');
+        e.target.value = '';
+        return;
+    }
+    
+    files.forEach((file, index) => {
+        // Validar tamaño (10 MB máximo)
+        if (file.size > 10 * 1024 * 1024) {
+            mostrarMensaje(`El archivo "${file.name}" excede el tamaño máximo de 10 MB`, 'warning');
+            return;
+        }
+        
+        const col = document.createElement('div');
+        col.className = 'col-6 col-md-4 col-lg-3';
+        
+        const card = document.createElement('div');
+        card.className = 'card h-100';
+        
+        // Si es imagen, mostrar preview
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                card.innerHTML = `
+                    <img src="${event.target.result}" class="card-img-top" style="height: 120px; object-fit: cover;">
+                    <div class="card-body p-2">
+                        <small class="text-muted text-truncate d-block">${file.name}</small>
+                        <small class="text-muted">${(file.size / 1024).toFixed(1)} KB</small>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Para otros archivos, mostrar ícono
+            const icon = file.type.includes('pdf') ? 'file-earmark-pdf' : 'file-earmark-text';
+            card.innerHTML = `
+                <div class="card-body text-center p-3">
+                    <i class="bi bi-${icon} fs-1 text-primary"></i>
+                    <small class="text-muted text-truncate d-block mt-2">${file.name}</small>
+                    <small class="text-muted">${(file.size / 1024).toFixed(1)} KB</small>
+                </div>
+            `;
+        }
+        
+        col.appendChild(card);
+        previewContainer.appendChild(col);
+    });
+});
+
 // Validación adicional del formulario
 document.getElementById('solicitudForm').addEventListener('submit', function(e) {
     const email = document.getElementById('email_solicitante').value;

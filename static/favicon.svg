@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fondo circular azul -->
+  <circle cx="50" cy="50" r="48" fill="#2563eb" stroke="#1e40af" stroke-width="2"/>
+  
+  <!-- Engranaje blanco -->
+  <g transform="translate(50,50)">
+    <!-- Dientes del engranaje (8 dientes rectangulares) -->
+    <!-- Diente superior -->
+    <rect x="-4" y="-32" width="8" height="8" fill="white"/>
+    <!-- Diente superior derecho -->
+    <rect x="17" y="-25" width="8" height="8" fill="white" transform="rotate(45 50 50)"/>
+    <!-- Diente derecho -->
+    <rect x="24" y="-4" width="8" height="8" fill="white"/>
+    <!-- Diente inferior derecho -->
+    <rect x="17" y="17" width="8" height="8" fill="white" transform="rotate(45 50 50)"/>
+    <!-- Diente inferior -->
+    <rect x="-4" y="24" width="8" height="8" fill="white"/>
+    <!-- Diente inferior izquierdo -->
+    <rect x="-25" y="17" width="8" height="8" fill="white" transform="rotate(45 50 50)"/>
+    <!-- Diente izquierdo -->
+    <rect x="-32" y="-4" width="8" height="8" fill="white"/>
+    <!-- Diente superior izquierdo -->
+    <rect x="-25" y="-25" width="8" height="8" fill="white" transform="rotate(45 50 50)"/>
+    
+    <!-- Círculo principal del engranaje -->
+    <circle cx="0" cy="0" r="20" fill="white"/>
+    
+    <!-- Hueco central -->
+    <circle cx="0" cy="0" r="8" fill="#2563eb"/>
+  </g>
+</svg>

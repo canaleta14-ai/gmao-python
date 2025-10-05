@@ -450,9 +450,11 @@ function guardarPlan() {
 
   // Datos específicos según el tipo de frecuencia
   if (tipoFrecuencia === "diaria") {
-    data.intervalo_dias = document.getElementById("intervalo_dias").value;
+    const intervaloDias = document.getElementById("intervalo_dias").value;
+    data.intervalo_dias = intervaloDias ? parseInt(intervaloDias) : 1; // Valor por defecto: 1
   } else if (tipoFrecuencia === "semanal") {
-    data.intervalo_semanas = document.getElementById("intervalo_semanas").value;
+    const intervaloSemanas = document.getElementById("intervalo_semanas").value;
+    data.intervalo_semanas = intervaloSemanas ? parseInt(intervaloSemanas) : 1; // Valor por defecto: 1
 
     // Recopilar días de la semana seleccionados
     const diasSeleccionados = [];
@@ -463,16 +465,19 @@ function guardarPlan() {
       });
     data.dias_semana = diasSeleccionados;
   } else if (tipoFrecuencia === "mensual") {
-    data.intervalo_meses = document.getElementById("intervalo_meses").value;
+    const intervaloMeses = document.getElementById("intervalo_meses").value;
+    data.intervalo_meses = intervaloMeses ? parseInt(intervaloMeses) : 1; // Valor por defecto: 1
     data.tipo_mensual = document.getElementById("tipo_mensual").value;
 
     if (data.tipo_mensual === "dia_mes") {
-      data.dia_mes = document.getElementById("dia_mes").value;
+      const diaMes = document.getElementById("dia_mes").value;
+      data.dia_mes = diaMes ? parseInt(diaMes) : 1; // Valor por defecto: 1
       // Limpiar campos no utilizados
       data.semana_mes = null;
       data.dia_semana_mes = null;
     } else if (data.tipo_mensual === "dia_semana_mes") {
-      data.semana_mes = document.getElementById("semana_mes").value;
+      const semanaMes = document.getElementById("semana_mes").value;
+      data.semana_mes = semanaMes ? parseInt(semanaMes) : 1; // Valor por defecto: 1
       data.dia_semana_mes = document.getElementById("dia_semana_mes").value;
       // Limpiar campo no utilizado
       data.dia_mes = null;
@@ -1547,7 +1552,8 @@ function exportarCSV() {
     console.log(`📊 Generando CSV con ${planesData.length} planes...`);
 
     // Crear y descargar el archivo
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    // Añadir BOM UTF-8 para evitar caracteres mal codificados en Excel
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
 
     if (!blob || blob.size === 0) {
       throw new Error("No se pudo crear el archivo CSV");
@@ -2050,7 +2056,8 @@ async function exportarSeleccionados() {
     });
 
     // Descargar archivo
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // Añadir BOM UTF-8 para mejorar compatibilidad con Excel
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);

@@ -14,16 +14,15 @@ def create_app():
 
     # Configuración de logging
     if not app.debug:
-        # Configuración para producción
+        # Configuración para producción - solo console logging (Google Cloud Logging)
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=[logging.FileHandler("logs/gmao.log"), logging.StreamHandler()],
+            handlers=[logging.StreamHandler()],
         )
-        # Crear directorio de logs si no existe
-        os.makedirs("logs", exist_ok=True)
     else:
-        # Configuración para desarrollo - también loggear a archivo
+        # Configuración para desarrollo - loggear a archivo y consola
+        os.makedirs("logs", exist_ok=True)
         logging.basicConfig(
             level=logging.DEBUG,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -32,8 +31,6 @@ def create_app():
                 logging.StreamHandler(),
             ],
         )
-        # Crear directorio de logs si no existe
-        os.makedirs("logs", exist_ok=True)
 
     # Configuración de SECRET_KEY desde Secret Manager (producción) o .env (desarrollo)
     from app.utils.secrets import get_secret_or_env
@@ -50,9 +47,9 @@ def create_app():
     else:
         app.logger.info("✅ SECRET_KEY configurada correctamente")
 
-    # Configuración de sesión para cerrar al cerrar navegador
-    app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 24 horas
-    app.config["SESSION_PERMANENT"] = True  # Mantener sesiones permanentes
+    # Configuración de sesión - cerrar al cerrar navegador
+    app.config["SESSION_PERMANENT"] = False  # Sesión expira al cerrar navegador
+    app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 hora como fallback
     app.config["SESSION_COOKIE_HTTPONLY"] = (
         True  # Solo accesible via HTTP, no JavaScript
     )
@@ -267,8 +264,18 @@ def create_app():
     # Registrar blueprint de cron (tareas programadas)
     from app.routes.cron import cron_bp
 
+    # Registrar blueprint de diagnóstico
+    from app.routes.diagnostico import diagnostico_bp
+
+    # Registrar blueprint de actualizar fecha
+    from app.routes.actualizar_fecha import actualizar_fecha_bp
+
     app.register_blueprint(cron_bp)
+    app.register_blueprint(diagnostico_bp)
+    app.register_blueprint(actualizar_fecha_bp)
     app.logger.info("Blueprint de cron registrado")
+    app.logger.info("Blueprint de diagnóstico registrado")
+    app.logger.info("Blueprint de actualizar fecha registrado")
 
     # Middleware para verificar sesión
     # @app.before_request

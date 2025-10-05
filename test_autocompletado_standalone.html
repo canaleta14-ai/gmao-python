@@ -262,7 +262,24 @@
                 
                 console.log('🎭 Artículo simulado seleccionado:', articulo);
             } else {
-                alert('⚠️ Primero inicializa el autocompletado');
+                console.warn('Primero inicializa el autocompletado');
+                // Crear mensaje bonito en lugar de alert
+                const mensaje = document.createElement('div');
+                mensaje.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+                mensaje.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
+                mensaje.innerHTML = `
+                    <strong>Advertencia</strong><br>
+                    Primero inicializa el autocompletado
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(mensaje);
+                
+                // Auto-remover después de 5 segundos
+                setTimeout(() => {
+                    if (mensaje.parentNode) {
+                        mensaje.remove();
+                    }
+                }, 5000);
             }
         }
         

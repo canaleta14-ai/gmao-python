@@ -50,8 +50,8 @@ def login():
         user = autenticar_usuario(username, password)
         if user:
             login_user(
-                user, remember=True
-            )  # Cambiar a remember=True para sesiones permanentes
+                user, remember=False
+            )  # remember=False para cerrar sesión al cerrar navegador
             if request.is_json:
                 return jsonify({"success": True, "message": "Login exitoso"})
             flash("Login exitoso", "success")
