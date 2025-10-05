@@ -550,16 +550,18 @@ def editar_plan(plan_id, data):
                 fecha_inicio = fecha_nueva
                 fecha_fin = fecha_inicio + timedelta(days=1)
 
+                # Buscar planes duplicados pero permitir planes con descripciones diferentes
                 plan_duplicado = PlanMantenimiento.query.filter(
                     PlanMantenimiento.activo_id == activo_id,
                     PlanMantenimiento.proxima_ejecucion >= fecha_inicio,
                     PlanMantenimiento.proxima_ejecucion < fecha_fin,
                     PlanMantenimiento.id != plan_id,  # Excluir el plan actual
+                    PlanMantenimiento.nombre == data.get("nombre", plan.nombre)  # Solo considerar duplicado si tiene el mismo nombre
                 ).first()
 
                 if plan_duplicado:
                     raise ValueError(
-                        f"Ya existe un plan de mantenimiento para este activo "
+                        f"Ya existe un plan de mantenimiento con el mismo nombre para este activo "
                         f"programado para el {nueva_proxima_ejecucion.strftime('%d/%m/%Y')}. "
                         f"Plan existente: {plan_duplicado.codigo_plan} - {plan_duplicado.nombre}"
                     )

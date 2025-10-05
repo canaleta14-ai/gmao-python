@@ -2040,19 +2040,19 @@ async function exportarSeleccionados() {
       return;
     }
 
-    // Generar CSV
-    let csv = 'Código,Nombre,Equipo,Frecuencia,Última Ejecución,Próxima Ejecución,Estado,Autogeneración,Instrucciones\n';
-    
+    // Generar CSV alineado con exportación estándar (todos los planes)
+    let csv = 'Código,Nombre,Estado,Frecuencia,Última Ejecución,Próxima Ejecución,Tiempo Estimado (hrs),Activo Asignado,Descripción\n';
+
     planesExportar.forEach(p => {
-      csv += `"${p.codigo}",`;
-      csv += `"${p.nombre}",`;
-      csv += `"${p.equipo || ''}",`;
-      csv += `"${p.frecuencia}",`;
+      csv += `"${p.codigo || p.codigo_plan || ''}",`;
+      csv += `"${p.nombre || ''}",`;
+      csv += `"${p.estado || ''}",`;
+      csv += `"${p.frecuencia || ''}",`;
       csv += `"${p.ultima_ejecucion || ''}",`;
       csv += `"${p.proxima_ejecucion || ''}",`;
-      csv += `"${p.estado}",`;
-      csv += `"${p.generacion_automatica ? 'Sí' : 'No'}",`;
-      csv += `"${(p.instrucciones || '').replace(/"/g, '""')}"\n`;
+      csv += `${p.tiempo_estimado != null ? p.tiempo_estimado : ''},`;
+      csv += `"${p.activo_nombre || p.equipo || ''}",`;
+      csv += `"${(p.descripcion || p.instrucciones || '').replace(/"/g, '""')}"\n`;
     });
 
     // Descargar archivo

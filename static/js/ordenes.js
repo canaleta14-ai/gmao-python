@@ -2210,16 +2210,22 @@ function exportarSeleccionados() {
     }
 
     // Crear CSV
-    const headers = ['Número', 'Fecha', 'Activo', 'Tipo', 'Prioridad', 'Estado', 'Técnico', 'Descripción'];
+    // Encabezados alineados con exportación del servidor (Excel)
+    const headers = ['Número', 'Fecha Creación', 'Fecha Programada', 'Fecha Completada', 'Tipo', 'Prioridad', 'Estado', 'Descripción', 'Observaciones', 'Tiempo Estimado', 'Tiempo Real', 'Activo', 'Técnico'];
     const rows = seleccionados.map(orden => [
-        orden.id || '',
-        orden.fecha_creacion || '',
-        orden.activo_nombre || 'Sin asignar',
-        orden.tipo || '',
-        orden.prioridad || '',
-        orden.estado || '',
-        orden.tecnico_nombre || 'Sin asignar',
-        (orden.descripcion || '').replace(/"/g, '""')
+        (orden.numero || orden.id || ''),
+        (orden.fecha_creacion || ''),
+        (orden.fecha_programada || ''),
+        (orden.fecha_completada || ''),
+        (orden.tipo || ''),
+        (orden.prioridad || ''),
+        (orden.estado || ''),
+        ((orden.descripcion || '').replace(/"/g, '""')),
+        ((orden.observaciones || '').replace(/"/g, '""')),
+        (orden.tiempo_estimado != null ? orden.tiempo_estimado : ''),
+        (orden.tiempo_real != null ? orden.tiempo_real : ''),
+        (orden.activo_nombre || 'Sin asignar'),
+        (orden.tecnico_nombre || 'Sin asignar')
     ]);
 
     let csv = headers.join(',') + '\n';
