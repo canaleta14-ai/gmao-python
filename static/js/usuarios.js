@@ -676,8 +676,28 @@ function actualizarUsuario(id) {
         });
 }
 
-function eliminarUsuario(id, nombre) {
+async function eliminarUsuario(id, nombre) {
     console.log('Solicitud de eliminar usuario:', id, nombre);
+
+    try {
+        const resp = await fetch(`/usuarios/api/${id}`);
+        if (resp.ok) {
+            const data = await resp.json();
+            const username = data?.usuario?.username || "";
+            if (username === "admin") {
+                mostrarMensaje("No se puede eliminar el usuario administrador", "warning");
+                const btn = document.querySelector(`button.action-btn.delete[data-id="${id}"]`);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.title = "Administrador protegido";
+                }
+                return;
+            }
+        }
+    } catch (e) {
+        console.error("Error verificando usuario antes de eliminar:", e);
+    }
+
     mostrarConfirmacionEliminarUsuario(id, nombre);
 }
 
@@ -1172,11 +1192,31 @@ function actualizarUsuario(id) {
 }
 
 // Función para eliminar un usuario
-function eliminarUsuario(id) {
+async function eliminarUsuario(id) {
     const usuario = usuarios.find((u) => u.id === id);
     if (!usuario) {
         mostrarMensaje("Usuario no encontrado", "danger");
         return;
+    }
+
+    // Verificar si es el usuario administrador antes de mostrar confirmación
+    try {
+        const resp = await fetch(`/usuarios/api/${id}`);
+        if (resp.ok) {
+            const data = await resp.json();
+            const username = data?.usuario?.username || "";
+            if (username === "admin") {
+                mostrarMensaje("No se puede eliminar el usuario administrador", "warning");
+                const btn = document.querySelector(`button.action-btn.delete[data-id="${id}"]`);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.title = "Administrador protegido";
+                }
+                return;
+            }
+        }
+    } catch (e) {
+        console.error("Error verificando usuario antes de confirmar eliminación:", e);
     }
 
     // Mostrar modal de confirmación en lugar de confirm()
@@ -1238,16 +1278,33 @@ function confirmarEliminarUsuario() {
 }
 
 // Mostrar modal de confirmación antes de eliminar
-function mostrarConfirmacionEliminarUsuario(id, nombre) {
+async function mostrarConfirmacionEliminarUsuario(id, nombre) {
+    try {
+        const resp = await fetch(`/usuarios/api/${id}`);
+        if (resp.ok) {
+            const data = await resp.json();
+            const username = data?.usuario?.username || "";
+            if (username === "admin") {
+                mostrarMensaje("No se puede eliminar el usuario administrador", "warning");
+                const btn = document.querySelector(`button.action-btn.delete[data-id="${id}"]`);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.title = "Administrador protegido";
+                }
+                return;
+            }
+        }
+    } catch (e) {
+        console.error("Error verificando usuario:", e);
+    }
+
     usuarioAEliminar = { id, nombre };
 
-    // Actualizar nombre en el modal
     const nombreElement = document.getElementById('nombre-usuario-eliminar');
     if (nombreElement) {
         nombreElement.textContent = nombre;
     }
 
-    // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('modalEliminarUsuario'));
     modal.show();
 }

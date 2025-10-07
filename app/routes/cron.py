@@ -58,15 +58,16 @@ def generar_ordenes_preventivas():
     try:
         logger.info("=== INICIO: Generación automática de órdenes preventivas ===")
 
-        # Obtener fecha actual
-        hoy = datetime.now(timezone.utc).date()
+        # Obtener fecha/hora actual en UTC
+        ahora_utc = datetime.now(timezone.utc)
 
-        # Buscar planes activos que necesitan ejecución
-        # (próxima_ejecucion <= hoy)
+        # Buscar planes activos con generación automática que necesitan ejecución
+        # (próxima_ejecucion <= ahora)
         planes_vencidos = PlanMantenimiento.query.filter(
             and_(
-                PlanMantenimiento.activo == True,
-                PlanMantenimiento.proxima_ejecucion <= hoy,
+                PlanMantenimiento.estado == "Activo",
+                PlanMantenimiento.generacion_automatica == True,
+                PlanMantenimiento.proxima_ejecucion <= ahora_utc,
             )
         ).all()
 
@@ -108,7 +109,7 @@ def generar_ordenes_preventivas():
 
         # Preparar respuesta
         resumen = {
-            "fecha_ejecucion": hoy.isoformat(),
+            "fecha_ejecucion": ahora_utc.isoformat(),
             "planes_revisados": len(planes_vencidos),
             "ordenes_creadas": len(ordenes_creadas),
             "errores": len(errores),
@@ -152,7 +153,7 @@ def crear_orden_desde_plan(plan):
     # Crear orden
     nueva_orden = OrdenTrabajo(
         numero_orden=numero_orden,
-        tipo="Preventivo",
+        tipo="Mantenimiento Preventivo",
         prioridad=plan.prioridad or "Media",
         estado="Pendiente",
         descripcion=descripcion,
