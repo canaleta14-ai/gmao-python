@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user, logout_user, login_user
 from app.models.usuario import Usuario
-from app.extensions import db, limiter
+from app.extensions import db, limiter, csrf
 
 usuarios_controller = Blueprint("usuarios_controller", __name__)
 
@@ -23,16 +23,21 @@ def autenticar_usuario(username, password):
 
 @usuarios_controller.route("/login", methods=["GET", "POST"])
 @limiter.limit("10 per minute")  # Máximo 10 intentos por minuto por IP
+@csrf.exempt  # Eximir CSRF para el endpoint de login
 def login():
     """
     Ruta de login - maneja tanto GET (mostrar formulario) como POST (procesar login)
     Protegido con rate limiting: 10 intentos por minuto
     """
     if current_user.is_authenticated:
-        return redirect(url_for("web_routes.dashboard"))
+        # Si ya está autenticado, responder en el formato adecuado
+        if request.is_json:
+            return jsonify({"success": True, "message": "Ya autenticado"}), 200
+        return redirect(url_for("web.dashboard"))
 
     if request.method == "POST":
-        data = request.get_json() if request.is_json else request.form
+        # Aceptar JSON o form y ser tolerante si get_json devuelve None
+        data = request.get_json(silent=True) or request.form or {}
         username = data.get("username")
         password = data.get("password")
 
@@ -61,7 +66,7 @@ def login():
                 "/"
             ):  # Solo redirigir a rutas locales
                 return redirect(next_page)
-            return redirect(url_for("web_routes.dashboard"))
+            return redirect(url_for("web.dashboard"))
         else:
             if request.is_json:
                 return (

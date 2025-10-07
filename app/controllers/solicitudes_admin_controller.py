@@ -53,7 +53,7 @@ def listar_solicitudes():
     # Permitir acceso a Administradores, Técnicos y Supervisores
     if current_user.rol not in ["Administrador", "Técnico", "Supervisor"]:
         flash("No tiene permisos para acceder a esta sección.", "error")
-        return redirect(url_for("web_routes.index"))
+        return redirect(url_for("web.index"))
 
     # Obtener filtros
     estado = request.args.get("estado", "")
@@ -126,7 +126,7 @@ def ver_solicitud(id):
     """Ver detalles de una solicitud específica"""
     if current_user.rol not in ["Administrador", "Técnico", "Supervisor"]:
         flash("No tiene permisos para acceder a esta sección.", "error")
-        return redirect(url_for("web_routes.index"))
+        return redirect(url_for("web.index"))
 
     solicitud = SolicitudServicio.query.get_or_404(id)
 
@@ -139,7 +139,7 @@ def editar_solicitud(id):
     """Editar una solicitud específica"""
     if current_user.rol not in ["Administrador", "Técnico", "Supervisor"]:
         flash("No tiene permisos para acceder a esta sección.", "error")
-        return redirect(url_for("web_routes.index"))
+        return redirect(url_for("web.index"))
 
     solicitud = SolicitudServicio.query.get_or_404(id)
 
@@ -598,7 +598,7 @@ def exportar_solicitudes():
     """Exporta todas las solicitudes a Excel"""
     if current_user.rol != "Administrador":
         flash("No tiene permisos para acceder a esta sección.", "error")
-        return redirect(url_for("web_routes.index"))
+    return redirect(url_for("web.index"))
 
     try:
         excel_data = exportar_solicitudes_csv()

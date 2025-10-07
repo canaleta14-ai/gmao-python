@@ -1,0 +1,100 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.6, pytest-8.3.3, pluggy-1.6.0
+rootdir: C:\gmao - copia
+configfile: pytest.ini
+plugins: anyio-4.11.0, langsmith-0.4.31, cov-5.0.0, flask-1.3.0, mock-3.14.0
+collected 12 items
+
+tests\test_factory.py ...F........                                       [100%]
+
+================================== FAILURES ===================================
+___________________ TestFactory.test_blueprints_registered ____________________
+
+self = <tests.test_factory.TestFactory object at 0x000001FA3E65CC10>
+
+    def test_blueprints_registered(self):
+        """Test que los blueprints principales estßn registrados"""
+        app = create_app()
+    
+        # Verificar que se registraron blueprints
+        blueprint_names = [bp.name for bp in app.blueprints.values()]
+    
+        # Blueprints esperados
+        expected = ["web", "activos", "ordenes", "planes", "inventario", "usuarios"]
+    
+        for bp_name in expected:
+>           assert bp_name in blueprint_names, f"Blueprint '{bp_name}' no registrado"
+E           AssertionError: Blueprint 'web' no registrado
+E           assert 'web' in ['web_routes', 'activos', 'ordenes', 'recambios', 'inventario', 'planes', ...]
+
+tests\test_factory.py:49: AssertionError
+---------------------------- Captured stdout call -----------------------------
+[OK] Blueprint de estadÝsticas disponible
+------------------------------ Captured log call ------------------------------
+WARNING  app.utils.secrets:secrets.py:134 Usando valor por defecto para 'SECRET_KEY' (ni Secret Manager ni .env disponibles)\nWARNING  app.factory:factory.py:51 \u26a0\ufe0f  Usando SECRET_KEY por defecto - NO USAR EN PRODUCCI\xd3N
+
+---------- coverage: platform win32, python 3.11.6-final-0 -----------
+Name                                              Stmts   Miss   Cover   Missing
+--------------------------------------------------------------------------------
+app\__init__.py                                       1      0 100.00%
+app\config\__init__.py                                0      0 100.00%
+app\controllers\__init__.py                           0      0 100.00%
+app\controllers\activos_controller.py               172    154  10.47%   11-55, 91-157, 170-209, 213-246, 250-253, 258, 263, 268-347, 352-366, 371-398, 408-411
+app\controllers\archivos_controller.py               79     62  21.52%   15-69, 76-99, 110-114, 120-130, 136-146, 151-182, 187, 192-213, 218-222
+app\controllers\categorias_controller.py            100     82  18.00%   14-53, 66-121, 131-151, 161-238, 251-285, 298-338
+app\controllers\estadisticas_controller.py           13      8  38.46%   9-33
+app\controllers\inventario_controller.py            203    180  11.33%   16-63, 76-99, 103-118, 126-167, 172-208, 213-259, 265-282, 288-308, 313-326, 331-348, 353-374, 379-422, 427-459, 464-480, 485-499
+app\controllers\inventario_controller_simple.py     172    154  10.47%   13-37, 42-77, 83-107, 112-205, 215-328, 333-364, 369-426, 431-466
+app\controllers\manuales_controller.py              104    104   0.00%   5-203
+app\controllers\orden_recambios_controller.py        89     81   8.99%   10-50, 55-56, 61-173, 178-195, 200-215
+app\controllers\ordenes_controller.py               207    186  10.14%   15-36, 74-150, 163-164, 197-239, 244-304, 309-403, 408-418, 423-424, 439-446, 459-495, 505-596
+app\controllers\planes_controller.py                420    400   4.76%   14-226, 231-261, 265-346, 360-467, 472-473, 501-649, 654-657, 662-687, 700-839, 848-854, 865-905, 912-1015, 1030-1169
+app\controllers\proveedores_controller.py           129    113  12.40%   11-45, 63-100, 114-143, 148-178, 183-186, 191-192, 207-260, 265-268, 273-300, 310-313
+app\controllers\solicitudes_admin_controller.py     242    196  19.01%   29-38, 54-111, 127-133, 140-169, 176-225, 232-263, 270-299, 313-360, 368-398, 403-504, 511-581, 599-616
+app\controllers\usuarios_controller.py               76     57  25.00%   14-21, 32-80, 89-91, 100-114, 123-158
+app\extensions.py                                     9      0 100.00%
+app\factory.py                                      189     66  65.08%   30-31, 53, 72, 84-92, 109-115, 130, 164, 170-171, 200-247, 317-318, 322-324, 328-329, 333-335, 343-344
+app\forms\__init__.py                                 0      0 100.00%
+app\models\__init__.py                               13      0 100.00%
+app\models\activo.py                                 46     16  65.22%   38-45, 50-51, 56-64, 69
+app\models\archivo_adjunto.py                        41     14  65.85%   35, 39, 60-61, 66-75, 80, 85-92
+app\models\categoria.py                              50     27  46.00%   37-51, 62, 66-70, 73, 91-114
+app\models\control_generacion.py                     35     35   0.00%   5-70
+app\models\inventario.py                             99     31  68.69%   56, 61-63, 68, 72-80, 84-91, 95-97, 101-103, 134, 139-145, 176-177, 182-184
+app\models\manual.py                                 28     11  60.71%   45-53, 57, 73
+app\models\movimiento_inventario.py                  59      8  86.44%   51, 56, 61, 65-67, 102, 129
+app\models\orden_recambio.py                         20      2  90.00%   32, 35
+app\models\orden_trabajo.py                          20      0 100.00%
+app\models\plan_mantenimiento.py                     25      0 100.00%
+app\models\proveedor.py                              13      1  92.31%   16
+app\models\solicitud_servicio.py                     41      7  82.93%   57, 62-71, 76-82, 87-93
+app\models\usuario.py                                18      2  88.89%   22, 26
+app\routes\__init__.py                                0      0 100.00%
+app\routes\activos.py                               146    103  29.45%   23-29, 42-78, 84-110, 117, 124-128, 135-143, 149-159, 169-175, 182-203, 209-214, 220-225, 232-238, 245-249, 256-267
+app\routes\actualizar_fecha.py                       33     24  27.27%   17-80
+app\routes\calendario.py                             91     70  23.08%   17, 24-167, 174-228, 235-257
+app\routes\categorias.py                             31      9  70.97%   11, 17, 23, 29, 35, 41, 51, 57, 63
+app\routes\cron.py                                  121    100  17.36%   28-32, 46-128, 145-182, 193-247, 258-314, 319-354, 363-366
+app\routes\diagnostico.py                            22     16  27.27%   12-67
+app\routes\estadisticas.py                            8      1  87.50%   11
+app\routes\inventario.py                            270    193  28.52%   26-28, 40, 47-51, 61-128, 135-147, 154-171, 178, 186-263, 270-301, 308-323, 330-361, 368-393, 400-433, 440-496, 503, 589-638, 648-655, 662-679, 687-708, 716-755, 762, 772
+app\routes\inventario_simple.py                      54     54   0.00%   1-126
+app\routes\ordenes.py                               166    112  32.53%   40, 47-70, 77-104, 111-115, 122-129, 136-147, 154-160, 167-171, 178-182, 189-193, 200-213, 223-227, 234-238, 245-253, 260-264, 271-277
+app\routes\planes.py                                112     87  22.32%   22, 28-54, 65-109, 116-121, 128-155, 162-183, 190-206
+app\routes\proveedores.py                            97     72  25.77%   22-39, 49-70, 76-101, 107-115, 121-131, 137-147, 154-158, 165-176
+app\routes\recambios.py                              50     36  28.00%   11-15, 21-52, 58-82, 88-94, 100-119
+app\routes\solicitudes.py                           149    122  18.12%   26, 32-35, 41-106, 116-122, 128-134, 140-145, 169-219, 225-246, 260-337
+app\routes\usuarios.py                              174    143  17.82%   14, 20-92, 98-154, 160-193, 199-262, 268-301, 307-352, 359-448
+app\routes\web.py                                   201    146  27.36%   34-39, 48-116, 123-127, 134-148, 155-170, 177-214, 220, 226-243, 252, 258, 264, 269-271, 279, 286-302, 309-418, 436, 443-552
+app\utils\__init__.py                                 0      0 100.00%
+app\utils\email_utils.py                             97     88   9.28%   18-110, 120, 127-193, 200-262
+app\utils\secrets.py                                 49     27  44.90%   17-18, 45-74, 118-125, 165-171
+app\utils\storage.py                                176    176   0.00%   6-419
+--------------------------------------------------------------------------------
+TOTAL                                              4760   3576  24.87%
+Coverage HTML written to dir htmlcov
+
+FAIL Required test coverage of 80% not reached. Total coverage: 24.87%
+=========================== short test summary info ===========================
+FAILED tests/test_factory.py::TestFactory::test_blueprints_registered - Asser...
+======================== 1 failed, 11 passed in 1.89s =========================

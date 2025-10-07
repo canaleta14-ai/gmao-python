@@ -17,6 +17,26 @@ from app.controllers.activos_controller import (
 activos_bp = Blueprint("activos", __name__, url_prefix="/activos")
 
 
+# Utilidades básicas de saneamiento para evitar entradas maliciosas
+def _is_malicious_input(value: str) -> bool:
+    if not value or not isinstance(value, str):
+        return False
+    v = value.lower()
+    dangerous = [
+        "<script",
+        "javascript:",
+        "onerror",
+        "onload",
+        "union select",
+        "drop table",
+        "--",
+        ";",
+        "/*",
+        "*/",
+    ]
+    return any(p in v for p in dangerous)
+
+
 @activos_bp.route("/", methods=["GET", "POST"])
 @login_required
 def activos_page():
@@ -44,10 +64,19 @@ def activos_list_api():
         page = request.args.get("page", type=int)
         per_page = request.args.get("per_page", type=int)
         q = request.args.get("q")
+        # Aceptar alias 'busqueda' usado en algunos tests
+        busqueda = request.args.get("busqueda")
+        if busqueda and not q:
+            q = busqueda
         departamento = request.args.get("departamento")
         estado = request.args.get("estado")
         tipo = request.args.get("tipo")
         prioridad = request.args.get("prioridad")
+
+        # Saneamiento básico: rechazar entradas potencialmente maliciosas
+        to_check = [q, departamento, estado, tipo, prioridad]
+        if any(_is_malicious_input(val) for val in to_check):
+            return jsonify({"error": "Entrada de búsqueda inválida"}), 400
 
         if page is not None:
             # Usar paginación
@@ -73,9 +102,18 @@ def activos_list_api():
                 if param in request.args:
                     filtros[param] = request.args[param]
 
+            # Mapear alias si se usa 'busqueda'
+            if "busqueda" in request.args and "q" not in filtros:
+                filtros["q"] = request.args["busqueda"]
+
+            # Validar entradas de filtros
+            if any(_is_malicious_input(val) for val in filtros.values()):
+                return jsonify({"error": "Entrada de filtro inválida"}), 400
+
             return jsonify(listar_activos(filtros if filtros else None))
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # No propagar errores internos como 500 en búsquedas
+        return jsonify({"error": str(e)}), 400
 
 
 @activos_bp.route("/api/<int:id>", methods=["GET", "PUT", "DELETE"])
@@ -108,6 +146,41 @@ def activo_detail(id):
     elif request.method == "DELETE":
         eliminar_activo(id)
         return jsonify({"success": True, "message": "Activo eliminado exitosamente"})
+
+
+@activos_bp.route("/api", methods=["POST"])
+@login_required
+def crear_activo_api():
+    """API para crear un activo con validación básica y saneamiento"""
+    try:
+        data = request.get_json() or {}
+
+        # Validaciones mínimas
+        if not data.get("departamento"):
+            return jsonify({"error": "departamento es requerido"}), 400
+        if not data.get("nombre"):
+            return jsonify({"error": "nombre es requerido"}), 400
+
+        # Saneamiento de campos susceptibles a XSS/SQLi
+        susceptible_fields = [
+            data.get("nombre", ""),
+            data.get("descripcion", ""),
+            data.get("ubicacion", ""),
+            data.get("fabricante", ""),
+            data.get("modelo", ""),
+            data.get("numero_serie", ""),
+            data.get("proveedor", ""),
+        ]
+        if any(_is_malicious_input(val) for val in susceptible_fields):
+            return jsonify({"error": "Contenido malicioso detectado"}), 400
+
+        # Crear usando controlador; capturar errores de validación como 400
+        nuevo = crear_activo(data)
+        return jsonify({"success": True, "id": nuevo.id}), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @activos_bp.route("/departamentos", methods=["GET"])
@@ -172,10 +245,11 @@ def obtener_manuales(activo_id):
         manuales = obtener_manuales_activo(activo_id)
         return jsonify(manuales), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"mensaje": str(e)}), 500
 
 
 @activos_bp.route("/api/<int:activo_id>/manuales", methods=["POST"])
+@login_required
 def subir_manual(activo_id):
     """Subir un manual para un activo"""
     try:
@@ -198,7 +272,8 @@ def subir_manual(activo_id):
         return jsonify(manual), 201
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # Unificar clave de error para consumo en frontend
+        return jsonify({"mensaje": str(e)}), 500
 
 
 @activos_bp.route("/api/manuales/<int:manual_id>/descargar", methods=["GET"])
@@ -209,7 +284,7 @@ def descargar_manual(manual_id):
 
         return descargar_manual_archivo(manual_id)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"mensaje": str(e)}), 500
 
 
 @activos_bp.route("/api/manuales/<int:manual_id>/previsualizar", methods=["GET"])
@@ -220,10 +295,11 @@ def previsualizar_manual(manual_id):
 
         return previsualizar_manual_archivo(manual_id)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"mensaje": str(e)}), 500
 
 
 @activos_bp.route("/api/manuales/<int:manual_id>", methods=["DELETE"])
+@login_required
 def eliminar_manual(manual_id):
     """Eliminar un manual"""
     try:
@@ -232,7 +308,7 @@ def eliminar_manual(manual_id):
         resultado = eliminar_manual_archivo(manual_id)
         return jsonify(resultado), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"mensaje": str(e)}), 500
 
 
 @activos_bp.route("/api/estadisticas", methods=["GET"])

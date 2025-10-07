@@ -1,0 +1,887 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.6, pytest-8.3.3, pluggy-1.6.0
+rootdir: C:\gmao - copia
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.11.0, langsmith-0.4.31, cov-5.0.0, flask-1.3.0, mock-3.14.0
+collected 53 items
+
+tests\test_factory.py .FFF....F...                                       [ 22%]
+tests\test_models\test_activo.py .F.....                                 [ 35%]
+tests\test_models\test_inventario.py FFFFFFF                             [ 49%]
+tests\test_models\test_orden_trabajo.py .......                          [ 62%]
+tests\test_routes\test_cron_routes.py F.F.FFFF                           [ 77%]
+tests\test_security.py ..FF..EE....                                      [100%]
+
+=================================== ERRORS ====================================
+_______________ ERROR at setup of test_sql_injection_protection _______________
+file C:\gmao - copia\tests\test_security.py, line 127
+  @pytest.mark.security
+  def test_sql_injection_protection(authenticated_client):
+E       fixture 'authenticated_client' not found
+>       available fixtures: _configure_application, _monkeypatch_response_class, _push_request_context, accept_any, accept_json, accept_jsonp, accept_mimetype, activo_test, anyio_backend, anyio_backend_name, anyio_backend_options, app, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, client, client_class, config, cov, db_session, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, live_server, mocker, module_mocker, monkeypatch, no_cover, orden_trabajo_test, package_mocker, plan_mantenimiento_test, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, session_mocker, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, usuario_admin, usuario_tecnico
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\gmao - copia\tests\test_security.py:127
+____________________ ERROR at setup of test_xss_protection ____________________
+file C:\gmao - copia\tests\test_security.py, line 160
+  @pytest.mark.security
+  def test_xss_protection(authenticated_client):
+E       fixture 'authenticated_client' not found
+>       available fixtures: _configure_application, _monkeypatch_response_class, _push_request_context, accept_any, accept_json, accept_jsonp, accept_mimetype, activo_test, anyio_backend, anyio_backend_name, anyio_backend_options, app, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, client, client_class, config, cov, db_session, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, live_server, mocker, module_mocker, monkeypatch, no_cover, orden_trabajo_test, package_mocker, plan_mantenimiento_test, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, session_mocker, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, usuario_admin, usuario_tecnico
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\gmao - copia\tests\test_security.py:160
+================================== FAILURES ===================================
+_________________ TestFactory.test_create_app_testing_config __________________
+
+self = <tests.test_factory.TestFactory object at 0x000001810C6307D0>
+
+    def test_create_app_testing_config(self):
+        """Test creaci¾n de app con configuraci¾n de testing"""
+        app = create_app()
+    
+>       assert app.config["TESTING"] is True
+E       assert False is True
+
+tests\test_factory.py:26: AssertionError
+---------------------------- Captured stdout call -----------------------------
+[OK] Blueprint de estadÝsticas disponible
+------------------------------ Captured log call ------------------------------
+WARNING  app.utils.secrets:secrets.py:134 Usando valor por defecto para 'SECRET_KEY' (ni Secret Manager ni .env disponibles)\nWARNING  app.factory:factory.py:46 \u26a0\ufe0f  Usando SECRET_KEY por defecto - NO USAR EN PRODUCCI\xd3N
+_______________ TestFactory.test_database_extension_initialized _______________
+
+self = <tests.test_factory.TestFactory object at 0x000001810C630F10>
+
+    def test_database_extension_initialized(self):
+        """Test que la extensi¾n de base de datos estß inicializada"""
+        app = create_app()
+    
+        with app.app_context():
+            # db deberÝa estar inicializado
+            assert db is not None
+>           assert db.app == app
+
+tests\test_factory.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <SQLAlchemy>, name = 'app'
+
+    def __getattr__(self, name: str) -> t.Any:
+        if name == "relation":
+            return self._relation
+    
+        if name == "event":
+            return sa_event
+    
+        if name.startswith("_"):
+            raise AttributeError(name)
+    
+        for mod in (sa, sa_orm):
+            if hasattr(mod, name):
+                return getattr(mod, name)
+    
+>       raise AttributeError(name)
+E       AttributeError: app
+
+.venv\Lib\site-packages\flask_sqlalchemy\extension.py:1008: AttributeError
+---------------------------- Captured stdout call -----------------------------
+[OK] Blueprint de estadÝsticas disponible
+------------------------------ Captured log call ------------------------------
+WARNING  app.utils.secrets:secrets.py:134 Usando valor por defecto para 'SECRET_KEY' (ni Secret Manager ni .env disponibles)\nWARNING  app.factory:factory.py:46 \u26a0\ufe0f  Usando SECRET_KEY por defecto - NO USAR EN PRODUCCI\xd3N
+___________________ TestFactory.test_blueprints_registered ____________________
+
+self = <tests.test_factory.TestFactory object at 0x000001810C631690>
+
+    def test_blueprints_registered(self):
+        """Test que los blueprints principales estßn registrados"""
+        app = create_app()
+    
+        # Verificar que se registraron blueprints
+        blueprint_names = [bp.name for bp in app.blueprints.values()]
+    
+        # Blueprints esperados
+        expected = ["web", "activos", "ordenes", "planes", "inventario", "usuarios"]
+    
+        for bp_name in expected:
+>           assert bp_name in blueprint_names, f"Blueprint '{bp_name}' no registrado"
+E           AssertionError: Blueprint 'web' no registrado
+E           assert 'web' in ['web_routes', 'activos', 'ordenes', 'recambios', 'inventario', 'planes', ...]
+
+tests\test_factory.py:49: AssertionError
+---------------------------- Captured stdout call -----------------------------
+[OK] Blueprint de estadÝsticas disponible
+------------------------------ Captured log call ------------------------------
+WARNING  app.utils.secrets:secrets.py:134 Usando valor por defecto para 'SECRET_KEY' (ni Secret Manager ni .env disponibles)\nWARNING  app.factory:factory.py:46 \u26a0\ufe0f  Usando SECRET_KEY por defecto - NO USAR EN PRODUCCI\xd3N
+__________________ TestFactory.test_csrf_disabled_in_testing __________________
+
+self = <tests.test_factory.TestFactory object at 0x000001810C633AD0>
+
+    def test_csrf_disabled_in_testing(self):
+        """Test que CSRF estß deshabilitado en testing"""
+        app = create_app()
+    
+        # En testing, WTF_CSRF_ENABLED deberÝa ser False
+>       assert app.config.get("WTF_CSRF_ENABLED", True) is False
+E       AssertionError: assert True is False
+E        +  where True = <built-in method get of Config object at 0x000001812D070950>('WTF_CSRF_ENABLED', True)
+E        +    where <built-in method get of Config object at 0x000001812D070950> = <Config {'DEBUG': False, 'TESTING': False, 'PROPAGATE_EXCEPTIONS': None, 'SECRET_KEY': 'dev-secret-key-INSEGURO-CAMBIA... ['X-CSRFToken', 'X-CSRF-Token'], 'WTF_CSRF_TIME_LIMIT': 3600, 'WTF_CSRF_SSL_STRICT': True, 'RATELIMIT_ENABLED': True}>.get
+E        +      where <Config {'DEBUG': False, 'TESTING': False, 'PROPAGATE_EXCEPTIONS': None, 'SECRET_KEY': 'dev-secret-key-INSEGURO-CAMBIA... ['X-CSRFToken', 'X-CSRF-Token'], 'WTF_CSRF_TIME_LIMIT': 3600, 'WTF_CSRF_SSL_STRICT': True, 'RATELIMIT_ENABLED': True}> = <Flask 'app.factory'>.config
+
+tests\test_factory.py:86: AssertionError
+---------------------------- Captured stdout call -----------------------------
+[OK] Blueprint de estadÝsticas disponible
+------------------------------ Captured log call ------------------------------
+WARNING  app.utils.secrets:secrets.py:134 Usando valor por defecto para 'SECRET_KEY' (ni Secret Manager ni .env disponibles)\nWARNING  app.factory:factory.py:46 \u26a0\ufe0f  Usando SECRET_KEY por defecto - NO USAR EN PRODUCCI\xd3N
+______________ TestActivoModel.test_activo_con_todos_los_campos _______________
+
+self = <tests.test_models.test_activo.TestActivoModel object at 0x000001810C67B150>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_activo_con_todos_los_campos(self, db_session):
+        """Test activo con todos los campos opcionales"""
+>       activo = Activo(
+            codigo="ACT-FULL-001",
+            nombre="Compresor Industrial",
+            departamento="Mantenimiento",
+            tipo="Compresor",
+            ubicacion="AlmacÚn Central",
+            estado="En Mantenimiento",
+            marca="Siemens",
+            modelo="X-2000",
+            numero_serie="SN123456789",
+            fecha_adquisicion="2024-01-15",
+            prioridad="Alta",
+            activo=True,
+        )
+
+tests\test_models\test_activo.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Activo (transient 1654324739472)>
+kwargs = {'activo': True, 'codigo': 'ACT-FULL-001', 'departamento': 'Mantenimiento', 'estado': 'En Mantenimiento', ...}
+cls_ = <class 'app.models.activo.Activo'>, k = 'marca'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'marca' is an invalid keyword argument for Activo
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+_______________ TestInventarioModel.test_crear_item_inventario ________________
+
+self = <tests.test_models.test_inventario.TestInventarioModel object at 0x000001810C682C50>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_crear_item_inventario(self, db_session):
+        """Test creaci¾n bßsica de item de inventario"""
+>       item = Inventario(
+            codigo="INV-TEST-001",
+            nombre="Rodamiento SKF 6205",
+            categoria="Rodamientos",
+            cantidad=50,
+            cantidad_minima=10,
+            ubicacion="AlmacÚn A - Estante 3",
+            unidad="Unidad",
+        )
+
+tests\test_models\test_inventario.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Inventario INV-TEST-001: None>
+kwargs = {'cantidad': 50, 'cantidad_minima': 10, 'categoria': 'Rodamientos', 'codigo': 'INV-TEST-001', ...}
+cls_ = <class 'app.models.inventario.Inventario'>, k = 'nombre'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'nombre' is an invalid keyword argument for Inventario
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+________________ TestInventarioModel.test_alerta_stock_minimo _________________
+
+self = <tests.test_models.test_inventario.TestInventarioModel object at 0x000001810C683310>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_alerta_stock_minimo(self, db_session):
+        """Test detecci¾n de stock por debajo del mÝnimo"""
+>       item_bajo = Inventario(
+            codigo="INV-BAJO-001",
+            nombre="Filtro de aceite",
+            categoria="Filtros",
+            cantidad=5,  # Menor que mÝnimo
+            cantidad_minima=10,
+            ubicacion="AlmacÚn B",
+            unidad="Unidad",
+        )
+
+tests\test_models\test_inventario.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Inventario INV-BAJO-001: None>
+kwargs = {'cantidad': 5, 'cantidad_minima': 10, 'categoria': 'Filtros', 'codigo': 'INV-BAJO-001', ...}
+cls_ = <class 'app.models.inventario.Inventario'>, k = 'nombre'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'nombre' is an invalid keyword argument for Inventario
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+________________ TestInventarioModel.test_actualizar_cantidad _________________
+
+self = <tests.test_models.test_inventario.TestInventarioModel object at 0x000001810C683A50>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_actualizar_cantidad(self, db_session):
+        """Test actualizaci¾n de cantidad de inventario"""
+>       item = Inventario(
+            codigo="INV-UPDATE-001",
+            nombre="Tornillo M8",
+            categoria="TornillerÝa",
+            cantidad=100,
+            cantidad_minima=20,
+            ubicacion="AlmacÚn D",
+            unidad="Unidad",
+        )
+
+tests\test_models\test_inventario.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Inventario INV-UPDATE-001: None>
+kwargs = {'cantidad': 100, 'cantidad_minima': 20, 'categoria': 'TornillerÝa', 'codigo': 'INV-UPDATE-001', ...}
+cls_ = <class 'app.models.inventario.Inventario'>, k = 'nombre'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'nombre' is an invalid keyword argument for Inventario
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+_______________ TestInventarioModel.test_categorias_inventario ________________
+
+self = <tests.test_models.test_inventario.TestInventarioModel object at 0x000001810C68C210>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_categorias_inventario(self, db_session):
+        """Test diferentes categorÝas de inventario"""
+        categorias = [
+            "Rodamientos",
+            "Filtros",
+            "Lubricantes",
+            "TornillerÝa",
+            "Herramientas",
+            "ElÚctricos",
+        ]
+    
+        for i, categoria in enumerate(categorias):
+>           item = Inventario(
+                codigo=f"INV-CAT-{i:03d}",
+                nombre=f"Item de {categoria}",
+                categoria=categoria,
+                cantidad=10,
+                cantidad_minima=5,
+                ubicacion="AlmacÚn General",
+                unidad="Unidad",
+            )
+
+tests\test_models\test_inventario.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Inventario INV-CAT-000: None>
+kwargs = {'cantidad': 10, 'cantidad_minima': 5, 'categoria': 'Rodamientos', 'codigo': 'INV-CAT-000', ...}
+cls_ = <class 'app.models.inventario.Inventario'>, k = 'nombre'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'nombre' is an invalid keyword argument for Inventario
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+__________________ TestInventarioModel.test_unidades_medida ___________________
+
+self = <tests.test_models.test_inventario.TestInventarioModel object at 0x000001810C683F10>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_unidades_medida(self, db_session):
+        """Test diferentes unidades de medida"""
+        items = [
+            ("INV-UN-001", "Tornillo", "Unidad"),
+            ("INV-UN-002", "Aceite", "Litro"),
+            ("INV-UN-003", "Cable", "Metro"),
+            ("INV-UN-004", "Pintura", "Kilogramo"),
+        ]
+    
+        for codigo, nombre, unidad in items:
+>           item = Inventario(
+                codigo=codigo,
+                nombre=nombre,
+                categoria="General",
+                cantidad=10,
+                cantidad_minima=5,
+                ubicacion="AlmacÚn",
+                unidad=unidad,
+            )
+
+tests\test_models\test_inventario.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Inventario INV-UN-001: None>
+kwargs = {'cantidad': 10, 'cantidad_minima': 5, 'categoria': 'General', 'codigo': 'INV-UN-001', ...}
+cls_ = <class 'app.models.inventario.Inventario'>, k = 'nombre'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'nombre' is an invalid keyword argument for Inventario
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+____________________ TestInventarioModel.test_codigo_unico ____________________
+
+self = <tests.test_models.test_inventario.TestInventarioModel object at 0x000001810C67AE50>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_codigo_unico(self, db_session):
+        """Test que el c¾digo del item debe ser ·nico"""
+>       item1 = Inventario(
+            codigo="INV-UNIQUE-001",
+            nombre="Item 1",
+            categoria="General",
+            cantidad=10,
+            cantidad_minima=5,
+            ubicacion="AlmacÚn",
+            unidad="Unidad",
+        )
+
+tests\test_models\test_inventario.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Inventario INV-UNIQUE-001: None>
+kwargs = {'cantidad': 10, 'cantidad_minima': 5, 'categoria': 'General', 'codigo': 'INV-UNIQUE-001', ...}
+cls_ = <class 'app.models.inventario.Inventario'>, k = 'nombre'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'nombre' is an invalid keyword argument for Inventario
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+__________________ TestInventarioModel.test_precio_opcional ___________________
+
+self = <tests.test_models.test_inventario.TestInventarioModel object at 0x000001810C68CB50>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_precio_opcional(self, db_session):
+        """Test campo precio opcional"""
+>       item_con_precio = Inventario(
+            codigo="INV-PRECIO-001",
+            nombre="Rodamiento Premium",
+            categoria="Rodamientos",
+            cantidad=20,
+            cantidad_minima=5,
+            ubicacion="AlmacÚn A",
+            unidad="Unidad",
+            precio=25.50,
+        )
+
+tests\test_models\test_inventario.py:176: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Inventario INV-PRECIO-001: None>
+kwargs = {'cantidad': 20, 'cantidad_minima': 5, 'categoria': 'Rodamientos', 'codigo': 'INV-PRECIO-001', ...}
+cls_ = <class 'app.models.inventario.Inventario'>, k = 'nombre'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'nombre' is an invalid keyword argument for Inventario
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+_________ TestCronRoutes.test_generar_ordenes_preventivas_desarrollo __________
+
+self = <tests.test_routes.test_cron_routes.TestCronRoutes object at 0x000001810C695850>
+client = <FlaskClient <Flask 'app.factory'>>
+plan_mantenimiento_test = <PlanMantenimiento 1>, app = <Flask 'app.factory'>
+
+    def test_generar_ordenes_preventivas_desarrollo(
+        self, client, plan_mantenimiento_test, app
+    ):
+        """Test generaci¾n de ¾rdenes en modo desarrollo"""
+        with app.app_context():
+            response = client.post("/api/cron/generar-ordenes-preventivas")
+    
+            assert response.status_code == 200
+            data = response.get_json()
+            assert "planes_revisados" in data
+            assert "ordenes_creadas" in data
+            assert data["planes_revisados"] >= 1
+>           assert data["ordenes_creadas"] >= 1  # Al menos el plan de prueba
+E           assert 0 >= 1
+
+tests\test_routes\test_cron_routes.py:24: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    app.routes.cron:cron.py:104 Error procesando plan 1: 'PlanMantenimiento' object has no attribute 'tipo_mantenimiento'
+____________________ TestCronRoutes.test_verificar_alertas ____________________
+
+self = <tests.test_routes.test_cron_routes.TestCronRoutes object at 0x000001810C6965D0>
+client = <FlaskClient <Flask 'app.factory'>>, activo_test = <Activo 1>
+app = <Flask 'app.factory'>
+
+    def test_verificar_alertas(self, client, activo_test, app):
+        """Test verificaci¾n de alertas de mantenimiento"""
+        with app.app_context():
+            response = client.post("/api/cron/verificar-alertas")
+    
+>           assert response.status_code == 200
+E           assert 500 == 200
+E            +  where 500 = <WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]>.status_code
+
+tests\test_routes\test_cron_routes.py:64: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    app.routes.cron:cron.py:313 Error en verificaci¾n de alertas: type object 'Activo' has no attribute 'fecha_ultimo_mantenimiento'
+_______________ TestCronRoutes.test_crear_orden_actualiza_plan ________________
+
+self = <tests.test_routes.test_cron_routes.TestCronRoutes object at 0x000001810C695CD0>
+client = <FlaskClient <Flask 'app.factory'>>
+plan_mantenimiento_test = <PlanMantenimiento 1>, app = <Flask 'app.factory'>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+
+    def test_crear_orden_actualiza_plan(
+        self, client, plan_mantenimiento_test, app, db_session
+    ):
+        """Test que crear orden actualiza fechas del plan"""
+        from app.models.plan_mantenimiento import PlanMantenimiento
+    
+        with app.app_context():
+            # Obtener fecha inicial
+            plan = (
+                db_session.query(PlanMantenimiento)
+                .filter_by(id=plan_mantenimiento_test.id)
+                .first()
+            )
+            fecha_inicial = plan.proxima_ejecucion
+    
+            # Generar ¾rdenes
+            response = client.post("/api/cron/generar-ordenes-preventivas")
+            assert response.status_code == 200
+    
+            # Verificar que se actualiz¾ la pr¾xima ejecuci¾n
+            db_session.refresh(plan)
+>           assert plan.ultima_ejecucion is not None
+E           assert None is not None
+E            +  where None = <PlanMantenimiento 1>.ultima_ejecucion
+
+tests\test_routes\test_cron_routes.py:102: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    app.routes.cron:cron.py:104 Error procesando plan 1: 'PlanMantenimiento' object has no attribute 'tipo_mantenimiento'
+________________ TestCronRoutes.test_generar_multiples_ordenes ________________
+
+self = <tests.test_routes.test_cron_routes.TestCronRoutes object at 0x000001810C696CD0>
+client = <FlaskClient <Flask 'app.factory'>>, app = <Flask 'app.factory'>
+db_session = <sqlalchemy.orm.scoping.scoped_session object at 0x000001810AC11E50>
+activo_test = <Activo 1>, usuario_tecnico = <Usuario 1>
+
+    def test_generar_multiples_ordenes(
+        self, client, app, db_session, activo_test, usuario_tecnico
+    ):
+        """Test generaci¾n de m·ltiples ¾rdenes desde varios planes"""
+        from app.models.plan_mantenimiento import PlanMantenimiento
+        from datetime import datetime, timedelta
+    
+        with app.app_context():
+            # Crear varios planes vencidos
+            planes = []
+            for i in range(3):
+>               plan = PlanMantenimiento(
+                    nombre=f"Plan Test {i+1}",
+                    descripcion=f"Descripci¾n plan {i+1}",
+                    tipo_mantenimiento="Preventivo",
+                    activo_id=activo_test.id,
+                    responsable_id=usuario_tecnico.id,
+                    frecuencia="Mensual",
+                    frecuencia_dias=30,
+                    proxima_ejecucion=datetime.utcnow().date() - timedelta(days=i + 1),
+                    activo=True,
+                    duracion_estimada=2.0,
+                )
+
+tests\test_routes\test_cron_routes.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:571: in _initialize_instance
+    with util.safe_reraise():
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:569: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <PlanMantenimiento (transient 1654320557328)>
+kwargs = {'activo': True, 'activo_id': 1, 'descripcion': 'Descripci¾n plan 1', 'duracion_estimada': 2.0, ...}
+cls_ = <class 'app.models.plan_mantenimiento.PlanMantenimiento'>
+k = 'tipo_mantenimiento'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'tipo_mantenimiento' is an invalid keyword argument for PlanMantenimiento
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+_______________ TestCronRoutes.test_verificar_alertas_seguridad _______________
+
+self = <tests.test_routes.test_cron_routes.TestCronRoutes object at 0x000001810C697090>
+client = <FlaskClient <Flask 'app.factory'>>, app = <Flask 'app.factory'>
+
+    def test_verificar_alertas_seguridad(self, client, app):
+        """Test seguridad de endpoint de alertas"""
+        app.config["FLASK_ENV"] = "production"
+    
+        with app.app_context():
+            # Sin header - debe fallar
+            response = client.post("/api/cron/verificar-alertas")
+            assert response.status_code == 403
+    
+            # Con header correcto - debe funcionar
+            response = client.post(
+                "/api/cron/verificar-alertas", headers={"X-Appengine-Cron": "true"}
+            )
+>           assert response.status_code == 200
+E           assert 500 == 200
+E            +  where 500 = <WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]>.status_code
+
+tests\test_routes\test_cron_routes.py:154: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    app.routes.cron:cron.py:313 Error en verificaci¾n de alertas: type object 'Activo' has no attribute 'fecha_ultimo_mantenimiento'
+________________ TestCronRoutes.test_test_cron_solo_desarrollo ________________
+
+self = <tests.test_routes.test_cron_routes.TestCronRoutes object at 0x000001810C697450>
+client = <FlaskClient <Flask 'app.factory'>>, app = <Flask 'app.factory'>
+
+    def test_test_cron_solo_desarrollo(self, client, app):
+        """Test que /test solo funciona en desarrollo"""
+        # En desarrollo - debe funcionar
+        response = client.get("/api/cron/test")
+>       assert response.status_code == 200
+E       assert 403 == 200
+E        +  where 403 = <WrapperTestResponse streamed [403 FORBIDDEN]>.status_code
+
+tests\test_routes\test_cron_routes.py:162: AssertionError
+_________________ test_session_cookie_insecure_in_development _________________
+
+app = <Flask 'app.factory'>
+
+    @pytest.mark.security
+    def test_session_cookie_insecure_in_development(app):
+        """Verificar que en desarrollo las cookies no requieren HTTPS"""
+        # Verificar entorno de desarrollo
+>       assert app.config.get("FLASK_ENV") != "production"
+E       AssertionError: assert 'production' != 'production'
+E        +  where 'production' = <built-in method get of Config object at 0x000001810C62DA90>('FLASK_ENV')
+E        +    where <built-in method get of Config object at 0x000001810C62DA90> = <Config {'DEBUG': False, 'TESTING': True, 'PROPAGATE_EXCEPTIONS': None, 'SECRET_KEY': 'test-secret-key', 'PERMANENT_SE...ken'], 'WTF_CSRF_TIME_LIMIT': 3600, 'WTF_CSRF_SSL_STRICT': True, 'RATELIMIT_ENABLED': True, 'FLASK_ENV': 'production'}>.get
+E        +      where <Config {'DEBUG': False, 'TESTING': True, 'PROPAGATE_EXCEPTIONS': None, 'SECRET_KEY': 'test-secret-key', 'PERMANENT_SE...ken'], 'WTF_CSRF_TIME_LIMIT': 3600, 'WTF_CSRF_SSL_STRICT': True, 'RATELIMIT_ENABLED': True, 'FLASK_ENV': 'production'}> = <Flask 'app.factory'>.config
+
+tests\test_security.py:56: AssertionError
+_________________________ test_secret_key_not_default _________________________
+
+app = <Flask 'app.factory'>
+
+    @pytest.mark.security
+    def test_secret_key_not_default(app):
+        """Verificar que SECRET_KEY no es el valor por defecto"""
+        secret = app.config["SECRET_KEY"]
+    
+        # No debe ser el valor de desarrollo por defecto
+        default_key = "clave_secreta_fija_para_sesiones_2025_gmao"
+    
+        # En producci¾n no debe ser el default
+        if os.getenv("GAE_ENV", "").startswith("standard"):
+            assert (
+                secret != default_key
+            ), "SECRET_KEY en producci¾n no debe ser el valor por defecto"
+    
+        # Verificar longitud mÝnima
+>       assert (
+            len(secret) >= 32
+        ), f"SECRET_KEY debe tener al menos 32 caracteres, tiene {len(secret)}"
+E       AssertionError: SECRET_KEY debe tener al menos 32 caracteres, tiene 15
+E       assert 15 >= 32
+E        +  where 15 = len('test-secret-key')
+
+tests\test_security.py:78: AssertionError
+
+---------- coverage: platform win32, python 3.11.6-final-0 -----------
+Name                                              Stmts   Miss   Cover   Missing
+--------------------------------------------------------------------------------
+app\__init__.py                                       1      0 100.00%
+app\config\__init__.py                                0      0 100.00%
+app\controllers\__init__.py                           0      0 100.00%
+app\controllers\activos_controller.py               172    154  10.47%   11-55, 91-157, 170-209, 213-246, 250-253, 258, 263, 268-347, 352-366, 371-398, 408-411
+app\controllers\archivos_controller.py               79     62  21.52%   15-69, 76-99, 110-114, 120-130, 136-146, 151-182, 187, 192-213, 218-222
+app\controllers\categorias_controller.py            100     82  18.00%   14-53, 66-121, 131-151, 161-238, 251-285, 298-338
+app\controllers\estadisticas_controller.py           13      8  38.46%   9-33
+app\controllers\inventario_controller.py            203    180  11.33%   16-63, 76-99, 103-118, 126-167, 172-208, 213-259, 265-282, 288-308, 313-326, 331-348, 353-374, 379-422, 427-459, 464-480, 485-499
+app\controllers\inventario_controller_simple.py     172    154  10.47%   13-37, 42-77, 83-107, 112-205, 215-328, 333-364, 369-426, 431-466
+app\controllers\manuales_controller.py              104    104   0.00%   5-203
+app\controllers\orden_recambios_controller.py        89     81   8.99%   10-50, 55-56, 61-173, 178-195, 200-215
+app\controllers\ordenes_controller.py               207    186  10.14%   15-36, 74-150, 163-164, 197-239, 244-304, 309-403, 408-418, 423-424, 439-446, 459-495, 505-596
+app\controllers\planes_controller.py                420    400   4.76%   14-226, 231-261, 265-346, 360-467, 472-473, 501-649, 654-657, 662-687, 700-839, 848-854, 865-905, 912-1015, 1030-1169
+app\controllers\proveedores_controller.py           129    113  12.40%   11-45, 63-100, 114-143, 148-178, 183-186, 191-192, 207-260, 265-268, 273-300, 310-313
+app\controllers\solicitudes_admin_controller.py     242    196  19.01%   29-38, 54-111, 127-133, 140-169, 176-225, 232-263, 270-299, 313-360, 368-398, 403-504, 511-581, 599-616
+app\controllers\usuarios_controller.py               76     57  25.00%   14-21, 32-80, 89-91, 100-114, 123-158
+app\extensions.py                                     9      0 100.00%
+app\factory.py                                      180     54  70.00%   25-26, 48, 85-86, 104-110, 186-233, 308-310, 314-315, 319-321, 329-330
+app\forms\__init__.py                                 0      0 100.00%
+app\models\__init__.py                               13      0 100.00%
+app\models\activo.py                                 46     16  65.22%   38-45, 50-51, 56-64, 69
+app\models\archivo_adjunto.py                        41     14  65.85%   35, 39, 60-61, 66-75, 80, 85-92
+app\models\categoria.py                              50     27  46.00%   37-51, 62, 66-70, 73, 91-114
+app\models\control_generacion.py                     35     35   0.00%   5-70
+app\models\inventario.py                             99     30  69.70%   61-63, 68, 72-80, 84-91, 95-97, 101-103, 134, 139-145, 176-177, 182-184
+app\models\manual.py                                 28     11  60.71%   45-53, 57, 73
+app\models\movimiento_inventario.py                  59      8  86.44%   51, 56, 61, 65-67, 102, 129
+app\models\orden_recambio.py                         20      2  90.00%   32, 35
+app\models\orden_trabajo.py                          20      0 100.00%
+app\models\plan_mantenimiento.py                     25      0 100.00%
+app\models\proveedor.py                              13      1  92.31%   16
+app\models\solicitud_servicio.py                     41      7  82.93%   57, 62-71, 76-82, 87-93
+app\models\usuario.py                                18      1  94.44%   22
+app\routes\__init__.py                                0      0 100.00%
+app\routes\activos.py                               146    103  29.45%   23-29, 42-78, 84-110, 117, 124-128, 135-143, 149-159, 169-175, 182-203, 209-214, 220-225, 232-238, 245-249, 256-267
+app\routes\actualizar_fecha.py                       33     24  27.27%   17-80
+app\routes\calendario.py                             91     70  23.08%   17, 24-167, 174-228, 235-257
+app\routes\categorias.py                             31      9  70.97%   11, 17, 23, 29, 35, 41, 51, 57, 63
+app\routes\cron.py                                  121     60  50.41%   84-100, 125-128, 150-182, 193-247, 280-300, 319-354
+app\routes\diagnostico.py                            22     16  27.27%   12-67
+app\routes\estadisticas.py                            8      1  87.50%   11
+app\routes\inventario.py                            270    193  28.52%   26-28, 40, 47-51, 61-128, 135-147, 154-171, 178, 186-263, 270-301, 308-323, 330-361, 368-393, 400-433, 440-496, 503, 589-638, 648-655, 662-679, 687-708, 716-755, 762, 772
+app\routes\inventario_simple.py                      54     54   0.00%   1-126
+app\routes\ordenes.py                               166    112  32.53%   40, 47-70, 77-104, 111-115, 122-129, 136-147, 154-160, 167-171, 178-182, 189-193, 200-213, 223-227, 234-238, 245-253, 260-264, 271-277
+app\routes\planes.py                                112     87  22.32%   22, 28-54, 65-109, 116-121, 128-155, 162-183, 190-206
+app\routes\proveedores.py                            97     72  25.77%   22-39, 49-70, 76-101, 107-115, 121-131, 137-147, 154-158, 165-176
+app\routes\recambios.py                              50     36  28.00%   11-15, 21-52, 58-82, 88-94, 100-119
+app\routes\solicitudes.py                           149    122  18.12%   26, 32-35, 41-106, 116-122, 128-134, 140-145, 169-219, 225-246, 260-337
+app\routes\usuarios.py                              174    143  17.82%   14, 20-92, 98-154, 160-193, 199-262, 268-301, 307-352, 359-448
+app\routes\web.py                                   201    144  28.36%   34-39, 48-116, 123-127, 134-148, 155-170, 177-214, 220, 226-243, 252, 258, 264, 270, 279, 286-302, 309-418, 436, 443-552
+app\utils\__init__.py                                 0      0 100.00%
+app\utils\email_utils.py                             97     88   9.28%   18-110, 120, 127-193, 200-262
+app\utils\secrets.py                                 49     13  73.47%   17-18, 46-50, 67-70, 123, 165-171
+app\utils\storage.py                                176    176   0.00%   6-419
+--------------------------------------------------------------------------------
+TOTAL                                              4751   3506  26.21%
+Coverage HTML written to dir htmlcov
+
+FAIL Required test coverage of 80% not reached. Total coverage: 26.21%
+=========================== short test summary info ===========================
+FAILED tests/test_factory.py::TestFactory::test_create_app_testing_config - a...
+FAILED tests/test_factory.py::TestFactory::test_database_extension_initialized
+FAILED tests/test_factory.py::TestFactory::test_blueprints_registered - Asser...
+FAILED tests/test_factory.py::TestFactory::test_csrf_disabled_in_testing - As...
+FAILED tests/test_models/test_activo.py::TestActivoModel::test_activo_con_todos_los_campos
+FAILED tests/test_models/test_inventario.py::TestInventarioModel::test_crear_item_inventario
+FAILED tests/test_models/test_inventario.py::TestInventarioModel::test_alerta_stock_minimo
+FAILED tests/test_models/test_inventario.py::TestInventarioModel::test_actualizar_cantidad
+FAILED tests/test_models/test_inventario.py::TestInventarioModel::test_categorias_inventario
+FAILED tests/test_models/test_inventario.py::TestInventarioModel::test_unidades_medida
+FAILED tests/test_models/test_inventario.py::TestInventarioModel::test_codigo_unico
+FAILED tests/test_models/test_inventario.py::TestInventarioModel::test_precio_opcional
+FAILED tests/test_routes/test_cron_routes.py::TestCronRoutes::test_generar_ordenes_preventivas_desarrollo
+FAILED tests/test_routes/test_cron_routes.py::TestCronRoutes::test_verificar_alertas
+FAILED tests/test_routes/test_cron_routes.py::TestCronRoutes::test_crear_orden_actualiza_plan
+FAILED tests/test_routes/test_cron_routes.py::TestCronRoutes::test_generar_multiples_ordenes
+FAILED tests/test_routes/test_cron_routes.py::TestCronRoutes::test_verificar_alertas_seguridad
+FAILED tests/test_routes/test_cron_routes.py::TestCronRoutes::test_test_cron_solo_desarrollo
+FAILED tests/test_security.py::test_session_cookie_insecure_in_development - ...
+FAILED tests/test_security.py::test_secret_key_not_default - AssertionError: ...
+ERROR tests/test_security.py::test_sql_injection_protection
+ERROR tests/test_security.py::test_xss_protection
+=================== 20 failed, 31 passed, 2 errors in 9.12s ===================

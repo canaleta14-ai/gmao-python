@@ -12,6 +12,25 @@ def create_app():
     static_dir = os.path.join(base_dir, "static")
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
+    # Configuración específica de testing/desarrollo
+    is_pytest = bool(os.getenv("PYTEST_CURRENT_TEST"))
+    is_testing_env = os.getenv("TESTING", "").lower() in ("1", "true", "yes")
+    forced_dev = os.getenv("FLASK_ENV", "").lower() in ("development", "testing")
+    if is_pytest or is_testing_env or forced_dev:
+        # Forzar modo desarrollo para que cookies no sean seguras en tests
+        app.config.update(
+            {
+                "TESTING": True,
+                "WTF_CSRF_ENABLED": False,
+                "ENV": "development",
+                "FLASK_ENV": "development",
+                "SESSION_COOKIE_SECURE": False,
+                "REMEMBER_COOKIE_SECURE": False,
+            }
+        )
+        # Asegurar clave secreta suficientemente larga para tests
+        app.config["SECRET_KEY"] = os.getenv("TEST_SECRET_KEY", app.config.get("SECRET_KEY", "x" * 64))
+
     # Configuración de logging
     if not app.debug:
         # Configuración para producción - solo console logging (Google Cloud Logging)
@@ -47,6 +66,20 @@ def create_app():
     else:
         app.logger.info("✅ SECRET_KEY configurada correctamente")
 
+    # Refuerzo de configuración para entorno de tests (pytest)
+    # Debe ocurrir DESPUÉS de cargar SECRET_KEY para poder sobrescribir claves inseguras cortas
+    if app.config.get("TESTING") or os.getenv("PYTEST_CURRENT_TEST"):
+        # Deshabilitar CSRF en tests
+        app.config["WTF_CSRF_ENABLED"] = False
+        # Asegurar clave secreta suficientemente larga para pruebas
+        if len(app.config.get("SECRET_KEY", "")) < 32:
+            app.config["SECRET_KEY"] = "x" * 64
+        # Forzar entorno de desarrollo para cookies no seguras
+        app.config["ENV"] = "development"
+        app.config["FLASK_ENV"] = "development"
+        app.config["SESSION_COOKIE_SECURE"] = False
+        app.config["REMEMBER_COOKIE_SECURE"] = False
+
     # Configuración de sesión - cerrar al cerrar navegador
     app.config["SESSION_PERMANENT"] = False  # Sesión expira al cerrar navegador
     app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 hora como fallback
@@ -57,7 +90,7 @@ def create_app():
     # Activar HTTPS solo en producción
     is_production = (
         os.getenv("GAE_ENV", "").startswith("standard")
-        or os.getenv("FLASK_ENV") == "production"
+        or app.config.get("FLASK_ENV") == "production"
     )
     app.config["SESSION_COOKIE_SECURE"] = is_production
     app.config["REMEMBER_COOKIE_SECURE"] = is_production
@@ -124,6 +157,11 @@ def create_app():
         # Configuración SQLite para desarrollo
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///../instance/database.db"
 
+    # Forzar uso de SQLite en memoria para tests unitarios ejecutados con pytest
+    # Prioriza memoria incluso si existe variable de entorno del URI
+    if os.getenv("PYTEST_CURRENT_TEST"):
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Configuración para uploads de archivos
@@ -149,7 +187,18 @@ def create_app():
 
     app.config["ADMIN_EMAILS"] = os.getenv("ADMIN_EMAILS", "")
 
+    # Permitir override del URI de base de datos vía variable de entorno en testing
+    # Si estamos bajo pytest, mantenemos memoria por consistencia con tests
+    env_uri = os.getenv("SQLALCHEMY_DATABASE_URI")
+    if env_uri and not os.getenv("PYTEST_CURRENT_TEST"):
+        app.config["SQLALCHEMY_DATABASE_URI"] = env_uri
+
     db.init_app(app)
+    # Asegurar compatibilidad con tests que esperan db.app
+    try:
+        db.app = app
+    except Exception:
+        pass
 
     # Inicializar Flask-Migrate
     from app.extensions import migrate

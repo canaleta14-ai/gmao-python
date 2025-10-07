@@ -407,10 +407,10 @@ def eliminar_orden(id):
     """Eliminar orden de trabajo"""
     orden = OrdenTrabajo.query.get_or_404(id)
 
-    # Solo permitir eliminar órdenes en estado Pendiente o Cancelada
-    if orden.estado not in ["Pendiente", "Cancelada"]:
+    # Permitir eliminar órdenes en estado Pendiente, En Proceso o Cancelada
+    if orden.estado not in ["Pendiente", "En Proceso", "Cancelada"]:
         raise ValueError(
-            "Solo se pueden eliminar órdenes en estado 'Pendiente' o 'Cancelada'"
+            "Solo se pueden eliminar órdenes en estado 'Pendiente', 'En Proceso' o 'Cancelada'"
         )
 
     db.session.delete(orden)

@@ -15,6 +15,11 @@ class PlanMantenimiento(db.Model):
     instrucciones = db.Column(db.Text)
     tiempo_estimado = db.Column(db.Float)
 
+    # Campos esperados por rutas/tests
+    tipo_mantenimiento = db.Column(db.String(50))
+    tareas = db.Column(db.Text)
+    duracion_estimada = db.Column(db.Float)
+
     # Campos para configuración de frecuencia específica
     tipo_frecuencia = db.Column(db.String(20))  # 'diaria', 'semanal', 'mensual', etc.
 
@@ -42,3 +47,34 @@ class PlanMantenimiento(db.Model):
     )  # Si genera órdenes automáticamente
 
     activo_id = db.Column(db.Integer, db.ForeignKey("activo.id"))
+    responsable_id = db.Column(db.Integer, db.ForeignKey("usuario.id"))
+
+    def __init__(self, *args, **kwargs):
+        # Generar código por defecto si no se proporciona
+        codigo_plan = kwargs.pop("codigo_plan", None)
+        # Permitir que tests/rutas pasen 'activo' como boolean para mapear a estado
+        activo_flag = kwargs.pop("activo", None)
+
+        super().__init__(*args, **kwargs)
+
+        if codigo_plan:
+            self.codigo_plan = codigo_plan
+        else:
+            self.codigo_plan = self._generar_codigo_plan()
+
+        if activo_flag is not None:
+            try:
+                self.estado = "Activo" if bool(activo_flag) else "Inactivo"
+            except Exception:
+                # En caso de tipos no booleanos, dejar estado por defecto
+                pass
+
+    @staticmethod
+    def _generar_codigo_plan():
+        # Genera un código único y legible para el plan
+        from datetime import datetime
+        import random
+
+        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        rand = random.randint(1000, 9999)
+        return f"PLAN-{timestamp}-{rand}"

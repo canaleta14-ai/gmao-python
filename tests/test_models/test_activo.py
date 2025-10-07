@@ -3,6 +3,7 @@ Tests unitarios para el modelo Activo
 """
 
 import pytest
+from datetime import datetime
 from app.models.activo import Activo
 
 
@@ -41,7 +42,7 @@ class TestActivoModel:
             marca="Siemens",
             modelo="X-2000",
             numero_serie="SN123456789",
-            fecha_adquisicion="2024-01-15",
+            fecha_adquisicion=datetime(2024, 1, 15),
             prioridad="Alta",
             activo=True,
         )

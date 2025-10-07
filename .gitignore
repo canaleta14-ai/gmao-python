@@ -192,4 +192,4 @@ build/
 *.deb
 *.rpm
 postgresql-installer.exe
-installer.exe
+installer.exetest.db
