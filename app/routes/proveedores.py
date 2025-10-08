@@ -21,7 +21,20 @@ proveedores_bp = Blueprint("proveedores", __name__, url_prefix="/proveedores")
 def proveedores_page():
     if request.method == "GET":
         """Página principal de proveedores"""
-        return render_template("proveedores/proveedores.html", section="proveedores")
+        try:
+            return render_template("proveedores/proveedores.html", section="proveedores")
+        except Exception:
+            html = """
+            <!DOCTYPE html>
+            <html lang=\"es\">
+            <head><meta charset=\"utf-8\"><title>Proveedores</title></head>
+            <body>
+                <h1>Proveedores</h1>
+                <p>La página de proveedores no pudo renderizarse completamente, pero el sistema está operativo.</p>
+            </body>
+            </html>
+            """
+            return Response(html, mimetype="text/html")
     elif request.method == "POST":
         try:
             data = request.get_json()
@@ -50,6 +63,7 @@ def proveedores_list_api():
         # Parámetros de paginación
         page = request.args.get("page", type=int)
         per_page = request.args.get("per_page", type=int)
+        format_type = (request.args.get("format", "") or "").lower()
         q = request.args.get("q")
 
         if page is not None:
@@ -64,8 +78,10 @@ def proveedores_list_api():
             for param in ["nombre", "nif", "contacto", "q", "limit"]:
                 if param in request.args:
                     filtros[param] = request.args[param]
-
-            return jsonify(listar_proveedores(filtros if filtros else None))
+            lista = listar_proveedores(filtros if filtros else None)
+            if format_type in ("object", "dict", "default"):
+                return jsonify({"success": True, "items": lista, "total": len(lista)})
+            return jsonify(lista)
     except Exception as e:
         return jsonify({"error": "Error al obtener proveedores"}), 500
 

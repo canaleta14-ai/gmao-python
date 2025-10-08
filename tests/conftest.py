@@ -28,6 +28,8 @@ def app():
     os.environ["TESTING"] = "true"
     os.environ["DB_TYPE"] = "sqlite"
     os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
+    # Desactivar rate limiting ANTES de inicializar la app para evitar 429 en /login
+    os.environ["RATELIMIT_ENABLED"] = "false"
 
     app = create_app()
 

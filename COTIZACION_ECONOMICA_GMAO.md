@@ -94,10 +94,10 @@
 | Módulo | Horas | Tarifa/Hora | Costo |
 |--------|-------|-------------|-------|
 | **Backend (Flask/Python)** | | | |
-| - Arquitectura y configuración | 20h | €25 | €500 |
-| - Modelos de datos (9 tablas) | 30h | €25 | €750 |
-| - Controladores y lógica | 40h | €25 | €1000 |
-| - API REST | 15h | €25 | €375 |
+| - Arquitectura y configuración | 20h | €50 | €1000 |
+| - Modelos de datos (9 tablas) | 30h | €50 | €1500 |
+| - Controladores y lógica | 40h | €50 | €2000 |
+| - API REST | 15h | €50 | €750 |
 | **Frontend (HTML/CSS/JS)** | | | |
 | - Diseño UI/UX | 25h | €45 | €1125 |
 | - Templates (20+ páginas) | 35h | €45 | €1575 |
@@ -486,9 +486,9 @@ Recuperación inversión: 6-8 meses
 ## 📧 CONTACTO
 
 **Desarrollos Hibo**  
-Email: j_hidalgo@disfood.com  
+Email: canaleta14@gmail.com
 Teléfono: [Añadir]  
-Web: https://gmao-sistema-2025.ew.r.appspot.com
+Web: https://mantenimiento-470311.ew.r.appspot.com
 
 **Horario Soporte**:
 - Lunes a Viernes: 9:00-18:00

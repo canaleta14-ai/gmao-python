@@ -693,8 +693,17 @@ async function guardarNuevoArticulo() {
   }
 
   const data = {
-    codigo: document.getElementById("nuevo-codigo").value,
+    // Enviar `null` si el código está vacío para permitir generación automática en backend
+    codigo:
+      (document.getElementById("nuevo-codigo").value || "").trim() !== ""
+        ? document.getElementById("nuevo-codigo").value.trim()
+        : null,
     descripcion: document.getElementById("nuevo-descripcion").value,
+    // Enviar también `categoria_id` para que el backend pueda generar el código
+    categoria_id: (function () {
+      const v = document.getElementById("nuevo-categoria").value;
+      return v ? parseInt(v, 10) : null;
+    })(),
     categoria: document.getElementById("nuevo-categoria").value,
     stock_minimo:
       parseInt(document.getElementById("nuevo-stock-minimo").value) || 0,

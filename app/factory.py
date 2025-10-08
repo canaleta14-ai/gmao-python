@@ -62,9 +62,9 @@ def create_app():
 
     # Log de advertencia si se usa clave por defecto
     if app.config["SECRET_KEY"] == "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION":
-        app.logger.warning("⚠️  Usando SECRET_KEY por defecto - NO USAR EN PRODUCCIÓN")
+        app.logger.warning("[WARN] Usando SECRET_KEY por defecto - NO USAR EN PRODUCCIÓN")
     else:
-        app.logger.info("✅ SECRET_KEY configurada correctamente")
+        app.logger.info("[OK] SECRET_KEY configurada correctamente")
 
     # Refuerzo de configuración para entorno de tests (pytest)
     # Debe ocurrir DESPUÉS de cargar SECRET_KEY para poder sobrescribir claves inseguras cortas
@@ -97,9 +97,9 @@ def create_app():
 
     # Log de configuración de seguridad
     if is_production:
-        app.logger.info("🔒 Modo producción: Cookies seguras activadas (HTTPS)")
+        app.logger.info("[SECURE] Modo producción: Cookies seguras activadas (HTTPS)")
     else:
-        app.logger.info("🔓 Modo desarrollo: Cookies seguras desactivadas")
+        app.logger.info("[DEV] Modo desarrollo: Cookies seguras desactivadas")
 
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # Protección CSRF
 
@@ -204,19 +204,30 @@ def create_app():
     from app.extensions import migrate
 
     migrate.init_app(app, db)
-    app.logger.info("✅ Flask-Migrate inicializado")
+    app.logger.info("[OK] Flask-Migrate inicializado")
+
+    # Verificación de esquema en desarrollo/testing para prevenir errores 500
+    try:
+        from app.utils.schema_check import ensure_inventario_schema
+        if app.config.get("TESTING") or app.config.get("FLASK_ENV") in ("development", "testing") or app.config.get("ENV") == "development":
+            # Ejecutar dentro de app_context para evitar errores de contexto
+            with app.app_context():
+                res = ensure_inventario_schema(app)
+                app.logger.info(f"[OK] Verificación de esquema Inventario: columnas añadidas={res.get('added', 0)}")
+    except Exception as e:
+        app.logger.warning(f"[WARN] Error en verificación de esquema al arranque: {e}")
 
     # Inicializar CSRF Protection
     from app.extensions import csrf
 
     csrf.init_app(app)
-    app.logger.info("✅ CSRF Protection inicializado")
+    app.logger.info("[OK] CSRF Protection inicializado")
 
     # Inicializar Rate Limiting
     from app.extensions import limiter
 
     limiter.init_app(app)
-    app.logger.info("✅ Rate Limiting inicializado")
+    app.logger.info("[OK] Rate Limiting inicializado")
 
     # Inicializar LoginManager
     login_manager = LoginManager()

@@ -2,7 +2,7 @@ from flask import jsonify, request
 from app.extensions import db
 from app.models.categoria import Categoria
 from app.models.inventario import Inventario
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 
 class CategoriasController:
@@ -18,10 +18,49 @@ class CategoriasController:
 
             categorias_data = []
             for categoria in categorias:
-                # Contar artículos en cada categoría
-                total_articulos = Inventario.query.filter_by(
-                    categoria_id=categoria.id
-                ).count()
+                # Contar artículos en cada categoría usando un conteo seguro
+                try:
+                    total_articulos = (
+                        db.session.query(func.count(Inventario.id))
+                        .filter(Inventario.categoria_id == categoria.id)
+                        .scalar()
+                        or 0
+                    )
+                except Exception:
+                    # Fallback robusto: evitar columnas inexistentes seleccionadas por el ORM
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+                    try:
+                        db.session.remove()
+                    except Exception:
+                        pass
+
+                    backend = (
+                        db.engine.url.get_backend_name()
+                        if getattr(db, "engine", None)
+                        else None
+                    )
+                    table_name = "inventario"
+                    if backend in ("postgresql", "postgres"):
+                        table_name = "public.inventario"
+
+                    with db.engine.connect() as base_conn:
+                        try:
+                            base_conn.exec_driver_sql("ROLLBACK")
+                        except Exception:
+                            pass
+                        with base_conn.execution_options(
+                            isolation_level="AUTOCOMMIT"
+                        ) as conn:
+                            res = conn.execute(
+                                text(
+                                    f"SELECT COUNT(*) AS total FROM {table_name} WHERE categoria_id = :cid"
+                                ),
+                                {"cid": categoria.id},
+                            ).first()
+                            total_articulos = int(res[0]) if res else 0
 
                 categorias_data.append(
                     {
@@ -183,9 +222,47 @@ class CategoriasController:
 
             # No permitir cambiar el prefijo si ya tiene artículos asociados
             if "prefijo" in data:
-                total_articulos = Inventario.query.filter_by(
-                    categoria_id=categoria.id
-                ).count()
+                # Conteo seguro de artículos asociados a la categoría
+                try:
+                    total_articulos = (
+                        db.session.query(func.count(Inventario.id))
+                        .filter(Inventario.categoria_id == categoria.id)
+                        .scalar()
+                        or 0
+                    )
+                except Exception:
+                    # Fallback robusto para evitar columnas inexistentes seleccionadas por el ORM
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+                    try:
+                        db.session.remove()
+                    except Exception:
+                        pass
+
+                    backend = (
+                        db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+                    )
+                    table_name = "inventario"
+                    if backend in ("postgresql", "postgres"):
+                        table_name = "public.inventario"
+
+                    with db.engine.connect() as base_conn:
+                        try:
+                            base_conn.exec_driver_sql("ROLLBACK")
+                        except Exception:
+                            pass
+                        from sqlalchemy import text as _text
+                        with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
+                            res = conn.execute(
+                                _text(
+                                    f"SELECT COUNT(*) AS total FROM {table_name} WHERE categoria_id = :cid"
+                                ),
+                                {"cid": categoria.id},
+                            ).first()
+                            total_articulos = int(res[0]) if res else 0
+
                 if total_articulos > 0:
                     return (
                         jsonify(
@@ -256,10 +333,46 @@ class CategoriasController:
                     404,
                 )
 
-            # Verificar si tiene artículos asociados
-            total_articulos = Inventario.query.filter_by(
-                categoria_id=categoria.id
-            ).count()
+            # Verificar si tiene artículos asociados con conteo seguro
+            try:
+                total_articulos = (
+                    db.session.query(func.count(Inventario.id))
+                    .filter(Inventario.categoria_id == categoria.id)
+                    .scalar()
+                    or 0
+                )
+            except Exception:
+                # Fallback robusto para evitar columnas inexistentes seleccionadas por el ORM
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+                try:
+                    db.session.remove()
+                except Exception:
+                    pass
+
+                backend = (
+                    db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+                )
+                table_name = "inventario"
+                if backend in ("postgresql", "postgres"):
+                    table_name = "public.inventario"
+
+                with db.engine.connect() as base_conn:
+                    try:
+                        base_conn.exec_driver_sql("ROLLBACK")
+                    except Exception:
+                        pass
+                    from sqlalchemy import text as _text
+                    with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
+                        res = conn.execute(
+                            _text(
+                                f"SELECT COUNT(*) AS total FROM {table_name} WHERE categoria_id = :cid"
+                            ),
+                            {"cid": categoria.id},
+                        ).first()
+                        total_articulos = int(res[0]) if res else 0
             if total_articulos > 0:
                 # Solo desactivar, no eliminar
                 categoria.activa = False

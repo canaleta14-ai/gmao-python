@@ -19,12 +19,18 @@ steps:
     entrypoint: pip
     args: ["install", "-r", "requirements.txt", "--user", "--quiet"]
 
-  # Ejecutar pruebas (opcional - deshabilitado por defecto)
-  # - name: "python:3.11-slim"
-  #   entrypoint: python
-  #   args: ["-m", "pytest", "test_*.py", "-v", "--tb=short"]
-  #   env:
-  #     - "FLASK_ENV=test"
+  # Ejecutar pruebas con cobertura mínima del 70%
+  - name: "python:3.11-slim"
+    entrypoint: bash
+    script: |
+      #!/bin/bash
+      set -e
+      echo "🏗 Instalando dependencias para test..."
+      pip install -r requirements.txt --user --quiet
+      echo "🧪 Ejecutando tests con cobertura (>=70%)..."
+      python -m pytest -q --cov=app --cov-report=term-missing --cov-fail-under=70
+    env:
+      - "FLASK_ENV=testing"
 
   # Verificar sintaxis de Python
   - name: "python:3.11-slim"

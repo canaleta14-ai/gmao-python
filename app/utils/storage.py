@@ -105,7 +105,7 @@ def _upload_to_gcs(file, folder, filename):
         # Subir
         blob.upload_from_file(file, content_type=file.content_type)
 
-        logger.info(f"✅ Archivo subido a GCS: {blob_path}")
+        logger.info(f"[OK] Archivo subido a GCS: {blob_path}")
 
         # Devolver path relativo (usaremos URLs firmadas para acceso)
         return f"gs://{BUCKET_NAME}/{blob_path}"
@@ -139,7 +139,7 @@ def _upload_to_local(file, folder, filename):
         filepath = os.path.join(base_dir, filename)
         file.save(filepath)
 
-        logger.info(f"✅ Archivo guardado localmente: {filepath}")
+        logger.info(f"[OK] Archivo guardado localmente: {filepath}")
         return f"/uploads/{folder}/{filename}"
 
     except Exception as e:
@@ -195,10 +195,10 @@ def _delete_from_gcs(filepath, folder):
 
         if blob.exists():
             blob.delete()
-            logger.info(f"✅ Archivo eliminado de GCS: {blob_path}")
+            logger.info(f"[OK] Archivo eliminado de GCS: {blob_path}")
             return True
         else:
-            logger.warning(f"⚠️  Archivo no existe en GCS: {blob_path}")
+            logger.warning(f"[WARN] Archivo no existe en GCS: {blob_path}")
             return False
 
     except Exception as e:
@@ -224,10 +224,10 @@ def _delete_from_local(filepath, folder):
 
         if os.path.exists(filepath):
             os.remove(filepath)
-            logger.info(f"✅ Archivo eliminado localmente: {filepath}")
+            logger.info(f"[OK] Archivo eliminado localmente: {filepath}")
             return True
         else:
-            logger.warning(f"⚠️  Archivo no existe localmente: {filepath}")
+            logger.warning(f"[WARN] Archivo no existe localmente: {filepath}")
             return False
 
     except Exception as e:
@@ -270,7 +270,7 @@ def get_signed_url(filepath, folder, expiration=3600):
 
         # Verificar que existe
         if not blob.exists():
-            logger.warning(f"⚠️  Blob no existe: {blob_path}")
+            logger.warning(f"[WARN] Blob no existe: {blob_path}")
             return filepath
 
         # URL firmada válida por el tiempo especificado

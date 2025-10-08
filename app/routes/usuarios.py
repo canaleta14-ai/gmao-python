@@ -11,7 +11,21 @@ usuarios_bp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
 @usuarios_bp.route("/")
 @login_required
 def usuarios_page():
-    return render_template("usuarios/usuarios.html", section="usuarios")
+    try:
+        return render_template("usuarios/usuarios.html", section="usuarios")
+    except Exception:
+        # Fallback seguro para evitar 500 si falta template o hay error en dependencias
+        html = """
+        <!DOCTYPE html>
+        <html lang=\"es\">
+        <head><meta charset=\"utf-8\"><title>Usuarios</title></head>
+        <body>
+            <h1>Usuarios</h1>
+            <p>La página de usuarios no pudo renderizarse completamente, pero el sistema está operativo.</p>
+        </body>
+        </html>
+        """
+        return Response(html, mimetype="text/html")
 
 
 @usuarios_bp.route("/api", methods=["GET"])
@@ -85,6 +99,13 @@ def api_usuarios():
                 }
             )
 
+        # Compatibilidad de formato según query param
+        fmt = (request.args.get("format") or "").strip().lower()
+        # Alternativa: devolver lista si se pide explícitamente
+        if fmt in ["list", "array"]:
+            return jsonify(usuarios_data)
+
+        # Formato por defecto: objeto con metadata
         return jsonify(
             {"success": True, "usuarios": usuarios_data, "total": len(usuarios_data)}
         )

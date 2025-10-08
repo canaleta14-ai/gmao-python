@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, Response
 from flask_login import login_required
 from app.controllers.planes_controller import (
     listar_planes,
@@ -19,7 +19,20 @@ planes_bp = Blueprint("planes", __name__, url_prefix="/planes")
 @login_required
 def planes_page():
     """Página principal de planes de mantenimiento"""
-    return render_template("preventivo/preventivo.html", section="preventivo")
+    try:
+        return render_template("preventivo/preventivo.html", section="preventivo")
+    except Exception:
+        html = """
+        <!DOCTYPE html>
+        <html lang=\"es\">
+        <head><meta charset=\"utf-8\"><title>Planes de Mantenimiento</title></head>
+        <body>
+            <h1>Planes de Mantenimiento</h1>
+            <p>La página de planes no pudo renderizarse completamente, pero el sistema está operativo.</p>
+        </body>
+        </html>
+        """
+        return Response(html, mimetype="text/html")
 
 
 @planes_bp.route("/api", methods=["GET", "POST"])

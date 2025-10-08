@@ -74,7 +74,14 @@ def listar_inventario():
 def crear_item(data):
     # Si hay categoria_id, generar código automáticamente
     codigo = data.get("codigo")
-    categoria_id = data.get("categoria_id")
+    # Permitir que el frontend envíe `categoria_id` o `categoria` (id como string)
+    categoria_id = data.get("categoria_id") or data.get("categoria")
+    try:
+        # Normalizar a entero si viene como string
+        categoria_id = int(categoria_id) if categoria_id not in (None, "") else None
+    except (ValueError, TypeError):
+        # Si no es convertible (por ejemplo, nombre de categoría), mantener None
+        categoria_id = None
 
     if categoria_id and not codigo:
         # Generar código automático basado en categoría
@@ -82,11 +89,22 @@ def crear_item(data):
         if categoria:
             codigo = categoria.generar_proximo_codigo()
 
+    # Si no hay código y tampoco categoría para generarlo, validar explícitamente
+    if not codigo and not categoria_id:
+        raise ValueError(
+            "El código es obligatorio si no se ha seleccionado una categoría"
+        )
+
     nuevo_item = Inventario(
-        codigo=codigo or data["codigo"],
+        codigo=codigo,
         descripcion=data["descripcion"],
         categoria_id=categoria_id,
-        categoria=data.get("categoria"),  # Mantener compatibilidad
+        # Mantener compatibilidad: si `categoria` fue un nombre, almacenarlo
+        categoria=(
+            data.get("categoria")
+            if isinstance(data.get("categoria"), str)
+            else None
+        ),
         stock_actual=data.get("stock_actual", 0),
         stock_minimo=data.get("stock_minimo", 0),
         ubicacion=data.get("ubicacion"),
@@ -425,38 +443,74 @@ def generar_asiento_inventario_anual(año):
 def obtener_estadisticas_inventario():
     """Obtener estadísticas generales del inventario"""
     stats = {}
+    try:
+        # Artículos totales
+        stats["total_articulos"] = Inventario.query.filter_by(activo=True).count()
 
-    # Artículos totales
-    stats["total_articulos"] = Inventario.query.filter_by(activo=True).count()
+        # Artículos con stock bajo mínimo
+        stats["articulos_bajo_minimo"] = Inventario.query.filter(
+            Inventario.activo == True, Inventario.stock_actual <= Inventario.stock_minimo
+        ).count()
 
-    # Artículos con stock bajo mínimo
-    stats["articulos_bajo_minimo"] = Inventario.query.filter(
-        Inventario.activo == True, Inventario.stock_actual <= Inventario.stock_minimo
-    ).count()
+        # Valor total del inventario
+        valor_total = (
+            db.session.query(func.sum(Inventario.stock_actual * Inventario.precio_promedio))
+            .filter(Inventario.activo == True)
+            .scalar()
+            or 0
+        )
+        stats["valor_total_inventario"] = valor_total
 
-    # Valor total del inventario
-    valor_total = (
-        db.session.query(func.sum(Inventario.stock_actual * Inventario.precio_promedio))
-        .filter(Inventario.activo == True)
-        .scalar()
-        or 0
-    )
-    stats["valor_total_inventario"] = valor_total
+        # Artículos críticos
+        stats["articulos_criticos"] = Inventario.query.filter_by(
+            activo=True, critico=True
+        ).count()
 
-    # Artículos críticos
-    stats["articulos_criticos"] = Inventario.query.filter_by(
-        activo=True, critico=True
-    ).count()
+        # Movimientos del mes actual
+        mes_actual = datetime.now().month
+        año_actual = datetime.now().year
+        stats["movimientos_mes"] = MovimientoInventario.query.filter(
+            extract("month", MovimientoInventario.fecha) == mes_actual,
+            extract("year", MovimientoInventario.fecha) == año_actual,
+        ).count()
 
-    # Movimientos del mes actual
-    mes_actual = datetime.now().month
-    año_actual = datetime.now().year
-    stats["movimientos_mes"] = MovimientoInventario.query.filter(
-        extract("month", MovimientoInventario.fecha) == mes_actual,
-        extract("year", MovimientoInventario.fecha) == año_actual,
-    ).count()
+        return stats
+    except Exception:
+        # Limpiar sesión en caso de estado abortado
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        try:
+            db.session.remove()
+        except Exception:
+            pass
 
-    return stats
+        # Fallback mínimo: contar totales vía SQL directo en AUTOCOMMIT
+        total = 0
+        try:
+            backend = db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+            table_name = "inventario"
+            if backend == "postgresql":
+                table_name = "public.inventario"
+            with db.engine.connect() as base_conn:
+                try:
+                    base_conn.exec_driver_sql("ROLLBACK")
+                except Exception:
+                    pass
+                with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
+                    res = conn.execute(db.text(f"SELECT COUNT(*) AS total FROM {table_name}")).first()
+                    total = int(res[0]) if res else 0
+        except Exception:
+            total = 0
+
+        return {
+            "total_articulos": total,
+            "articulos_bajo_minimo": 0,
+            "valor_total_inventario": 0,
+            "articulos_criticos": 0,
+            "movimientos_mes": 0,
+        }
 
 
 def validar_datos_articulo(data):

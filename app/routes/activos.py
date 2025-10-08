@@ -63,6 +63,7 @@ def activos_list_api():
         # Parámetros de paginación
         page = request.args.get("page", type=int)
         per_page = request.args.get("per_page", type=int)
+        format_type = (request.args.get("format", "") or "").lower()
         q = request.args.get("q")
         # Aceptar alias 'busqueda' usado en algunos tests
         busqueda = request.args.get("busqueda")
@@ -110,7 +111,10 @@ def activos_list_api():
             if any(_is_malicious_input(val) for val in filtros.values()):
                 return jsonify({"error": "Entrada de filtro inválida"}), 400
 
-            return jsonify(listar_activos(filtros if filtros else None))
+            lista = listar_activos(filtros if filtros else None)
+            if format_type in ("object", "dict", "default"):
+                return jsonify({"success": True, "items": lista, "total": len(lista)})
+            return jsonify(lista)
     except Exception as e:
         # No propagar errores internos como 500 en búsquedas
         return jsonify({"error": str(e)}), 400

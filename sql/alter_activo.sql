@@ -1,0 +1,20 @@
+-- Agregar columnas faltantes en la tabla activo para alinear con el modelo
+-- Ejecutar en Cloud SQL (PostgreSQL)
+
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS tipo VARCHAR(50);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS marca VARCHAR(100);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS ubicacion VARCHAR(100);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS estado VARCHAR(50);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS prioridad VARCHAR(20);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS fecha_adquisicion TIMESTAMP;
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS ultimo_mantenimiento TIMESTAMP;
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS proximo_mantenimiento TIMESTAMP;
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS modelo VARCHAR(100);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS numero_serie VARCHAR(100);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS fabricante VARCHAR(100);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS proveedor VARCHAR(100);
+ALTER TABLE activo ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
+
+-- Índice de apoyo por estado
+CREATE INDEX IF NOT EXISTS idx_activo_estado ON activo (estado);

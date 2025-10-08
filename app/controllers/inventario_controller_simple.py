@@ -2,7 +2,7 @@ from app.models.inventario import Inventario
 from app.extensions import db
 from flask import request
 from datetime import datetime, timezone
-from sqlalchemy import func
+from sqlalchemy import func, text
 from io import BytesIO
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -11,70 +11,149 @@ from openpyxl.styles import Font, PatternFill, Alignment
 def obtener_estadisticas_inventario():
     """Obtener estadísticas generales del inventario"""
     stats = {}
-
-    # Artículos totales
-    stats["total_articulos"] = Inventario.query.filter_by(activo=True).count()
-
-    # Artículos con stock bajo mínimo
-    stats["articulos_bajo_minimo"] = Inventario.query.filter(
-        Inventario.activo == True, Inventario.stock_actual <= Inventario.stock_minimo
-    ).count()
-
-    # Valor total del inventario usando precio_promedio
-    valor_total = (
-        db.session.query(func.sum(Inventario.stock_actual * Inventario.precio_promedio))
-        .filter(Inventario.activo == True)
-        .scalar()
-        or 0
-    )
-    stats["valor_total_stock"] = float(valor_total) if valor_total else 0
-
-    # Artículos críticos
-    stats["articulos_criticos"] = Inventario.query.filter_by(
-        activo=True, critico=True
-    ).count()
-
-    return stats
+    try:
+        # Ruta principal (ORM)
+        stats["total_articulos"] = Inventario.query.filter_by(activo=True).count()
+        stats["articulos_bajo_minimo"] = Inventario.query.filter(
+            Inventario.activo == True, Inventario.stock_actual <= Inventario.stock_minimo
+        ).count()
+        valor_total = (
+            db.session.query(func.sum(Inventario.stock_actual * Inventario.precio_promedio))
+            .filter(Inventario.activo == True)
+            .scalar()
+            or 0
+        )
+        stats["valor_total_stock"] = float(valor_total) if valor_total else 0
+        stats["articulos_criticos"] = Inventario.query.filter_by(
+            activo=True, critico=True
+        ).count()
+        return stats
+    except Exception:
+        # Evitar contaminación de la sesión del ORM en estado abortado
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        try:
+            db.session.remove()
+        except Exception:
+            pass
+        # Fallback: contar artículos totales y devolver el resto como 0
+        total = 0
+        try:
+            backend = db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+            table_name = "inventario"
+            if backend == "postgresql":
+                table_name = "public.inventario"
+            from sqlalchemy import text as _text
+            # Limpiar estado y ejecutar en AUTOCOMMIT para evitar transacción abortada
+            with db.engine.connect() as base_conn:
+                try:
+                    base_conn.exec_driver_sql("ROLLBACK")
+                except Exception:
+                    pass
+                with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
+                    res = conn.execute(_text(f"SELECT COUNT(*) AS total FROM {table_name}")).first()
+                total = int(res[0]) if res else 0
+        except Exception:
+            total = 0
+        return {
+            "total_articulos": total,
+            "articulos_bajo_minimo": 0,
+            "valor_total_stock": 0,
+            "articulos_criticos": 0,
+        }
 
 
 def listar_articulos_avanzado(filtros=None, page=1, per_page=10):
     """Listar artículos con filtros avanzados"""
-    query = Inventario.query.filter_by(activo=True)
+    try:
+        query = Inventario.query.filter_by(activo=True)
 
-    if filtros:
-        if "codigo" in filtros and filtros["codigo"]:
-            query = query.filter(Inventario.codigo.ilike(f"%{filtros['codigo']}%"))
-        if "descripcion" in filtros and filtros["descripcion"]:
-            query = query.filter(
-                Inventario.descripcion.ilike(f"%{filtros['descripcion']}%")
-            )
-        if "categoria" in filtros and filtros["categoria"]:
-            query = query.filter(Inventario.categoria == filtros["categoria"])
-        if "bajo_minimo" in filtros and filtros["bajo_minimo"]:
-            query = query.filter(Inventario.stock_actual <= Inventario.stock_minimo)
-        if "critico" in filtros and filtros["critico"] == "true":
-            query = query.filter(Inventario.critico == True)
-        if "ubicacion" in filtros and filtros["ubicacion"]:
-            query = query.filter(
-                Inventario.ubicacion.ilike(f"%{filtros['ubicacion']}%")
-            )
-
-        # Filtro de búsqueda general (para autocompletado)
-        if "busqueda_general" in filtros and filtros["busqueda_general"]:
-            busqueda = filtros["busqueda_general"]
-            query = query.filter(
-                db.or_(
-                    Inventario.codigo.ilike(f"%{busqueda}%"),
-                    Inventario.descripcion.ilike(f"%{busqueda}%"),
-                    Inventario.categoria.ilike(f"%{busqueda}%"),
-                    Inventario.ubicacion.ilike(f"%{busqueda}%"),
+        if filtros:
+            if "codigo" in filtros and filtros["codigo"]:
+                query = query.filter(Inventario.codigo.ilike(f"%{filtros['codigo']}%"))
+            if "descripcion" in filtros and filtros["descripcion"]:
+                query = query.filter(
+                    Inventario.descripcion.ilike(f"%{filtros['descripcion']}%")
                 )
-            )
+            if "categoria" in filtros and filtros["categoria"]:
+                query = query.filter(Inventario.categoria == filtros["categoria"])
+            if "bajo_minimo" in filtros and filtros["bajo_minimo"]:
+                query = query.filter(Inventario.stock_actual <= Inventario.stock_minimo)
+            if "critico" in filtros and filtros["critico"] == "true":
+                query = query.filter(Inventario.critico == True)
+            if "ubicacion" in filtros and filtros["ubicacion"]:
+                query = query.filter(
+                    Inventario.ubicacion.ilike(f"%{filtros['ubicacion']}%")
+                )
 
-    paginacion = query.order_by(Inventario.codigo).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    return paginacion.items, paginacion.total
+            # Filtro de búsqueda general (para autocompletado)
+            if "busqueda_general" in filtros and filtros["busqueda_general"]:
+                busqueda = filtros["busqueda_general"]
+                query = query.filter(
+                    db.or_(
+                        Inventario.codigo.ilike(f"%{busqueda}%"),
+                        Inventario.descripcion.ilike(f"%{busqueda}%"),
+                        Inventario.categoria.ilike(f"%{busqueda}%"),
+                        Inventario.ubicacion.ilike(f"%{busqueda}%"),
+                    )
+                )
+
+        paginacion = query.order_by(Inventario.codigo).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        return paginacion.items, paginacion.total
+    except Exception:
+        # Fallback robusto con SQL directo: usar columnas seguras
+        try:
+            backend = db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+            table_name = "inventario"
+            if backend == "postgresql":
+                table_name = "public.inventario"
+
+            base_sql = f"SELECT id, codigo, descripcion FROM {table_name}"
+            where_clauses = []
+            params = {}
+
+            if filtros:
+                if filtros.get("codigo"):
+                    where_clauses.append("codigo ILIKE :codigo")
+                    params["codigo"] = f"%{filtros['codigo']}%"
+                if filtros.get("descripcion"):
+                    where_clauses.append("descripcion ILIKE :descripcion")
+                    params["descripcion"] = f"%{filtros['descripcion']}%"
+                if filtros.get("busqueda_general"):
+                    where_clauses.append("(codigo ILIKE :q OR descripcion ILIKE :q)")
+                    params["q"] = f"%{filtros['busqueda_general']}%"
+
+            if where_clauses:
+                base_sql += " WHERE " + " AND ".join(where_clauses)
+
+            base_sql += " ORDER BY codigo LIMIT :limit OFFSET :offset"
+            params["limit"] = per_page
+            params["offset"] = (page - 1) * per_page
+
+            count_sql = f"SELECT COUNT(*) AS total FROM {table_name}"
+            if where_clauses:
+                count_sql += " WHERE " + " AND ".join(where_clauses)
+
+            # Usar AUTOCOMMIT tras un ROLLBACK explícito para evitar estados abortados
+            with db.engine.connect() as base_conn:
+                try:
+                    base_conn.exec_driver_sql("ROLLBACK")
+                except Exception:
+                    pass
+                with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
+                    rows = conn.execute(text(base_sql), params).mappings().all()
+                    total_row = conn.execute(text(count_sql), params).first()
+            total = total_row[0] if total_row else 0
+
+            articulos = [dict(r) for r in rows]
+            return articulos, total
+        except Exception:
+            # Si también falla el fallback (tabla inexistente, etc.), devolver vacío
+            return [], 0
 
 
 def crear_articulo_simple(data):

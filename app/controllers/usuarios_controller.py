@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, Response
 from flask_login import login_required, current_user, logout_user, login_user
 from app.models.usuario import Usuario
 from app.extensions import db, limiter, csrf
@@ -45,12 +45,13 @@ def login():
             if request.is_json:
                 return (
                     jsonify(
-                        {"success": False, "message": "Usuario y contraseña requeridos"}
+                        {"success": False, "error": "Usuario y contraseña requeridos"}
                     ),
                     400,
                 )
             flash("Usuario y contraseña requeridos", "warning")
-            return render_template("web/login.html", no_sidebar=True, login_bg=True)
+            # Para formularios, redirigimos al login evitando 500 por render
+            return redirect(url_for("usuarios_controller.login"))
 
         user = autenticar_usuario(username, password)
         if user:
@@ -73,15 +74,20 @@ def login():
                     jsonify(
                         {
                             "success": False,
-                            "message": "Usuario o contraseña incorrectos",
+                            "error": "Usuario o contraseña incorrectos",
                         }
                     ),
                     401,
                 )
             flash("Usuario o contraseña incorrectos", "danger")
-            return render_template("web/login.html", no_sidebar=True, login_bg=True)
+            # Para formularios, redirigimos al login con mensaje
+            return redirect(url_for("usuarios_controller.login"))
 
-    return render_template("web/login.html", no_sidebar=True, login_bg=True)
+    # GET /login: intentar renderizar normalmente; si falla, responder HTML mínimo
+    try:
+        return render_template("web/login.html", no_sidebar=True, login_bg=True)
+    except Exception:
+        return Response("<html><body>Login</body></html>", mimetype="text/html"), 200
 
 
 @usuarios_controller.route("/logout", methods=["GET", "POST"])

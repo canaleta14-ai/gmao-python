@@ -169,21 +169,36 @@ def insertar_datos_prueba():
             db.session.commit()
             print(f"✅ Insertados {len(articulos_prueba)} artículos de prueba")
 
-            # Mostrar resumen
-            result = db.session.execute(
-                text("SELECT COUNT(*) as total FROM inventario;")
-            )
-            total = result.fetchone()[0]
+            # Mostrar resumen en conexión independiente con AUTOCOMMIT tras ROLLBACK
+            backend = db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+            table_name = "inventario"
+            if backend == "postgresql":
+                table_name = "public.inventario"
+
+            with db.engine.connect() as base_conn:
+                try:
+                    base_conn.exec_driver_sql("ROLLBACK")
+                except Exception:
+                    pass
+                with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
+                    res = conn.execute(text(f"SELECT COUNT(*) AS total FROM {table_name}"))
+                    total = int(res.fetchone()[0]) if res else 0
             print(f"üìä Total de artículos en inventario: {total}")
 
             print("\nüéØ Categorías insertadas:")
-            result = db.session.execute(
-                text(
-                    "SELECT categoria, COUNT(*) as total FROM inventario GROUP BY categoria;"
-                )
-            )
-            for row in result.fetchall():
-                print(f"   - {row[0]}: {row[1]} artículos")
+            with db.engine.connect() as base_conn:
+                try:
+                    base_conn.exec_driver_sql("ROLLBACK")
+                except Exception:
+                    pass
+                with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
+                    result = conn.execute(
+                        text(
+                            f"SELECT categoria, COUNT(*) AS total FROM {table_name} GROUP BY categoria"
+                        )
+                    )
+                    for row in result.fetchall():
+                        print(f"   - {row[0]}: {row[1]} artículos")
 
         except Exception as e:
             db.session.rollback()
