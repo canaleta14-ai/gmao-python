@@ -600,7 +600,7 @@ def exportar_solicitudes():
     """Exporta todas las solicitudes a Excel"""
     if current_user.rol != "Administrador":
         flash("No tiene permisos para acceder a esta sección.", "error")
-    return redirect(url_for("web.index"))
+        return redirect(url_for("web.index"))
 
     try:
         excel_data = exportar_solicitudes_csv()

@@ -627,12 +627,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Aplicar filtros iniciales (vacíos) - esto carga todos los datos
     setTimeout(() => aplicarFiltros(1), 100);
 });
-
-function exportarSolicitudes() {
-    const url = new URL(window.location);
-    url.pathname = '/admin/solicitudes/exportar';
-    window.open(url, '_blank');
-}
 </script>
 
 <!-- Los scripts principales (main.js, etc.) ya están cargados en base.html -->
