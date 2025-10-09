@@ -666,10 +666,10 @@ def eliminar_solicitudes_masivo():
 
     try:
         data = request.get_json()
-        if not data or 'ids' not in data:
+        if not data or 'solicitud_ids' not in data:
             return jsonify({"error": "No se proporcionaron IDs de solicitudes."}), 400
         
-        ids = data['ids']
+        ids = data['solicitud_ids']
         if not isinstance(ids, list) or not ids:
             return jsonify({"error": "Lista de IDs inválida."}), 400
         

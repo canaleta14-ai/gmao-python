@@ -777,6 +777,34 @@ function updateDeleteButton() {
         selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
     }
 }
+
+// Función para mostrar mensajes de notificación
+function mostrarMensaje(mensaje, tipo = 'info') {
+    // Crear alerta Bootstrap
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    // Agregar al inicio del contenedor principal
+    const container = document.querySelector('.container-fluid');
+    if (container) {
+        container.insertBefore(alertDiv, container.firstChild);
+    } else {
+        // Fallback si no hay container-fluid
+        const body = document.body;
+        body.insertBefore(alertDiv, body.firstChild);
+    }
+
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
 </script>
 
 <!-- Los scripts principales (main.js, etc.) ya están cargados en base.html -->
