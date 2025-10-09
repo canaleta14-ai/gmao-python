@@ -184,8 +184,17 @@ def create_app():
     app.config["UPLOAD_FOLDER"] = os.path.join(base_dir, "uploads")
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB máximo
 
-    # Crear directorio de uploads si no existe
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    # Crear directorio de uploads solo en desarrollo (no en producción GAE)
+    if not os.getenv("GAE_ENV"):  # GAE_ENV existe solo en Google App Engine
+        try:
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+        except OSError:
+            # En producción, usar un directorio temporal o Cloud Storage
+            app.config["UPLOAD_FOLDER"] = "/tmp/uploads"
+            try:
+                os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+            except OSError:
+                pass  # Ignorar errores en producción
 
     # Configuración de URL del servidor
     app.config["SERVER_URL"] = os.getenv("SERVER_URL", "http://localhost:5000")
