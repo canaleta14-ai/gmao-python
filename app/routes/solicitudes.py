@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_file
 from app.extensions import db
 from app.models.solicitud_servicio import SolicitudServicio
 from app.models.archivo_adjunto import ArchivoAdjunto
@@ -13,6 +13,7 @@ from app.utils.email_utils import (
     enviar_email_confirmacion,
     enviar_email_notificacion_admin,
 )
+from app.utils.storage import upload_file, is_gcp_environment, get_signed_url, file_exists
 
 solicitudes_bp = Blueprint("solicitudes", __name__, url_prefix="/solicitudes")
 
@@ -248,7 +249,8 @@ def generar_numero_solicitud():
 
 def procesar_archivos_solicitud(archivos, solicitud_id):
     """
-    Procesa y guarda los archivos adjuntos de una solicitud.
+    Procesa y guarda archivos adjuntos para una solicitud de servicio
+    Usa Google Cloud Storage en producción y filesystem local en desarrollo
 
     Args:
         archivos: Lista de archivos desde request.files.getlist()
@@ -258,21 +260,6 @@ def procesar_archivos_solicitud(archivos, solicitud_id):
         Número de archivos guardados exitosamente
     """
     archivos_guardados = 0
-
-    # Directorio base para archivos
-    from flask import current_app
-
-    # En App Engine, el sistema de archivos es de solo lectura excepto /tmp
-    # Por ahora guardamos en /tmp (temporal), posteriormente migrar a Cloud Storage
-    if os.getenv("FLASK_ENV") == "production":
-        upload_folder = "/tmp/uploads"
-    else:
-        upload_folder = current_app.config.get("UPLOAD_FOLDER", "static/uploads")
-
-    solicitudes_folder = os.path.join(upload_folder, "solicitudes", str(solicitud_id))
-
-    # Crear directorio si no existe
-    os.makedirs(solicitudes_folder, exist_ok=True)
 
     for archivo in archivos:
         # Validar que el archivo existe y tiene contenido
@@ -299,10 +286,14 @@ def procesar_archivos_solicitud(archivos, solicitud_id):
             # Generar nombre único para el archivo
             filename = secure_filename(archivo.filename)
             nombre_unico = f"{uuid.uuid4().hex[:8]}_{filename}"
-            ruta_archivo = os.path.join(solicitudes_folder, nombre_unico)
-
-            # Guardar archivo físicamente
-            archivo.save(ruta_archivo)
+            
+            # Usar Cloud Storage o filesystem local según el entorno
+            folder = f"solicitudes/{solicitud_id}"
+            ruta_archivo = upload_file(archivo, folder, nombre_unico)
+            
+            if not ruta_archivo:
+                print(f"Error subiendo archivo {archivo.filename}")
+                continue
 
             # Obtener información del archivo
             extension = filename.rsplit(".", 1)[1].lower() if "." in filename else ""
@@ -322,7 +313,7 @@ def procesar_archivos_solicitud(archivos, solicitud_id):
                 tipo_archivo=tipo_archivo,
                 extension=extension,
                 tamaño=file_length,
-                ruta_archivo=ruta_archivo,
+                ruta_archivo=ruta_archivo,  # Ahora puede ser URL de GCS o path local
                 solicitud_servicio_id=solicitud_id,
                 usuario_id=None,  # Las solicitudes públicas no tienen usuario
             )
@@ -335,3 +326,58 @@ def procesar_archivos_solicitud(archivos, solicitud_id):
             continue
 
     return archivos_guardados
+
+
+@solicitudes_bp.route("/api/archivos/<int:archivo_id>/download", methods=["GET"])
+def descargar_archivo_adjunto(archivo_id):
+    """Descargar archivo adjunto de solicitud"""
+    try:
+        # Buscar el archivo en la base de datos
+        archivo = ArchivoAdjunto.query.get_or_404(archivo_id)
+        
+        # Verificar que es un archivo (no un enlace)
+        if archivo.tipo_archivo == "enlace":
+            return jsonify({"error": "Los enlaces no se pueden descargar"}), 400
+        
+        # Determinar si el archivo está en Cloud Storage o filesystem local
+        if archivo.ruta_archivo.startswith("gs://"):
+            # Archivo en Google Cloud Storage
+            # Extraer folder y filename del path de GCS
+            # Formato: gs://bucket/solicitudes/1/filename.ext
+            path_parts = archivo.ruta_archivo.replace("gs://", "").split("/", 1)
+            if len(path_parts) > 1:
+                # Extraer folder (solicitudes/1) y filename
+                gcs_path = path_parts[1]  # solicitudes/1/filename.ext
+                folder_parts = gcs_path.split("/")
+                if len(folder_parts) >= 3:
+                    folder = "/".join(folder_parts[:-1])  # solicitudes/1
+                    filename = folder_parts[-1]  # filename.ext
+                    
+                    # Verificar que el archivo existe en GCS
+                    if not file_exists(filename, folder):
+                        return jsonify({"error": "Archivo no encontrado en el servidor"}), 404
+                    
+                    # Generar URL firmada para descarga directa
+                    signed_url = get_signed_url(filename, folder, expiration=300)  # 5 minutos
+                    if signed_url:
+                        from flask import redirect
+                        return redirect(signed_url)
+                    else:
+                        return jsonify({"error": "Error generando enlace de descarga"}), 500
+                else:
+                    return jsonify({"error": "Formato de ruta de archivo inválido"}), 400
+            else:
+                return jsonify({"error": "Formato de ruta de archivo inválido"}), 400
+        else:
+            # Archivo en filesystem local
+            if not os.path.exists(archivo.ruta_archivo):
+                return jsonify({"error": "Archivo no encontrado en el servidor"}), 404
+            
+            return send_file(
+                archivo.ruta_archivo, 
+                as_attachment=True, 
+                download_name=archivo.nombre_original
+            )
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400

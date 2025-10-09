@@ -126,6 +126,69 @@
                         </div>
                     </div>
 
+                    <!-- Archivos Adjuntos -->
+                    {% if archivos_adjuntos %}
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-paperclip me-2"></i>Archivos Adjuntos
+                            </h5>
+                            <span class="badge bg-info">{{ archivos_adjuntos|length }} archivo{{ 's' if archivos_adjuntos|length != 1 else '' }}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                {% for archivo in archivos_adjuntos %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-start">
+                                                <div class="me-3">
+                                                    {% if archivo.es_imagen %}
+                                                        <i class="bi bi-image fs-2 text-primary"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-file-earmark-text fs-2 text-secondary"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="flex-grow-1 min-w-0">
+                                                    <h6 class="card-title mb-1 text-truncate" title="{{ archivo.nombre_original }}">
+                                                        {{ archivo.nombre_original }}
+                                                    </h6>
+                                                    <p class="card-text small text-muted mb-2">
+                                                        <i class="bi bi-calendar3 me-1"></i>
+                                                        {{ archivo.fecha_subida.strftime('%d/%m/%Y %H:%M') if archivo.fecha_subida else 'N/A' }}
+                                                    </p>
+                                                    {% if archivo.tamano %}
+                                                    <p class="card-text small text-muted mb-2">
+                                                        <i class="bi bi-hdd me-1"></i>
+                                                        {{ "%.1f"|format(archivo.tamano / 1024 / 1024) }} MB
+                                                    </p>
+                                                    {% endif %}
+                                                    <div class="d-flex gap-1">
+                                                        <a href="{{ url_for('solicitudes.descargar_archivo_adjunto', archivo_id=archivo.id) }}" 
+                                                           class="btn btn-sm btn-outline-primary" 
+                                                           title="Descargar archivo">
+                                                            <i class="bi bi-download"></i>
+                                                        </a>
+                                                        {% if archivo.es_imagen %}
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-info" 
+                                                                onclick="verImagen('{{ url_for('solicitudes.descargar_archivo_adjunto', archivo_id=archivo.id) }}', '{{ archivo.nombre_original }}')"
+                                                                title="Ver imagen">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Historial de Estados -->
                     <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -795,5 +858,39 @@ function enviarEmail(email, numeroSolicitud) {
 function llamar(telefono) {
     window.location.href = `tel:${telefono}`;
 }
+
+function verImagen(url, nombre) {
+    const modal = document.getElementById('modalVerImagen');
+    const img = document.getElementById('imagenModal');
+    const titulo = document.getElementById('tituloImagenModal');
+    
+    img.src = url;
+    titulo.textContent = nombre;
+    
+    new bootstrap.Modal(modal).show();
+}
+
+function descargarArchivo(archivoId) {
+    window.open(`/solicitudes/api/archivos/${archivoId}/download`, "_blank");
+}
 </script>
+
+<!-- Modal para ver imágenes -->
+<div class="modal fade" id="modalVerImagen" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloImagenModal">Ver Imagen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagenModal" src="" class="img-fluid" alt="Imagen adjunta">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

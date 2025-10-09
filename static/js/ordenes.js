@@ -27,51 +27,76 @@ function debounce(func, wait) {
     };
 }
 
-// Función para mostrar indicadores de carga con toast
-function mostrarCargando(mensaje = 'Procesando...') {
-    const toastId = 'loading-toast-' + Date.now();
-    const toastHtml = `
-        <div id="${toastId}" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <div class="d-flex align-items-center">
-                        <div class="spinner-border spinner-border-sm me-2" role="status">
-                            <span class="visually-hidden">Cargando...</span>
+// Variable global para controlar el toast de carga
+let loadingToast = null;
+
+// Función para mostrar indicadores de carga compatible con descargarCSVMejorado
+function mostrarCargando(mostrar = true, mensaje = 'Procesando...') {
+    // Si se pasa un string como primer parámetro, es la versión antigua
+    if (typeof mostrar === 'string') {
+        mensaje = mostrar;
+        mostrar = true;
+    }
+    
+    if (mostrar) {
+        // Cerrar toast anterior si existe
+        if (loadingToast) {
+            loadingToast.close();
+        }
+        
+        const toastId = 'loading-toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            ${mensaje}
                         </div>
-                        ${mensaje}
                     </div>
                 </div>
             </div>
-        </div>
-    `;
-    
-    // Crear contenedor de toasts si no existe
-    let toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-        toastContainer.style.zIndex = '1055';
-        document.body.appendChild(toastContainer);
-    }
-    
-    // Agregar toast
-    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-    const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement, { autohide: false });
-    toast.show();
-    
-    // Retornar objeto para poder cerrar el toast
-    return {
-        close: () => {
-            toast.hide();
-            setTimeout(() => {
-                if (toastElement && toastElement.parentNode) {
-                    toastElement.remove();
-                }
-            }, 300);
+        `;
+        
+        // Crear contenedor de toasts si no existe
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '1055';
+            document.body.appendChild(toastContainer);
         }
-    };
+        
+        // Agregar toast
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { autohide: false });
+        toast.show();
+        
+        // Guardar referencia global
+        loadingToast = {
+            close: () => {
+                toast.hide();
+                setTimeout(() => {
+                    if (toastElement && toastElement.parentNode) {
+                        toastElement.remove();
+                    }
+                }, 300);
+                loadingToast = null;
+            }
+        };
+        
+        return loadingToast;
+    } else {
+        // Ocultar toast de carga
+        if (loadingToast) {
+            loadingToast.close();
+            loadingToast = null;
+        }
+    }
 }
 
 // Inicialización cuando se carga la página
@@ -900,7 +925,7 @@ async function exportarCSV() {
             await descargarCSVMejorado(
                 "/ordenes/exportar-csv",
                 "ordenes_trabajo_{fecha}",
-                "Excel"
+                "CSV"
             );
         } else {
             // Fallback simple

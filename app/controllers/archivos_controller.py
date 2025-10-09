@@ -3,9 +3,10 @@ import uuid
 from datetime import datetime
 from urllib.parse import urlparse
 from werkzeug.utils import secure_filename
-from flask import request, current_app
+from flask import request, current_app, redirect
 from app.extensions import db
 from app.models import ArchivoAdjunto, OrdenTrabajo
+from app.utils.storage import upload_file, is_gcp_environment, get_signed_url, file_exists
 
 
 def subir_archivo(orden_id, usuario_id):
@@ -29,19 +30,23 @@ def subir_archivo(orden_id, usuario_id):
         extension = _obtener_extension(nombre_original)
         nombre_unico = f"{uuid.uuid4().hex}{extension}"
 
-        # Crear directorio si no existe
-        upload_dir = os.path.join(current_app.static_folder, "uploads", "ordenes")
-        os.makedirs(upload_dir, exist_ok=True)
+        # Obtener descripción si se proporcionó
+        descripcion = request.form.get("descripcion", "")
 
-        # Guardar archivo
-        ruta_archivo = os.path.join(upload_dir, nombre_unico)
-        archivo.save(ruta_archivo)
+        # Subir archivo usando storage utility (Cloud Storage o local según entorno)
+        folder = "ordenes"
+        ruta_archivo = upload_file(archivo, folder, nombre_unico)
+        
+        if not ruta_archivo:
+            raise ValueError("Error al subir el archivo")
+
+        # Obtener tamaño del archivo
+        archivo.seek(0, 2)  # Ir al final
+        tamaño = archivo.tell()
+        archivo.seek(0)  # Volver al inicio
 
         # Determinar tipo de archivo
         tipo_archivo = _determinar_tipo_archivo(extension)
-
-        # Obtener descripción si se proporcionó
-        descripcion = request.form.get("descripcion", "")
 
         # Crear registro en base de datos
         archivo_adjunto = ArchivoAdjunto(
@@ -49,8 +54,8 @@ def subir_archivo(orden_id, usuario_id):
             nombre_archivo=nombre_unico,
             tipo_archivo=tipo_archivo,
             extension=extension,
-            tamaño=os.path.getsize(ruta_archivo),
-            ruta_archivo=f"uploads/ordenes/{nombre_unico}",
+            tamaño=tamaño,
+            ruta_archivo=ruta_archivo,  # Ahora es URL de GCS o path local
             descripcion=descripcion,
             orden_trabajo_id=orden_id,
             usuario_id=usuario_id,
@@ -131,19 +136,43 @@ def eliminar_archivo(archivo_id):
 
 
 def descargar_archivo(archivo_id):
-    """Obtener ruta de archivo para descarga"""
+    """Obtener información de archivo para descarga"""
 
     archivo = ArchivoAdjunto.query.get_or_404(archivo_id)
 
     if archivo.tipo_archivo == "enlace":
         raise ValueError("Los enlaces no se pueden descargar")
 
-    ruta_completa = os.path.join(current_app.static_folder, archivo.ruta_archivo)
-
-    if not os.path.exists(ruta_completa):
-        raise ValueError("Archivo no encontrado en el servidor")
-
-    return ruta_completa, archivo.nombre_original
+    # Verificar si es archivo de Cloud Storage (URL que empieza con gs://)
+    if archivo.ruta_archivo.startswith('gs://'):
+        # Extraer folder y filename de la URL de GCS
+        # gs://bucket/ordenes/filename -> folder=ordenes, filename=filename
+        parts = archivo.ruta_archivo.replace('gs://', '').split('/', 2)
+        if len(parts) >= 3:
+            folder = parts[1]  # ordenes
+            filename = parts[2]  # nombre_archivo
+            
+            # Verificar que el archivo existe en GCS
+            if not file_exists(filename, folder):
+                raise ValueError("Archivo no encontrado en el servidor")
+            
+            # Generar URL firmada para descarga
+            signed_url = get_signed_url(filename, folder)
+            if signed_url:
+                # Retornar información especial para indicar que es una redirección
+                return {"type": "redirect", "url": signed_url}
+            else:
+                raise ValueError("Error al generar URL de descarga")
+        else:
+            raise ValueError("Formato de ruta de archivo inválido")
+    else:
+        # Archivo local (desarrollo o archivos legacy)
+        ruta_completa = os.path.join(current_app.static_folder, archivo.ruta_archivo)
+        
+        if not os.path.exists(ruta_completa):
+            raise ValueError("Archivo no encontrado en el servidor")
+        
+        return {"type": "local", "path": ruta_completa, "filename": archivo.nombre_original}
 
 
 def _archivo_permitido(filename):

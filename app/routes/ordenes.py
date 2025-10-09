@@ -7,6 +7,7 @@ from flask import (
     make_response,
     send_file,
     current_app,
+    redirect,
 )
 from flask_login import login_required, current_user
 from app.controllers.ordenes_controller import (
@@ -450,9 +451,20 @@ def eliminar_archivo_adjunto(archivo_id):
 def descargar_archivo_adjunto(archivo_id):
     """Descargar archivo adjunto"""
     try:
-        archivo_path, nombre_original = descargar_archivo(archivo_id)
-        return send_file(
-            archivo_path, as_attachment=True, download_name=nombre_original
-        )
+        resultado = descargar_archivo(archivo_id)
+        
+        if resultado["type"] == "redirect":
+            # Archivo en Cloud Storage - redirigir a URL firmada
+            return redirect(resultado["url"])
+        elif resultado["type"] == "local":
+            # Archivo local - usar send_file
+            return send_file(
+                resultado["path"], 
+                as_attachment=True, 
+                download_name=resultado["filename"]
+            )
+        else:
+            return jsonify({"error": "Tipo de archivo no soportado"}), 400
+            
     except Exception as e:
         return jsonify({"error": str(e)}), 400

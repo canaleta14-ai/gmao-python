@@ -13,6 +13,7 @@ from functools import wraps
 from app.extensions import db
 from app.models.solicitud_servicio import SolicitudServicio
 from app.models.usuario import Usuario
+from app.models.archivo_adjunto import ArchivoAdjunto
 from app.utils.email_utils import enviar_email
 from datetime import datetime, timezone
 import os
@@ -129,8 +130,9 @@ def ver_solicitud(id):
         return redirect(url_for("web.index"))
 
     solicitud = SolicitudServicio.query.get_or_404(id)
+    archivos_adjuntos = ArchivoAdjunto.query.filter_by(solicitud_servicio_id=solicitud.id).all()
 
-    return render_template("admin/solicitudes/ver.html", solicitud=solicitud)
+    return render_template("admin/solicitudes/ver.html", solicitud=solicitud, archivos_adjuntos=archivos_adjuntos)
 
 
 @solicitudes_admin_bp.route("/<int:id>/editar", methods=["GET", "POST"])

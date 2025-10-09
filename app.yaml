@@ -23,7 +23,7 @@ env_variables:
   MAIL_USERNAME: j_hidalgo@disfood.com
   # MAIL_PASSWORD se obtiene vía Secret Manager en runtime
   MAIL_PASSWORD: ""
-  ADMIN_EMAIL: j_hidalgo@disfood.com
+  ADMIN_EMAILS: j_hidalgo@disfood.com
 
 beta_settings:
   cloud_sql_instances: mantenimiento-470311:europe-west1:gmao-postgres
