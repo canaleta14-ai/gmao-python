@@ -947,3 +947,140 @@ def eliminar_plan_auto_test():
         db.session.rollback()
         logger.exception("Error crítico eliminando planes auto test")
         return jsonify({"error": str(e)}), 500
+
+
+@cron_bp.route("/eliminar-ordenes-auto-test", methods=["POST"])
+@csrf.exempt
+def eliminar_ordenes_auto_test():
+    """
+    Endpoint para eliminar órdenes creadas por el plan auto test.
+    Solo accesible desde Cloud Scheduler.
+    """
+    if not is_valid_cron_request():
+        return (
+            jsonify(
+                {
+                    "error": "Acceso no autorizado",
+                    "mensaje": "Este endpoint solo puede ser llamado por Cloud Scheduler",
+                }
+            ),
+            403,
+        )
+
+    try:
+        logger.info("=== INICIO: Eliminación de órdenes auto test ===")
+        
+        ordenes_eliminadas = []
+        errores = []
+        
+        # 1. Buscar órdenes huérfanas (con plan_mantenimiento_id que no existe)
+        ordenes_huerfanas = db.session.execute(text("""
+            SELECT ot.id, ot.numero_orden, ot.descripcion, ot.plan_mantenimiento_id
+            FROM orden_trabajo ot
+            WHERE ot.plan_mantenimiento_id IS NOT NULL 
+              AND ot.plan_mantenimiento_id NOT IN (
+                  SELECT id FROM plan_mantenimiento WHERE id IS NOT NULL
+              )
+        """)).fetchall()
+        
+        logger.info(f"Encontradas {len(ordenes_huerfanas)} órdenes huérfanas")
+        
+        # 2. Buscar órdenes con referencias a auto test
+        ordenes_auto_test = db.session.execute(text("""
+            SELECT id, numero_orden, descripcion, plan_mantenimiento_id
+            FROM orden_trabajo 
+            WHERE LOWER(descripcion) LIKE LOWER(:patron1)
+               OR LOWER(numero_orden) LIKE LOWER(:patron2)
+               OR LOWER(descripcion) LIKE LOWER(:patron3)
+        """), {
+            'patron1': '%auto%test%',
+            'patron2': '%auto%test%',
+            'patron3': '%pm-auto-test%'
+        }).fetchall()
+        
+        logger.info(f"Encontradas {len(ordenes_auto_test)} órdenes con referencias auto test")
+        
+        # 3. Buscar órdenes del plan eliminado (ID 3)
+        ordenes_plan_3 = db.session.execute(text("""
+            SELECT id, numero_orden, descripcion, plan_mantenimiento_id
+            FROM orden_trabajo 
+            WHERE plan_mantenimiento_id = 3
+        """)).fetchall()
+        
+        logger.info(f"Encontradas {len(ordenes_plan_3)} órdenes del plan ID 3")
+        
+        # Consolidar todas las órdenes problemáticas
+        todas_ordenes_problematicas = set()
+        
+        for orden in ordenes_huerfanas:
+            todas_ordenes_problematicas.add(orden.id)
+        
+        for orden in ordenes_auto_test:
+            todas_ordenes_problematicas.add(orden.id)
+            
+        for orden in ordenes_plan_3:
+            todas_ordenes_problematicas.add(orden.id)
+        
+        logger.info(f"Total de órdenes únicas a eliminar: {len(todas_ordenes_problematicas)}")
+        
+        # Eliminar órdenes problemáticas
+        for orden_id in todas_ordenes_problematicas:
+            try:
+                # Obtener detalles antes de eliminar
+                orden_detalle = db.session.execute(text("""
+                    SELECT numero_orden, descripcion, plan_mantenimiento_id
+                    FROM orden_trabajo WHERE id = :orden_id
+                """), {'orden_id': orden_id}).fetchone()
+                
+                if orden_detalle:
+                    # Eliminar la orden
+                    result = db.session.execute(text("""
+                        DELETE FROM orden_trabajo WHERE id = :orden_id
+                    """), {'orden_id': orden_id})
+                    
+                    if result.rowcount > 0:
+                        ordenes_eliminadas.append({
+                            "id": orden_id,
+                            "numero_orden": orden_detalle.numero_orden,
+                            "descripcion": orden_detalle.descripcion,
+                            "plan_mantenimiento_id": orden_detalle.plan_mantenimiento_id
+                        })
+                        logger.info(f"✅ Eliminada orden ID: {orden_id} - {orden_detalle.numero_orden}")
+                    else:
+                        logger.warning(f"⚠️ No se pudo eliminar orden ID: {orden_id}")
+                else:
+                    logger.warning(f"⚠️ No se encontró orden ID: {orden_id}")
+                    
+            except Exception as e:
+                error_msg = f"Error eliminando orden ID {orden_id}: {str(e)}"
+                logger.error(error_msg)
+                errores.append({"orden_id": orden_id, "error": str(e)})
+        
+        # Confirmar cambios
+        db.session.commit()
+        
+        logger.info(f"=== FIN: Eliminación completada. {len(ordenes_eliminadas)} órdenes eliminadas ===")
+        
+        return (
+            jsonify(
+                {
+                    "fecha": datetime.now(timezone.utc).isoformat(),
+                    "ordenes_eliminadas": len(ordenes_eliminadas),
+                    "detalles_ordenes": ordenes_eliminadas,
+                    "errores": errores,
+                    "resumen": {
+                        "ordenes_huerfanas": len(ordenes_huerfanas),
+                        "ordenes_auto_test": len(ordenes_auto_test),
+                        "ordenes_plan_3": len(ordenes_plan_3),
+                        "total_unicas": len(todas_ordenes_problematicas)
+                    },
+                    "mensaje": f"Se eliminaron {len(ordenes_eliminadas)} órdenes problemáticas auto test"
+                }
+            ),
+            200,
+        )
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.exception("Error crítico eliminando órdenes auto test")
+        return jsonify({"error": str(e)}), 500
