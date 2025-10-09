@@ -19,6 +19,9 @@
                     <button type="button" class="btn btn-outline-primary" onclick="exportarSolicitudes()">
                         <i class="bi bi-download me-1"></i>Exportar
                     </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="eliminarSeleccionadas()" id="btnEliminarMasivo" style="display: none;">
+                        <i class="bi bi-trash me-1"></i>Eliminar Seleccionadas
+                    </button>
                     <button type="button" class="btn btn-primary" onclick="location.reload()">
                         <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
                     </button>
@@ -167,6 +170,9 @@
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
+                                        <th class="border-0">
+                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" title="Seleccionar todas">
+                                        </th>
                                         <th class="border-0">#</th>
                                         <th class="border-0">Solicitante</th>
                                         <th class="border-0">Tipo</th>
@@ -179,6 +185,9 @@
                                 <tbody>
                                     {% for solicitud in solicitudes %}
                                     <tr>
+                                        <td>
+                                            <input type="checkbox" class="solicitud-checkbox" value="{{ solicitud.id }}" onchange="updateDeleteButton()">
+                                        </td>
                                         <td>
                                             <strong class="text-primary">{{ solicitud.numero_solicitud }}</strong>
                                         </td>
@@ -227,6 +236,11 @@
                                                         onclick="cambiarEstado({{ solicitud.id }}, '{{ solicitud.estado }}')"
                                                         title="Cambiar estado">
                                                     <i class="bi bi-arrow-right-circle"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger action-btn delete"
+                                                        onclick="eliminarSolicitud({{ solicitud.id }})"
+                                                        title="Eliminar solicitud">
+                                                    <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -427,7 +441,7 @@ function actualizarTabla(data) {
     if (data.solicitudes.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-4">
+                <td colspan="8" class="text-center py-4">
                     <i class="bi bi-inbox fs-1 text-muted mb-2"></i>
                     <p class="text-muted mb-0">No se encontraron solicitudes con los filtros aplicados</p>
                 </td>
@@ -446,6 +460,9 @@ function actualizarTabla(data) {
 
         html += `
             <tr>
+                <td>
+                    <input type="checkbox" class="solicitud-checkbox" value="${solicitud.id}" onchange="updateDeleteButton()">
+                </td>
                 <td>
                     <strong class="text-primary">${solicitud.numero_solicitud}</strong>
                 </td>
@@ -470,15 +487,26 @@ function actualizarTabla(data) {
                     <small class="text-muted">${solicitud.fecha_creacion}</small>
                 </td>
                 <td>
-                    <div class="btn-group" role="group">
-                        <a href="/admin/solicitudes/${solicitud.id}" class="btn btn-sm btn-outline-primary" title="Ver">
+                    <div class="d-flex gap-1 justify-content-center">
+                        <button class="btn btn-sm btn-outline-primary action-btn view"
+                                onclick="window.location.href='/admin/solicitudes/${solicitud.id}'"
+                                title="Ver detalles">
                             <i class="bi bi-eye"></i>
-                        </a>
-                        <a href="/admin/solicitudes/${solicitud.id}/editar" class="btn btn-sm btn-outline-warning" title="Editar">
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary action-btn edit"
+                                onclick="window.location.href='/admin/solicitudes/${solicitud.id}/editar'"
+                                title="Editar">
                             <i class="bi bi-pencil"></i>
-                        </a>
-                        <button type="button" class="btn btn-sm btn-outline-info" onclick="cambiarEstado(${solicitud.id})" title="Cambiar Estado">
-                            <i class="bi bi-arrow-repeat"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info action-btn info"
+                                onclick="cambiarEstado(${solicitud.id}, '${solicitud.estado}')"
+                                title="Cambiar estado">
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger action-btn delete"
+                                onclick="eliminarSolicitud(${solicitud.id})"
+                                title="Eliminar solicitud">
+                            <i class="bi bi-trash"></i>
                         </button>
                     </div>
                 </td>
@@ -627,6 +655,114 @@ document.addEventListener('DOMContentLoaded', function() {
     // Aplicar filtros iniciales (vacíos) - esto carga todos los datos
     setTimeout(() => aplicarFiltros(1), 100);
 });
+
+// ========== FUNCIONES PARA ELIMINACIÓN ==========
+
+// Función para eliminar una solicitud individual
+function eliminarSolicitud(solicitudId) {
+    if (confirm('¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.')) {
+        fetch(`/admin/solicitudes/${solicitudId}/eliminar`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarMensaje('Solicitud eliminada correctamente', 'success');
+                // Recargar la tabla con los filtros actuales
+                aplicarFiltros(currentPage);
+            } else {
+                mostrarMensaje('Error al eliminar la solicitud: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarMensaje('Error de conexión al eliminar la solicitud', 'danger');
+        });
+    }
+}
+
+// Función para eliminar solicitudes seleccionadas
+function eliminarSeleccionadas() {
+    const checkboxes = document.querySelectorAll('.solicitud-checkbox:checked');
+    const solicitudIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (solicitudIds.length === 0) {
+        mostrarMensaje('Por favor, selecciona al menos una solicitud para eliminar', 'warning');
+        return;
+    }
+    
+    const mensaje = solicitudIds.length === 1 
+        ? '¿Estás seguro de que deseas eliminar la solicitud seleccionada?' 
+        : `¿Estás seguro de que deseas eliminar las ${solicitudIds.length} solicitudes seleccionadas?`;
+    
+    if (confirm(mensaje + ' Esta acción no se puede deshacer.')) {
+        fetch('/admin/solicitudes/eliminar-masivo', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                solicitud_ids: solicitudIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarMensaje(`${data.eliminadas} solicitud(es) eliminada(s) correctamente`, 'success');
+                // Limpiar selecciones
+                document.getElementById('selectAll').checked = false;
+                updateDeleteButton();
+                // Recargar la tabla con los filtros actuales
+                aplicarFiltros(currentPage);
+            } else {
+                mostrarMensaje('Error al eliminar las solicitudes: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarMensaje('Error de conexión al eliminar las solicitudes', 'danger');
+        });
+    }
+}
+
+// Función para seleccionar/deseleccionar todas las solicitudes
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.solicitud-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateDeleteButton();
+}
+
+// Función para actualizar la visibilidad del botón de eliminación masiva
+function updateDeleteButton() {
+    const checkboxes = document.querySelectorAll('.solicitud-checkbox:checked');
+    const deleteButton = document.getElementById('eliminarSeleccionadasBtn');
+    const selectAll = document.getElementById('selectAll');
+    
+    if (deleteButton) {
+        if (checkboxes.length > 0) {
+            deleteButton.style.display = 'inline-block';
+        } else {
+            deleteButton.style.display = 'none';
+        }
+    }
+    
+    // Actualizar estado del checkbox "Seleccionar todas"
+    const allCheckboxes = document.querySelectorAll('.solicitud-checkbox');
+    if (allCheckboxes.length > 0) {
+        selectAll.checked = checkboxes.length === allCheckboxes.length;
+        selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
+    }
+}
 </script>
 
 <!-- Los scripts principales (main.js, etc.) ya están cargados en base.html -->

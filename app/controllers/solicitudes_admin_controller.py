@@ -616,3 +616,108 @@ def exportar_solicitudes():
     except Exception as e:
         flash(f"Error al exportar solicitudes: {str(e)}", "error")
         return redirect(url_for("solicitudes_admin.listar_solicitudes"))
+
+
+@solicitudes_admin_bp.route("/<int:id>/eliminar", methods=["DELETE"])
+@login_required_ajax
+def eliminar_solicitud(id):
+    """Elimina una solicitud específica"""
+    if current_user.rol != "Administrador":
+        return jsonify({"error": "No tiene permisos para eliminar solicitudes."}), 403
+
+    try:
+        solicitud = SolicitudServicio.query.get_or_404(id)
+        
+        # Eliminar archivos adjuntos asociados
+        archivos = ArchivoAdjunto.query.filter_by(solicitud_id=id).all()
+        for archivo in archivos:
+            # Eliminar archivo físico si existe
+            if archivo.ruta_archivo and os.path.exists(archivo.ruta_archivo):
+                try:
+                    os.remove(archivo.ruta_archivo)
+                except OSError:
+                    pass  # Continuar aunque no se pueda eliminar el archivo físico
+            
+            # Eliminar registro de la base de datos
+            db.session.delete(archivo)
+        
+        # Eliminar la solicitud
+        db.session.delete(solicitud)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Solicitud #{solicitud.id} eliminada correctamente."
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": f"Error al eliminar la solicitud: {str(e)}"
+        }), 500
+
+
+@solicitudes_admin_bp.route("/eliminar-masivo", methods=["DELETE"])
+@login_required_ajax
+def eliminar_solicitudes_masivo():
+    """Elimina múltiples solicitudes seleccionadas"""
+    if current_user.rol != "Administrador":
+        return jsonify({"error": "No tiene permisos para eliminar solicitudes."}), 403
+
+    try:
+        data = request.get_json()
+        if not data or 'ids' not in data:
+            return jsonify({"error": "No se proporcionaron IDs de solicitudes."}), 400
+        
+        ids = data['ids']
+        if not isinstance(ids, list) or not ids:
+            return jsonify({"error": "Lista de IDs inválida."}), 400
+        
+        eliminadas = 0
+        errores = []
+        
+        for solicitud_id in ids:
+            try:
+                solicitud = SolicitudServicio.query.get(solicitud_id)
+                if not solicitud:
+                    errores.append(f"Solicitud #{solicitud_id} no encontrada")
+                    continue
+                
+                # Eliminar archivos adjuntos asociados
+                archivos = ArchivoAdjunto.query.filter_by(solicitud_id=solicitud_id).all()
+                for archivo in archivos:
+                    # Eliminar archivo físico si existe
+                    if archivo.ruta_archivo and os.path.exists(archivo.ruta_archivo):
+                        try:
+                            os.remove(archivo.ruta_archivo)
+                        except OSError:
+                            pass  # Continuar aunque no se pueda eliminar el archivo físico
+                    
+                    # Eliminar registro de la base de datos
+                    db.session.delete(archivo)
+                
+                # Eliminar la solicitud
+                db.session.delete(solicitud)
+                eliminadas += 1
+                
+            except Exception as e:
+                errores.append(f"Error al eliminar solicitud #{solicitud_id}: {str(e)}")
+        
+        db.session.commit()
+        
+        mensaje = f"Se eliminaron {eliminadas} solicitudes correctamente."
+        if errores:
+            mensaje += f" Errores: {'; '.join(errores)}"
+        
+        return jsonify({
+            "success": True,
+            "message": mensaje,
+            "eliminadas": eliminadas,
+            "errores": errores
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": f"Error en la eliminación masiva: {str(e)}"
+        }), 500
