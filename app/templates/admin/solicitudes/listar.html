@@ -671,8 +671,7 @@ function eliminarSolicitud(solicitudId) {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCSRFToken()
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(response => response.json())
@@ -718,8 +717,7 @@ function eliminarSeleccionadas() {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCSRFToken()
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     solicitud_ids: solicitudIds
@@ -808,21 +806,7 @@ function mostrarMensaje(mensaje, tipo = 'info') {
     }, 5000);
 }
 
-// Función para obtener el token CSRF
-function getCSRFToken() {
-    const metaTag = document.querySelector('meta[name="csrf-token"]');
-    if (metaTag) {
-        return metaTag.getAttribute('content');
-    }
-    
-    const inputTag = document.querySelector('input[name="csrf_token"]');
-    if (inputTag) {
-        return inputTag.value;
-    }
-    
-    console.warn('CSRF token not found');
-    return '';
-}
+
 </script>
 
 <!-- Los scripts principales (main.js, etc.) ya están cargados en base.html -->
