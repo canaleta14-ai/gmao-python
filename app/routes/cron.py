@@ -798,38 +798,39 @@ def aplicar_parches_db():
                 )
             else:
                 logger.info("No se encontró plan activo para preparar como candidato")
-                # Si no hay ningún plan, crear uno de prueba automáticamente
-                total_planes = db.session.execute(
-                    text("SELECT COUNT(*) FROM public.plan_mantenimiento")
-                ).scalar()
-                if not total_planes:
-                    logger.info("Creando plan de mantenimiento de prueba para validación")
-                    # Intentar asociar un activo existente si lo hay
-                    activo_prueba_id = db.session.execute(
-                        text("SELECT id FROM public.activo ORDER BY id LIMIT 1")
-                    ).scalar()
+                # COMENTADO: Evitar creación automática de planes de prueba PM-AUTO-TEST
+                # que estaban causando problemas en producción
+                # total_planes = db.session.execute(
+                #     text("SELECT COUNT(*) FROM public.plan_mantenimiento")
+                # ).scalar()
+                # if not total_planes:
+                #     logger.info("Creando plan de mantenimiento de prueba para validación")
+                #     # Intentar asociar un activo existente si lo hay
+                #     activo_prueba_id = db.session.execute(
+                #         text("SELECT id FROM public.activo ORDER BY id LIMIT 1")
+                #     ).scalar()
 
-                    insert_plan_sql = text(
-                        """
-                        INSERT INTO public.plan_mantenimiento (
-                            codigo_plan, nombre, descripcion, estado,
-                            generacion_automatica, proxima_ejecucion,
-                            tipo_mantenimiento, duracion_estimada, activo_id
-                        ) VALUES (
-                            'PM-AUTO-TEST', 'Plan Auto Test', 'Plan generado para validación automática', 'Activo',
-                            TRUE, NOW() - INTERVAL '1 day',
-                            'Preventivo', 2.0, :activo_id
-                        ) RETURNING id
-                        """
-                    )
-                    nuevo_plan_id = db.session.execute(
-                        insert_plan_sql, {"activo_id": activo_prueba_id}
-                    ).scalar()
-                    db.session.commit()
-                    plan_candidato_id = nuevo_plan_id
-                    logger.info(
-                        f"PLAN DE PRUEBA creado: id={nuevo_plan_id} (PM-AUTO-TEST)"
-                    )
+                #     insert_plan_sql = text(
+                #         """
+                #         INSERT INTO public.plan_mantenimiento (
+                #             codigo_plan, nombre, descripcion, estado,
+                #             generacion_automatica, proxima_ejecucion,
+                #             tipo_mantenimiento, duracion_estimada, activo_id
+                #         ) VALUES (
+                #             'PM-AUTO-TEST', 'Plan Auto Test', 'Plan generado para validación automática', 'Activo',
+                #             TRUE, NOW() - INTERVAL '1 day',
+                #             'Preventivo', 2.0, :activo_id
+                #         ) RETURNING id
+                #         """
+                #     )
+                #     nuevo_plan_id = db.session.execute(
+                #         insert_plan_sql, {"activo_id": activo_prueba_id}
+                #     ).scalar()
+                #     db.session.commit()
+                #     plan_candidato_id = nuevo_plan_id
+                #     logger.info(
+                #         f"PLAN DE PRUEBA creado: id={nuevo_plan_id} (PM-AUTO-TEST)"
+                #     )
         except Exception as e:
             logger.exception("Error preparando plan candidato tras parche DB")
 
