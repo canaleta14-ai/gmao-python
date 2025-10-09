@@ -854,3 +854,95 @@ def aplicar_parches_db():
         db.session.rollback()
         logger.exception("Error crítico aplicando parche DB")
         return jsonify({"error": str(e)}), 500
+
+
+@cron_bp.route("/eliminar-plan-auto-test", methods=["GET", "POST"])
+def eliminar_plan_auto_test():
+    """
+    Elimina el plan auto test problemático que está generando órdenes continuamente
+    
+    Returns:
+        JSON con resumen de la eliminación
+    """
+    # Verificar que la petición es válida
+    if not is_valid_cron_request():
+        logger.warning("Intento de acceso no autorizado a endpoint de eliminación")
+        return (
+            jsonify(
+                {
+                    "error": "Acceso no autorizado",
+                    "mensaje": "Este endpoint solo puede ser llamado por Cloud Scheduler",
+                }
+            ),
+            403,
+        )
+
+    try:
+        logger.info("=== INICIO: Eliminación de plan auto test problemático ===")
+        
+        # Buscar planes auto test problemáticos
+        planes_auto_test = PlanMantenimiento.query.filter(
+            (PlanMantenimiento.codigo_plan == 'PM-AUTO-TEST') |
+            (PlanMantenimiento.nombre.ilike('%auto%test%')) |
+            (PlanMantenimiento.codigo_plan.ilike('%auto%test%'))
+        ).all()
+        
+        logger.info(f"Planes auto test encontrados: {len(planes_auto_test)}")
+        
+        planes_eliminados = []
+        errores = []
+        
+        for plan in planes_auto_test:
+            try:
+                logger.info(f"Procesando plan: {plan.codigo_plan} (ID: {plan.id})")
+                
+                # Contar órdenes relacionadas
+                ordenes_relacionadas = OrdenTrabajo.query.filter(
+                    OrdenTrabajo.descripcion.ilike(f'%{plan.codigo_plan}%')
+                ).count()
+                
+                logger.info(f"Órdenes relacionadas encontradas: {ordenes_relacionadas}")
+                
+                # Información del plan antes de eliminar
+                plan_info = {
+                    "id": plan.id,
+                    "codigo_plan": plan.codigo_plan,
+                    "nombre": plan.nombre,
+                    "estado": plan.estado,
+                    "generacion_automatica": plan.generacion_automatica,
+                    "ordenes_relacionadas": ordenes_relacionadas
+                }
+                
+                # Eliminar el plan
+                db.session.delete(plan)
+                planes_eliminados.append(plan_info)
+                
+                logger.info(f"✅ Plan {plan.codigo_plan} eliminado exitosamente")
+                
+            except Exception as e:
+                error_msg = f"Error eliminando plan {plan.codigo_plan}: {str(e)}"
+                logger.error(error_msg)
+                errores.append({"plan_id": plan.id, "codigo_plan": plan.codigo_plan, "error": str(e)})
+        
+        # Confirmar cambios
+        db.session.commit()
+        
+        logger.info(f"=== FIN: Eliminación completada. {len(planes_eliminados)} planes eliminados ===")
+        
+        return (
+            jsonify(
+                {
+                    "fecha": datetime.now(timezone.utc).isoformat(),
+                    "planes_eliminados": len(planes_eliminados),
+                    "detalles_planes": planes_eliminados,
+                    "errores": errores,
+                    "mensaje": f"Se eliminaron {len(planes_eliminados)} planes auto test problemáticos"
+                }
+            ),
+            200,
+        )
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.exception("Error crítico eliminando planes auto test")
+        return jsonify({"error": str(e)}), 500
