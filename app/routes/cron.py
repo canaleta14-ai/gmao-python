@@ -4,7 +4,7 @@ Protegidos con X-Appengine-Cron header
 """
 
 from flask import Blueprint, request, jsonify, current_app
-from app.extensions import db
+from app.extensions import db, csrf
 from app.models.plan_mantenimiento import PlanMantenimiento
 from app.models.orden_trabajo import OrdenTrabajo
 from app.models.activo import Activo
@@ -857,6 +857,7 @@ def aplicar_parches_db():
 
 
 @cron_bp.route("/eliminar-plan-auto-test", methods=["GET", "POST"])
+@csrf.exempt
 def eliminar_plan_auto_test():
     """
     Elimina el plan auto test problemático que está generando órdenes continuamente
