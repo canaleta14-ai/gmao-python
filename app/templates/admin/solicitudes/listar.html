@@ -671,7 +671,8 @@ function eliminarSolicitud(solicitudId) {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCSRFToken()
                 }
             })
             .then(response => response.json())
@@ -717,7 +718,8 @@ function eliminarSeleccionadas() {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCSRFToken()
                 },
                 body: JSON.stringify({
                     solicitud_ids: solicitudIds
