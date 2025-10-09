@@ -1368,3 +1368,54 @@ def eliminar_plan_auto_test_especifico():
             "success": False,
             "error": f"Error eliminando plan: {str(e)}"
         }), 500
+
+
+@cron_bp.route("/limpiar-ordenes-huerfanas", methods=["POST"])
+def limpiar_ordenes_huerfanas():
+    """
+    Endpoint temporal para limpiar órdenes huérfanas (con plan_mantenimiento_id null)
+    """
+    try:
+        logger.info("=== INICIANDO LIMPIEZA DE ÓRDENES HUÉRFANAS ===")
+        
+        # Buscar órdenes huérfanas
+        ordenes_huerfanas = OrdenTrabajo.query.filter(
+            OrdenTrabajo.plan_mantenimiento_id.is_(None)
+        ).all()
+        
+        logger.info(f"Encontradas {len(ordenes_huerfanas)} órdenes huérfanas")
+        
+        ordenes_eliminadas = []
+        
+        for orden in ordenes_huerfanas:
+            orden_info = {
+                "id": orden.id,
+                "descripcion": orden.descripcion,
+                "estado": orden.estado,
+                "fecha_creacion": orden.fecha_creacion.isoformat() if orden.fecha_creacion else None
+            }
+            ordenes_eliminadas.append(orden_info)
+            
+            logger.info(f"Eliminando orden huérfana ID: {orden.id}")
+            db.session.delete(orden)
+        
+        # Confirmar cambios
+        db.session.commit()
+        logger.info(f"=== LIMPIEZA COMPLETADA: {len(ordenes_eliminadas)} órdenes eliminadas ===")
+        
+        response = {
+            "success": True,
+            "message": "Órdenes huérfanas eliminadas exitosamente",
+            "ordenes_eliminadas": len(ordenes_eliminadas),
+            "detalles": ordenes_eliminadas
+        }
+        
+        return jsonify(response)
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error en limpiar_ordenes_huerfanas: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error al limpiar órdenes huérfanas: {str(e)}"
+        }), 500
