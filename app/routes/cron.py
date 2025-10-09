@@ -1195,6 +1195,102 @@ def verificar_planes_produccion():
         return jsonify({"error": str(e)}), 500
 
 
+@cron_bp.route("/investigar-planes-restantes", methods=["GET"])
+@csrf.exempt
+def investigar_planes_restantes():
+    """
+    Endpoint temporal para investigar qué planes y órdenes siguen en el sistema.
+    """
+    try:
+        logger.info("🔍 Investigando planes y órdenes restantes en el sistema")
+        
+        # Buscar todos los planes de mantenimiento
+        planes_query = """
+            SELECT 
+                id,
+                codigo_plan,
+                nombre,
+                descripcion,
+                estado,
+                generacion_automatica,
+                ultima_ejecucion,
+                proxima_ejecucion,
+                frecuencia
+            FROM plan_mantenimiento 
+            ORDER BY id
+        """
+        
+        planes = db.session.execute(text(planes_query)).fetchall()
+        
+        # Buscar todas las órdenes de trabajo
+        ordenes_query = """
+            SELECT 
+                id,
+                plan_id,
+                estado,
+                fecha_creacion,
+                fecha_programada,
+                descripcion
+            FROM orden_trabajo 
+            ORDER BY id
+        """
+        
+        ordenes = db.session.execute(text(ordenes_query)).fetchall()
+        
+        # Procesar planes
+        planes_list = []
+        for plan in planes:
+            plan_dict = {
+                "id": plan.id,
+                "codigo_plan": plan.codigo_plan,
+                "nombre": plan.nombre,
+                "descripcion": plan.descripcion,
+                "estado": plan.estado,
+                "generacion_automatica": plan.generacion_automatica,
+                "frecuencia": plan.frecuencia,
+                "ultima_ejecucion": plan.ultima_ejecucion.isoformat() if plan.ultima_ejecucion else None,
+                "proxima_ejecucion": plan.proxima_ejecucion.isoformat() if plan.proxima_ejecucion else None
+            }
+            planes_list.append(plan_dict)
+        
+        # Procesar órdenes
+        ordenes_list = []
+        ordenes_pendientes = []
+        for orden in ordenes:
+            orden_dict = {
+                "id": orden.id,
+                "plan_id": orden.plan_id,
+                "estado": orden.estado,
+                "fecha_creacion": orden.fecha_creacion.isoformat() if orden.fecha_creacion else None,
+                "fecha_programada": orden.fecha_programada.isoformat() if orden.fecha_programada else None,
+                "descripcion": orden.descripcion
+            }
+            ordenes_list.append(orden_dict)
+            
+            # Identificar órdenes pendientes
+            if orden.estado in ['Pendiente', 'Programada', 'En Progreso']:
+                ordenes_pendientes.append(orden_dict)
+        
+        response = {
+            "success": True,
+            "total_planes": len(planes_list),
+            "total_ordenes": len(ordenes_list),
+            "ordenes_pendientes": len(ordenes_pendientes),
+            "planes": planes_list,
+            "ordenes": ordenes_list,
+            "detalles_ordenes_pendientes": ordenes_pendientes
+        }
+        
+        logger.info(f"✅ Investigación completada: {len(planes_list)} planes, {len(ordenes_list)} órdenes, {len(ordenes_pendientes)} pendientes")
+        return jsonify(response), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Error investigando planes y órdenes: {str(e)}")
+        return jsonify({
+             "success": False,
+             "error": f"Error investigando: {str(e)}"
+         }), 500
+
 
 @cron_bp.route("/eliminar-plan-auto-test-especifico", methods=["POST"])
 @csrf.exempt
