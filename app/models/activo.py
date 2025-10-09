@@ -10,7 +10,6 @@ class Activo(db.Model):
     )  # Código de departamento (000, 100, 140, etc.)
     nombre = db.Column(db.String(100), nullable=False)
     tipo = db.Column(db.String(50))
-    marca = db.Column(db.String(100))
     ubicacion = db.Column(db.String(100))
     estado = db.Column(db.String(50), default="Operativo")
     prioridad = db.Column(
