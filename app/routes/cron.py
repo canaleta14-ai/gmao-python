@@ -1111,10 +1111,10 @@ def verificar_planes_produccion():
         planes_query = """
             SELECT 
                 id,
-                codigo,
+                codigo_plan,
                 nombre,
                 descripcion,
-                activo,
+                estado,
                 generacion_automatica,
                 fecha_creacion,
                 fecha_modificacion
@@ -1133,10 +1133,10 @@ def verificar_planes_produccion():
         for plan in planes:
             plan_dict = {
                 "id": plan.id,
-                "codigo": plan.codigo,
+                "codigo_plan": plan.codigo_plan,
                 "nombre": plan.nombre,
                 "descripcion": plan.descripcion,
-                "activo": plan.activo,
+                "estado": plan.estado,
                 "generacion_automatica": plan.generacion_automatica,
                 "fecha_creacion": plan.fecha_creacion.isoformat() if plan.fecha_creacion else None,
                 "fecha_modificacion": plan.fecha_modificacion.isoformat() if plan.fecha_modificacion else None
@@ -1144,13 +1144,13 @@ def verificar_planes_produccion():
             planes_list.append(plan_dict)
             
             # Identificar planes auto test
-            if (plan.codigo and "auto" in plan.codigo.lower() and "test" in plan.codigo.lower()) or \
+            if (plan.codigo_plan and "auto" in plan.codigo_plan.lower() and "test" in plan.codigo_plan.lower()) or \
                (plan.nombre and "auto" in plan.nombre.lower() and "test" in plan.nombre.lower()) or \
                (plan.descripcion and "auto" in plan.descripcion.lower() and "test" in plan.descripcion.lower()):
                 planes_auto_test.append(plan_dict)
             
             # Identificar planes activos
-            if plan.activo:
+            if plan.estado == "Activo":
                 planes_activos.append(plan_dict)
         
         # Buscar específicamente el plan con ID 3 (el que eliminamos)
