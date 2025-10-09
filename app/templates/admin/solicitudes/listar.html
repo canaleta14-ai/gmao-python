@@ -660,29 +660,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función para eliminar una solicitud individual
 function eliminarSolicitud(solicitudId) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.')) {
-        fetch(`/admin/solicitudes/${solicitudId}/eliminar`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarMensaje('Solicitud eliminada correctamente', 'success');
-                // Recargar la tabla con los filtros actuales
-                aplicarFiltros(currentPage);
-            } else {
-                mostrarMensaje('Error al eliminar la solicitud: ' + data.message, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('Error de conexión al eliminar la solicitud', 'danger');
-        });
-    }
+    showConfirmModal({
+        title: "Eliminar Solicitud",
+        message: "¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.",
+        confirmText: "Eliminar",
+        cancelText: "Cancelar",
+        type: "danger",
+        onConfirm: function() {
+            fetch(`/admin/solicitudes/${solicitudId}/eliminar`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarMensaje('Solicitud eliminada correctamente', 'success');
+                    // Recargar la tabla con los filtros actuales
+                    aplicarFiltros(currentPage);
+                } else {
+                    mostrarMensaje('Error al eliminar la solicitud: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarMensaje('Error de conexión al eliminar la solicitud', 'danger');
+            });
+        }
+    });
 }
 
 // Función para eliminar solicitudes seleccionadas
@@ -699,35 +706,42 @@ function eliminarSeleccionadas() {
         ? '¿Estás seguro de que deseas eliminar la solicitud seleccionada?' 
         : `¿Estás seguro de que deseas eliminar las ${solicitudIds.length} solicitudes seleccionadas?`;
     
-    if (confirm(mensaje + ' Esta acción no se puede deshacer.')) {
-        fetch('/admin/solicitudes/eliminar-masivo', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                solicitud_ids: solicitudIds
+    showConfirmModal({
+        title: "Eliminar Solicitudes",
+        message: mensaje + ' Esta acción no se puede deshacer.',
+        confirmText: "Eliminar",
+        cancelText: "Cancelar",
+        type: "danger",
+        onConfirm: function() {
+            fetch('/admin/solicitudes/eliminar-masivo', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    solicitud_ids: solicitudIds
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                mostrarMensaje(`${data.eliminadas} solicitud(es) eliminada(s) correctamente`, 'success');
-                // Limpiar selecciones
-                document.getElementById('selectAll').checked = false;
-                updateDeleteButton();
-                // Recargar la tabla con los filtros actuales
-                aplicarFiltros(currentPage);
-            } else {
-                mostrarMensaje('Error al eliminar las solicitudes: ' + data.message, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarMensaje('Error de conexión al eliminar las solicitudes', 'danger');
-        });
-    }
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarMensaje(`${data.eliminadas} solicitud(es) eliminada(s) correctamente`, 'success');
+                    // Limpiar selecciones
+                    document.getElementById('selectAll').checked = false;
+                    updateDeleteButton();
+                    // Recargar la tabla con los filtros actuales
+                    aplicarFiltros(currentPage);
+                } else {
+                    mostrarMensaje('Error al eliminar las solicitudes: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarMensaje('Error de conexión al eliminar las solicitudes', 'danger');
+            });
+        }
+    });
 }
 
 // Función para seleccionar/deseleccionar todas las solicitudes
