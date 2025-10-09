@@ -2537,7 +2537,11 @@ async function confirmarEliminarOrden() {
 
     try {
         const response = await fetch(`/ordenes/api/${ordenAEliminar}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            }
         });
 
         const result = await response.json();
