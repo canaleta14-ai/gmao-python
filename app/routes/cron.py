@@ -1269,6 +1269,84 @@ def verificar_planes_temp():
     except Exception as e:
         logger.error(f"❌ Error verificando planes temporalmente: {str(e)}")
         return jsonify({
+             "success": False,
+             "error": f"Error verificando planes: {str(e)}"
+         }), 500
+
+
+@cron_bp.route("/eliminar-plan-auto-test-especifico", methods=["POST"])
+@csrf.exempt
+def eliminar_plan_auto_test_especifico():
+    """
+    Endpoint para eliminar el plan auto test específico encontrado en producción (ID 5).
+    """
+    try:
+        logger.info("🗑️ Iniciando eliminación del plan auto test específico (ID 5)")
+        
+        # Buscar el plan específico
+        plan_query = """
+            SELECT id, codigo_plan, nombre, descripcion, estado
+            FROM plan_mantenimiento 
+            WHERE id = 5 OR codigo_plan = 'PM-AUTO-TEST'
+        """
+        
+        planes_encontrados = db.session.execute(text(plan_query)).fetchall()
+        
+        if not planes_encontrados:
+            logger.info("✅ No se encontró el plan auto test para eliminar")
+            return jsonify({
+                "success": True,
+                "message": "Plan auto test no encontrado (ya eliminado)",
+                "planes_eliminados": 0
+            }), 200
+        
+        planes_eliminados = []
+        
+        # Eliminar cada plan encontrado
+        for plan in planes_encontrados:
+            logger.info(f"🗑️ Eliminando plan: ID={plan.id}, Código={plan.codigo_plan}, Nombre={plan.nombre}")
+            
+            # Primero eliminar órdenes asociadas si existen
+            ordenes_query = """
+                DELETE FROM orden_trabajo 
+                WHERE plan_mantenimiento_id = :plan_id
+            """
+            result_ordenes = db.session.execute(text(ordenes_query), {"plan_id": plan.id})
+            ordenes_eliminadas = result_ordenes.rowcount
+            
+            # Luego eliminar el plan
+            plan_delete_query = """
+                DELETE FROM plan_mantenimiento 
+                WHERE id = :plan_id
+            """
+            result_plan = db.session.execute(text(plan_delete_query), {"plan_id": plan.id})
+            
+            if result_plan.rowcount > 0:
+                planes_eliminados.append({
+                    "id": plan.id,
+                    "codigo_plan": plan.codigo_plan,
+                    "nombre": plan.nombre,
+                    "ordenes_eliminadas": ordenes_eliminadas
+                })
+                logger.info(f"✅ Plan eliminado: ID={plan.id}, Órdenes eliminadas: {ordenes_eliminadas}")
+        
+        # Confirmar cambios
+        db.session.commit()
+        
+        response = {
+            "success": True,
+            "message": f"Plan auto test eliminado exitosamente",
+            "planes_eliminados": len(planes_eliminados),
+            "detalles": planes_eliminados
+        }
+        
+        logger.info(f"✅ Eliminación completada: {len(planes_eliminados)} planes eliminados")
+        return jsonify(response), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"❌ Error eliminando plan auto test específico: {str(e)}")
+        return jsonify({
             "success": False,
-            "error": f"Error verificando planes: {str(e)}"
+            "error": f"Error eliminando plan: {str(e)}"
         }), 500
