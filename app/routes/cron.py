@@ -1084,3 +1084,112 @@ def eliminar_ordenes_auto_test():
         db.session.rollback()
         logger.exception("Error crítico eliminando órdenes auto test")
         return jsonify({"error": str(e)}), 500
+
+
+@cron_bp.route("/verificar-planes-produccion", methods=["GET"])
+@csrf.exempt
+def verificar_planes_produccion():
+    """
+    Endpoint para verificar qué planes están actualmente en la base de datos de producción.
+    Solo accesible desde Cloud Scheduler.
+    """
+    if not is_valid_cron_request():
+        return (
+            jsonify(
+                {
+                    "error": "Acceso no autorizado",
+                    "mensaje": "Este endpoint solo puede ser llamado por Cloud Scheduler",
+                }
+            ),
+            403,
+        )
+
+    try:
+        logger.info("🔍 Iniciando verificación de planes en producción")
+        
+        # Buscar todos los planes de mantenimiento
+        planes_query = """
+            SELECT 
+                id,
+                codigo,
+                nombre,
+                descripcion,
+                activo,
+                generacion_automatica,
+                fecha_creacion,
+                fecha_modificacion
+            FROM plan_mantenimiento 
+            ORDER BY id
+        """
+        
+        result = db.session.execute(text(planes_query))
+        planes = result.fetchall()
+        
+        # Convertir a lista de diccionarios
+        planes_list = []
+        planes_auto_test = []
+        planes_activos = []
+        
+        for plan in planes:
+            plan_dict = {
+                "id": plan.id,
+                "codigo": plan.codigo,
+                "nombre": plan.nombre,
+                "descripcion": plan.descripcion,
+                "activo": plan.activo,
+                "generacion_automatica": plan.generacion_automatica,
+                "fecha_creacion": plan.fecha_creacion.isoformat() if plan.fecha_creacion else None,
+                "fecha_modificacion": plan.fecha_modificacion.isoformat() if plan.fecha_modificacion else None
+            }
+            planes_list.append(plan_dict)
+            
+            # Identificar planes auto test
+            if (plan.codigo and "auto" in plan.codigo.lower() and "test" in plan.codigo.lower()) or \
+               (plan.nombre and "auto" in plan.nombre.lower() and "test" in plan.nombre.lower()) or \
+               (plan.descripcion and "auto" in plan.descripcion.lower() and "test" in plan.descripcion.lower()):
+                planes_auto_test.append(plan_dict)
+            
+            # Identificar planes activos
+            if plan.activo:
+                planes_activos.append(plan_dict)
+        
+        # Buscar específicamente el plan con ID 3 (el que eliminamos)
+        plan_id_3_query = """
+            SELECT COUNT(*) as count
+            FROM plan_mantenimiento 
+            WHERE id = 3
+        """
+        
+        result_id_3 = db.session.execute(text(plan_id_3_query))
+        plan_id_3_exists = result_id_3.fetchone().count > 0
+        
+        logger.info(f"✅ Verificación completada: {len(planes)} planes encontrados")
+        logger.info(f"📊 Planes auto test: {len(planes_auto_test)}")
+        logger.info(f"📊 Planes activos: {len(planes_activos)}")
+        logger.info(f"📊 Plan ID 3 existe: {plan_id_3_exists}")
+        
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "timestamp": datetime.now().isoformat(),
+                    "total_planes": len(planes),
+                    "planes_auto_test": planes_auto_test,
+                    "planes_activos": planes_activos,
+                    "plan_id_3_existe": plan_id_3_exists,
+                    "todos_los_planes": planes_list,
+                    "resumen": {
+                        "total": len(planes),
+                        "activos": len(planes_activos),
+                        "auto_test": len(planes_auto_test),
+                        "plan_id_3": plan_id_3_exists
+                    },
+                    "mensaje": f"Verificación completada: {len(planes)} planes en base de datos"
+                }
+            ),
+            200,
+        )
+        
+    except Exception as e:
+        logger.exception("Error crítico verificando planes en producción")
+        return jsonify({"error": str(e)}), 500
