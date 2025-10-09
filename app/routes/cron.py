@@ -1116,8 +1116,8 @@ def verificar_planes_produccion():
                 descripcion,
                 estado,
                 generacion_automatica,
-                fecha_creacion,
-                fecha_modificacion
+                ultima_ejecucion,
+                proxima_ejecucion
             FROM plan_mantenimiento 
             ORDER BY id
         """
@@ -1138,8 +1138,8 @@ def verificar_planes_produccion():
                 "descripcion": plan.descripcion,
                 "estado": plan.estado,
                 "generacion_automatica": plan.generacion_automatica,
-                "fecha_creacion": plan.fecha_creacion.isoformat() if plan.fecha_creacion else None,
-                "fecha_modificacion": plan.fecha_modificacion.isoformat() if plan.fecha_modificacion else None
+                "ultima_ejecucion": plan.ultima_ejecucion.isoformat() if plan.ultima_ejecucion else None,
+                "proxima_ejecucion": plan.proxima_ejecucion.isoformat() if plan.proxima_ejecucion else None
             }
             planes_list.append(plan_dict)
             
@@ -1213,8 +1213,8 @@ def verificar_planes_temp():
                 descripcion,
                 estado,
                 generacion_automatica,
-                fecha_creacion,
-                fecha_modificacion
+                ultima_ejecucion,
+                proxima_ejecucion
             FROM plan_mantenimiento 
             ORDER BY id
         """
@@ -1234,8 +1234,8 @@ def verificar_planes_temp():
                 "descripcion": plan.descripcion,
                 "estado": plan.estado,
                 "generacion_automatica": plan.generacion_automatica,
-                "fecha_creacion": plan.fecha_creacion.isoformat() if plan.fecha_creacion else None,
-                "fecha_modificacion": plan.fecha_modificacion.isoformat() if plan.fecha_modificacion else None
+                "ultima_ejecucion": plan.ultima_ejecucion.isoformat() if plan.ultima_ejecucion else None,
+                "proxima_ejecucion": plan.proxima_ejecucion.isoformat() if plan.proxima_ejecucion else None
             }
             planes_list.append(plan_dict)
             
