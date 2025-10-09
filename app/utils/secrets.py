@@ -1,7 +1,11 @@
 """
-Utilidades para Google Cloud Secret Manager
+Utilidades para gestores de secretos (GCP/AWS/Azure)
 
-Proporciona funciones para acceder a secretos almacenados en GCP de forma segura.
+Proporciona funciones para acceder a secretos almacenados en:
+- Google Cloud Secret Manager
+- AWS Secrets Manager
+- Azure Key Vault
+
 Incluye fallback a variables de entorno para desarrollo local.
 """
 
@@ -16,6 +20,23 @@ try:
     SECRETMANAGER_AVAILABLE = True
 except ImportError:
     SECRETMANAGER_AVAILABLE = False
+
+# Lazy import AWS (boto3)
+try:
+    import boto3
+
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+
+# Lazy import Azure Key Vault
+try:
+    from azure.identity import DefaultAzureCredential
+    from azure.keyvault.secrets import SecretClient
+
+    AZURE_KV_AVAILABLE = True
+except ImportError:
+    AZURE_KV_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +95,72 @@ def get_secret(
         return None
 
 
+def get_secret_aws(secret_id: str, region: Optional[str] = None) -> Optional[str]:
+    """Obtiene un secreto desde AWS Secrets Manager.
+
+    Args:
+        secret_id: Nombre/ARN del secreto en AWS
+        region: Región AWS (fallback a env `AWS_REGION`)
+
+    Returns:
+        Valor del secreto como string, o None si falla
+    """
+    if not BOTO3_AVAILABLE:
+        logger.warning("boto3 no disponible, no se puede acceder a AWS Secrets Manager")
+        return None
+
+    try:
+        if region is None:
+            region = os.getenv("AWS_REGION", "us-east-1")
+
+        client = boto3.client("secretsmanager", region_name=region)
+        response = client.get_secret_value(SecretId=secret_id)
+
+        if "SecretString" in response:
+            return response["SecretString"]
+        else:
+            # Binario -> texto
+            import base64
+
+            return base64.b64decode(response["SecretBinary"]).decode("utf-8")
+    except Exception as e:
+        logger.error(f"Error al obtener secret '{secret_id}' de AWS Secrets Manager: {e}")
+        return None
+
+
+def get_secret_azure(secret_id: str, vault_name: Optional[str] = None) -> Optional[str]:
+    """Obtiene un secreto desde Azure Key Vault.
+
+    Args:
+        secret_id: Nombre del secreto en el Vault
+        vault_name: Nombre del Key Vault (fallback a env `AZURE_KEYVAULT_NAME`)
+
+    Returns:
+        Valor del secreto como string, o None si falla
+    """
+    if not AZURE_KV_AVAILABLE:
+        logger.warning(
+            "azure-keyvault-secrets o azure-identity no disponibles, no se puede acceder a Azure Key Vault"
+        )
+        return None
+
+    try:
+        if vault_name is None:
+            vault_name = os.getenv("AZURE_KEYVAULT_NAME")
+        if not vault_name:
+            logger.error("AZURE_KEYVAULT_NAME no configurado")
+            return None
+
+        credential = DefaultAzureCredential()
+        vault_url = f"https://{vault_name}.vault.azure.net"
+        client = SecretClient(vault_url=vault_url, credential=credential)
+        secret = client.get_secret(secret_id)
+        return secret.value
+    except Exception as e:
+        logger.error(f"Error al obtener secret '{secret_id}' de Azure Key Vault: {e}")
+        return None
+
+
 def get_secret_or_env(secret_id: str, env_var: str, default: str = "") -> str:
     """
     Obtiene secreto de Secret Manager en producción o variable de entorno en desarrollo.
@@ -106,34 +193,61 @@ def get_secret_or_env(secret_id: str, env_var: str, default: str = "") -> str:
         - K_SERVICE: Google Cloud Run
         - GOOGLE_CLOUD_PROJECT: Proyecto GCP configurado
     """
-    # Detectar si estamos en entorno GCP
-    is_gcp = (
-        os.getenv("GAE_ENV", "").startswith("standard")  # App Engine
-        or os.getenv("K_SERVICE") is not None  # Cloud Run
-        or os.getenv("GOOGLE_CLOUD_PROJECT") is not None  # GCP configurado
-    )
+    # Selección de proveedor
+    provider = os.getenv("SECRETS_PROVIDER", "auto").lower()
 
-    # En GCP, intentar Secret Manager primero
-    if is_gcp and SECRETMANAGER_AVAILABLE:
-        logger.debug(
-            f"Entorno GCP detectado, intentando Secret Manager para '{secret_id}'"
+    def _try_gcp():
+        if SECRETMANAGER_AVAILABLE:
+            logger.debug(f"Intentando Secret Manager (GCP) para '{secret_id}'")
+            value = get_secret(secret_id)
+            if value:
+                return value
+        return None
+
+    def _try_aws():
+        logger.debug(f"Intentando Secrets Manager (AWS) para '{secret_id}'")
+        return get_secret_aws(secret_id)
+
+    def _try_azure():
+        logger.debug(f"Intentando Key Vault (Azure) para '{secret_id}'")
+        return get_secret_azure(secret_id)
+
+    value = None
+
+    if provider == "gcp":
+        value = _try_gcp()
+    elif provider == "aws":
+        value = _try_aws()
+    elif provider == "azure":
+        value = _try_azure()
+    else:
+        # auto: detectar entorno
+        is_gcp = (
+            os.getenv("GAE_ENV", "").startswith("standard")
+            or os.getenv("K_SERVICE") is not None
+            or os.getenv("GOOGLE_CLOUD_PROJECT") is not None
         )
-        secret_value = get_secret(secret_id)
-        if secret_value:
-            return secret_value
-        else:
-            logger.warning(
-                f"Secret '{secret_id}' no disponible en Secret Manager, "
-                f"usando variable de entorno '{env_var}'"
-            )
+        if is_gcp:
+            value = _try_gcp()
+        # Si no GCP, probar Azure si hay configuración
+        if value is None and os.getenv("AZURE_KEYVAULT_NAME"):
+            value = _try_azure()
+        # Si no Azure, probar AWS si hay configuración
+        if value is None and (
+            os.getenv("AWS_REGION") or os.getenv("AWS_EXECUTION_ENV")
+        ):
+            value = _try_aws()
 
-    # Fallback: Variable de entorno (desarrollo o si Secret Manager falla)
+    if value:
+        return value
+
+    # Fallback: Variable de entorno (desarrollo o si proveedores fallan)
     env_value = os.getenv(env_var, default)
 
     if env_value == default and default:
         logger.warning(
             f"Usando valor por defecto para '{env_var}' "
-            f"(ni Secret Manager ni .env disponibles)"
+            f"(ningún proveedor de secretos ni .env disponibles)"
         )
     elif env_value != default:
         logger.debug(f"Usando variable de entorno '{env_var}' para configuración")

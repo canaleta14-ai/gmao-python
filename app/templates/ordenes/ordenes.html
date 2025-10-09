@@ -188,6 +188,10 @@
                       title="Cambiar prioridad">
                 <i class="bi bi-flag me-1"></i>Prioridad
               </button>
+              <button class="btn btn-danger" onclick="eliminarSeleccionados()" 
+                      title="Eliminar órdenes seleccionadas">
+                <i class="bi bi-trash me-1"></i>Eliminar
+              </button>
               <button class="btn btn-info" onclick="exportarSeleccionados()" 
                       title="Exportar seleccionados">
                 <i class="bi bi-download me-1"></i>Exportar
@@ -831,5 +835,5 @@
 {% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>
-<script src="{{ url_for('static', filename='js/ordenes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ordenes.js') }}?v=20241231001"></script>
 {% endblock %}

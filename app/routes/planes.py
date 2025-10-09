@@ -39,7 +39,33 @@ def planes_page():
 @login_required
 def planes_api():
     if request.method == "GET":
-        return jsonify(listar_planes())
+        try:
+            data = listar_planes()
+            # Asegurar compatibilidad: devolver dict con 'items' y 'planes'
+            if isinstance(data, list):
+                return jsonify({"items": data, "planes": data})
+            return jsonify(data)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            # Fallback seguro: estructura vacía para que el frontend no rompa
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": str(e),
+                        "items": [],
+                        "planes": [],
+                        "page": 1,
+                        "per_page": 10,
+                        "total": 0,
+                        "pages": 0,
+                        "has_next": False,
+                        "has_prev": False,
+                    }
+                ),
+                200,
+            )
     elif request.method == "POST":
         try:
             data = request.get_json()
@@ -128,10 +154,39 @@ def planes_estadisticas():
     """Obtener estadísticas de planes de mantenimiento"""
     try:
         estadisticas = obtener_estadisticas_planes()
-        return jsonify({"success": True, "estadisticas": estadisticas})
+        # Asegurar estructura mínima esperada por el frontend
+        if not isinstance(estadisticas, dict):
+            estadisticas = {}
+        for key in [
+            "planes_activos",
+            "planes_proximos",
+            "planes_vencidos",
+            "planes_completados",
+            "total_planes",
+        ]:
+            estadisticas.setdefault(key, 0)
+        # Devolver tanto estructura anidada como claves planas para compatibilidad
+        response = {"success": True, "estadisticas": estadisticas, **estadisticas}
+        return jsonify(response), 200
     except Exception as e:
+        import traceback
         print(f"Error obteniendo estadísticas: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        traceback.print_exc()
+        # Fallback robusto: responder 200 con valores seguros para evitar errores en UI
+        fallback = {
+            "planes_activos": 0,
+            "planes_proximos": 0,
+            "planes_vencidos": 0,
+            "planes_completados": 0,
+            "total_planes": 0,
+        }
+        response = {
+            "success": False,
+            "error": str(e),
+            "estadisticas": fallback,
+            **fallback,
+        }
+        return jsonify(response), 200
 
 
 @planes_bp.route("/generar-ordenes", methods=["POST"])

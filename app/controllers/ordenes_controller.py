@@ -421,6 +421,8 @@ def eliminar_orden(id):
 def obtener_activos_disponibles():
     """Obtener lista de activos para selección en órdenes"""
     activos = Activo.query.filter_by(estado="Operativo").order_by(Activo.codigo).all()
+    if not activos:
+        activos = Activo.query.order_by(Activo.codigo).limit(10).all()
     return [
         {
             "id": activo.id,

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from app.extensions import db
 from flask_login import LoginManager
 import logging
@@ -65,6 +65,22 @@ def create_app():
         app.logger.warning("[WARN] Usando SECRET_KEY por defecto - NO USAR EN PRODUCCIÓN")
     else:
         app.logger.info("[OK] SECRET_KEY configurada correctamente")
+
+    # Validación de seguridad adicional: longitud mínima y prohibir default en producción
+    is_production_env = (
+        os.getenv("GAE_ENV", "").startswith("standard")
+        or os.getenv("FLASK_ENV") == "production"
+        or app.config.get("FLASK_ENV") == "production"
+    )
+    if is_production_env:
+        if app.config["SECRET_KEY"] == "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION":
+            raise ValueError(
+                "SECRET_KEY por defecto detectada en producción. Configure una clave segura vía Secret Manager o variable de entorno."
+            )
+        if len(app.config.get("SECRET_KEY", "")) < 32:
+            raise ValueError(
+                "SECRET_KEY demasiado corta para producción (mínimo 32 caracteres)."
+            )
 
     # Refuerzo de configuración para entorno de tests (pytest)
     # Debe ocurrir DESPUÉS de cargar SECRET_KEY para poder sobrescribir claves inseguras cortas
@@ -358,21 +374,72 @@ def create_app():
         app.logger.warning(f"Página no encontrada: {error}")
         return render_template("404.html"), 404
 
+    def _prefiere_json():
+        """Determina si la respuesta debería ser JSON (peticiones API/AJAX)."""
+        try:
+            api_like_prefixes = (
+                "/api",
+                "/planes/api",
+                "/ordenes/api",
+                "/ordenes/activos",
+                "/inventario/api",
+                "/activos/api",
+                "/proveedores/api",
+                "/admin/solicitudes/api",
+            )
+            if request.path and any(request.path.startswith(p) for p in api_like_prefixes):
+                return True
+
+            accept = request.headers.get("Accept", "")
+            if "application/json" in accept:
+                return True
+
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return True
+        except Exception:
+            # Si algo falla en la detección, retornar HTML por defecto
+            pass
+        return False
+
     @app.errorhandler(500)
     def internal_error(error):
         app.logger.error(f"Error interno del servidor: {error}")
         db.session.rollback()
+        if _prefiere_json():
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Error interno del servidor",
+                        "error": str(error),
+                    }
+                ),
+                500,
+            )
         return render_template("500.html"), 500
 
     @app.errorhandler(403)
     def forbidden_error(error):
         app.logger.warning(f"Acceso prohibido: {error}")
+        if _prefiere_json():
+            return jsonify({"success": False, "message": "Acceso prohibido"}), 403
         return render_template("403.html"), 403
 
     @app.errorhandler(Exception)
     def handle_unexpected_error(error):
         app.logger.error(f"Error inesperado: {error}", exc_info=True)
         db.session.rollback()
+        if _prefiere_json():
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Error inesperado",
+                        "error": str(error),
+                    }
+                ),
+                500,
+            )
         return render_template("500.html"), 500
 
     # Los blueprints se registran automáticamente

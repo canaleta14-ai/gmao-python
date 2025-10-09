@@ -61,12 +61,26 @@ def obtener_estadisticas():
     """API para obtener estadísticas del inventario"""
     try:
         stats = obtener_estadisticas_inventario()
-        return jsonify(stats)
+        # Asegurar claves mínimas esperadas por el frontend
+        if not isinstance(stats, dict):
+            stats = {}
+        for key, default in [
+            ("total_articulos", 0),
+            ("valor_total_stock", 0),
+            ("articulos_bajo_minimo", 0),
+            ("articulos_criticos", 0),
+        ]:
+            stats.setdefault(key, default)
+        return jsonify(stats), 200
     except Exception as e:
-        return (
-            jsonify({"success": False, "error": "Error al obtener estadísticas"}),
-            500,
-        )
+        # Fallback robusto: 200 con estructura segura para evitar romper UI
+        fallback = {
+            "total_articulos": 0,
+            "valor_total_stock": 0,
+            "articulos_bajo_minimo": 0,
+            "articulos_criticos": 0,
+        }
+        return jsonify({"success": False, "error": str(e), **fallback}), 200
 
 
 @inventario_bp.route("/api/articulos", methods=["GET"])

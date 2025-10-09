@@ -14,6 +14,8 @@ from .usuario import Usuario
 from .manual import Manual
 from .archivo_adjunto import ArchivoAdjunto
 from .solicitud_servicio import SolicitudServicio
+from .categoria import Categoria
+from .control_generacion import ControlGeneracion
 
 # Exportar para fácil importación
 __all__ = [
@@ -29,4 +31,6 @@ __all__ = [
     "Manual",
     "ArchivoAdjunto",
     "SolicitudServicio",
+    "Categoria",
+    "ControlGeneracion",
 ]

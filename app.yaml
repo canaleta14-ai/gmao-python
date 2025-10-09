@@ -6,6 +6,8 @@ instance_class: F2
 
 env_variables:
   FLASK_ENV: production
+  SECRETS_PROVIDER: "gcp"
+  GOOGLE_CLOUD_PROJECT: "mantenimiento-470311"
   DB_TYPE: postgresql
   DB_USER: gmao-user
   DB_NAME: gmao
@@ -19,7 +21,8 @@ env_variables:
   MAIL_PORT: "587"
   MAIL_USE_TLS: "True"
   MAIL_USERNAME: j_hidalgo@disfood.com
-  MAIL_PASSWORD: dvematimfpjjpxji
+  # MAIL_PASSWORD se obtiene vía Secret Manager en runtime
+  MAIL_PASSWORD: ""
   ADMIN_EMAIL: j_hidalgo@disfood.com
 
 beta_settings:

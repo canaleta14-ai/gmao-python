@@ -1,6 +1,6 @@
 from app.factory import create_app
 from app.extensions import db
-from app.models.usuario import Usuario
+from app.models import *  # Import all models so db.create_all() creates all tables
 from werkzeug.security import generate_password_hash
 
 # Script para inicializar la base de datos y crear el usuario admin

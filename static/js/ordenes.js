@@ -27,6 +27,53 @@ function debounce(func, wait) {
     };
 }
 
+// Función para mostrar indicadores de carga con toast
+function mostrarCargando(mensaje = 'Procesando...') {
+    const toastId = 'loading-toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        ${mensaje}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Crear contenedor de toasts si no existe
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1055';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Agregar toast
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { autohide: false });
+    toast.show();
+    
+    // Retornar objeto para poder cerrar el toast
+    return {
+        close: () => {
+            toast.hide();
+            setTimeout(() => {
+                if (toastElement && toastElement.parentNode) {
+                    toastElement.remove();
+                }
+            }, 300);
+        }
+    };
+}
+
 // Inicialización cuando se carga la página
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Módulo de órdenes cargado");
@@ -96,20 +143,52 @@ async function cargarOrdenes(page = 1, perPageParam = null, filtros = {}) {
         if (filtros.prioridad) params.append("prioridad", filtros.prioridad);
 
         const response = await fetch(`/ordenes/api?${params}`);
+        
         if (response.ok) {
-            const data = await response.json();
-            ordenes = data.items || [];
-            mostrarOrdenes();
-            actualizarEstadisticas();
+            const contentType = response.headers.get("content-type");
+            
+            // Verificar si la respuesta es JSON
+            if (contentType && contentType.includes("application/json")) {
+                const data = await response.json();
+                ordenes = data.items || [];
+                mostrarOrdenes();
+                actualizarEstadisticas();
 
-            // Renderizar paginación
-            paginacionOrdenes.render(data.page, data.per_page, data.total);
+                // Renderizar paginación
+                paginacionOrdenes.render(data.page, data.per_page, data.total);
+            } else {
+                // Si no es JSON, probablemente es HTML (página de login)
+                console.warn("Respuesta no es JSON, posible problema de autenticación");
+                const text = await response.text();
+                if (text.includes("login") || text.includes("Iniciar sesión")) {
+                    mostrarMensaje("Sesión expirada. Por favor, inicia sesión nuevamente.", "warning");
+                    // Redirigir al login después de un breve delay
+                    setTimeout(() => {
+                        window.location.href = "/auth/login";
+                    }, 2000);
+                } else {
+                    throw new Error("Respuesta inesperada del servidor");
+                }
+            }
         } else {
-            throw new Error("Error al cargar órdenes");
+            if (response.status === 401 || response.status === 403) {
+                mostrarMensaje("No tienes permisos para acceder a esta información.", "warning");
+                setTimeout(() => {
+                    window.location.href = "/auth/login";
+                }, 2000);
+            } else {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
         }
     } catch (error) {
         console.error("Error cargando órdenes:", error);
-        mostrarMensaje("Error al cargar las órdenes", "danger");
+        mostrarMensaje("Error al cargar las órdenes. Verifica tu conexión.", "danger");
+        
+        // Mostrar mensaje de "No hay órdenes" en caso de error
+        const tbody = document.getElementById("tabla-ordenes");
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">Error al cargar las órdenes</td></tr>';
+        }
     }
 }
 
@@ -2057,45 +2136,57 @@ async function cambiarEstadoMasivo(nuevoEstado) {
         return;
     }
 
-    const confirmacion = await seleccionMasiva.confirmarAccionMasiva(
-        `¿Cambiar estado a "${nuevoEstado}"?`,
-        `Se cambiará el estado de ${seleccionados.length} orden(es) a "${nuevoEstado}".`
-    );
+    seleccionMasiva.confirmarAccionMasiva(
+        `cambiar estado a "${nuevoEstado}"`,
+        async (seleccionados) => {
+            let exitosos = 0;
+            let errores = 0;
 
-    if (!confirmacion) return;
+            // Mostrar indicador de carga
+            const loadingToast = mostrarCargando('Cambiando estado...');
 
-    let exitosos = 0;
-    let errores = 0;
+            for (const orden of seleccionados) {
+                try {
+                    const response = await fetch(`/ordenes/api/${orden.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            estado: nuevoEstado
+                        })
+                    });
 
-    for (const orden of seleccionados) {
-        try {
-            const response = await fetch(`/ordenes/${orden.id}/estado`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estado: nuevoEstado })
-            });
-
-            if (response.ok) {
-                exitosos++;
-            } else {
-                errores++;
+                    if (response.ok) {
+                        exitosos++;
+                    } else {
+                        errores++;
+                        console.error(`Error al cambiar estado de orden ${orden.id}:`, await response.text());
+                    }
+                } catch (error) {
+                    errores++;
+                    console.error(`Error al cambiar estado de orden ${orden.id}:`, error);
+                }
             }
-        } catch (error) {
-            console.error(`Error al cambiar estado de orden ${orden.id}:`, error);
-            errores++;
-        }
-    }
 
-    if (exitosos > 0) {
-        mostrarMensaje(
-            `${exitosos} orden(es) actualizada(s) a "${nuevoEstado}"${errores > 0 ? `. ${errores} error(es).` : ''}`,
-            errores > 0 ? 'warning' : 'success'
-        );
-        cargarOrdenes(currentPage);
-        actualizarEstadisticas();
-    } else {
-        mostrarMensaje('No se pudieron actualizar las órdenes', 'danger');
-    }
+            // Ocultar indicador de carga
+            if (loadingToast) {
+                loadingToast.close();
+            }
+
+            // Mostrar resultado
+            if (exitosos > 0) {
+                mostrarMensaje(`Estado cambiado exitosamente en ${exitosos} orden(es)`, 'success');
+                await cargarOrdenes(currentPage, perPage);
+                actualizarEstadisticas();
+            }
+
+            if (errores > 0) {
+                mostrarMensaje(`Error al cambiar estado en ${errores} orden(es)`, 'error');
+            }
+        }
+    );
 }
 
 /**
@@ -2259,46 +2350,66 @@ async function cancelarSeleccionados() {
         return;
     }
 
-    const confirmacion = await seleccionMasiva.confirmarAccionMasiva(
-        '¿Cancelar órdenes seleccionadas?',
-        `Se cancelarán ${seleccionados.length} orden(es). Esta acción puede requerir aprobación.`,
-        'danger'
+    // Verificar que todas las órdenes se pueden cancelar
+    const noCancelables = seleccionados.filter(
+        orden => orden.estado === 'Completada' || orden.estado === 'Cancelada'
     );
 
-    if (!confirmacion) return;
+    if (noCancelables.length > 0) {
+        mostrarMensaje('No se pueden cancelar órdenes que ya están "Completadas" o "Canceladas"', 'warning');
+        return;
+    }
 
-    let exitosos = 0;
-    let errores = 0;
+    seleccionMasiva.confirmarAccionMasiva(
+        'cancelar órdenes',
+        async (seleccionados) => {
+            let exitosos = 0;
+            let errores = 0;
 
-    for (const orden of seleccionados) {
-        try {
-            const response = await fetch(`/ordenes/${orden.id}/estado`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estado: 'Cancelada' })
-            });
+            // Mostrar indicador de carga
+            const loadingToast = mostrarCargando('Cancelando órdenes...');
 
-            if (response.ok) {
-                exitosos++;
-            } else {
-                errores++;
+            for (const orden of seleccionados) {
+                try {
+                    const response = await fetch(`/ordenes/api/${orden.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            estado: 'Cancelada'
+                        })
+                    });
+
+                    if (response.ok) {
+                        exitosos++;
+                    } else {
+                        errores++;
+                        console.error(`Error al cancelar orden ${orden.id}:`, await response.text());
+                    }
+                } catch (error) {
+                    errores++;
+                    console.error(`Error al cancelar orden ${orden.id}:`, error);
+                }
             }
-        } catch (error) {
-            console.error(`Error al cancelar orden ${orden.id}:`, error);
-            errores++;
-        }
-    }
 
-    if (exitosos > 0) {
-        mostrarMensaje(
-            `${exitosos} orden(es) cancelada(s)${errores > 0 ? `. ${errores} error(es).` : ''}`,
-            errores > 0 ? 'warning' : 'success'
-        );
-        cargarOrdenes(currentPage);
-        actualizarEstadisticas();
-    } else {
-        mostrarMensaje('No se pudieron cancelar las órdenes', 'danger');
-    }
+            // Ocultar indicador de carga
+            if (loadingToast) {
+                loadingToast.close();
+            }
+
+            // Mostrar resultado
+            if (exitosos > 0) {
+                mostrarMensaje(`${exitosos} orden(es) cancelada(s) exitosamente`, 'success');
+                await cargarOrdenes(currentPage, perPage);
+            }
+
+            if (errores > 0) {
+                mostrarMensaje(`Error al cancelar ${errores} orden(es)`, 'error');
+            }
+        }
+    );
 }
 
 // Variables para eliminación de órdenes
@@ -2323,6 +2434,76 @@ function mostrarModalEliminarOrden(ordenId) {
     
     const modal = new bootstrap.Modal(document.getElementById('modalEliminarOrden'));
     modal.show();
+}
+
+/**
+ * Eliminar múltiples órdenes seleccionadas
+ */
+async function eliminarSeleccionados() {
+    const seleccionados = seleccionMasiva.obtenerSeleccionados();
+
+    if (seleccionados.length === 0) {
+        mostrarMensaje('No hay órdenes seleccionadas', 'warning');
+        return;
+    }
+
+    // Verificar que todas las órdenes se pueden eliminar
+    const noEliminables = seleccionados.filter(
+        orden => orden.estado !== 'Pendiente' && orden.estado !== 'Cancelada'
+    );
+
+    if (noEliminables.length > 0) {
+        mostrarMensaje('Solo se pueden eliminar órdenes en estado "Pendiente" o "Cancelada"', 'warning');
+        return;
+    }
+
+    seleccionMasiva.confirmarAccionMasiva(
+        'eliminar órdenes',
+        async (seleccionados) => {
+            let exitosos = 0;
+            let errores = 0;
+
+            // Mostrar indicador de carga
+            const loadingToast = mostrarCargando('Eliminando órdenes...');
+
+            for (const orden of seleccionados) {
+                try {
+                    const response = await fetch(`/ordenes/api/${orden.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        }
+                    });
+
+                    if (response.ok) {
+                        exitosos++;
+                    } else {
+                        errores++;
+                        console.error(`Error al eliminar orden ${orden.id}:`, await response.text());
+                    }
+                } catch (error) {
+                    errores++;
+                    console.error(`Error al eliminar orden ${orden.id}:`, error);
+                }
+            }
+
+            // Ocultar indicador de carga
+            if (loadingToast) {
+                loadingToast.close();
+            }
+
+            // Mostrar resultado
+            if (exitosos > 0) {
+                mostrarMensaje(`${exitosos} orden(es) eliminada(s) exitosamente`, 'success');
+                await cargarOrdenes(currentPage, perPage);
+            }
+
+            if (errores > 0) {
+                mostrarMensaje(`Error al eliminar ${errores} orden(es)`, 'error');
+            }
+        }
+    );
 }
 
 // Confirmar eliminación de orden

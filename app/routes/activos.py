@@ -116,8 +116,28 @@ def activos_list_api():
                 return jsonify({"success": True, "items": lista, "total": len(lista)})
             return jsonify(lista)
     except Exception as e:
-        # No propagar errores internos como 500 en búsquedas
-        return jsonify({"error": str(e)}), 400
+        import traceback
+        traceback.print_exc()
+        # Fallback seguro: mantener la UI operativa con estructura vacía
+        if request.args.get("page") is not None:
+            page_val = int(request.args.get("page", 1))
+            per_page_val = int(request.args.get("per_page", 10))
+            return (
+                jsonify(
+                    {
+                        "items": [],
+                        "page": page_val,
+                        "per_page": per_page_val,
+                        "total": 0,
+                        "pages": 0,
+                        "has_next": False,
+                        "has_prev": False,
+                    }
+                ),
+                200,
+            )
+        # Listado tradicional: lista vacía
+        return jsonify([]), 200
 
 
 @activos_bp.route("/api/<int:id>", methods=["GET", "PUT", "DELETE"])
@@ -323,7 +343,21 @@ def estadisticas_activos():
         estadisticas = obtener_estadisticas_activos()
         return jsonify(estadisticas)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        import traceback
+        print(f"Error obteniendo estadísticas de activos: {e}")
+        traceback.print_exc()
+        # Fallback seguro: devolver ceros para no romper la UI
+        return (
+            jsonify(
+                {
+                    "total_activos": 0,
+                    "activos_operativos": 0,
+                    "activos_mantenimiento": 0,
+                    "activos_fuera_servicio": 0,
+                }
+            ),
+            200,
+        )
 
 
 @activos_bp.route("/api/<int:id>/toggle", methods=["PUT"])

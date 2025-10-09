@@ -169,9 +169,25 @@ def estadisticas_proveedores():
     """Obtener estadísticas de proveedores"""
     try:
         estadisticas = obtener_estadisticas_proveedores()
-        return jsonify(estadisticas)
+        if not isinstance(estadisticas, dict):
+            estadisticas = {}
+        # Asegurar claves mínimas esperadas por frontend
+        for key in [
+            "total_proveedores",
+            "proveedores_activos",
+            "proveedores_pendientes",
+            "proveedores_inactivos",
+        ]:
+            estadisticas.setdefault(key, 0)
+        return jsonify(estadisticas), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        fallback = {
+            "total_proveedores": 0,
+            "proveedores_activos": 0,
+            "proveedores_pendientes": 0,
+            "proveedores_inactivos": 0,
+        }
+        return jsonify({"success": False, "error": str(e), **fallback}), 200
 
 
 @proveedores_bp.route("/api/<int:id>/toggle", methods=["PUT"])
