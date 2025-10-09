@@ -1226,7 +1226,7 @@ def investigar_planes_restantes():
         ordenes_query = """
             SELECT 
                 id,
-                plan_id,
+                plan_mantenimiento_id,
                 estado,
                 fecha_creacion,
                 fecha_programada,
@@ -1259,7 +1259,7 @@ def investigar_planes_restantes():
         for orden in ordenes:
             orden_dict = {
                 "id": orden.id,
-                "plan_id": orden.plan_id,
+                "plan_mantenimiento_id": orden.plan_mantenimiento_id,
                 "estado": orden.estado,
                 "fecha_creacion": orden.fecha_creacion.isoformat() if orden.fecha_creacion else None,
                 "fecha_programada": orden.fecha_programada.isoformat() if orden.fecha_programada else None,
