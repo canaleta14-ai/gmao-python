@@ -1371,6 +1371,7 @@ def eliminar_plan_auto_test_especifico():
 
 
 @cron_bp.route("/limpiar-ordenes-huerfanas", methods=["POST"])
+@csrf.exempt
 def limpiar_ordenes_huerfanas():
     """
     Endpoint temporal para limpiar órdenes huérfanas (con plan_mantenimiento_id null)
