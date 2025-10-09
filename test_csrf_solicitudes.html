@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CSRF Token - Solicitudes</title>
+    <meta name="csrf-token" content="test-token-123">
+</head>
+<body>
+    <h1>Test CSRF Token Functionality</h1>
+    <button onclick="testCSRF()">Test CSRF Function</button>
+    <div id="result"></div>
+
+    <script src="static/js/csrf-utils.js"></script>
+    <script>
+        function testCSRF() {
+            console.log('Testing CSRF token...');
+            
+            // Test if getCSRFToken function exists
+            if (typeof getCSRFToken === 'function') {
+                console.log('✅ getCSRFToken function exists');
+                
+                const token = getCSRFToken();
+                console.log('Token:', token);
+                
+                document.getElementById('result').innerHTML = `
+                    <p>✅ Function exists</p>
+                    <p>Token: ${token}</p>
+                `;
+            } else {
+                console.log('❌ getCSRFToken function NOT found');
+                document.getElementById('result').innerHTML = '❌ getCSRFToken function NOT found';
+            }
+        }
+        
+        // Auto-test on load
+        window.onload = function() {
+            testCSRF();
+        };
+    </script>
+</body>
+</html>
