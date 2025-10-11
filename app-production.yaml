@@ -30,6 +30,7 @@ env_variables:
   DB_PORT: "5432"
   DB_NAME: "gmao_db"
   DB_USER: "gmao_user"
+  DB_PASSWORD: "Spain2025PostgreSQL!"
   
   # Storage (región europea para GDPR)
   GCS_BUCKET_NAME: "mantenimiento-470311-uploads-eu"
