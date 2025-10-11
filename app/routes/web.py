@@ -40,6 +40,53 @@ def health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 
+@web_bp.route("/admin/emergency-reload-config", methods=["POST"])
+def emergency_reload_config():
+    """Endpoint de emergencia para forzar recarga de configuración de secretos"""
+    try:
+        # Importar funciones de configuración
+        from app.utils.secrets import get_secret_or_env
+        import os
+
+        # Limpiar cache de variables de entorno si existe
+        if hasattr(os, "_environ_cache"):
+            delattr(os, "_environ_cache")
+
+        # Forzar detección de entorno GCP
+        os.environ["FORCE_GCP_MODE"] = "true"
+
+        # Intentar obtener la configuración de base de datos
+        db_password = get_secret_or_env("PGPASSWORD", "gmao-db-password")
+        db_host = get_secret_or_env("PGHOST", "gmao-db-host")
+        db_user = get_secret_or_env("PGUSER", "gmao-db-user", "postgres")
+        db_name = get_secret_or_env("PGDATABASE", "gmao-db-name", "gmao_db")
+
+        # Verificar que obtuvimos los valores
+        config_status = {
+            "db_password": (
+                "✓" if db_password and db_password != "gmao-db-password" else "✗"
+            ),
+            "db_host": "✓" if db_host and db_host != "gmao-db-host" else "✗",
+            "db_user": "✓" if db_user else "✗",
+            "db_name": "✓" if db_name else "✗",
+            "gcp_mode_forced": "✓",
+        }
+
+        return (
+            jsonify(
+                {
+                    "status": "config_reloaded",
+                    "config_status": config_status,
+                    "message": "Configuración de secretos recargada",
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+
 @web_bp.route("/admin/asignar-tecnicos", methods=["POST"])
 @login_required
 def asignar_tecnicos_masivo():
@@ -321,7 +368,10 @@ def login():
         try:
             user = autenticar_usuario(username, password)
         except Exception as e:
-            return jsonify({"success": False, "error": "auth_error", "detail": str(e)}), 401
+            return (
+                jsonify({"success": False, "error": "auth_error", "detail": str(e)}),
+                401,
+            )
 
         if not user:
             return jsonify({"success": False, "error": "invalid_credentials"}), 401
@@ -634,22 +684,33 @@ def get_notificaciones():
             except Exception:
                 pass
             try:
-                backend = db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+                backend = (
+                    db.engine.url.get_backend_name()
+                    if getattr(db, "engine", None)
+                    else None
+                )
                 table_name = "inventario"
                 if backend in ("postgresql", "postgres"):
                     table_name = "public.inventario"
                 from sqlalchemy import text as _text
+
                 with db.engine.connect() as base_conn:
                     try:
                         base_conn.exec_driver_sql("ROLLBACK")
                     except Exception:
                         pass
-                    with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
-                        rows = conn.execute(
-                            _text(
-                                f"SELECT id, descripcion, COALESCE(stock_actual, 0) AS stock_actual FROM {table_name} WHERE COALESCE(stock_actual, 0) <= COALESCE(stock_minimo, 0) ORDER BY id"
+                    with base_conn.execution_options(
+                        isolation_level="AUTOCOMMIT"
+                    ) as conn:
+                        rows = (
+                            conn.execute(
+                                _text(
+                                    f"SELECT id, descripcion, COALESCE(stock_actual, 0) AS stock_actual FROM {table_name} WHERE COALESCE(stock_actual, 0) <= COALESCE(stock_minimo, 0) ORDER BY id"
+                                )
                             )
-                        ).mappings().all()
+                            .mappings()
+                            .all()
+                        )
                         for r in rows:
                             notificaciones.append(
                                 {
