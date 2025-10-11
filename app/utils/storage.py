@@ -38,6 +38,10 @@ def is_gcp_environment():
     Returns:
         bool: True si estamos en GCP
     """
+    # FORZAR ALMACENAMIENTO LOCAL PARA DESARROLLO
+    if os.getenv("FORCE_LOCAL_STORAGE", "true").lower() == "true":
+        return False
+
     return (
         os.getenv("GAE_ENV", "").startswith("standard")
         or os.getenv("K_SERVICE")

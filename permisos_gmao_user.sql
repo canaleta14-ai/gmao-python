@@ -1,0 +1,7 @@
+-- Script para otorgar permisos al usuario gmao-user
+GRANT ALL PRIVILEGES ON DATABASE postgres TO "gmao-user";
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "gmao-user";
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "gmao-user";
+GRANT USAGE ON SCHEMA public TO "gmao-user";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "gmao-user";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "gmao-user";

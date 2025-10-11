@@ -9,10 +9,10 @@ env_variables:
   SECRETS_PROVIDER: "gcp"
   GOOGLE_CLOUD_PROJECT: "mantenimiento-470311"
   DB_TYPE: postgresql
-  DB_USER: gmao-user
-  DB_NAME: gmao
+  DB_USER: postgres
+  DB_NAME: postgres
   # Actualizado para el proyecto "Mantenimiento" (disfood)
-  DB_HOST: "/cloudsql/mantenimiento-470311:europe-west1:gmao-postgres"
+  DB_HOST: "/cloudsql/mantenimiento-470311:europe-southwest1:gmao-postgres-spain"
   SERVER_URL: https://mantenimiento-470311.ew.r.appspot.com
   # Cloud Storage bucket para persistencia de archivos
   GCS_BUCKET_NAME: "gmao-mantenimiento-201193253693"
@@ -26,7 +26,7 @@ env_variables:
   ADMIN_EMAILS: j_hidalgo@disfood.com
 
 beta_settings:
-  cloud_sql_instances: mantenimiento-470311:europe-west1:gmao-postgres
+  cloud_sql_instances: mantenimiento-470311:europe-southwest1:gmao-postgres-spain
 
 # Instalación optimizada usando requirements-production.txt
 handlers:

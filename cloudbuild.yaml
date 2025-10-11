@@ -43,9 +43,33 @@ steps:
     args:
       - "app"
       - "deploy"
-      - "--version=${_VERSION:-prod}"
+      - "--version=${_VERSION:-madrid-fix35}"
       - "--quiet"
-      - "--no-promote"
+      - "--promote"
+
+  # Aplicar migraciones en Cloud SQL
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: bash
+    script: |
+      #!/bin/bash
+      echo "🔄 Aplicando migraciones en Cloud SQL..."
+      
+      # Configurar variables de entorno
+      export FLASK_ENV=production
+      export SECRETS_PROVIDER=gcp
+      export GOOGLE_CLOUD_PROJECT=mantenimiento-470311
+      export DB_TYPE=postgresql
+      export DB_USER=gmao-user
+      export DB_NAME=gmao
+      export DB_HOST=/cloudsql/mantenimiento-470311:europe-west1:gmao-postgres
+      
+      # Instalar dependencias
+      pip install -r requirements.txt --user --quiet
+      
+      # Ejecutar migraciones
+      python aplicar_migraciones_produccion.py
+      
+      echo "✅ Migraciones completadas"
 
 # Configuración de variables de sustitución
 substitutions:

@@ -376,28 +376,53 @@ def crear_plan(data):
     proxima_ejecucion = calcular_proxima_ejecucion(data)
     print(f"DEBUG crear_plan - Próxima ejecución calculada: {proxima_ejecucion}")
 
-    # Validar que no exista otro plan para el mismo activo en la misma fecha
+    # Validar que no exista un plan idéntico para el mismo activo en la misma fecha
     if data.get("activo_id") and proxima_ejecucion:
         from datetime import datetime, timedelta
 
-        # Verificar si hay otro plan para el mismo activo en la misma fecha (mismo día)
+        # Verificar si hay otro plan IDÉNTICO para el mismo activo en la misma fecha
         fecha_inicio = proxima_ejecucion.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         fecha_fin = fecha_inicio + timedelta(days=1)
 
-        plan_duplicado = PlanMantenimiento.query.filter(
+        # Buscar planes similares (mismo activo, misma fecha, mismo nombre o tipo)
+        planes_similares = PlanMantenimiento.query.filter(
             PlanMantenimiento.activo_id == data.get("activo_id"),
             PlanMantenimiento.proxima_ejecucion >= fecha_inicio,
             PlanMantenimiento.proxima_ejecucion < fecha_fin,
-        ).first()
+        ).all()
 
-        if plan_duplicado:
-            raise ValueError(
-                f"Ya existe un plan de mantenimiento para este activo "
-                f"programado para el {proxima_ejecucion.strftime('%d/%m/%Y')}. "
-                f"Plan existente: {plan_duplicado.codigo_plan} - {plan_duplicado.nombre}"
-            )
+        # Verificar si algún plan es realmente idéntico
+        for plan_existente in planes_similares:
+            # Comparar nombre (principal identificador)
+            if (
+                plan_existente.nombre.lower().strip()
+                == data.get("nombre", "").lower().strip()
+            ):
+                raise ValueError(
+                    f"Ya existe un plan con el mismo nombre '{plan_existente.nombre}' "
+                    f"para este activo programado para el {proxima_ejecucion.strftime('%d/%m/%Y')}. "
+                    f"Plan existente: {plan_existente.codigo_plan}"
+                )
+
+            # Si tienen el mismo tipo de mantenimiento y frecuencia, son muy similares
+            if (
+                plan_existente.tipo_mantenimiento
+                and data.get("tipo_mantenimiento")
+                and plan_existente.tipo_mantenimiento.lower()
+                == data.get("tipo_mantenimiento", "").lower()
+                and plan_existente.frecuencia
+                and data.get("frecuencia")
+                and plan_existente.frecuencia.lower()
+                == data.get("frecuencia", "").lower()
+            ):
+                raise ValueError(
+                    f"Ya existe un plan similar para este activo programado para el {proxima_ejecucion.strftime('%d/%m/%Y')}. "
+                    f"Plan existente: {plan_existente.codigo_plan} - {plan_existente.nombre} "
+                    f"(Tipo: {plan_existente.tipo_mantenimiento}, Frecuencia: {plan_existente.frecuencia}). "
+                    f"Considera usar un nombre diferente o modificar el tipo/frecuencia."
+                )
 
     # Mantener compatibilidad con el campo frecuencia_dias para frecuencias simples
     frecuencias_dias = {
@@ -556,7 +581,10 @@ def editar_plan(plan_id, data):
                     PlanMantenimiento.proxima_ejecucion >= fecha_inicio,
                     PlanMantenimiento.proxima_ejecucion < fecha_fin,
                     PlanMantenimiento.id != plan_id,  # Excluir el plan actual
-                    PlanMantenimiento.nombre == data.get("nombre", plan.nombre)  # Solo considerar duplicado si tiene el mismo nombre
+                    PlanMantenimiento.nombre
+                    == data.get(
+                        "nombre", plan.nombre
+                    ),  # Solo considerar duplicado si tiene el mismo nombre
                 ).first()
 
                 if plan_duplicado:

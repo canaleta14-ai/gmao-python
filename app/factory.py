@@ -29,7 +29,9 @@ def create_app():
             }
         )
         # Asegurar clave secreta suficientemente larga para tests
-        app.config["SECRET_KEY"] = os.getenv("TEST_SECRET_KEY", app.config.get("SECRET_KEY", "x" * 64))
+        app.config["SECRET_KEY"] = os.getenv(
+            "TEST_SECRET_KEY", app.config.get("SECRET_KEY", "x" * 64)
+        )
 
     # Configuración de logging
     if not app.debug:
@@ -62,7 +64,9 @@ def create_app():
 
     # Log de advertencia si se usa clave por defecto
     if app.config["SECRET_KEY"] == "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION":
-        app.logger.warning("[WARN] Usando SECRET_KEY por defecto - NO USAR EN PRODUCCIÓN")
+        app.logger.warning(
+            "[WARN] Usando SECRET_KEY por defecto - NO USAR EN PRODUCCIÓN"
+        )
     else:
         app.logger.info("[OK] SECRET_KEY configurada correctamente")
 
@@ -142,9 +146,12 @@ def create_app():
     db_type = os.getenv("DB_TYPE", "sqlite")  # 'sqlite' o 'postgresql'
 
     if db_type == "postgresql":
-        # Obtener DB_PASSWORD desde Secret Manager (producción) o .env (desarrollo)
-        db_password = get_secret_or_env(
-            secret_id="gmao-db-password", env_var="DB_PASSWORD", default=""
+        # TEMPORAL: Leer directamente de variable de entorno para debugging
+        db_password = os.getenv("DB_PASSWORD", "")
+
+        # DEBUG: Log para verificar qué contraseña estamos usando
+        app.logger.info(
+            f"DB_PASSWORD configurada: {'[SET]' if db_password else '[EMPTY]'}"
         )
 
         # Detectar si estamos en GCP App Engine
@@ -234,11 +241,18 @@ def create_app():
     # Verificación de esquema en desarrollo/testing para prevenir errores 500
     try:
         from app.utils.schema_check import ensure_inventario_schema
-        if app.config.get("TESTING") or app.config.get("FLASK_ENV") in ("development", "testing") or app.config.get("ENV") == "development":
+
+        if (
+            app.config.get("TESTING")
+            or app.config.get("FLASK_ENV") in ("development", "testing")
+            or app.config.get("ENV") == "development"
+        ):
             # Ejecutar dentro de app_context para evitar errores de contexto
             with app.app_context():
                 res = ensure_inventario_schema(app)
-                app.logger.info(f"[OK] Verificación de esquema Inventario: columnas añadidas={res.get('added', 0)}")
+                app.logger.info(
+                    f"[OK] Verificación de esquema Inventario: columnas añadidas={res.get('added', 0)}"
+                )
     except Exception as e:
         app.logger.warning(f"[WARN] Error en verificación de esquema al arranque: {e}")
 
@@ -355,12 +369,31 @@ def create_app():
     # Registrar blueprint de actualizar fecha
     from app.routes.actualizar_fecha import actualizar_fecha_bp
 
+    # Registrar blueprint de inicialización (temporal)
+    from app.routes.init_database import init_bp
+
     app.register_blueprint(cron_bp)
     app.register_blueprint(diagnostico_bp)
     app.register_blueprint(actualizar_fecha_bp)
+    app.register_blueprint(init_bp)
     app.logger.info("Blueprint de cron registrado")
     app.logger.info("Blueprint de diagnóstico registrado")
     app.logger.info("Blueprint de actualizar fecha registrado")
+    app.logger.info("Blueprint de inicialización registrado")
+
+    # Ruta para servir archivos subidos localmente
+    @app.route("/uploads/<folder>/<filename>")
+    def uploaded_file(folder, filename):
+        """Servir archivos subidos en modo local"""
+        from flask import send_from_directory
+        import os
+
+        upload_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "uploads",
+            folder,
+        )
+        return send_from_directory(upload_dir, filename)
 
     # Middleware para verificar sesión
     # @app.before_request
@@ -396,7 +429,9 @@ def create_app():
                 "/proveedores/api",
                 "/admin/solicitudes/api",
             )
-            if request.path and any(request.path.startswith(p) for p in api_like_prefixes):
+            if request.path and any(
+                request.path.startswith(p) for p in api_like_prefixes
+            ):
                 return True
 
             accept = request.headers.get("Accept", "")
