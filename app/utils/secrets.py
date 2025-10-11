@@ -124,7 +124,9 @@ def get_secret_aws(secret_id: str, region: Optional[str] = None) -> Optional[str
 
             return base64.b64decode(response["SecretBinary"]).decode("utf-8")
     except Exception as e:
-        logger.error(f"Error al obtener secret '{secret_id}' de AWS Secrets Manager: {e}")
+        logger.error(
+            f"Error al obtener secret '{secret_id}' de AWS Secrets Manager: {e}"
+        )
         return None
 
 
@@ -222,6 +224,7 @@ def get_secret_or_env(secret_id: str, env_var: str, default: str = "") -> str:
         value = _try_azure()
     else:
         # auto: detectar entorno
+        # Detectar automáticamente si estamos en GCP
         is_gcp = (
             os.getenv("GAE_ENV", "").startswith("standard")
             or os.getenv("K_SERVICE") is not None
