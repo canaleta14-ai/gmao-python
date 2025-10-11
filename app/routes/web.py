@@ -10,7 +10,7 @@ from flask import (
     Response,
 )
 from flask_login import login_required, current_user, login_user, logout_user
-from flask_wtf import csrf
+from flask_wtf.csrf import exempt
 
 # Importar función de autenticación desde el controlador
 from app.controllers.usuarios_controller import autenticar_usuario
@@ -42,7 +42,7 @@ def health_check():
 
 
 @web_bp.route("/admin/emergency-reload-config", methods=["POST"])
-@csrf.exempt
+@exempt
 def emergency_reload_config():
     """Endpoint de emergencia para forzar recarga de configuración de secretos"""
     try:
