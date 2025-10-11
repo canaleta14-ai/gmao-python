@@ -10,7 +10,6 @@ from flask import (
     Response,
 )
 from flask_login import login_required, current_user, login_user, logout_user
-from flask_wtf.csrf import exempt
 
 # Importar función de autenticación desde el controlador
 from app.controllers.usuarios_controller import autenticar_usuario
@@ -41,52 +40,52 @@ def health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 
-@web_bp.route("/admin/emergency-reload-config", methods=["POST"])
-@exempt
-def emergency_reload_config():
-    """Endpoint de emergencia para forzar recarga de configuración de secretos"""
-    try:
-        # Importar funciones de configuración
-        from app.utils.secrets import get_secret_or_env
-        import os
-
-        # Limpiar cache de variables de entorno si existe
-        if hasattr(os, "_environ_cache"):
-            delattr(os, "_environ_cache")
-
-        # Forzar detección de entorno GCP
-        os.environ["FORCE_GCP_MODE"] = "true"
-
-        # Intentar obtener la configuración de base de datos
-        db_password = get_secret_or_env("PGPASSWORD", "gmao-db-password")
-        db_host = get_secret_or_env("PGHOST", "gmao-db-host")
-        db_user = get_secret_or_env("PGUSER", "gmao-db-user", "postgres")
-        db_name = get_secret_or_env("PGDATABASE", "gmao-db-name", "gmao_db")
-
-        # Verificar que obtuvimos los valores
-        config_status = {
-            "db_password": (
-                "✓" if db_password and db_password != "gmao-db-password" else "✗"
-            ),
-            "db_host": "✓" if db_host and db_host != "gmao-db-host" else "✗",
-            "db_user": "✓" if db_user else "✗",
-            "db_name": "✓" if db_name else "✗",
-            "gcp_mode_forced": "✓",
-        }
-
-        return (
-            jsonify(
-                {
-                    "status": "config_reloaded",
-                    "config_status": config_status,
-                    "message": "Configuración de secretos recargada",
-                }
-            ),
-            200,
-        )
-
-    except Exception as e:
-        return jsonify({"status": "error", "error": str(e)}), 500
+# @web_bp.route("/admin/emergency-reload-config", methods=["POST"])
+# @exempt
+# def emergency_reload_config():
+#     """Endpoint de emergencia para forzar recarga de configuración de secretos"""
+#     try:
+#         # Importar funciones de configuración
+#         from app.utils.secrets import get_secret_or_env
+#         import os
+#
+#         # Limpiar cache de variables de entorno si existe
+#         if hasattr(os, "_environ_cache"):
+#             delattr(os, "_environ_cache")
+#
+#         # Forzar detección de entorno GCP
+#         os.environ["FORCE_GCP_MODE"] = "true"
+#
+#         # Intentar obtener la configuración de base de datos
+#         db_password = get_secret_or_env("PGPASSWORD", "gmao-db-password")
+#         db_host = get_secret_or_env("PGHOST", "gmao-db-host")
+#         db_user = get_secret_or_env("PGUSER", "gmao-db-user", "postgres")
+#         db_name = get_secret_or_env("PGDATABASE", "gmao-db-name", "gmao_db")
+#
+#         # Verificar que obtuvimos los valores
+#         config_status = {
+#             "db_password": (
+#                 "✓" if db_password and db_password != "gmao-db-password" else "✗"
+#             ),
+#             "db_host": "✓" if db_host and db_host != "gmao-db-host" else "✗",
+#             "db_user": "✓" if db_user else "✗",
+#             "db_name": "✓" if db_name else "✗",
+#             "gcp_mode_forced": "✓",
+#         }
+#
+#         return (
+#             jsonify(
+#                 {
+#                     "status": "config_reloaded",
+#                     "config_status": config_status,
+#                     "message": "Configuración de secretos recargada",
+#                 }
+#             ),
+#             200,
+#         )
+#
+#     except Exception as e:
+#         return jsonify({"status": "error", "error": str(e)}), 500
 
 
 @web_bp.route("/admin/asignar-tecnicos", methods=["POST"])
