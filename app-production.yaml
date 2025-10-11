@@ -26,11 +26,11 @@ env_variables:
   LOCALE: "es_ES.UTF-8"
   
   # Base de datos Cloud SQL (región europea - Madrid para España)
-  DB_HOST: "/cloudsql/mantenimiento-470311:europe-southwest1:gmao-postgres-spain"
+  DB_HOST: "/cloudsql/mantenimiento-470311:europe-southwest1:gmao-madrid-final"
   DB_PORT: "5432"
-  DB_NAME: "gmao_db"
-  DB_USER: "gmao_user"
-  DB_PASSWORD: "Spain2025PostgreSQL!"
+  DB_NAME: "gmao_production"
+  DB_USER: "postgres"
+  DB_PASSWORD: "GmaoMadrid2025!"
   
   # Storage (región europea para GDPR)
   GCS_BUCKET_NAME: "mantenimiento-470311-uploads-eu"
@@ -52,7 +52,7 @@ env_variables:
 
 # Configuración de base de datos Cloud SQL
 beta_settings:
-  cloud_sql_instances: "mantenimiento-470311:europe-southwest1:gmao-postgres-spain"
+  cloud_sql_instances: "mantenimiento-470311:europe-southwest1:gmao-madrid-final"
 
 # Manejadores de archivos
 handlers:
