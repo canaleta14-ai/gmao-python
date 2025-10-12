@@ -117,6 +117,7 @@ def activos_list_api():
             return jsonify(lista)
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         # Fallback seguro: mantener la UI operativa con estructura vacía
         if request.args.get("page") is not None:
@@ -344,20 +345,11 @@ def estadisticas_activos():
         return jsonify(estadisticas)
     except Exception as e:
         import traceback
+
         print(f"Error obteniendo estadísticas de activos: {e}")
         traceback.print_exc()
-        # Fallback seguro: devolver ceros para no romper la UI
-        return (
-            jsonify(
-                {
-                    "total_activos": 0,
-                    "activos_operativos": 0,
-                    "activos_mantenimiento": 0,
-                    "activos_fuera_servicio": 0,
-                }
-            ),
-            200,
-        )
+        # Retornar error 500 para consistencia con el resto del sistema
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @activos_bp.route("/api/<int:id>/toggle", methods=["PUT"])

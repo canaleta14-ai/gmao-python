@@ -35,11 +35,11 @@ class TestActivoModel:
         activo = Activo(
             codigo="ACT-FULL-001",
             nombre="Compresor Industrial",
-            departamento="Mantenimiento",
+            departamento="140",
             tipo="Compresor",
             ubicacion="Almacén Central",
             estado="En Mantenimiento",
-            marca="Siemens",
+            fabricante="Siemens",
             modelo="X-2000",
             numero_serie="SN123456789",
             fecha_adquisicion=datetime(2024, 1, 15),
@@ -49,7 +49,7 @@ class TestActivoModel:
         db_session.add(activo)
         db_session.commit()
 
-        assert activo.marca == "Siemens"
+        assert activo.fabricante == "Siemens"
         assert activo.modelo == "X-2000"
         assert activo.numero_serie == "SN123456789"
         assert activo.prioridad == "Alta"

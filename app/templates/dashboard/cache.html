@@ -1,0 +1,684 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<!-- Métricas de cache principales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-value" id="cacheSize">--</div>
+                <div class="metric-label">Elementos en Cache</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card success">
+            <div class="card-body text-center">
+                <div class="metric-value" id="hitRate">--%</div>
+                <div class="metric-label">Hit Rate</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card warning">
+            <div class="card-body text-center">
+                <div class="metric-value" id="memoryUsage">-- MB</div>
+                <div class="metric-label">Memoria Utilizada</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-value" id="cacheStatus">--</div>
+                <div class="metric-label">Estado del Cache</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Controles de cache -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    Controles de Cache
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button class="btn btn-info w-100 mb-2" onclick="refreshCacheStats()">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            Actualizar Estadísticas
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-warning w-100 mb-2" onclick="clearExpiredCache()">
+                            <i class="fas fa-clock me-2"></i>
+                            Limpiar Expirados
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-danger w-100 mb-2" onclick="clearAllCache()" data-confirm="¿Está seguro de limpiar todo el cache?">
+                            <i class="fas fa-trash me-2"></i>
+                            Limpiar Todo
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100 mb-2" onclick="preloadCache()">
+                            <i class="fas fa-download me-2"></i>
+                            Precargar Cache
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Configuración de TTL -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="defaultTTL" class="form-label">TTL por Defecto (segundos)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="defaultTTL" min="60" max="86400" value="3600">
+                            <button class="btn btn-outline-primary" onclick="updateDefaultTTL()">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="maxMemory" class="form-label">Memoria Máxima (MB)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="maxMemory" min="50" max="1000" value="100">
+                            <button class="btn btn-outline-primary" onclick="updateMaxMemory()">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cacheEnabled" class="form-label">Estado del Cache</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="cacheEnabled" checked onchange="toggleCache()">
+                            <label class="form-check-label" for="cacheEnabled">
+                                Cache Habilitado
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas de cache por tipo -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Estadísticas por Tipo de Cache
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="cacheTypeChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribución Hit/Miss
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="hitMissChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de elementos en cache -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Elementos en Cache
+                </h5>
+                <div class="input-group" style="width: 300px;">
+                    <input type="text" class="form-control form-control-sm" id="cacheSearch" placeholder="Buscar en cache..." onkeyup="filterCacheItems()">
+                    <button class="btn btn-outline-primary btn-sm" onclick="filterCacheItems()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="cacheItemsTable">
+                        <thead>
+                            <tr>
+                                <th>Clave</th>
+                                <th>Tipo</th>
+                                <th>Tamaño</th>
+                                <th>TTL Restante</th>
+                                <th>Hits</th>
+                                <th>Última Actualización</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Cargando elementos del cache...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historial de operaciones -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Historial de Operaciones (Últimas 50)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover" id="cacheOperationsTable">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Operación</th>
+                                <th>Clave</th>
+                                <th>Resultado</th>
+                                <th>Duración (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Cargando historial de operaciones...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">¿Está seguro de realizar esta acción?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Variables globales
+    let cacheTypeChart;
+    let hitMissChart;
+    let currentCacheData = {};
+    let operationHistory = [];
+
+    // Función para cargar datos de cache
+    async function loadPageData() {
+        try {
+            await Promise.all([
+                loadCacheStats(),
+                loadCacheItems(),
+                loadCacheOperations()
+            ]);
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    async function loadCacheStats() {
+        try {
+            const response = await fetch('/dashboard/api/cache/stats');
+            if (!response.ok) throw new Error('Error al cargar estadísticas de cache');
+            
+            const data = await response.json();
+            updateCacheMetrics(data);
+            updateCacheCharts(data);
+            
+        } catch (error) {
+            console.error('Error loading cache stats:', error);
+            showAlert('Error al cargar estadísticas de cache', 'danger');
+        }
+    }
+
+    async function loadCacheItems() {
+        try {
+            const response = await fetch('/dashboard/api/cache/items');
+            if (!response.ok) throw new Error('Error al cargar elementos de cache');
+            
+            const data = await response.json();
+            currentCacheData = data;
+            updateCacheItemsTable(data.items || []);
+            
+        } catch (error) {
+            console.error('Error loading cache items:', error);
+            showAlert('Error al cargar elementos de cache', 'danger');
+        }
+    }
+
+    async function loadCacheOperations() {
+        try {
+            const response = await fetch('/dashboard/api/cache/operations?limit=50');
+            if (!response.ok) throw new Error('Error al cargar historial de operaciones');
+            
+            const data = await response.json();
+            operationHistory = data.operations || [];
+            updateOperationsTable(operationHistory);
+            
+        } catch (error) {
+            console.error('Error loading cache operations:', error);
+        }
+    }
+
+    function updateCacheMetrics(data) {
+        const stats = data.cache_stats || {};
+        
+        document.getElementById('cacheSize').textContent = formatNumber(stats.total_keys || 0, 0);
+        document.getElementById('hitRate').textContent = formatNumber(stats.hit_rate || 0, 1);
+        document.getElementById('memoryUsage').textContent = formatNumber(stats.memory_usage_mb || 0, 1);
+        document.getElementById('cacheStatus').textContent = stats.enabled ? 'Activo' : 'Inactivo';
+        
+        // Actualizar configuración
+        document.getElementById('cacheEnabled').checked = stats.enabled;
+        document.getElementById('defaultTTL').value = stats.default_ttl || 3600;
+        document.getElementById('maxMemory').value = stats.max_memory_mb || 100;
+    }
+
+    function updateCacheCharts(data) {
+        const stats = data.cache_stats || {};
+        const typeStats = stats.type_stats || {};
+        
+        // Gráfico de estadísticas por tipo
+        const ctx1 = document.getElementById('cacheTypeChart').getContext('2d');
+        
+        const typeLabels = Object.keys(typeStats);
+        const hitCounts = typeLabels.map(type => typeStats[type].hits || 0);
+        const missCounts = typeLabels.map(type => typeStats[type].misses || 0);
+        
+        if (cacheTypeChart) cacheTypeChart.destroy();
+        
+        cacheTypeChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: typeLabels,
+                datasets: [
+                    {
+                        label: 'Hits',
+                        data: hitCounts,
+                        backgroundColor: '#2ecc71',
+                        borderColor: '#27ae60',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Misses',
+                        data: missCounts,
+                        backgroundColor: '#e74c3c',
+                        borderColor: '#c0392b',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de Operaciones'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico de distribución Hit/Miss
+        const ctx2 = document.getElementById('hitMissChart').getContext('2d');
+        
+        const totalHits = stats.total_hits || 0;
+        const totalMisses = stats.total_misses || 0;
+        
+        if (hitMissChart) hitMissChart.destroy();
+        
+        hitMissChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Hits', 'Misses'],
+                datasets: [{
+                    data: [totalHits, totalMisses],
+                    backgroundColor: ['#2ecc71', '#e74c3c'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCacheItemsTable(items) {
+        const tbody = document.querySelector('#cacheItemsTable tbody');
+        
+        if (items.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        No hay elementos en cache
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        items.forEach(item => {
+            const sizeKB = (item.size_bytes || 0) / 1024;
+            const ttlRemaining = formatTTL(item.ttl_remaining || 0);
+            const lastAccessed = new Date(item.last_accessed).toLocaleString('es-ES');
+            
+            html += `
+                <tr>
+                    <td><code class="small">${item.key}</code></td>
+                    <td><span class="badge bg-info">${item.type}</span></td>
+                    <td>${formatNumber(sizeKB, 1)} KB</td>
+                    <td>
+                        <span class="badge ${item.ttl_remaining > 300 ? 'bg-success' : item.ttl_remaining > 60 ? 'bg-warning' : 'bg-danger'}">
+                            ${ttlRemaining}
+                        </span>
+                    </td>
+                    <td><span class="badge bg-primary">${item.hit_count || 0}</span></td>
+                    <td><small>${lastAccessed}</small></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCacheItem('${item.key}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="refreshCacheItem('${item.key}')" title="Refrescar">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+
+    function updateOperationsTable(operations) {
+        const tbody = document.querySelector('#cacheOperationsTable tbody');
+        
+        if (operations.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        No hay operaciones recientes
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        operations.slice(0, 50).forEach(op => {
+            const timestamp = new Date(op.timestamp).toLocaleTimeString('es-ES');
+            const resultClass = op.result === 'hit' ? 'success' : op.result === 'miss' ? 'warning' : 'info';
+            
+            html += `
+                <tr>
+                    <td><small>${timestamp}</small></td>
+                    <td><span class="badge bg-secondary">${op.operation}</span></td>
+                    <td><code class="small">${op.key}</code></td>
+                    <td><span class="badge bg-${resultClass}">${op.result}</span></td>
+                    <td>${formatNumber(op.duration_ms || 0, 2)}</td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+
+    // Funciones de control
+    async function refreshCacheStats() {
+        showLoadingButton(event.target);
+        await loadCacheStats();
+        hideLoadingButton(event.target, '<i class="fas fa-sync-alt me-2"></i>Actualizar Estadísticas');
+    }
+
+    async function clearExpiredCache() {
+        try {
+            showLoadingButton(event.target);
+            const response = await fetch('/dashboard/api/cache/clear-expired', { method: 'POST' });
+            if (!response.ok) throw new Error('Error al limpiar cache expirado');
+            
+            const result = await response.json();
+            showAlert(`Se eliminaron ${result.deleted_keys || 0} elementos expirados`, 'success');
+            await loadPageData();
+            
+        } catch (error) {
+            handleError(error);
+        } finally {
+            hideLoadingButton(event.target, '<i class="fas fa-clock me-2"></i>Limpiar Expirados');
+        }
+    }
+
+    async function clearAllCache() {
+        if (!await confirmAction('¿Está seguro de limpiar todo el cache? Esta acción no se puede deshacer.')) {
+            return;
+        }
+        
+        try {
+            showLoadingButton(event.target);
+            const response = await fetch('/dashboard/api/cache/clear-all', { method: 'POST' });
+            if (!response.ok) throw new Error('Error al limpiar cache');
+            
+            const result = await response.json();
+            showAlert(`Se eliminaron ${result.deleted_keys || 0} elementos del cache`, 'success');
+            await loadPageData();
+            
+        } catch (error) {
+            handleError(error);
+        } finally {
+            hideLoadingButton(event.target, '<i class="fas fa-trash me-2"></i>Limpiar Todo');
+        }
+    }
+
+    async function preloadCache() {
+        try {
+            showLoadingButton(event.target);
+            const response = await fetch('/dashboard/api/cache/preload', { method: 'POST' });
+            if (!response.ok) throw new Error('Error al precargar cache');
+            
+            const result = await response.json();
+            showAlert(`Se precargaron ${result.preloaded_keys || 0} elementos en cache`, 'success');
+            await loadPageData();
+            
+        } catch (error) {
+            handleError(error);
+        } finally {
+            hideLoadingButton(event.target, '<i class="fas fa-download me-2"></i>Precargar Cache');
+        }
+    }
+
+    async function deleteCacheItem(key) {
+        if (!await confirmAction(`¿Eliminar el elemento '${key}' del cache?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/dashboard/api/cache/delete/${encodeURIComponent(key)}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Error al eliminar elemento');
+            
+            showAlert('Elemento eliminado del cache', 'success');
+            await loadCacheItems();
+            
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    async function refreshCacheItem(key) {
+        try {
+            const response = await fetch(`/dashboard/api/cache/refresh/${encodeURIComponent(key)}`, { method: 'POST' });
+            if (!response.ok) throw new Error('Error al refrescar elemento');
+            
+            showAlert('Elemento refrescado en cache', 'success');
+            await loadCacheItems();
+            
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    function filterCacheItems() {
+        const searchTerm = document.getElementById('cacheSearch').value.toLowerCase();
+        const items = currentCacheData.items || [];
+        
+        const filteredItems = items.filter(item => 
+            item.key.toLowerCase().includes(searchTerm) ||
+            item.type.toLowerCase().includes(searchTerm)
+        );
+        
+        updateCacheItemsTable(filteredItems);
+    }
+
+    // Funciones de configuración
+    async function updateDefaultTTL() {
+        const ttl = parseInt(document.getElementById('defaultTTL').value);
+        if (ttl < 60 || ttl > 86400) {
+            showAlert('TTL debe estar entre 60 y 86400 segundos', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/dashboard/api/cache/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ default_ttl: ttl })
+            });
+            
+            if (!response.ok) throw new Error('Error al actualizar TTL');
+            showAlert('TTL por defecto actualizado', 'success');
+            
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    async function updateMaxMemory() {
+        const maxMemory = parseInt(document.getElementById('maxMemory').value);
+        if (maxMemory < 50 || maxMemory > 1000) {
+            showAlert('Memoria máxima debe estar entre 50 y 1000 MB', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/dashboard/api/cache/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ max_memory_mb: maxMemory })
+            });
+            
+            if (!response.ok) throw new Error('Error al actualizar memoria máxima');
+            showAlert('Memoria máxima actualizada', 'success');
+            
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    async function toggleCache() {
+        const enabled = document.getElementById('cacheEnabled').checked;
+        
+        try {
+            const response = await fetch('/dashboard/api/cache/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: enabled })
+            });
+            
+            if (!response.ok) throw new Error('Error al cambiar estado del cache');
+            showAlert(`Cache ${enabled ? 'habilitado' : 'deshabilitado'}`, 'success');
+            await loadCacheStats();
+            
+        } catch (error) {
+            handleError(error);
+            // Revertir el checkbox en caso de error
+            document.getElementById('cacheEnabled').checked = !enabled;
+        }
+    }
+
+    // Utilidades
+    function formatTTL(seconds) {
+        if (seconds < 60) return `${seconds}s`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+        return `${Math.floor(seconds / 3600)}h`;
+    }
+
+    function confirmAction(message) {
+        return new Promise((resolve) => {
+            document.getElementById('confirmMessage').textContent = message;
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            
+            const confirmButton = document.getElementById('confirmButton');
+            const newConfirmButton = confirmButton.cloneNode(true);
+            confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+            
+            newConfirmButton.onclick = () => {
+                modal.hide();
+                resolve(true);
+            };
+            
+            modal.show();
+            modal._element.addEventListener('hidden.bs.modal', () => resolve(false), { once: true });
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Proveedores en Activos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>🔧 Test - Carga de Proveedores en Activos</h2>
+        <p class="text-muted">Esta página permite probar la funcionalidad de carga de proveedores en el formulario de activos.</p>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h4>1. Test Manual de API</h4>
+                <button class="btn btn-primary" onclick="testAPI()">Probar API /proveedores/api</button>
+                <div id="api-result" class="mt-2"></div>
+            </div>
+            
+            <div class="col-md-6">
+                <h4>2. Test de Select de Proveedores</h4>
+                <button class="btn btn-success" onclick="testSelectProveedores()">Cargar en Select</button>
+                <select class="form-select mt-2" id="test-proveedor-select">
+                    <option value="">Seleccionar proveedor...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h4>3. Logs de Debugging</h4>
+                <textarea id="debug-logs" class="form-control" rows="10" readonly></textarea>
+                <button class="btn btn-secondary mt-2" onclick="clearLogs()">Limpiar Logs</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función para agregar logs al área de texto
+        function addLog(message) {
+            const logs = document.getElementById('debug-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.value += `[${timestamp}] ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Limpiar logs
+        function clearLogs() {
+            document.getElementById('debug-logs').value = '';
+        }
+
+        // Test de la API de proveedores
+        async function testAPI() {
+            addLog('🔄 Iniciando test de API /proveedores/api...');
+            const resultDiv = document.getElementById('api-result');
+            
+            try {
+                const response = await fetch('/proveedores/api');
+                addLog(`📡 Respuesta de la API: Status ${response.status}`);
+                
+                if (response.ok) {
+                    const proveedores = await response.json();
+                    addLog(`✅ Datos recibidos: ${proveedores.length} proveedores`);
+                    
+                    const activos = proveedores.filter(p => p.activo);
+                    addLog(`✅ Proveedores activos: ${activos.length}`);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>✅ API funcionando correctamente</strong><br>
+                            Total: ${proveedores.length} proveedores<br>
+                            Activos: ${activos.length} proveedores
+                        </div>
+                    `;
+                    
+                    if (activos.length > 0) {
+                        addLog(`📋 Primer proveedor activo: ${activos[0].nombre} (ID: ${activos[0].id})`);
+                    }
+                } else {
+                    addLog(`❌ Error en la respuesta: ${response.status} ${response.statusText}`);
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>❌ Error en la API</strong><br>
+                            Status: ${response.status} ${response.statusText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                addLog(`❌ Error de conexión: ${error.message}`);
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>❌ Error de conexión</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Test del select de proveedores
+        async function testSelectProveedores() {
+            addLog('🔄 Iniciando test de carga en select...');
+            const select = document.getElementById('test-proveedor-select');
+            
+            try {
+                const response = await fetch('/proveedores/api');
+                
+                if (response.ok) {
+                    const proveedores = await response.json();
+                    addLog(`📥 Cargando ${proveedores.length} proveedores en select...`);
+                    
+                    // Limpiar select
+                    select.innerHTML = '<option value="">Seleccionar proveedor...</option>';
+                    
+                    // Filtrar y agregar proveedores activos
+                    const proveedoresActivos = proveedores.filter(p => p.activo);
+                    addLog(`🔍 Filtrando: ${proveedoresActivos.length} proveedores activos`);
+                    
+                    if (proveedoresActivos.length === 0) {
+                        select.innerHTML = '<option value="">⚠️ No hay proveedores activos</option>';
+                        addLog('⚠️ No se encontraron proveedores activos');
+                        return;
+                    }
+                    
+                    proveedoresActivos.forEach((proveedor, index) => {
+                        const option = document.createElement('option');
+                        option.value = proveedor.id;
+                        option.textContent = `${proveedor.nombre} (${proveedor.nif})`;
+                        select.appendChild(option);
+                        addLog(`➕ Agregado: ${proveedor.nombre} (ID: ${proveedor.id})`);
+                    });
+                    
+                    addLog(`✅ Select actualizado con ${proveedoresActivos.length} opciones`);
+                } else {
+                    addLog(`❌ Error al cargar proveedores: ${response.status}`);
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // Inicializar página
+        addLog('🚀 Página de test cargada - Ready para pruebas');
+        addLog('💡 Instrucciones:');
+        addLog('   1. Haz clic en "Probar API" para verificar la conexión');
+        addLog('   2. Haz clic en "Cargar en Select" para probar la funcionalidad');
+        addLog('   3. Revisa los logs para diagnosticar problemas');
+    </script>
+</body>
+</html>

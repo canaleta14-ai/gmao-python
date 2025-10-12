@@ -1,0 +1,487 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<!-- Métricas de performance principales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-value" id="totalRequests">--</div>
+                <div class="metric-label">Total Requests</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card success">
+            <div class="card-body text-center">
+                <div class="metric-value" id="avgResponseTime">-- ms</div>
+                <div class="metric-label">Tiempo Respuesta Promedio</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card warning">
+            <div class="card-body text-center">
+                <div class="metric-value" id="errorRate">--%</div>
+                <div class="metric-label">Tasa de Error</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-value" id="throughput">--/hr</div>
+                <div class="metric-label">Throughput</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="timeRange" class="form-label">Rango de Tiempo</label>
+                        <select class="form-select" id="timeRange" onchange="updateTimeRange()">
+                            <option value="1">Última hora</option>
+                            <option value="6">Últimas 6 horas</option>
+                            <option value="24" selected>Últimas 24 horas</option>
+                            <option value="168">Última semana</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="operationFilter" class="form-label">Operación</label>
+                        <select class="form-select" id="operationFilter" onchange="updateOperationFilter()">
+                            <option value="all">Todas las operaciones</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="limitResults" class="form-label">Límite de Resultados</label>
+                        <select class="form-select" id="limitResults" onchange="updateLimit()">
+                            <option value="50">50</option>
+                            <option value="100" selected>100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos de performance -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Tiempo de Respuesta en el Tiempo
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="responseTimeChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribución por Operación
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="operationDistributionChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de métricas detalladas -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Estadísticas por Operación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="operationStatsTable">
+                        <thead>
+                            <tr>
+                                <th>Operación</th>
+                                <th>Requests</th>
+                                <th>Promedio (ms)</th>
+                                <th>Min (ms)</th>
+                                <th>Max (ms)</th>
+                                <th>Tasa Error (%)</th>
+                                <th>Memoria Promedio (MB)</th>
+                                <th>CPU Promedio (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Cargando estadísticas...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas en tiempo real -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-stream me-2"></i>
+                    Métricas Recientes (Últimas 20)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover" id="recentMetricsTable">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Operación</th>
+                                <th>Duración (ms)</th>
+                                <th>Memoria (MB)</th>
+                                <th>CPU (%)</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Cargando métricas recientes...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Variables globales para filtros
+    let currentTimeRange = 24;
+    let currentOperation = 'all';
+    let currentLimit = 100;
+    
+    // Variables para gráficos
+    let responseTimeChart;
+    let operationDistributionChart;
+
+    // Función para cargar datos de la página
+    async function loadPageData() {
+        try {
+            const params = new URLSearchParams({
+                limit: currentLimit,
+                hours: currentTimeRange,
+                operation: currentOperation
+            });
+            
+            const response = await fetch(`/dashboard/api/performance/metrics?${params}`);
+            if (!response.ok) throw new Error('Error al cargar métricas de performance');
+            
+            const data = await response.json();
+            updatePerformanceData(data);
+            updateCharts(data);
+            updateOperationStats(data);
+            updateRecentMetrics(data);
+            
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    function updatePerformanceData(data) {
+        const summary = data.summary || {};
+        const metrics = data.metrics || [];
+        
+        // Calcular métricas generales
+        const totalRequests = summary.total_metrics || metrics.length;
+        const avgResponseTime = metrics.length > 0 ? 
+            metrics.reduce((sum, m) => sum + (m.duration * 1000), 0) / metrics.length : 0;
+        const errorCount = metrics.filter(m => !m.success).length;
+        const errorRate = metrics.length > 0 ? (errorCount / metrics.length) * 100 : 0;
+        const throughput = totalRequests / Math.max(currentTimeRange, 1);
+        
+        // Actualizar métricas principales
+        document.getElementById('totalRequests').textContent = formatNumber(totalRequests, 0);
+        document.getElementById('avgResponseTime').textContent = formatNumber(avgResponseTime, 1);
+        document.getElementById('errorRate').textContent = formatNumber(errorRate, 1);
+        document.getElementById('throughput').textContent = formatNumber(throughput, 1);
+        
+        // Actualizar filtro de operaciones
+        updateOperationFilter(Object.keys(data.operation_stats || {}));
+    }
+
+    function updateOperationFilter(operations = []) {
+        const select = document.getElementById('operationFilter');
+        const currentValue = select.value;
+        
+        // Limpiar opciones existentes excepto "Todas"
+        select.innerHTML = '<option value="all">Todas las operaciones</option>';
+        
+        // Agregar operaciones disponibles
+        operations.forEach(op => {
+            const option = document.createElement('option');
+            option.value = op;
+            option.textContent = op.replace(/_/g, ' ').toUpperCase();
+            select.appendChild(option);
+        });
+        
+        // Restaurar selección si es válida
+        if (operations.includes(currentValue)) {
+            select.value = currentValue;
+        }
+    }
+
+    function updateCharts(data) {
+        const metrics = data.metrics || [];
+        
+        // Gráfico de tiempo de respuesta
+        const ctx1 = document.getElementById('responseTimeChart').getContext('2d');
+        
+        // Preparar datos para el gráfico de línea
+        const chartMetrics = metrics.slice(-50); // Últimas 50 métricas para el gráfico
+        const labels = chartMetrics.map(m => {
+            const date = new Date(m.timestamp);
+            return date.getHours().toString().padStart(2, '0') + ':' + 
+                   date.getMinutes().toString().padStart(2, '0');
+        });
+        const durations = chartMetrics.map(m => m.duration * 1000);
+        const memoryUsage = chartMetrics.map(m => m.memory_mb);
+        
+        // Destruir gráfico anterior
+        if (responseTimeChart) responseTimeChart.destroy();
+        
+        responseTimeChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Tiempo Respuesta (ms)',
+                        data: durations,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Memoria (MB)',
+                        data: memoryUsage,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 1,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Tiempo (ms)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Memoria (MB)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico de distribución por operación
+        const ctx2 = document.getElementById('operationDistributionChart').getContext('2d');
+        const operationCounts = {};
+        
+        metrics.forEach(metric => {
+            const op = metric.operation;
+            operationCounts[op] = (operationCounts[op] || 0) + 1;
+        });
+        
+        const operationLabels = Object.keys(operationCounts);
+        const operationValues = Object.values(operationCounts);
+        const colors = [
+            '#3498db', '#e74c3c', '#2ecc71', '#f39c12', 
+            '#9b59b6', '#1abc9c', '#34495e', '#e67e22'
+        ];
+        
+        // Destruir gráfico anterior
+        if (operationDistributionChart) operationDistributionChart.destroy();
+        
+        operationDistributionChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: operationLabels,
+                datasets: [{
+                    data: operationValues,
+                    backgroundColor: colors.slice(0, operationLabels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateOperationStats(data) {
+        const operationStats = data.operation_stats || {};
+        const tbody = document.querySelector('#operationStatsTable tbody');
+        
+        if (Object.keys(operationStats).length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        No hay estadísticas disponibles para el período seleccionado
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        Object.entries(operationStats).forEach(([operation, stats]) => {
+            html += `
+                <tr>
+                    <td><code>${operation}</code></td>
+                    <td><span class="badge bg-primary">${stats.count}</span></td>
+                    <td>${formatNumber(stats.avg_duration_ms || 0, 2)}</td>
+                    <td>${formatNumber((stats.min_duration || 0) * 1000, 2)}</td>
+                    <td>${formatNumber((stats.max_duration || 0) * 1000, 2)}</td>
+                    <td>
+                        <span class="badge ${stats.error_rate > 5 ? 'bg-danger' : stats.error_rate > 1 ? 'bg-warning' : 'bg-success'}">
+                            ${formatNumber(stats.error_rate || 0, 1)}%
+                        </span>
+                    </td>
+                    <td>${formatNumber(stats.avg_memory || 0, 1)}</td>
+                    <td>${formatNumber(stats.avg_cpu || 0, 1)}</td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+
+    function updateRecentMetrics(data) {
+        const metrics = data.metrics || [];
+        const tbody = document.querySelector('#recentMetricsTable tbody');
+        
+        if (metrics.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        No hay métricas recientes disponibles
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        metrics.slice(0, 20).forEach(metric => {
+            const timestamp = new Date(metric.timestamp);
+            const timeStr = timestamp.toLocaleTimeString('es-ES');
+            const success = metric.success;
+            
+            html += `
+                <tr class="${!success ? 'table-danger' : ''}">
+                    <td><small>${timeStr}</small></td>
+                    <td><code class="small">${metric.operation}</code></td>
+                    <td>${formatNumber(metric.duration * 1000, 2)}</td>
+                    <td>${formatNumber(metric.memory_mb, 1)}</td>
+                    <td>${formatNumber(metric.cpu_percent, 1)}</td>
+                    <td>
+                        <span class="badge ${success ? 'bg-success' : 'bg-danger'}">
+                            ${success ? 'OK' : 'ERROR'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+
+    // Funciones para manejar cambios en filtros
+    function updateTimeRange() {
+        currentTimeRange = parseInt(document.getElementById('timeRange').value);
+        refreshData();
+    }
+
+    function updateOperationFilter() {
+        currentOperation = document.getElementById('operationFilter').value;
+        refreshData();
+    }
+
+    function updateLimit() {
+        currentLimit = parseInt(document.getElementById('limitResults').value);
+        refreshData();
+    }
+</script>
+{% endblock %}

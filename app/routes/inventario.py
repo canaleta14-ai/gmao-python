@@ -1,4 +1,11 @@
-from flask import Blueprint, request, jsonify, render_template, send_from_directory, Response
+from flask import (
+    Blueprint,
+    request,
+    jsonify,
+    render_template,
+    send_from_directory,
+    Response,
+)
 from flask_login import login_required, current_user
 from functools import wraps
 import os
@@ -40,7 +47,7 @@ def inventario_page():
     """Página principal de inventario"""
     try:
         return render_template("inventario/inventario.html", section="inventario")
-        
+
     except Exception:
         html = """
         <!DOCTYPE html>
@@ -73,14 +80,8 @@ def obtener_estadisticas():
             stats.setdefault(key, default)
         return jsonify(stats), 200
     except Exception as e:
-        # Fallback robusto: 200 con estructura segura para evitar romper UI
-        fallback = {
-            "total_articulos": 0,
-            "valor_total_stock": 0,
-            "articulos_bajo_minimo": 0,
-            "articulos_criticos": 0,
-        }
-        return jsonify({"success": False, "error": str(e), **fallback}), 200
+        # Retornar error 500 para consistencia con el resto del sistema
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @inventario_bp.route("/api/articulos", methods=["GET"])
@@ -149,7 +150,9 @@ def obtener_articulos():
                         "grupo_contable": _v(a, "grupo_contable"),
                         "critico": bool(_v(a, "critico", False)),
                         "valor_stock": _v(a, "valor_stock", 0),
-                        "necesita_reposicion": bool(_v(a, "necesita_reposicion", False)),
+                        "necesita_reposicion": bool(
+                            _v(a, "necesita_reposicion", False)
+                        ),
                         "activo": _v(a, "activo", True),
                     }
                     for a in articulos
@@ -164,12 +167,17 @@ def obtener_articulos():
             print(f"[inventario] obtener_articulos error: {e}")
         except Exception:
             pass
-        return jsonify({
-            "total": 0,
-            "page": int(request.args.get("page", 1)),
-            "per_page": int(request.args.get("per_page", 10)),
-            "articulos": []
-        }), 200
+        return (
+            jsonify(
+                {
+                    "total": 0,
+                    "page": int(request.args.get("page", 1)),
+                    "per_page": int(request.args.get("per_page", 10)),
+                    "articulos": [],
+                }
+            ),
+            200,
+        )
 
 
 @inventario_bp.route("/api/diagnostico", methods=["GET"])
@@ -179,9 +187,7 @@ def diagnostico_inventario():
     try:
         total_orm = Inventario.query.count()
         total_activos_orm = Inventario.query.filter_by(activo=True).count()
-        muestra_orm = (
-            Inventario.query.order_by(Inventario.id).limit(5).all()
-        )
+        muestra_orm = Inventario.query.order_by(Inventario.id).limit(5).all()
         muestra_items = [
             {
                 "id": a.id,
@@ -214,11 +220,16 @@ def diagnostico_inventario():
             pass
         try:
             # Detectar backend y cualificar esquema si es necesario (Postgres)
-            backend = db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+            backend = (
+                db.engine.url.get_backend_name()
+                if getattr(db, "engine", None)
+                else None
+            )
             table_name = "inventario"
             if backend == "postgresql":
                 table_name = "public.inventario"
             from sqlalchemy import text as _text
+
             # Primero intentar limpiar cualquier transacción abortada, luego ejecutar en AUTOCOMMIT
             with db.engine.connect() as base_conn:
                 # Intento explícito de resetear cualquier transacción fallida en la conexión del pool
@@ -229,15 +240,23 @@ def diagnostico_inventario():
 
                 # Ejecutar consultas de diagnóstico en modo AUTOCOMMIT para evitar estados de transacción
                 with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
-                    tot_sql = conn.execute(_text(f"SELECT COUNT(*) AS total FROM {table_name}")).first()
-                    tot_act_sql = conn.execute(
-                        _text(f"SELECT COUNT(*) AS total FROM {table_name} WHERE COALESCE(activo, TRUE) = TRUE")
+                    tot_sql = conn.execute(
+                        _text(f"SELECT COUNT(*) AS total FROM {table_name}")
                     ).first()
-                    rows = conn.execute(
+                    tot_act_sql = conn.execute(
                         _text(
-                            f"SELECT id, codigo, COALESCE(activo, FALSE) AS activo, descripcion, COALESCE(stock_actual, 0) AS stock_actual FROM {table_name} ORDER BY id LIMIT 5"
+                            f"SELECT COUNT(*) AS total FROM {table_name} WHERE COALESCE(activo, TRUE) = TRUE"
                         )
-                    ).mappings().all()
+                    ).first()
+                    rows = (
+                        conn.execute(
+                            _text(
+                                f"SELECT id, codigo, COALESCE(activo, FALSE) AS activo, descripcion, COALESCE(stock_actual, 0) AS stock_actual FROM {table_name} ORDER BY id LIMIT 5"
+                            )
+                        )
+                        .mappings()
+                        .all()
+                    )
 
             return jsonify(
                 {
@@ -254,11 +273,20 @@ def diagnostico_inventario():
             except Exception:
                 pass
             # Evitar bloquear al frontend con 500; devolver detalle en 200
-            return jsonify({"success": False, "error": "diagnostico_fallo_sql", "orm_error": str(orm_err), "sql_error": str(sql_err)}), 200
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "diagnostico_fallo_sql",
+                        "orm_error": str(orm_err),
+                        "sql_error": str(sql_err),
+                    }
+                ),
+                200,
+            )
 
 
 # (El alias GET detallado se define más abajo para devolver sólo la lista)
-
 
 
 @inventario_bp.route("/exportar-csv", methods=["GET"])

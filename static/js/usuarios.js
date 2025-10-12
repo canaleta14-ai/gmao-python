@@ -603,7 +603,6 @@ async function validarUsername(username, usuarioId = null) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": getCSRFToken(),
       },
       body: JSON.stringify({
         username: username.trim(),
@@ -650,7 +649,6 @@ async function validarEmail(email, usuarioId = null) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": getCSRFToken(),
       },
       body: JSON.stringify({
         email: email.trim(),
@@ -702,12 +700,6 @@ function getOrCreateFeedback(field, fieldId) {
   }
 
   return feedbackDiv;
-}
-
-// Obtener token CSRF
-function getCSRFToken() {
-  const token = document.querySelector('meta[name="csrf-token"]');
-  return token ? token.getAttribute("content") : "";
 }
 
 function crearUsuario() {

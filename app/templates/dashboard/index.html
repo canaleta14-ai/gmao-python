@@ -1,0 +1,401 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<!-- Métricas principales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card metric-card">
+            <div class="card-body text-center">
+                <div class="metric-value" id="totalArticulos">--</div>
+                <div class="metric-label">Total Artículos</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card success">
+            <div class="card-body text-center">
+                <div class="metric-value" id="valorTotal">--</div>
+                <div class="metric-label">Valor Total Inventario</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card warning">
+            <div class="card-body text-center">
+                <div class="metric-value" id="stockBajo">--</div>
+                <div class="metric-label">Stock Bajo</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card metric-card danger">
+            <div class="card-body text-center">
+                <div class="metric-value" id="sinStock">--</div>
+                <div class="metric-label">Sin Stock</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas del sistema -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    Estado del Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex justify-content-between">
+                            <span>CPU:</span>
+                            <span id="cpuUsage" class="fw-bold">--%</span>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar" id="cpuProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Memoria:</span>
+                            <span id="memoryUsage" class="fw-bold">-- MB</span>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-info" id="memoryProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Uptime:</span>
+                            <span id="uptime" class="fw-bold">-- hrs</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Conexiones:</span>
+                            <span id="connections" class="fw-bold">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="h3" id="avgResponseTime">-- ms</div>
+                            <small class="text-muted">Tiempo Respuesta Promedio</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="h3" id="requestsToday">--</div>
+                            <small class="text-muted">Requests Hoy</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="h3" id="errorRate">--%</div>
+                            <small class="text-muted">Tasa de Error</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="h3" id="cacheHitRate">--%</div>
+                            <small class="text-muted">Cache Hit Rate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Métricas de Performance (Últimas 24h)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribución de Operaciones
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="operationsChart" width="300" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas y notificaciones -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Alertas y Notificaciones
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="alertsContainer">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Cargando alertas...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Variables para los gráficos
+    let performanceChart;
+    let operationsChart;
+
+    // Función para cargar datos de la página
+    async function loadPageData() {
+        try {
+            // Cargar resumen general
+            const overviewResponse = await fetch('/dashboard/api/system/overview');
+            if (!overviewResponse.ok) throw new Error('Error al cargar resumen del sistema');
+            const overviewData = await overviewResponse.json();
+            
+            updateOverviewData(overviewData);
+            
+            // Cargar métricas de performance
+            const performanceResponse = await fetch('/dashboard/api/performance/metrics?limit=50&hours=24');
+            if (!performanceResponse.ok) throw new Error('Error al cargar métricas de performance');
+            const performanceData = await performanceResponse.json();
+            
+            updatePerformanceCharts(performanceData);
+            
+            // Cargar alertas de inventario
+            const inventoryResponse = await fetch('/dashboard/api/inventory/stats');
+            if (!inventoryResponse.ok) throw new Error('Error al cargar estadísticas de inventario');
+            const inventoryData = await inventoryResponse.json();
+            
+            updateAlerts(inventoryData);
+            
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    function updateOverviewData(data) {
+        // Actualizar métricas principales
+        document.getElementById('totalArticulos').textContent = formatNumber(data.inventory.total_articulos, 0);
+        document.getElementById('valorTotal').textContent = formatCurrency(data.inventory.valor_total);
+        document.getElementById('stockBajo').textContent = formatNumber(data.inventory.articulos_stock_bajo, 0);
+        document.getElementById('sinStock').textContent = formatNumber(data.inventory.articulos_sin_stock, 0);
+        
+        // Actualizar métricas del sistema
+        document.getElementById('cpuUsage').textContent = formatNumber(data.system.cpu_percent, 1) + '%';
+        document.getElementById('memoryUsage').textContent = formatNumber(data.system.memory_usage_mb, 0) + ' MB';
+        document.getElementById('uptime').textContent = formatNumber(data.system.uptime_hours, 1) + ' hrs';
+        document.getElementById('connections').textContent = formatNumber(data.system.active_connections, 0);
+        
+        // Actualizar barras de progreso
+        const cpuProgress = document.getElementById('cpuProgress');
+        cpuProgress.style.width = Math.min(data.system.cpu_percent, 100) + '%';
+        cpuProgress.className = `progress-bar ${data.system.cpu_percent > 80 ? 'bg-danger' : data.system.cpu_percent > 60 ? 'bg-warning' : 'bg-success'}`;
+        
+        const memoryProgress = document.getElementById('memoryProgress');
+        const memoryPercent = Math.min((data.system.memory_usage_mb / 1024) * 10, 100); // Aproximación
+        memoryProgress.style.width = memoryPercent + '%';
+        
+        // Actualizar métricas de performance
+        document.getElementById('avgResponseTime').textContent = formatNumber(data.performance.avg_response_time, 1) + ' ms';
+        document.getElementById('requestsToday').textContent = formatNumber(data.performance.total_requests_today, 0);
+        document.getElementById('errorRate').textContent = formatNumber(data.performance.error_rate, 1) + '%';
+        document.getElementById('cacheHitRate').textContent = formatNumber(data.cache.hit_rate, 1) + '%';
+    }
+
+    function updatePerformanceCharts(data) {
+        const ctx1 = document.getElementById('performanceChart').getContext('2d');
+        const ctx2 = document.getElementById('operationsChart').getContext('2d');
+        
+        // Preparar datos para gráfico de línea (performance)
+        const metrics = data.metrics.slice(-20); // Últimas 20 métricas
+        const labels = metrics.map(m => {
+            const date = new Date(m.timestamp);
+            return date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
+        });
+        const durations = metrics.map(m => m.duration * 1000); // Convertir a ms
+        
+        // Destruir gráfico anterior si existe
+        if (performanceChart) {
+            performanceChart.destroy();
+        }
+        
+        performanceChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tiempo de Respuesta (ms)',
+                    data: durations,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Milisegundos'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Hora'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Preparar datos para gráfico de pie (operaciones)
+        const operationCounts = {};
+        data.metrics.forEach(metric => {
+            const op = metric.operation.split('_')[0]; // Simplificar nombre
+            operationCounts[op] = (operationCounts[op] || 0) + 1;
+        });
+        
+        const operationLabels = Object.keys(operationCounts);
+        const operationValues = Object.values(operationCounts);
+        const colors = [
+            '#3498db', '#e74c3c', '#2ecc71', '#f39c12', 
+            '#9b59b6', '#1abc9c', '#34495e', '#e67e22'
+        ];
+        
+        // Destruir gráfico anterior si existe
+        if (operationsChart) {
+            operationsChart.destroy();
+        }
+        
+        operationsChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: operationLabels,
+                datasets: [{
+                    data: operationValues,
+                    backgroundColor: colors.slice(0, operationLabels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    function updateAlerts(inventoryData) {
+        const alertsContainer = document.getElementById('alertsContainer');
+        const alerts = inventoryData.stock_alerts || [];
+        
+        if (alerts.length === 0) {
+            alertsContainer.innerHTML = `
+                <div class="text-center text-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    No hay alertas de stock en este momento
+                </div>
+            `;
+            return;
+        }
+        
+        let alertsHtml = '';
+        alerts.slice(0, 5).forEach(alert => { // Mostrar solo las primeras 5 alertas
+            const urgencyClass = alert.urgencia === 'critica' ? 'danger' : 
+                               alert.urgencia === 'alta' ? 'warning' : 'info';
+            const urgencyIcon = alert.urgencia === 'critica' ? 'fas fa-exclamation-triangle' : 
+                              alert.urgencia === 'alta' ? 'fas fa-exclamation' : 'fas fa-info-circle';
+            
+            alertsHtml += `
+                <div class="alert alert-${urgencyClass} alert-dismissible fade show mb-2" role="alert">
+                    <i class="${urgencyIcon} me-2"></i>
+                    <strong>${alert.codigo}</strong> - ${alert.descripcion}
+                    <br>
+                    <small>Stock actual: ${alert.stock_actual} | Stock mínimo: ${alert.stock_minimo}</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        });
+        
+        if (alerts.length > 5) {
+            alertsHtml += `
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        Y ${alerts.length - 5} alertas más...
+                        <a href="/dashboard/inventory" class="text-decoration-none">Ver todas</a>
+                    </small>
+                </div>
+            `;
+        }
+        
+        alertsContainer.innerHTML = alertsHtml;
+    }
+</script>
+{% endblock %}

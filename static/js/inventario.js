@@ -738,7 +738,6 @@ async function guardarNuevoArticulo() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": getCSRFToken(),
       },
       body: JSON.stringify(data),
     });

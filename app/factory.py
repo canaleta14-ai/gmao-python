@@ -6,22 +6,52 @@ import os
 from datetime import datetime
 
 
-def create_app():
+def create_app(config_name=None):
+    """
+    Application factory para crear instancias de Flask
+
+    Args:
+        config_name (str): 'development', 'testing', 'production' o None para auto-detectar
+    """
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
     static_dir = os.path.join(base_dir, "static")
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
-    # Configuración específica de testing/desarrollo
+    # Determinar configuración
     is_pytest = bool(os.getenv("PYTEST_CURRENT_TEST"))
     is_testing_env = os.getenv("TESTING", "").lower() in ("1", "true", "yes")
     forced_dev = os.getenv("FLASK_ENV", "").lower() in ("development", "testing")
-    if is_pytest or is_testing_env or forced_dev:
-        # Forzar modo desarrollo para que cookies no sean seguras en tests
+
+    # Si se especifica config_name, usarlo; sino auto-detectar
+    if config_name == "testing" or is_pytest or is_testing_env:
+        config_mode = "testing"
+    elif config_name == "development" or forced_dev:
+        config_mode = "development"
+    elif config_name == "production":
+        config_mode = "production"
+    else:
+        # Auto-detectar basado en entorno
+        config_mode = "testing" if (is_pytest or is_testing_env) else "development"
+
+    if config_mode == "testing":
+        # Configuración específica para testing
         app.config.update(
             {
                 "TESTING": True,
                 "WTF_CSRF_ENABLED": False,
+                "ENV": "testing",
+                "FLASK_ENV": "testing",
+                "SESSION_COOKIE_SECURE": False,
+                "REMEMBER_COOKIE_SECURE": False,
+            }
+        )
+    elif config_mode == "development":
+        # Configuración específica para desarrollo
+        app.config.update(
+            {
+                "TESTING": False,
+                "WTF_CSRF_ENABLED": True,
                 "ENV": "development",
                 "FLASK_ENV": "development",
                 "SESSION_COOKIE_SECURE": False,
@@ -262,11 +292,18 @@ def create_app():
     csrf.init_app(app)
     app.logger.info("[OK] CSRF Protection inicializado")
 
-    # Inicializar Rate Limiting
-    from app.extensions import limiter
+    # Inicializar Rate Limiting (solo si está habilitado)
+    ratelimit_enabled = app.config.get("RATELIMIT_ENABLED", True)
+    if os.getenv("RATELIMIT_ENABLED", "true").lower() not in ("false", "0", "no"):
+        if ratelimit_enabled:
+            from app.extensions import limiter
 
-    limiter.init_app(app)
-    app.logger.info("[OK] Rate Limiting inicializado")
+            limiter.init_app(app)
+            app.logger.info("[OK] Rate Limiting inicializado")
+        else:
+            app.logger.info("[SKIP] Rate Limiting desactivado por configuración")
+    else:
+        app.logger.info("[SKIP] Rate Limiting desactivado por variable de entorno")
 
     # Inicializar LoginManager
     login_manager = LoginManager()
@@ -360,16 +397,84 @@ def create_app():
     app.register_blueprint(solicitudes_admin_bp)
     app.register_blueprint(usuarios_controller)
 
-    # Registrar blueprint de limpieza de inventario
-    from limpiar_inventario_web import limpiar_bp
-
-    app.register_blueprint(limpiar_bp)
-
     # Registrar blueprint de gestión de lotes FIFO
     from app.blueprints.lotes import lotes_bp
 
     app.register_blueprint(lotes_bp)
     app.logger.info("Blueprint de gestión de lotes FIFO registrado")
+
+    # Registrar blueprint de endpoints con caché (OPTIMIZACIÓN)
+    try:
+        from app.blueprints.cached_inventario_simple import cached_inventario_bp
+
+        app.register_blueprint(cached_inventario_bp)
+        app.logger.info("Blueprint de endpoints con caché registrado")
+    except ImportError as e:
+        app.logger.warning(f"Blueprint de caché no disponible: {e}")
+
+    # Registrar blueprint de métricas de performance (OPTIMIZACIÓN)
+    try:
+        from app.blueprints.performance_metrics import performance_bp
+
+        app.register_blueprint(performance_bp)
+        app.logger.info("Blueprint de métricas de performance registrado")
+    except ImportError as e:
+        app.logger.warning(f"Blueprint de performance no disponible: {e}")
+
+    # Registrar blueprint de FIFO optimizado (OPTIMIZACIÓN)
+    try:
+        from app.blueprints.fifo_optimizado_bp import fifo_optimizado_bp
+
+        app.register_blueprint(fifo_optimizado_bp)
+        app.logger.info("Blueprint de FIFO optimizado registrado")
+    except ImportError as e:
+        app.logger.warning(f"Blueprint de FIFO optimizado no disponible: {e}")
+
+    # Registrar blueprint de inventario optimizado (INTEGRACIÓN COMPLETA)
+    try:
+        from app.blueprints.inventario_optimizado_documented import (
+            inventario_optimizado_bp,
+        )
+
+        app.register_blueprint(inventario_optimizado_bp)
+        app.logger.info(
+            "Blueprint de inventario optimizado documentado (v2) registrado"
+        )
+    except ImportError as e:
+        app.logger.warning(
+            f"Blueprint de inventario optimizado documentado no disponible: {e}"
+        )
+        # Fallback al blueprint original si el documentado no está disponible
+        try:
+            from app.blueprints.inventario_optimizado_bp import inventario_optimizado_bp
+
+            app.register_blueprint(inventario_optimizado_bp)
+            app.logger.info(
+                "Blueprint de inventario optimizado (v2) registrado como fallback"
+            )
+        except ImportError as e2:
+            app.logger.warning(
+                f"Blueprint de inventario optimizado no disponible: {e2}"
+            )
+
+    # Registrar blueprint de dashboard de monitoreo
+    try:
+        from app.blueprints.dashboard_bp import dashboard_bp
+
+        app.register_blueprint(dashboard_bp)
+        app.logger.info("Blueprint de dashboard de monitoreo registrado")
+    except ImportError as e:
+        app.logger.warning(f"Blueprint de dashboard no disponible: {e}")
+
+    # Registrar blueprint de sistema de alertas
+    try:
+        from app.blueprints.alertas_bp import alertas_bp
+
+        app.register_blueprint(alertas_bp)
+        app.logger.info("Blueprint de sistema de alertas registrado")
+
+    except ImportError as e:
+        app.logger.warning(f"Blueprint de alertas no disponible: {e}")
 
     # Registrar blueprint de cron (tareas programadas)
     from app.routes.cron import cron_bp
@@ -391,6 +496,31 @@ def create_app():
     app.logger.info("Blueprint de diagnóstico registrado")
     app.logger.info("Blueprint de actualizar fecha registrado")
     app.logger.info("Blueprint de inicialización registrado")
+
+    # Configurar documentación Swagger/OpenAPI para API V2
+    try:
+        from app.swagger_config import create_swagger_api, create_swagger_models
+
+        # Crear API Swagger y blueprint de documentación
+        api, api_v2_doc_bp = create_swagger_api()
+
+        # Registrar blueprint de documentación
+        app.register_blueprint(api_v2_doc_bp)
+
+        # Crear modelos Swagger
+        swagger_models = create_swagger_models(api)
+
+        # Hacer disponibles los modelos globalmente para los blueprints
+        app.swagger_api = api
+        app.swagger_models = swagger_models
+
+        app.logger.info("Documentación Swagger configurada correctamente")
+        app.logger.info("Swagger UI disponible en: /api/v2/docs/")
+
+    except ImportError as e:
+        app.logger.warning(f"Swagger/OpenAPI no disponible: {e}")
+    except Exception as e:
+        app.logger.error(f"Error configurando Swagger: {e}")
 
     # Ruta para servir archivos subidos localmente
     @app.route("/uploads/<folder>/<filename>")

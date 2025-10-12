@@ -543,6 +543,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
+<script src="/static/js/csrf-utils.js"></script>
 <script src="/static/js/pagination.js"></script>
 <!-- confirmation-modal.js ya está cargado en base.html -->
 <script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>

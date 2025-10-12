@@ -47,6 +47,7 @@ def planes_api():
             return jsonify(data)
         except Exception as e:
             import traceback
+
             traceback.print_exc()
             # Fallback seguro: estructura vacía para que el frontend no rompa
             return (
@@ -170,23 +171,15 @@ def planes_estadisticas():
         return jsonify(response), 200
     except Exception as e:
         import traceback
+
         print(f"Error obteniendo estadísticas: {e}")
         traceback.print_exc()
-        # Fallback robusto: responder 200 con valores seguros para evitar errores en UI
-        fallback = {
-            "planes_activos": 0,
-            "planes_proximos": 0,
-            "planes_vencidos": 0,
-            "planes_completados": 0,
-            "total_planes": 0,
-        }
+        # Retornar error 500 para consistencia con el resto del sistema
         response = {
             "success": False,
             "error": str(e),
-            "estadisticas": fallback,
-            **fallback,
         }
-        return jsonify(response), 200
+        return jsonify(response), 500
 
 
 @planes_bp.route("/generar-ordenes", methods=["POST"])

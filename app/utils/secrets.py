@@ -195,15 +195,26 @@ def get_secret_or_env(secret_id: str, env_var: str, default: str = "") -> str:
         - K_SERVICE: Google Cloud Run
         - GOOGLE_CLOUD_PROJECT: Proyecto GCP configurado
     """
+    # Verificar si Secret Manager está deshabilitado para desarrollo
+    use_secret_manager = os.getenv("USE_SECRET_MANAGER", "true").lower() not in (
+        "false",
+        "0",
+        "no",
+    )
+
     # Selección de proveedor
     provider = os.getenv("SECRETS_PROVIDER", "auto").lower()
 
     def _try_gcp():
-        if SECRETMANAGER_AVAILABLE:
+        if SECRETMANAGER_AVAILABLE and use_secret_manager:
             logger.debug(f"Intentando Secret Manager (GCP) para '{secret_id}'")
             value = get_secret(secret_id)
             if value:
                 return value
+        elif not use_secret_manager:
+            logger.debug(
+                f"Secret Manager deshabilitado para desarrollo, omitiendo '{secret_id}'"
+            )
         return None
 
     def _try_aws():

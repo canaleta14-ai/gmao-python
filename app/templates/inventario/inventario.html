@@ -709,6 +709,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/csrf-utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 <script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>

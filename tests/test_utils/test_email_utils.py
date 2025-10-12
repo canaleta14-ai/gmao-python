@@ -35,41 +35,51 @@ class FakeSMTP:
         return True
 
 
-def test_enviar_email_missing_config_raises(monkeypatch):
+def test_enviar_email_missing_config_raises(monkeypatch, app):
     # Limpiar credenciales para forzar error
     monkeypatch.delenv("MAIL_USERNAME", raising=False)
     monkeypatch.delenv("MAIL_PASSWORD", raising=False)
 
     from app.utils.email_utils import enviar_email
 
-    with pytest.raises(ValueError):
-        enviar_email("dest@example.com", "Prueba", "<b>Hola</b>")
+    with app.app_context():
+        with pytest.raises(ValueError):
+            enviar_email("dest@example.com", "Prueba", "<b>Hola</b>")
 
 
-def test_enviar_email_success_with_fake_smtp(monkeypatch):
-    # Configurar entorno SMTP válido
-    monkeypatch.setenv("MAIL_SERVER", "smtp.example.com")
-    monkeypatch.setenv("MAIL_PORT", "587")
-    monkeypatch.setenv("MAIL_USE_TLS", "True")
-    monkeypatch.setenv("MAIL_USERNAME", "user@example.com")
-    monkeypatch.setenv("MAIL_PASSWORD", "secret")
+def test_enviar_email_success_with_fake_smtp(monkeypatch, app):
+    # Configurar la aplicación Flask directamente
+    app.config.update(
+        {
+            "MAIL_SERVER": "smtp.example.com",
+            "MAIL_PORT": 587,
+            "MAIL_USE_TLS": True,
+            "MAIL_USERNAME": "user@example.com",
+            "MAIL_PASSWORD": "secret",
+        }
+    )
 
     # Reemplazar smtplib.SMTP por stub
     monkeypatch.setattr(smtplib, "SMTP", FakeSMTP)
 
     from app.utils.email_utils import enviar_email
 
-    ok = enviar_email("dest@example.com", "Asunto", "<b>Hola</b>")
-    assert ok is True
+    with app.app_context():
+        ok = enviar_email("dest@example.com", "Asunto", "<b>Hola</b>")
+        assert ok is True
 
 
-def test_contenido_texto_fallback(monkeypatch):
-    # Configurar entorno SMTP válido
-    monkeypatch.setenv("MAIL_SERVER", "smtp.example.com")
-    monkeypatch.setenv("MAIL_PORT", "587")
-    monkeypatch.setenv("MAIL_USE_TLS", "True")
-    monkeypatch.setenv("MAIL_USERNAME", "user@example.com")
-    monkeypatch.setenv("MAIL_PASSWORD", "secret")
+def test_contenido_texto_fallback(monkeypatch, app):
+    # Configurar la aplicación Flask directamente
+    app.config.update(
+        {
+            "MAIL_SERVER": "smtp.example.com",
+            "MAIL_PORT": 587,
+            "MAIL_USE_TLS": True,
+            "MAIL_USERNAME": "user@example.com",
+            "MAIL_PASSWORD": "secret",
+        }
+    )
 
     # Reemplazar smtplib.SMTP por stub que captura el mensaje
     fake = FakeSMTP("smtp.example.com", 587)
@@ -82,8 +92,9 @@ def test_contenido_texto_fallback(monkeypatch):
     from app.utils.email_utils import enviar_email
 
     html = "<html><body><h1>Hola</h1><p>Mundo</p></body></html>"
-    ok = enviar_email("dest@example.com", "Asunto", html, contenido_texto=None)
-    assert ok is True
+    with app.app_context():
+        ok = enviar_email("dest@example.com", "Asunto", html, contenido_texto=None)
+        assert ok is True
 
     # Verificar que se generó parte de texto plano sin etiquetas
     assert fake.msg is not None

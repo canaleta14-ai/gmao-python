@@ -22,7 +22,9 @@ def proveedores_page():
     if request.method == "GET":
         """Página principal de proveedores"""
         try:
-            return render_template("proveedores/proveedores.html", section="proveedores")
+            return render_template(
+                "proveedores/proveedores.html", section="proveedores"
+            )
         except Exception:
             html = """
             <!DOCTYPE html>
@@ -181,13 +183,8 @@ def estadisticas_proveedores():
             estadisticas.setdefault(key, 0)
         return jsonify(estadisticas), 200
     except Exception as e:
-        fallback = {
-            "total_proveedores": 0,
-            "proveedores_activos": 0,
-            "proveedores_pendientes": 0,
-            "proveedores_inactivos": 0,
-        }
-        return jsonify({"success": False, "error": str(e), **fallback}), 200
+        # Retornar error 500 para consistencia con el resto del sistema
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @proveedores_bp.route("/api/<int:id>/toggle", methods=["PUT"])
