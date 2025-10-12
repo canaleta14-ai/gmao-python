@@ -40,6 +40,31 @@ def health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 
+@web_bp.route("/sw.js")
+def service_worker_cleanup():
+    """Devuelve un Service Worker vacío que se desregistra inmediatamente"""
+    sw_content = """
+// Service Worker de limpieza - se desregistra inmediatamente
+self.addEventListener('install', function(event) {
+    console.log('SW: Limpieza - instalando para desregistrar');
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', function(event) {
+    console.log('SW: Limpieza - activando para desregistrar');
+    event.waitUntil(
+        self.registration.unregister().then(function() {
+            console.log('SW: Service Worker desregistrado exitosamente');
+            return self.clients.matchAll();
+        }).then(function(clients) {
+            clients.forEach(client => client.navigate(client.url));
+        })
+    );
+});
+"""
+    return Response(sw_content, mimetype="application/javascript")
+
+
 # @web_bp.route("/admin/emergency-reload-config", methods=["POST"])
 # @exempt
 # def emergency_reload_config():
