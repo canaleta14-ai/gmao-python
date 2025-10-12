@@ -16,6 +16,7 @@ from app.services.notification_service import notification_service
 from app.extensions import db, limiter
 import json
 from datetime import datetime, date
+import pytz
 
 # Crear blueprint
 alertas_bp = Blueprint("alertas", __name__, url_prefix="/alertas")
@@ -373,12 +374,16 @@ class KPIDashboard(Resource):
                 activa=True
             ).count()
 
+            # Configurar zona horaria de España (maneja automáticamente UTC+1/UTC+2)
+            zona_madrid = pytz.timezone("Europe/Madrid")
+            hora_madrid = datetime.now(zona_madrid)
+
             return {
                 "alertas_activas": total_alertas_activas,
                 "alertas_hoy": total_alertas_hoy,
                 "alertas_por_prioridad": alertas_por_prioridad,
                 "configuraciones_activas": configuraciones_activas,
-                "ultima_actualizacion": datetime.now().isoformat(),
+                "ultima_actualizacion": hora_madrid.isoformat(),
             }
 
         except Exception as e:

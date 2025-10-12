@@ -345,8 +345,13 @@ async function loadKPIs() {
             document.getElementById('kpi-alertas-hoy').textContent = data.alertas_hoy || 0;
             document.getElementById('kpi-configuraciones-activas').textContent = data.configuraciones_activas || 0;
             
-            // Actualizar timestamp
-            const timestamp = new Date(data.ultima_actualizacion).toLocaleTimeString();
+            // Actualizar timestamp con zona horaria de España
+            const timestamp = new Date(data.ultima_actualizacion).toLocaleTimeString('es-ES', {
+                timeZone: 'Europe/Madrid',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
             document.getElementById('kpi-ultima-actualizacion').textContent = timestamp;
             
             // Actualizar distribución por prioridad
