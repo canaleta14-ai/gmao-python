@@ -148,36 +148,67 @@ function llenarSelectDepartamentos() {
 // Cargar proveedores desde el servidor
 async function cargarProveedores() {
   try {
-    console.log("🔄 Cargando proveedores desde API...");
+    console.log("🔄 [ACTIVOS] Cargando proveedores desde API...");
+    console.log("🌐 [ACTIVOS] URL base:", window.location.origin);
 
     // Verificar que el elemento select existe
     const select = document.getElementById("nuevo-proveedor");
     if (!select) {
       console.error(
-        "❌ No se encontró el elemento select con ID 'nuevo-proveedor'"
+        "❌ [ACTIVOS] No se encontró el elemento select con ID 'nuevo-proveedor'"
       );
       return;
     }
-    console.log("✅ Select encontrado:", select);
+    console.log("✅ [ACTIVOS] Select encontrado:", select);
 
-    const response = await fetch("/proveedores/api");
-    console.log("📡 Respuesta recibida:", response.status, response.statusText);
+    const apiUrl = "/proveedores/api";
+    console.log("📡 [ACTIVOS] Solicitando:", apiUrl);
+
+    const response = await fetch(apiUrl);
+    console.log(
+      "📡 [ACTIVOS] Respuesta recibida:",
+      response.status,
+      response.statusText
+    );
+    console.log(
+      "📡 [ACTIVOS] Headers de respuesta:",
+      Object.fromEntries(response.headers.entries())
+    );
 
     if (response.ok) {
       const proveedores = await response.json();
-      console.log("✅ Proveedores cargados:", proveedores.length, "total");
-      console.log("📄 Datos completos:", proveedores);
+      console.log(
+        "✅ [ACTIVOS] Proveedores cargados:",
+        proveedores.length,
+        "total"
+      );
+      console.log("📄 [ACTIVOS] Datos completos:", proveedores);
+
+      // Verificar estructura de datos
+      if (Array.isArray(proveedores) && proveedores.length > 0) {
+        console.log(
+          "📋 [ACTIVOS] Primer proveedor estructura:",
+          proveedores[0]
+        );
+      }
+
       llenarSelectProveedores(proveedores);
     } else {
+      const errorText = await response.text();
       console.error(
-        "❌ Error en la respuesta del servidor:",
+        "❌ [ACTIVOS] Error en la respuesta del servidor:",
         response.status,
-        response.statusText
+        response.statusText,
+        errorText
       );
       mostrarErrorProveedores("Error al cargar proveedores del servidor");
     }
   } catch (error) {
-    console.error("❌ Error de conexión al cargar proveedores:", error);
+    console.error(
+      "❌ [ACTIVOS] Error de conexión al cargar proveedores:",
+      error
+    );
+    console.error("❌ [ACTIVOS] Stack trace:", error.stack);
     mostrarErrorProveedores(
       "Error de conexión. Verifique que el servidor esté funcionando"
     );
@@ -199,26 +230,49 @@ function mostrarErrorProveedores(mensaje) {
 
 // Llenar el select de proveedores
 function llenarSelectProveedores(proveedores) {
-  console.log("🔄 Iniciando llenarSelectProveedores con:", proveedores);
+  console.log(
+    "🔄 [ACTIVOS] Iniciando llenarSelectProveedores con:",
+    proveedores
+  );
 
   const select = document.getElementById("nuevo-proveedor");
   if (!select) {
     console.error(
-      "❌ No se encontró el elemento select con ID 'nuevo-proveedor'"
+      "❌ [ACTIVOS] No se encontró el elemento select con ID 'nuevo-proveedor'"
     );
     return;
   }
 
   // Limpiar opciones existentes
   select.innerHTML = '<option value="">Seleccionar proveedor...</option>';
-  console.log("🧹 Select limpiado, opciones actuales:", select.children.length);
+  console.log(
+    "🧹 [ACTIVOS] Select limpiado, opciones actuales:",
+    select.children.length
+  );
+
+  // Verificar si proveedores es un array válido
+  if (!Array.isArray(proveedores)) {
+    console.error(
+      "❌ [ACTIVOS] Los proveedores no son un array válido:",
+      typeof proveedores,
+      proveedores
+    );
+    select.innerHTML =
+      '<option value="">⚠️ Error: datos inválidos de proveedores</option>';
+    return;
+  }
 
   // Filtrar proveedores activos únicamente
-  const proveedoresActivos = proveedores.filter(
-    (proveedor) => proveedor.activo === true
-  );
+  const proveedoresActivos = proveedores.filter((proveedor) => {
+    console.log(
+      `🔍 [ACTIVOS] Verificando proveedor: ${proveedor.nombre} - activo: ${
+        proveedor.activo
+      } (tipo: ${typeof proveedor.activo})`
+    );
+    return proveedor.activo === true;
+  });
   console.log(
-    "📋 Proveedores activos encontrados:",
+    "📋 [ACTIVOS] Proveedores activos encontrados:",
     proveedoresActivos.length,
     "de",
     proveedores.length,
@@ -228,7 +282,15 @@ function llenarSelectProveedores(proveedores) {
   if (proveedoresActivos.length === 0) {
     select.innerHTML =
       '<option value="">⚠️ No hay proveedores activos disponibles</option>';
-    console.warn("⚠️ No se encontraron proveedores activos");
+    console.warn("⚠️ [ACTIVOS] No se encontraron proveedores activos");
+
+    // Mostrar todos los proveedores para debug
+    console.log("🐛 [ACTIVOS] Debug - Todos los proveedores recibidos:");
+    proveedores.forEach((p, index) => {
+      console.log(
+        `  ${index + 1}. ${p.nombre} - activo: ${p.activo} (${typeof p.activo})`
+      );
+    });
     return;
   }
 
@@ -238,10 +300,13 @@ function llenarSelectProveedores(proveedores) {
     option.value = proveedor.id;
     option.textContent = `${proveedor.nombre} (${proveedor.nif})`;
     select.appendChild(option);
+    console.log(
+      `✅ [ACTIVOS] Agregado proveedor: ${proveedor.nombre} (ID: ${proveedor.id})`
+    );
   });
 
   console.log(
-    "✅ Select de proveedores actualizado con",
+    "✅ [ACTIVOS] Select de proveedores actualizado con",
     proveedoresActivos.length,
     "opciones"
   );
