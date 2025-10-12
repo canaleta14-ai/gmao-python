@@ -2,9 +2,9 @@ name: CI/CD Pipeline GMAO Sistema
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 env:
   PYTHON_VERSION: '3.13'
