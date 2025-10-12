@@ -3,8 +3,8 @@
  * Maneja cache offline, notificaciones push y actualizaciones
  */
 
-const CACHE_NAME = "gmao-pwa-v1.0.0";
-const CACHE_VERSION = "1.0.0";
+const CACHE_NAME = "gmao-pwa-v1.0.1";
+const CACHE_VERSION = "1.0.1";
 
 // Recursos críticos para cache
 const CORE_CACHE_RESOURCES = [
@@ -156,14 +156,22 @@ async function cacheFirst(request) {
   }
 
   try {
-    const networkResponse = await fetch(request);
+    // Para recursos estáticos, usar configuración simple
+    const networkResponse = await fetch(request, {
+      redirect: "follow",
+    });
+
     if (networkResponse.ok) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch (error) {
-    console.warn("SW: Network falló para recurso estático:", request.url);
+    console.warn(
+      "SW: Network falló para recurso estático:",
+      request.url,
+      error
+    );
     throw error;
   }
 }
@@ -171,11 +179,20 @@ async function cacheFirst(request) {
 // Network First con Cache: Para APIs importantes
 async function networkFirstWithCache(request) {
   try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
+    // Crear request con redirect mode apropiado
+    const fetchRequest = new Request(request, {
+      redirect: "follow",
+      credentials: "same-origin",
+    });
+
+    const networkResponse = await fetch(fetchRequest);
+
+    // Solo cachear respuestas exitosas que no sean redirecciones a login
+    if (networkResponse.ok && !networkResponse.url.includes("/login")) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, networkResponse.clone());
     }
+
     return networkResponse;
   } catch (error) {
     console.log("SW: Red no disponible, usando cache para:", request.url);
@@ -190,13 +207,25 @@ async function networkFirstWithCache(request) {
 // Stale While Revalidate: Para páginas HTML
 async function staleWhileRevalidate(request) {
   const cachedResponse = await caches.match(request);
-  const networkPromise = fetch(request).then((response) => {
-    if (response.ok) {
-      const cache = caches.open(CACHE_NAME);
-      cache.then((c) => c.put(request, response.clone()));
-    }
-    return response;
-  });
+
+  const networkPromise = fetch(
+    new Request(request, {
+      redirect: "follow",
+      credentials: "same-origin",
+    })
+  )
+    .then((response) => {
+      // Solo cachear respuestas exitosas que no sean redirecciones a login
+      if (response.ok && !response.url.includes("/login")) {
+        const cache = caches.open(CACHE_NAME);
+        cache.then((c) => c.put(request, response.clone()));
+      }
+      return response;
+    })
+    .catch((error) => {
+      console.warn("SW: Error en network request para:", request.url, error);
+      return cachedResponse || new Response("Network Error", { status: 503 });
+    });
 
   return cachedResponse || networkPromise;
 }
@@ -204,8 +233,15 @@ async function staleWhileRevalidate(request) {
 // Network First: Para recursos dinámicos
 async function networkFirst(request) {
   try {
-    return await fetch(request);
+    // Crear request con redirect mode apropiado
+    const fetchRequest = new Request(request, {
+      redirect: "follow",
+      credentials: "same-origin",
+    });
+
+    return await fetch(fetchRequest);
   } catch (error) {
+    console.warn("SW: Network first falló para:", request.url, error);
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       return cachedResponse;
@@ -240,7 +276,13 @@ function isHTMLPage(url) {
     url.pathname === "/" ||
     url.pathname.startsWith("/dashboard") ||
     url.pathname.startsWith("/alertas/") ||
-    url.pathname.startsWith("/inventario")
+    url.pathname.startsWith("/inventario") ||
+    url.pathname.startsWith("/activos") ||
+    url.pathname.startsWith("/ordenes") ||
+    url.pathname.startsWith("/planes") ||
+    url.pathname.startsWith("/admin") ||
+    // No incluir /login para evitar problemas de cache con autenticación
+    (!url.pathname.startsWith("/login") && !url.pathname.startsWith("/api/"))
   );
 }
 
