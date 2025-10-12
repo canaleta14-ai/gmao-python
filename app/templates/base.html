@@ -180,12 +180,20 @@
 
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('PWA: Prompt de instalación disponible');
-            e.preventDefault();
+            e.preventDefault(); // Prevenir el prompt automático del browser
             deferredPrompt = e;
             
-            // Mostrar botón de instalación si existe
+            // Mostrar nuestro banner personalizado si existe
             if (installButton) {
                 installButton.style.display = 'block';
+                console.log('PWA: Mostrando botón de instalación personalizado');
+            }
+            
+            // Mostrar banner automáticamente en el dashboard
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner && !localStorage.getItem('pwa-install-dismissed')) {
+                banner.classList.add('show');
+                console.log('PWA: Mostrando banner de instalación');
             }
         });
 

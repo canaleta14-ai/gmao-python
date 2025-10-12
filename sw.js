@@ -14,7 +14,7 @@ const CORE_CACHE_RESOURCES = [
   "/static/css/style.css",
   "/static/css/no-rounded.css",
   "/static/js/main.js",
-  "/static/js/pwa-register.js",
+  "/static/js/csrf-utils.js",
   "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css",
   "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
   "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css",
