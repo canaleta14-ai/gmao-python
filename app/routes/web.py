@@ -44,22 +44,54 @@ def health_check():
 def service_worker_cleanup():
     """Devuelve un Service Worker vacío que se desregistra inmediatamente"""
     sw_content = """
-// Service Worker de limpieza - se desregistra inmediatamente
+// Service Worker de limpieza agresiva - elimina todos los caches y se desregistra
+console.log('SW: Iniciando limpieza total del Service Worker');
+
 self.addEventListener('install', function(event) {
-    console.log('SW: Limpieza - instalando para desregistrar');
+    console.log('SW: Instalando para limpieza inmediata');
     self.skipWaiting();
 });
 
 self.addEventListener('activate', function(event) {
-    console.log('SW: Limpieza - activando para desregistrar');
+    console.log('SW: Activando para desregistro total');
     event.waitUntil(
-        self.registration.unregister().then(function() {
+        // Eliminar todos los caches primero
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.map(function(cacheName) {
+                    console.log('SW: Eliminando cache:', cacheName);
+                    return caches.delete(cacheName);
+                })
+            );
+        }).then(function() {
+            console.log('SW: Todos los caches eliminados');
+            // Desregistrar este Service Worker
+            return self.registration.unregister();
+        }).then(function() {
             console.log('SW: Service Worker desregistrado exitosamente');
+            // Recargar todas las pestañas
             return self.clients.matchAll();
         }).then(function(clients) {
-            clients.forEach(client => client.navigate(client.url));
+            clients.forEach(function(client) {
+                if (client.url && client.focus) {
+                    client.navigate(client.url);
+                }
+            });
         })
     );
+});
+
+// Interceptar fetch events pero no hacer nada con ellos
+self.addEventListener('fetch', function(event) {
+    // No hacer nada, dejar que las solicitudes vayan al servidor normalmente
+    return;
+});
+
+// Mensaje para desregistro manual
+self.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 """
     return Response(sw_content, mimetype="application/javascript")

@@ -134,13 +134,42 @@
         <script src="{{ url_for('static', filename='js/filtros-globales.js') }}"></script>
         <!-- <script src="{{ url_for('static', filename='js/test_simple.js') }}"></script> -->
         
-        <!-- Limpieza de Service Worker residual -->
+        <!-- Limpieza agresiva de Service Worker residual -->
         <script>
+        // Limpieza completa de Service Workers
         if ('serviceWorker' in navigator) {
+            // Primero intentar desregistrar todos los SW existentes
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    console.log('Desregistrando Service Worker:', registration.scope);
-                    registration.unregister();
+                console.log('Encontrados', registrations.length, 'Service Workers registrados');
+                registrations.forEach(function(registration) {
+                    console.log('Desregistrando SW:', registration.scope);
+                    registration.unregister().then(function(success) {
+                        if (success) {
+                            console.log('SW desregistrado exitosamente:', registration.scope);
+                        }
+                    });
+                });
+            });
+
+            // Forzar registro del SW de limpieza si hay alguno activo
+            navigator.serviceWorker.getRegistration().then(function(registration) {
+                if (registration) {
+                    console.log('SW activo encontrado, registrando SW de limpieza');
+                    navigator.serviceWorker.register('/sw.js', { 
+                        scope: '/',
+                        updateViaCache: 'none' 
+                    }).then(function(reg) {
+                        console.log('SW de limpieza registrado');
+                        // Forzar activación inmediata
+                        if (reg.waiting) {
+                            reg.waiting.postMessage({type: 'SKIP_WAITING'});
+                        }
+                        if (reg.installing) {
+                            reg.installing.postMessage({type: 'SKIP_WAITING'});
+                        }
+                    }).catch(function(error) {
+                        console.log('Error registrando SW de limpieza:', error);
+                    });
                 }
             });
         }
