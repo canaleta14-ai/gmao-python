@@ -57,9 +57,7 @@ def is_valid_cron_request():
         return True
 
     # Como fallback, aceptar User-Agent típico de App Engine y Cloud Scheduler
-    if user_agent.startswith("AppEngine-Google") or user_agent.startswith(
-        "Google-Cloud-Scheduler"
-    ):
+    if user_agent.startswith("AppEngine-Google") or user_agent.startswith("Google-Cloud-Scheduler"):
         return True
 
     return False
@@ -96,11 +94,7 @@ def generar_ordenes_preventivas():
 
         # Buscar planes activos que necesitan ejecución (próxima_ejecucion <= ahora)
         # En desarrollo/testing no exigimos generacion_automatica para facilitar pruebas
-        es_desarrollo = (
-            current_app.config.get("FLASK_ENV") in ("development", "testing")
-            or current_app.config.get("ENV") == "development"
-            or current_app.config.get("TESTING")
-        )
+        es_desarrollo = current_app.config.get("FLASK_ENV") in ("development", "testing") or current_app.config.get("ENV") == "development" or current_app.config.get("TESTING")
 
         columnas_necesarias = (
             PlanMantenimiento.id,
@@ -174,61 +168,31 @@ def generar_ordenes_preventivas():
         ordenes_creadas = []
         errores = []
 
-        for plan_dict in planes_vencidos:
+        for plan in planes_vencidos:
             try:
-                # Obtener la instancia real del modelo para poder actualizarla
-                plan_id = _get_val(plan_dict, "id")
-                plan_modelo = PlanMantenimiento.query.get(plan_id)
-
-                if not plan_modelo:
-                    logger.warning(f"Plan {plan_id} no encontrado en base de datos")
-                    continue
-
-                # Verificar si ya existe una orden para este plan en las últimas 24 horas
-                # Esto evita duplicados en caso de múltiples deployments
-                ahora_menos_24h = ahora_utc - timedelta(hours=24)
-                orden_existente = OrdenTrabajo.query.filter(
-                    and_(
-                        OrdenTrabajo.plan_mantenimiento_id == plan_id,
-                        OrdenTrabajo.fecha_creacion >= ahora_menos_24h,
-                    )
-                ).first()
-
-                if orden_existente:
-                    logger.info(
-                        f"⚠️ Plan {plan_id} ya tiene orden reciente ({orden_existente.numero_orden}), omitiendo"
-                    )
-                    continue
-
-                # Generar orden de trabajo usando la instancia del modelo
-                orden = crear_orden_desde_plan(plan_modelo, plan_dict)
+                # Generar orden de trabajo
+                orden = crear_orden_desde_plan(plan)
 
                 if orden:
                     ordenes_creadas.append(
                         {
                             "orden_id": orden.id,
                             "numero_orden": orden.numero_orden,
-                            "plan_id": plan_id,
-                            "activo": (
-                                Activo.query.get(
-                                    _get_val(plan_dict, "activo_id")
-                                ).nombre
-                                if _get_val(plan_dict, "activo_id")
-                                else "N/A"
-                            ),
+                            "plan_id": _get_val(plan, "id"),
+                            "activo": (Activo.query.get(_get_val(plan, "activo_id")).nombre if _get_val(plan, "activo_id") else "N/A"),
                             "descripcion": orden.descripcion,
                         }
                     )
 
                     logger.info(
-                        f"✅ Orden creada: {orden.numero_orden} para plan {plan_id}"
+                        f"✅ Orden creada: {orden.numero_orden} para plan {_get_val(plan, 'id')}"
                     )
 
                     # Enviar notificación (si está configurado)
-                    enviar_notificacion_orden_creada(orden, plan_modelo)
+                    enviar_notificacion_orden_creada(orden, plan)
 
             except Exception as e:
-                plan_id_safe = _get_val(plan_dict, "id")
+                plan_id_safe = _get_val(plan, "id")
                 error_msg = f"Error procesando plan {plan_id_safe}: {str(e)}"
                 logger.error(error_msg)
                 errores.append({"plan_id": plan_id_safe, "error": str(e)})
@@ -260,44 +224,41 @@ def generar_ordenes_preventivas():
         )
 
 
-def crear_orden_desde_plan(plan_modelo, plan_dict=None):
+def crear_orden_desde_plan(plan):
     """
     Crea una orden de trabajo a partir de un plan de mantenimiento
 
     Args:
-        plan_modelo: PlanMantenimiento instance (para actualizar)
-        plan_dict: Dict con datos del plan (para lectura, opcional)
+        plan: PlanMantenimiento instance
 
     Returns:
         OrdenTrabajo: Nueva orden creada
     """
-    # Si no se proporciona dict, usar el modelo directamente
-    plan_data = plan_dict if plan_dict else plan_modelo
-
     # Generar número de orden único
     ultimo_numero = db.session.query(db.func.max(OrdenTrabajo.id)).scalar() or 0
     numero_orden = f"OT-{ultimo_numero + 1:06d}"
 
     # Crear descripción basada en el plan
-    tipo = _get_val(plan_data, "tipo_mantenimiento") or "Preventivo"
-    desc_base = _get_val(plan_data, "descripcion") or ""
-    tareas = _get_val(plan_data, "tareas") or None
+    tipo = _get_val(plan, "tipo_mantenimiento") or "Preventivo"
+    desc_base = _get_val(plan, "descripcion") or ""
+    tareas = _get_val(plan, "tareas") or None
     descripcion = f"Mantenimiento {tipo}: {desc_base}"
     if tareas:
         descripcion += f"\n\nTareas:\n{tareas}"
 
     # Crear orden
+    # Inserción directa por SQL para evitar cargas ORM que puedan tocar PlanMantenimiento
     vals = {
         "numero_orden": numero_orden,
         "tipo": "Mantenimiento Preventivo",
-        "prioridad": (_get_val(plan_data, "prioridad") or "Media"),
+        "prioridad": (_get_val(plan, "prioridad") or "Media"),
         "estado": "Pendiente",
         "descripcion": descripcion,
-        "activo_id": _get_val(plan_data, "activo_id"),
+        "activo_id": _get_val(plan, "activo_id"),
         "tecnico_id": None,
-        "tiempo_estimado": _get_val(plan_data, "duracion_estimada"),
+        "tiempo_estimado": _get_val(plan, "duracion_estimada"),
         "fecha_programada": datetime.now(timezone.utc).date(),
-        "plan_mantenimiento_id": _get_val(plan_data, "id"),
+        "plan_mantenimiento_id": _get_val(plan, "id"),
         "fecha_creacion": datetime.now(timezone.utc),
     }
 
@@ -318,36 +279,26 @@ def crear_orden_desde_plan(plan_modelo, plan_dict=None):
     nuevo_id = db.session.execute(insert_sql, vals).scalar()
     nueva_orden = OrdenTrabajo.query.get(nuevo_id)
 
-    # CRÍTICO: Actualizar próxima ejecución del plan en la instancia del modelo
-    ahora = datetime.now(timezone.utc).date()
-    plan_modelo.ultima_ejecucion = ahora
+    # Actualizar próxima ejecución del plan
+    # Actualizar próxima ejecución del plan (solo si es instancia del modelo)
+    try:
+        plan.ultima_ejecucion = datetime.now(timezone.utc).date()
+    except Exception:
+        pass
 
     # Calcular próxima ejecución según frecuencia
-    freq_dias = _get_val(plan_data, "frecuencia_dias")
-    freq_meses = _get_val(plan_data, "frecuencia_meses") or _get_val(
-        plan_data, "intervalo_meses"
-    )
+    freq_dias = _get_val(plan, "frecuencia_dias")
+    freq_meses = _get_val(plan, "frecuencia_meses") or _get_val(plan, "intervalo_meses")
+    try:
+        if freq_dias:
+            plan.proxima_ejecucion = plan.ultima_ejecucion + timedelta(days=freq_dias)
+        elif freq_meses:
+            # Aproximación: 1 mes = 30 días
+            dias = int(freq_meses) * 30
+            plan.proxima_ejecucion = plan.ultima_ejecucion + timedelta(days=dias)
+    except Exception:
+        pass
 
-    if freq_dias:
-        plan_modelo.proxima_ejecucion = ahora + timedelta(days=freq_dias)
-        logger.info(
-            f"📅 Plan {plan_modelo.id}: próxima ejecución en {freq_dias} días ({plan_modelo.proxima_ejecucion})"
-        )
-    elif freq_meses:
-        # Aproximación: 1 mes = 30 días
-        dias = int(freq_meses) * 30
-        plan_modelo.proxima_ejecucion = ahora + timedelta(days=dias)
-        logger.info(
-            f"📅 Plan {plan_modelo.id}: próxima ejecucion en {freq_meses} meses ({plan_modelo.proxima_ejecucion})"
-        )
-    else:
-        # Si no hay frecuencia definida, programar para dentro de 30 días por defecto
-        plan_modelo.proxima_ejecucion = ahora + timedelta(days=30)
-        logger.warning(
-            f"⚠️ Plan {plan_modelo.id}: sin frecuencia definida, programado en 30 días"
-        )
-
-    # Los cambios se commitearán al final de la función principal
     return nueva_orden
 
 
@@ -608,9 +559,7 @@ def crear_articulos_demo():
                 for inv in Inventario.query.filter(Inventario.codigo.in_(codigos)).all()
             }
         except Exception as e:
-            logger.warning(
-                f"Tabla inventario inexistente o error consultando existentes: {e}"
-            )
+            logger.warning(f"Tabla inventario inexistente o error consultando existentes: {e}")
             try:
                 # Crear la tabla de inventario si no existe
                 Inventario.__table__.create(db.engine, checkfirst=True)
@@ -653,24 +602,18 @@ def crear_articulos_demo():
         try:
             # Activar también artículos existentes por código, para garantizar visibilidad
             try:
-                db.session.query(Inventario).filter(
-                    Inventario.codigo.in_(codigos)
-                ).update({"activo": True}, synchronize_session=False)
+                db.session.query(Inventario).filter(Inventario.codigo.in_(codigos)).update({"activo": True}, synchronize_session=False)
             except Exception as upd_err:
                 logger.warning(f"No se pudo activar artículos demo por ORM: {upd_err}")
 
             db.session.commit()
             logger.info(f"Artículos demo creados (ORM): {len(creados)}")
             return (
-                jsonify(
-                    {"success": True, "total_creados": len(creados), "creados": creados}
-                ),
+                jsonify({"success": True, "total_creados": len(creados), "creados": creados}),
                 200,
             )
         except Exception as orm_err:
-            logger.warning(
-                f"Fallo commit ORM al crear artículos demo: {orm_err}. Intentando SQL directo mínimo."
-            )
+            logger.warning(f"Fallo commit ORM al crear artículos demo: {orm_err}. Intentando SQL directo mínimo.")
             db.session.rollback()
             insert_sql = text(
                 "INSERT INTO inventario (codigo, descripcion, activo) VALUES (:codigo, :descripcion, :activo)"
@@ -678,27 +621,16 @@ def crear_articulos_demo():
             insertados = 0
             for d in dataset:
                 try:
-                    db.session.execute(
-                        insert_sql,
-                        {
-                            "codigo": d["codigo"],
-                            "descripcion": d.get("descripcion"),
-                            "activo": True,
-                        },
-                    )
+                    db.session.execute(insert_sql, {"codigo": d["codigo"], "descripcion": d.get("descripcion"), "activo": True})
                     insertados += 1
                 except Exception as se:
                     # Ignorar errores por duplicados u otros puntuales, seguir con el resto
-                    logger.warning(
-                        f"Error insertando artículo {d['codigo']} por SQL: {se}"
-                    )
+                    logger.warning(f"Error insertando artículo {d['codigo']} por SQL: {se}")
                     continue
             try:
                 db.session.commit()
                 # Asegurar activación por si ya existían con activo NULL/FALSE
-                update_sql = text(
-                    "UPDATE inventario SET activo = TRUE WHERE codigo = :codigo"
-                )
+                update_sql = text("UPDATE inventario SET activo = TRUE WHERE codigo = :codigo")
                 for d in dataset:
                     try:
                         db.session.execute(update_sql, {"codigo": d["codigo"]})
@@ -805,9 +737,7 @@ def aplicar_parches_db():
         # Verificación explícita de columnas críticas y contexto de BD/esquema
         verificaciones = {}
         try:
-            db_info = db.session.execute(
-                text("SELECT current_database(), current_schema()")
-            )
+            db_info = db.session.execute(text("SELECT current_database(), current_schema()"))
             db_name, db_schema = db_info.fetchone()
             verificaciones["current_database"] = db_name
             verificaciones["current_schema"] = db_schema
@@ -817,18 +747,14 @@ def aplicar_parches_db():
                     "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'plan_mantenimiento' AND column_name = 'responsable_id')"
                 )
             ).scalar()
-            verificaciones["plan_mantenimiento.responsable_id"] = bool(
-                existe_responsable
-            )
+            verificaciones["plan_mantenimiento.responsable_id"] = bool(existe_responsable)
 
             existe_tipo_mant = db.session.execute(
                 text(
                     "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'plan_mantenimiento' AND column_name = 'tipo_mantenimiento')"
                 )
             ).scalar()
-            verificaciones["plan_mantenimiento.tipo_mantenimiento"] = bool(
-                existe_tipo_mant
-            )
+            verificaciones["plan_mantenimiento.tipo_mantenimiento"] = bool(existe_tipo_mant)
 
             existe_marca = db.session.execute(
                 text(
@@ -936,7 +862,7 @@ def aplicar_parches_db():
 def eliminar_plan_auto_test():
     """
     Elimina el plan auto test problemático que está generando órdenes continuamente
-
+    
     Returns:
         JSON con resumen de la eliminación
     """
@@ -955,30 +881,30 @@ def eliminar_plan_auto_test():
 
     try:
         logger.info("=== INICIO: Eliminación de plan auto test problemático ===")
-
+        
         # Buscar planes auto test problemáticos
         planes_auto_test = PlanMantenimiento.query.filter(
-            (PlanMantenimiento.codigo_plan == "PM-AUTO-TEST")
-            | (PlanMantenimiento.nombre.ilike("%auto%test%"))
-            | (PlanMantenimiento.codigo_plan.ilike("%auto%test%"))
+            (PlanMantenimiento.codigo_plan == 'PM-AUTO-TEST') |
+            (PlanMantenimiento.nombre.ilike('%auto%test%')) |
+            (PlanMantenimiento.codigo_plan.ilike('%auto%test%'))
         ).all()
-
+        
         logger.info(f"Planes auto test encontrados: {len(planes_auto_test)}")
-
+        
         planes_eliminados = []
         errores = []
-
+        
         for plan in planes_auto_test:
             try:
                 logger.info(f"Procesando plan: {plan.codigo_plan} (ID: {plan.id})")
-
+                
                 # Contar órdenes relacionadas
                 ordenes_relacionadas = OrdenTrabajo.query.filter(
-                    OrdenTrabajo.descripcion.ilike(f"%{plan.codigo_plan}%")
+                    OrdenTrabajo.descripcion.ilike(f'%{plan.codigo_plan}%')
                 ).count()
-
+                
                 logger.info(f"Órdenes relacionadas encontradas: {ordenes_relacionadas}")
-
+                
                 # Información del plan antes de eliminar
                 plan_info = {
                     "id": plan.id,
@@ -986,33 +912,25 @@ def eliminar_plan_auto_test():
                     "nombre": plan.nombre,
                     "estado": plan.estado,
                     "generacion_automatica": plan.generacion_automatica,
-                    "ordenes_relacionadas": ordenes_relacionadas,
+                    "ordenes_relacionadas": ordenes_relacionadas
                 }
-
+                
                 # Eliminar el plan
                 db.session.delete(plan)
                 planes_eliminados.append(plan_info)
-
+                
                 logger.info(f"✅ Plan {plan.codigo_plan} eliminado exitosamente")
-
+                
             except Exception as e:
                 error_msg = f"Error eliminando plan {plan.codigo_plan}: {str(e)}"
                 logger.error(error_msg)
-                errores.append(
-                    {
-                        "plan_id": plan.id,
-                        "codigo_plan": plan.codigo_plan,
-                        "error": str(e),
-                    }
-                )
-
+                errores.append({"plan_id": plan.id, "codigo_plan": plan.codigo_plan, "error": str(e)})
+        
         # Confirmar cambios
         db.session.commit()
-
-        logger.info(
-            f"=== FIN: Eliminación completada. {len(planes_eliminados)} planes eliminados ==="
-        )
-
+        
+        logger.info(f"=== FIN: Eliminación completada. {len(planes_eliminados)} planes eliminados ===")
+        
         return (
             jsonify(
                 {
@@ -1020,12 +938,12 @@ def eliminar_plan_auto_test():
                     "planes_eliminados": len(planes_eliminados),
                     "detalles_planes": planes_eliminados,
                     "errores": errores,
-                    "mensaje": f"Se eliminaron {len(planes_eliminados)} planes auto test problemáticos",
+                    "mensaje": f"Se eliminaron {len(planes_eliminados)} planes auto test problemáticos"
                 }
             ),
             200,
         )
-
+        
     except Exception as e:
         db.session.rollback()
         logger.exception("Error crítico eliminando planes auto test")
@@ -1052,131 +970,98 @@ def eliminar_ordenes_auto_test():
 
     try:
         logger.info("=== INICIO: Eliminación de órdenes auto test ===")
-
+        
         ordenes_eliminadas = []
         errores = []
-
+        
         # 1. Buscar órdenes huérfanas (con plan_mantenimiento_id que no existe)
-        ordenes_huerfanas = db.session.execute(
-            text(
-                """
+        ordenes_huerfanas = db.session.execute(text("""
             SELECT ot.id, ot.numero_orden, ot.descripcion, ot.plan_mantenimiento_id
             FROM orden_trabajo ot
             WHERE ot.plan_mantenimiento_id IS NOT NULL 
               AND ot.plan_mantenimiento_id NOT IN (
                   SELECT id FROM plan_mantenimiento WHERE id IS NOT NULL
               )
-        """
-            )
-        ).fetchall()
-
+        """)).fetchall()
+        
         logger.info(f"Encontradas {len(ordenes_huerfanas)} órdenes huérfanas")
-
+        
         # 2. Buscar órdenes con referencias a auto test
-        ordenes_auto_test = db.session.execute(
-            text(
-                """
+        ordenes_auto_test = db.session.execute(text("""
             SELECT id, numero_orden, descripcion, plan_mantenimiento_id
             FROM orden_trabajo 
             WHERE LOWER(descripcion) LIKE LOWER(:patron1)
                OR LOWER(numero_orden) LIKE LOWER(:patron2)
                OR LOWER(descripcion) LIKE LOWER(:patron3)
-        """
-            ),
-            {
-                "patron1": "%auto%test%",
-                "patron2": "%auto%test%",
-                "patron3": "%pm-auto-test%",
-            },
-        ).fetchall()
-
-        logger.info(
-            f"Encontradas {len(ordenes_auto_test)} órdenes con referencias auto test"
-        )
-
+        """), {
+            'patron1': '%auto%test%',
+            'patron2': '%auto%test%',
+            'patron3': '%pm-auto-test%'
+        }).fetchall()
+        
+        logger.info(f"Encontradas {len(ordenes_auto_test)} órdenes con referencias auto test")
+        
         # 3. Buscar órdenes del plan eliminado (ID 3)
-        ordenes_plan_3 = db.session.execute(
-            text(
-                """
+        ordenes_plan_3 = db.session.execute(text("""
             SELECT id, numero_orden, descripcion, plan_mantenimiento_id
             FROM orden_trabajo 
             WHERE plan_mantenimiento_id = 3
-        """
-            )
-        ).fetchall()
-
+        """)).fetchall()
+        
         logger.info(f"Encontradas {len(ordenes_plan_3)} órdenes del plan ID 3")
-
+        
         # Consolidar todas las órdenes problemáticas
         todas_ordenes_problematicas = set()
-
+        
         for orden in ordenes_huerfanas:
             todas_ordenes_problematicas.add(orden.id)
-
+        
         for orden in ordenes_auto_test:
             todas_ordenes_problematicas.add(orden.id)
-
+            
         for orden in ordenes_plan_3:
             todas_ordenes_problematicas.add(orden.id)
-
-        logger.info(
-            f"Total de órdenes únicas a eliminar: {len(todas_ordenes_problematicas)}"
-        )
-
+        
+        logger.info(f"Total de órdenes únicas a eliminar: {len(todas_ordenes_problematicas)}")
+        
         # Eliminar órdenes problemáticas
         for orden_id in todas_ordenes_problematicas:
             try:
                 # Obtener detalles antes de eliminar
-                orden_detalle = db.session.execute(
-                    text(
-                        """
+                orden_detalle = db.session.execute(text("""
                     SELECT numero_orden, descripcion, plan_mantenimiento_id
                     FROM orden_trabajo WHERE id = :orden_id
-                """
-                    ),
-                    {"orden_id": orden_id},
-                ).fetchone()
-
+                """), {'orden_id': orden_id}).fetchone()
+                
                 if orden_detalle:
                     # Eliminar la orden
-                    result = db.session.execute(
-                        text(
-                            """
+                    result = db.session.execute(text("""
                         DELETE FROM orden_trabajo WHERE id = :orden_id
-                    """
-                        ),
-                        {"orden_id": orden_id},
-                    )
-
+                    """), {'orden_id': orden_id})
+                    
                     if result.rowcount > 0:
-                        ordenes_eliminadas.append(
-                            {
-                                "id": orden_id,
-                                "numero_orden": orden_detalle.numero_orden,
-                                "descripcion": orden_detalle.descripcion,
-                                "plan_mantenimiento_id": orden_detalle.plan_mantenimiento_id,
-                            }
-                        )
-                        logger.info(
-                            f"✅ Eliminada orden ID: {orden_id} - {orden_detalle.numero_orden}"
-                        )
+                        ordenes_eliminadas.append({
+                            "id": orden_id,
+                            "numero_orden": orden_detalle.numero_orden,
+                            "descripcion": orden_detalle.descripcion,
+                            "plan_mantenimiento_id": orden_detalle.plan_mantenimiento_id
+                        })
+                        logger.info(f"✅ Eliminada orden ID: {orden_id} - {orden_detalle.numero_orden}")
                     else:
                         logger.warning(f"⚠️ No se pudo eliminar orden ID: {orden_id}")
                 else:
                     logger.warning(f"⚠️ No se encontró orden ID: {orden_id}")
-
+                    
             except Exception as e:
                 error_msg = f"Error eliminando orden ID {orden_id}: {str(e)}"
                 logger.error(error_msg)
                 errores.append({"orden_id": orden_id, "error": str(e)})
-
+        
         # Confirmar cambios
         db.session.commit()
-
-        logger.info(
-            f"=== FIN: Eliminación completada. {len(ordenes_eliminadas)} órdenes eliminadas ==="
-        )
-
+        
+        logger.info(f"=== FIN: Eliminación completada. {len(ordenes_eliminadas)} órdenes eliminadas ===")
+        
         return (
             jsonify(
                 {
@@ -1188,14 +1073,14 @@ def eliminar_ordenes_auto_test():
                         "ordenes_huerfanas": len(ordenes_huerfanas),
                         "ordenes_auto_test": len(ordenes_auto_test),
                         "ordenes_plan_3": len(ordenes_plan_3),
-                        "total_unicas": len(todas_ordenes_problematicas),
+                        "total_unicas": len(todas_ordenes_problematicas)
                     },
-                    "mensaje": f"Se eliminaron {len(ordenes_eliminadas)} órdenes problemáticas auto test",
+                    "mensaje": f"Se eliminaron {len(ordenes_eliminadas)} órdenes problemáticas auto test"
                 }
             ),
             200,
         )
-
+        
     except Exception as e:
         db.session.rollback()
         logger.exception("Error crítico eliminando órdenes auto test")
@@ -1222,7 +1107,7 @@ def verificar_planes_produccion():
 
     try:
         logger.info("🔍 Iniciando verificación de planes en producción")
-
+        
         # Buscar todos los planes de mantenimiento
         planes_query = """
             SELECT 
@@ -1237,15 +1122,15 @@ def verificar_planes_produccion():
             FROM plan_mantenimiento 
             ORDER BY id
         """
-
+        
         result = db.session.execute(text(planes_query))
         planes = result.fetchall()
-
+        
         # Convertir a lista de diccionarios
         planes_list = []
         planes_auto_test = []
         planes_activos = []
-
+        
         for plan in planes:
             plan_dict = {
                 "id": plan.id,
@@ -1254,56 +1139,36 @@ def verificar_planes_produccion():
                 "descripcion": plan.descripcion,
                 "estado": plan.estado,
                 "generacion_automatica": plan.generacion_automatica,
-                "ultima_ejecucion": (
-                    plan.ultima_ejecucion.isoformat() if plan.ultima_ejecucion else None
-                ),
-                "proxima_ejecucion": (
-                    plan.proxima_ejecucion.isoformat()
-                    if plan.proxima_ejecucion
-                    else None
-                ),
+                "ultima_ejecucion": plan.ultima_ejecucion.isoformat() if plan.ultima_ejecucion else None,
+                "proxima_ejecucion": plan.proxima_ejecucion.isoformat() if plan.proxima_ejecucion else None
             }
             planes_list.append(plan_dict)
-
+            
             # Identificar planes auto test
-            if (
-                (
-                    plan.codigo_plan
-                    and "auto" in plan.codigo_plan.lower()
-                    and "test" in plan.codigo_plan.lower()
-                )
-                or (
-                    plan.nombre
-                    and "auto" in plan.nombre.lower()
-                    and "test" in plan.nombre.lower()
-                )
-                or (
-                    plan.descripcion
-                    and "auto" in plan.descripcion.lower()
-                    and "test" in plan.descripcion.lower()
-                )
-            ):
+            if (plan.codigo_plan and "auto" in plan.codigo_plan.lower() and "test" in plan.codigo_plan.lower()) or \
+               (plan.nombre and "auto" in plan.nombre.lower() and "test" in plan.nombre.lower()) or \
+               (plan.descripcion and "auto" in plan.descripcion.lower() and "test" in plan.descripcion.lower()):
                 planes_auto_test.append(plan_dict)
-
+            
             # Identificar planes activos
             if plan.estado == "Activo":
                 planes_activos.append(plan_dict)
-
+        
         # Buscar específicamente el plan con ID 3 (el que eliminamos)
         plan_id_3_query = """
             SELECT COUNT(*) as count
             FROM plan_mantenimiento 
             WHERE id = 3
         """
-
+        
         result_id_3 = db.session.execute(text(plan_id_3_query))
         plan_id_3_exists = result_id_3.fetchone().count > 0
-
+        
         logger.info(f"✅ Verificación completada: {len(planes)} planes encontrados")
         logger.info(f"📊 Planes auto test: {len(planes_auto_test)}")
         logger.info(f"📊 Planes activos: {len(planes_activos)}")
         logger.info(f"📊 Plan ID 3 existe: {plan_id_3_exists}")
-
+        
         return (
             jsonify(
                 {
@@ -1318,14 +1183,14 @@ def verificar_planes_produccion():
                         "total": len(planes),
                         "activos": len(planes_activos),
                         "auto_test": len(planes_auto_test),
-                        "plan_id_3": plan_id_3_exists,
+                        "plan_id_3": plan_id_3_exists
                     },
-                    "mensaje": f"Verificación completada: {len(planes)} planes en base de datos",
+                    "mensaje": f"Verificación completada: {len(planes)} planes en base de datos"
                 }
             ),
             200,
         )
-
+        
     except Exception as e:
         logger.exception("Error crítico verificando planes en producción")
         return jsonify({"error": str(e)}), 500
@@ -1339,7 +1204,7 @@ def investigar_planes_restantes():
     """
     try:
         logger.info("🔍 Investigando planes y órdenes restantes en el sistema")
-
+        
         # Buscar todos los planes de mantenimiento
         planes_query = """
             SELECT 
@@ -1355,9 +1220,9 @@ def investigar_planes_restantes():
             FROM plan_mantenimiento 
             ORDER BY id
         """
-
+        
         planes = db.session.execute(text(planes_query)).fetchall()
-
+        
         # Buscar todas las órdenes de trabajo
         ordenes_query = """
             SELECT 
@@ -1370,9 +1235,9 @@ def investigar_planes_restantes():
             FROM orden_trabajo 
             ORDER BY id
         """
-
+        
         ordenes = db.session.execute(text(ordenes_query)).fetchall()
-
+        
         # Procesar planes
         planes_list = []
         for plan in planes:
@@ -1384,17 +1249,11 @@ def investigar_planes_restantes():
                 "estado": plan.estado,
                 "generacion_automatica": plan.generacion_automatica,
                 "frecuencia": plan.frecuencia,
-                "ultima_ejecucion": (
-                    plan.ultima_ejecucion.isoformat() if plan.ultima_ejecucion else None
-                ),
-                "proxima_ejecucion": (
-                    plan.proxima_ejecucion.isoformat()
-                    if plan.proxima_ejecucion
-                    else None
-                ),
+                "ultima_ejecucion": plan.ultima_ejecucion.isoformat() if plan.ultima_ejecucion else None,
+                "proxima_ejecucion": plan.proxima_ejecucion.isoformat() if plan.proxima_ejecucion else None
             }
             planes_list.append(plan_dict)
-
+        
         # Procesar órdenes
         ordenes_list = []
         ordenes_pendientes = []
@@ -1403,22 +1262,16 @@ def investigar_planes_restantes():
                 "id": orden.id,
                 "plan_mantenimiento_id": orden.plan_mantenimiento_id,
                 "estado": orden.estado,
-                "fecha_creacion": (
-                    orden.fecha_creacion.isoformat() if orden.fecha_creacion else None
-                ),
-                "fecha_programada": (
-                    orden.fecha_programada.isoformat()
-                    if orden.fecha_programada
-                    else None
-                ),
-                "descripcion": orden.descripcion,
+                "fecha_creacion": orden.fecha_creacion.isoformat() if orden.fecha_creacion else None,
+                "fecha_programada": orden.fecha_programada.isoformat() if orden.fecha_programada else None,
+                "descripcion": orden.descripcion
             }
             ordenes_list.append(orden_dict)
-
+            
             # Identificar órdenes pendientes
-            if orden.estado in ["Pendiente", "Programada", "En Progreso"]:
+            if orden.estado in ['Pendiente', 'Programada', 'En Progreso']:
                 ordenes_pendientes.append(orden_dict)
-
+        
         response = {
             "success": True,
             "total_planes": len(planes_list),
@@ -1426,20 +1279,18 @@ def investigar_planes_restantes():
             "ordenes_pendientes": len(ordenes_pendientes),
             "planes": planes_list,
             "ordenes": ordenes_list,
-            "detalles_ordenes_pendientes": ordenes_pendientes,
+            "detalles_ordenes_pendientes": ordenes_pendientes
         }
-
-        logger.info(
-            f"✅ Investigación completada: {len(planes_list)} planes, {len(ordenes_list)} órdenes, {len(ordenes_pendientes)} pendientes"
-        )
+        
+        logger.info(f"✅ Investigación completada: {len(planes_list)} planes, {len(ordenes_list)} órdenes, {len(ordenes_pendientes)} pendientes")
         return jsonify(response), 200
-
+        
     except Exception as e:
         logger.error(f"❌ Error investigando planes y órdenes: {str(e)}")
-        return (
-            jsonify({"success": False, "error": f"Error investigando: {str(e)}"}),
-            500,
-        )
+        return jsonify({
+             "success": False,
+             "error": f"Error investigando: {str(e)}"
+         }), 500
 
 
 @cron_bp.route("/eliminar-plan-auto-test-especifico", methods=["POST"])
@@ -1450,91 +1301,74 @@ def eliminar_plan_auto_test_especifico():
     """
     try:
         logger.info("🗑️ Iniciando eliminación del plan auto test específico (ID 5)")
-
+        
         # Buscar el plan específico
         plan_query = """
             SELECT id, codigo_plan, nombre, descripcion, estado
             FROM plan_mantenimiento 
             WHERE id = 5 OR codigo_plan = 'PM-AUTO-TEST'
         """
-
+        
         planes_encontrados = db.session.execute(text(plan_query)).fetchall()
-
+        
         if not planes_encontrados:
             logger.info("✅ No se encontró el plan auto test para eliminar")
-            return (
-                jsonify(
-                    {
-                        "success": True,
-                        "message": "Plan auto test no encontrado (ya eliminado)",
-                        "planes_eliminados": 0,
-                    }
-                ),
-                200,
-            )
-
+            return jsonify({
+                "success": True,
+                "message": "Plan auto test no encontrado (ya eliminado)",
+                "planes_eliminados": 0
+            }), 200
+        
         planes_eliminados = []
-
+        
         # Eliminar cada plan encontrado
         for plan in planes_encontrados:
-            logger.info(
-                f"🗑️ Eliminando plan: ID={plan.id}, Código={plan.codigo_plan}, Nombre={plan.nombre}"
-            )
-
+            logger.info(f"🗑️ Eliminando plan: ID={plan.id}, Código={plan.codigo_plan}, Nombre={plan.nombre}")
+            
             # Primero eliminar órdenes asociadas si existen
             ordenes_query = """
                 DELETE FROM orden_trabajo 
                 WHERE plan_mantenimiento_id = :plan_id
             """
-            result_ordenes = db.session.execute(
-                text(ordenes_query), {"plan_id": plan.id}
-            )
+            result_ordenes = db.session.execute(text(ordenes_query), {"plan_id": plan.id})
             ordenes_eliminadas = result_ordenes.rowcount
-
+            
             # Luego eliminar el plan
             plan_delete_query = """
                 DELETE FROM plan_mantenimiento 
                 WHERE id = :plan_id
             """
-            result_plan = db.session.execute(
-                text(plan_delete_query), {"plan_id": plan.id}
-            )
-
+            result_plan = db.session.execute(text(plan_delete_query), {"plan_id": plan.id})
+            
             if result_plan.rowcount > 0:
-                planes_eliminados.append(
-                    {
-                        "id": plan.id,
-                        "codigo_plan": plan.codigo_plan,
-                        "nombre": plan.nombre,
-                        "ordenes_eliminadas": ordenes_eliminadas,
-                    }
-                )
-                logger.info(
-                    f"✅ Plan eliminado: ID={plan.id}, Órdenes eliminadas: {ordenes_eliminadas}"
-                )
-
+                planes_eliminados.append({
+                    "id": plan.id,
+                    "codigo_plan": plan.codigo_plan,
+                    "nombre": plan.nombre,
+                    "ordenes_eliminadas": ordenes_eliminadas
+                })
+                logger.info(f"✅ Plan eliminado: ID={plan.id}, Órdenes eliminadas: {ordenes_eliminadas}")
+        
         # Confirmar cambios
         db.session.commit()
-
+        
         response = {
             "success": True,
             "message": f"Plan auto test eliminado exitosamente",
             "planes_eliminados": len(planes_eliminados),
-            "detalles": planes_eliminados,
+            "detalles": planes_eliminados
         }
-
-        logger.info(
-            f"✅ Eliminación completada: {len(planes_eliminados)} planes eliminados"
-        )
+        
+        logger.info(f"✅ Eliminación completada: {len(planes_eliminados)} planes eliminados")
         return jsonify(response), 200
-
+        
     except Exception as e:
         db.session.rollback()
         logger.error(f"❌ Error eliminando plan auto test específico: {str(e)}")
-        return (
-            jsonify({"success": False, "error": f"Error eliminando plan: {str(e)}"}),
-            500,
-        )
+        return jsonify({
+            "success": False,
+            "error": f"Error eliminando plan: {str(e)}"
+        }), 500
 
 
 @cron_bp.route("/limpiar-ordenes-huerfanas", methods=["POST"])
@@ -1545,54 +1379,45 @@ def limpiar_ordenes_huerfanas():
     """
     try:
         logger.info("=== INICIANDO LIMPIEZA DE ÓRDENES HUÉRFANAS ===")
-
+        
         # Buscar órdenes huérfanas
         ordenes_huerfanas = OrdenTrabajo.query.filter(
             OrdenTrabajo.plan_mantenimiento_id.is_(None)
         ).all()
-
+        
         logger.info(f"Encontradas {len(ordenes_huerfanas)} órdenes huérfanas")
-
+        
         ordenes_eliminadas = []
-
+        
         for orden in ordenes_huerfanas:
             orden_info = {
                 "id": orden.id,
                 "descripcion": orden.descripcion,
                 "estado": orden.estado,
-                "fecha_creacion": (
-                    orden.fecha_creacion.isoformat() if orden.fecha_creacion else None
-                ),
+                "fecha_creacion": orden.fecha_creacion.isoformat() if orden.fecha_creacion else None
             }
             ordenes_eliminadas.append(orden_info)
-
+            
             logger.info(f"Eliminando orden huérfana ID: {orden.id}")
             db.session.delete(orden)
-
+        
         # Confirmar cambios
         db.session.commit()
-        logger.info(
-            f"=== LIMPIEZA COMPLETADA: {len(ordenes_eliminadas)} órdenes eliminadas ==="
-        )
-
+        logger.info(f"=== LIMPIEZA COMPLETADA: {len(ordenes_eliminadas)} órdenes eliminadas ===")
+        
         response = {
             "success": True,
             "message": "Órdenes huérfanas eliminadas exitosamente",
             "ordenes_eliminadas": len(ordenes_eliminadas),
-            "detalles": ordenes_eliminadas,
+            "detalles": ordenes_eliminadas
         }
-
+        
         return jsonify(response)
 
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error en limpiar_ordenes_huerfanas: {str(e)}")
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": f"Error al limpiar órdenes huérfanas: {str(e)}",
-                }
-            ),
-            500,
-        )
+        return jsonify({
+            "success": False,
+            "message": f"Error al limpiar órdenes huérfanas: {str(e)}"
+        }), 500

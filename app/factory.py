@@ -636,17 +636,4 @@ def create_app(config_name=None):
     except ImportError as e:
         print(f"[ERROR] Error importando blueprint de estadísticas: {e}")
 
-    # Rutas PWA - Service Worker y Manifest desde la raíz
-    from flask import send_from_directory
-
-    @app.route("/sw.js")
-    def service_worker():
-        """Servir el Service Worker desde la raíz del dominio (requerimiento PWA)"""
-        return send_from_directory(app.static_folder, "sw.js")
-
-    @app.route("/manifest.json")
-    def manifest():
-        """Servir el manifest.json desde la raíz del dominio"""
-        return send_from_directory(app.static_folder, "manifest.json")
-
     return app

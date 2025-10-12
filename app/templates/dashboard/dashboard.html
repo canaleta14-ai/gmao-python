@@ -1,24 +1,5 @@
 {% extends 'base.html' %} {% block section_title %}Dashboard{% endblock %} {%
 set section = 'dashboard' %} {% block content %}
-
-<!-- PWA Install Banner -->
-<div class="pwa-install-banner" id="pwa-install-banner">
-  <div class="pwa-install-content">
-    <div class="pwa-install-text">
-      <div class="pwa-install-title">📱 Instalar GMAO App</div>
-      <div class="pwa-install-subtitle">Acceso rápido desde tu móvil</div>
-    </div>
-    <div>
-      <button class="btn btn-light btn-sm me-2" onclick="installPWA()" id="pwa-install-btn">
-        <i class="bi bi-download"></i> Instalar
-      </button>
-      <button class="btn btn-outline-light btn-sm" onclick="dismissInstallBanner()">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
-  </div>
-</div>
-
 <!-- Estadísticas Rápidas -->
 <div class="row mb-4">
   <div class="col-12 mb-3">
@@ -582,37 +563,6 @@ set section = 'dashboard' %} {% block content %}
       loadDashboardFixed();
       loadAlertasData(); // Cargar también los datos de alertas
     }, 500);
-  });
-
-  // PWA Install Banner Logic
-  function dismissInstallBanner() {
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) {
-      banner.style.display = 'none';
-      // Recordar que el usuario rechazó la instalación
-      localStorage.setItem('pwa-install-dismissed', 'true');
-    }
-  }
-
-  // Mostrar banner si PWA es instalable y no fue rechazado
-  window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('PWA: Instalación disponible en dashboard');
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (!dismissed) {
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) {
-        banner.classList.add('show');
-      }
-    }
-  });
-
-  // Ocultar banner cuando se instale
-  window.addEventListener('appinstalled', (evt) => {
-    console.log('PWA: Instalada desde dashboard');
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) {
-      banner.style.display = 'none';
-    }
   });
 </script>
 {% endblock %}

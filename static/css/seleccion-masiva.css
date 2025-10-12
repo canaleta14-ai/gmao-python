@@ -42,22 +42,6 @@
 /* Contenedor de acciones masivas */
 #acciones-masivas {
   animation: slideDown 0.3s ease-in-out;
-  display: inline-flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0;
-}
-
-/* Asegurar que btn-group funcione correctamente */
-#acciones-masivas.btn-group {
-  display: inline-flex !important;
-}
-
-/* Botones dentro del grupo */
-#acciones-masivas .btn {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 @keyframes slideDown {
@@ -109,8 +93,7 @@
 }
 
 @keyframes pulse {
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(1);
   }
   50% {
@@ -152,39 +135,26 @@ input[type="checkbox"]:indeterminate::before {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
   }
-
+  
   #acciones-masivas .btn i {
     font-size: 0.875rem;
   }
-
+  
   /* Texto más pequeño en contador */
   #contador-seleccion {
     font-size: 0.75rem;
   }
-
-  /* Permitir wrap de botones en lugar de stack vertical */
-  #acciones-masivas {
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
 }
 
-@media (max-width: 480px) {
-  /* Stack vertical solo en pantallas muy pequeñas */
+@media (max-width: 576px) {
+  /* Stack de botones en móvil pequeño */
   #acciones-masivas {
     flex-direction: column;
     gap: 0.25rem;
   }
-
+  
   #acciones-masivas .btn {
     width: 100%;
-    justify-content: flex-start;
-  }
-
-  /* Botones más pequeños en móvil muy pequeño */
-  #acciones-masivas .btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8rem;
   }
 }
 
@@ -245,7 +215,7 @@ input[type="checkbox"]:focus {
     background-color: #0066cc !important;
     color: white;
   }
-
+  
   input[type="checkbox"]:checked {
     background-color: #0066cc;
     border-color: #0066cc;
@@ -258,11 +228,11 @@ input[type="checkbox"]:focus {
   .table tbody tr.selected {
     background-color: #1a3a5c !important;
   }
-
+  
   .table tbody tr.selected:hover {
     background-color: #2a4a6c !important;
   }
-
+  
   .table tbody tr:has(input[type="checkbox"]:hover) {
     background-color: #2c3e50;
   }
