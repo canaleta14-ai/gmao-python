@@ -67,6 +67,7 @@ def proveedores_list_api():
         per_page = request.args.get("per_page", type=int)
         format_type = (request.args.get("format", "") or "").lower()
         q = request.args.get("q")
+        debug = request.args.get("debug", "").lower() == "true"
 
         if page is not None:
             # Usar paginación
@@ -81,6 +82,41 @@ def proveedores_list_api():
                 if param in request.args:
                     filtros[param] = request.args[param]
             lista = listar_proveedores(filtros if filtros else None)
+
+            # Modo debug - información detallada
+            if debug:
+                debug_info = {
+                    "total_proveedores": len(lista),
+                    "proveedores_activos": len(
+                        [p for p in lista if p.get("activo", False)]
+                    ),
+                    "ambiente": "produccion" if "appspot" in request.host else "local",
+                    "proveedores_detalle": [],
+                }
+
+                for i, p in enumerate(lista, 1):
+                    activo = p.get("activo")
+                    debug_info["proveedores_detalle"].append(
+                        {
+                            "numero": i,
+                            "id": p.get("id"),
+                            "nombre": p.get("nombre"),
+                            "nif": p.get("nif"),
+                            "activo": activo,
+                            "activo_tipo": str(type(activo).__name__),
+                            "activo_str": str(activo),
+                        }
+                    )
+
+                return jsonify(
+                    {
+                        "success": True,
+                        "debug": debug_info,
+                        "items": lista,
+                        "total": len(lista),
+                    }
+                )
+
             if format_type in ("object", "dict", "default"):
                 return jsonify({"success": True, "items": lista, "total": len(lista)})
             return jsonify(lista)
