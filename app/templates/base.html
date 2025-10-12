@@ -62,9 +62,6 @@
                 <a class="nav-link {% if section=='inventario' %}active{% endif %}" href="/inventario">
                     <i class="bi bi-box-seam"></i> Inventario
                 </a>
-                <a class="nav-link {% if section=='alertas' %}active{% endif %}" href="/alertas/">
-                    <i class="bi bi-bell-fill"></i> Sistema de Alertas
-                </a>
                 <a class="nav-link {% if section=='solicitudes' %}active{% endif %}"
                     href="{{ url_for('solicitudes_admin.listar_solicitudes') }}">
                     <i class="bi bi-envelope-paper"></i> Solicitudes

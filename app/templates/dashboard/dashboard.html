@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block section_title %}Dashboard{% endblock %} {%
+<!-- {% extends 'base.html' %} {% block section_title %}Dashboard{% endblock %} {%
 set section = 'dashboard' %} {% block content %}
 <!-- Estadísticas Rápidas -->
 <div class="row mb-4">
@@ -64,104 +64,6 @@ set section = 'dashboard' %} {% block content %}
           <div>
             <h6 class="text-muted mb-1">Total Activos</h6>
             <h3 class="mb-0" id="stat-activos">0</h3>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Alertas de Mantenimiento -->
-<div class="row">
-  <div class="col-12">
-    <div class="card mb-4">
-      <div
-        class="card-header d-flex justify-content-between align-items-center"
-        style="background: var(--primary-color); color: #fff"
-      >
-        <h6 class="mb-0">
-          <i class="bi bi-bell text-warning me-2"></i>
-          Alertas de Mantenimiento
-        </h6>
-        <a class="btn btn-sm btn-outline-light" href="/planes">
-          <i class="bi bi-calendar-check"></i> Ver Planes
-        </a>
-      </div>
-      <div class="card-body">
-        <div id="maintenanceAlerts">
-          <!-- Se llenará dinámicamente -->
-          <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Preparando alertas de
-            mantenimiento...
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Sistema de Alertas Inteligente -->
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center" 
-           style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff">
-        <h6 class="mb-0">
-          <i class="bi bi-bell-fill text-warning me-2"></i>
-          Sistema de Alertas Inteligente
-        </h6>
-        <a class="btn btn-sm btn-outline-light" href="/alertas/">
-          <i class="bi bi-gear-fill"></i> Gestionar Alertas
-        </a>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-danger bg-opacity-10 border-danger border-2">
-              <div class="card-body text-center p-3">
-                <i class="bi bi-exclamation-triangle-fill text-danger fs-2 mb-2"></i>
-                <h4 class="text-danger mb-1" id="alertas-criticas">-</h4>
-                <small class="text-muted">Alertas Críticas</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-warning bg-opacity-10 border-warning border-2">
-              <div class="card-body text-center p-3">
-                <i class="bi bi-bell-fill text-warning fs-2 mb-2"></i>
-                <h4 class="text-warning mb-1" id="alertas-activas">-</h4>
-                <small class="text-muted">Alertas Activas</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-success bg-opacity-10 border-success border-2">
-              <div class="card-body text-center p-3">
-                <i class="bi bi-check-circle-fill text-success fs-2 mb-2"></i>
-                <h4 class="text-success mb-1" id="alertas-resueltas-hoy">-</h4>
-                <small class="text-muted">Resueltas Hoy</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-info bg-opacity-10 border-info border-2">
-              <div class="card-body text-center p-3">
-                <i class="bi bi-clock-fill text-info fs-2 mb-2"></i>
-                <h4 class="text-info mb-1" id="tiempo-promedio-resolucion">-</h4>
-                <small class="text-muted">Tiempo Promedio (min)</small>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Últimas alertas -->
-        <div class="mt-4">
-          <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>Últimas Alertas</h6>
-          <div id="ultimas-alertas" class="list-group">
-            <div class="text-center py-3">
-              <i class="bi bi-hourglass-split text-muted fs-3"></i>
-              <p class="text-muted mt-2">Cargando alertas...</p>
-            </div>
           </div>
         </div>
       </div>
@@ -342,15 +244,6 @@ set section = 'dashboard' %} {% block content %}
   function loadDashboardFixed() {
     console.log("🚀 DASHBOARD CORREGIDO - Cargando componentes...");
 
-    // Cargar alertas de mantenimiento
-    const alertsContainer = document.getElementById("maintenanceAlerts");
-    if (alertsContainer) {
-      console.log("📋 Iniciando carga de alertas...");
-      // Simplificar por ahora - solo mostrar mensaje
-      alertsContainer.innerHTML =
-        '<div class="alert alert-info">✅ Alertas funcionando</div>';
-    }
-
     // Cargar órdenes recientes
     loadOrdenesRecientes();
 
@@ -439,130 +332,13 @@ set section = 'dashboard' %} {% block content %}
       });
   }
 
-  // Función para cargar datos de alertas
-  function loadAlertasData() {
-    console.log("🔔 Cargando datos de alertas...");
-    
-    // Cargar KPIs de alertas
-    fetch("/alertas/api/kpis/dashboard")
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log("🔔 KPIs de alertas recibidos:", data);
-        
-        // Actualizar KPIs
-        const elementCriticas = document.getElementById("alertas-criticas");
-        const elementActivas = document.getElementById("alertas-activas");
-        const elementResueltas = document.getElementById("alertas-resueltas-hoy");
-        const elementTiempo = document.getElementById("tiempo-promedio-resolucion");
-        
-        if (elementCriticas) elementCriticas.textContent = data.alertas_criticas || 0;
-        if (elementActivas) elementActivas.textContent = data.alertas_activas || 0;
-        if (elementResueltas) elementResueltas.textContent = data.alertas_resueltas_hoy || 0;
-        if (elementTiempo) elementTiempo.textContent = Math.round(data.tiempo_promedio_resolucion || 0);
-        
-        console.log("✅ KPIs de alertas actualizados");
-      })
-      .catch(error => {
-        console.error("❌ Error cargando KPIs de alertas:", error);
-        
-        // Mostrar valores por defecto
-        const elementCriticas = document.getElementById("alertas-criticas");
-        const elementActivas = document.getElementById("alertas-activas");
-        const elementResueltas = document.getElementById("alertas-resueltas-hoy");
-        const elementTiempo = document.getElementById("tiempo-promedio-resolucion");
-        
-        if (elementCriticas) elementCriticas.textContent = "0";
-        if (elementActivas) elementActivas.textContent = "0";
-        if (elementResueltas) elementResueltas.textContent = "0";
-        if (elementTiempo) elementTiempo.textContent = "0";
-      });
-
-    // Cargar últimas alertas
-    fetch("/alertas/api/historial/?estado=activa&limite=5")
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log("🔔 Últimas alertas recibidas:", data);
-        
-        const container = document.getElementById("ultimas-alertas");
-        if (!container) return;
-        
-        if (data.alertas && data.alertas.length > 0) {
-          const alertasHtml = data.alertas.map(alerta => {
-            const prioridadClass = {
-              'critica': 'text-danger',
-              'alta': 'text-warning',
-              'media': 'text-info',
-              'baja': 'text-secondary'
-            }[alerta.prioridad] || 'text-secondary';
-            
-            const estadoClass = {
-              'activa': 'bg-danger',
-              'reconocida': 'bg-warning',
-              'resuelta': 'bg-success'
-            }[alerta.estado] || 'bg-secondary';
-            
-            return `
-              <div class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between align-items-center">
-                  <div class="flex-grow-1">
-                    <h6 class="mb-1">
-                      <i class="bi bi-bell-fill ${prioridadClass} me-2"></i>
-                      ${alerta.configuracion_nombre || 'Alerta'}
-                    </h6>
-                    <p class="mb-1">${alerta.mensaje}</p>
-                    <small class="text-muted">
-                      <i class="bi bi-clock me-1"></i>
-                      ${new Date(alerta.fecha_deteccion).toLocaleString()}
-                    </small>
-                  </div>
-                  <span class="badge ${estadoClass} ms-2">${alerta.estado}</span>
-                </div>
-              </div>
-            `;
-          }).join('');
-          
-          container.innerHTML = alertasHtml;
-        } else {
-          container.innerHTML = `
-            <div class="text-center py-3">
-              <i class="bi bi-check-circle text-success fs-3"></i>
-              <p class="text-muted mt-2">No hay alertas activas</p>
-            </div>
-          `;
-        }
-      })
-      .catch(error => {
-        console.error("❌ Error cargando últimas alertas:", error);
-        const container = document.getElementById("ultimas-alertas");
-        if (container) {
-          container.innerHTML = `
-            <div class="text-center py-3">
-              <i class="bi bi-exclamation-triangle text-warning fs-3"></i>
-              <p class="text-muted mt-2">Error cargando alertas</p>
-            </div>
-          `;
-        }
-      });
-  }
-
   // Ejecutar cuando el DOM esté listo
   document.addEventListener("DOMContentLoaded", function () {
     console.log("📊 Dashboard template loaded, calling loadDashboardFixed()");
     // Pequeño delay para asegurar que la sesión esté establecida
     setTimeout(() => {
       loadDashboardFixed();
-      loadAlertasData(); // Cargar también los datos de alertas
     }, 500);
   });
 </script>
-{% endblock %}
+{% endblock %} -->

@@ -5,10 +5,3 @@ cron:
   schedule: every day 00:00
   timezone: Europe/Madrid
   target: default
-  
-# Verificación semanal de alertas
-- description: "Verificar activos sin mantenimiento reciente"
-  url: /api/cron/verificar-alertas
-  schedule: every monday 08:00
-  timezone: Europe/Madrid
-  target: default

@@ -466,16 +466,6 @@ def create_app(config_name=None):
     except ImportError as e:
         app.logger.warning(f"Blueprint de dashboard no disponible: {e}")
 
-    # Registrar blueprint de sistema de alertas
-    try:
-        from app.blueprints.alertas_bp import alertas_bp
-
-        app.register_blueprint(alertas_bp)
-        app.logger.info("Blueprint de sistema de alertas registrado")
-
-    except ImportError as e:
-        app.logger.warning(f"Blueprint de alertas no disponible: {e}")
-
     # Registrar blueprint de cron (tareas programadas)
     from app.routes.cron import cron_bp
 
