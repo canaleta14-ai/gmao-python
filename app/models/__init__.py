@@ -17,7 +17,6 @@ from .archivo_adjunto import ArchivoAdjunto
 from .solicitud_servicio import SolicitudServicio
 from .categoria import Categoria
 from .control_generacion import ControlGeneracion
-from .alertas import AlertaConfiguracion, AlertaHistorial, NotificacionLog, AlertaKPI
 
 # Exportar para fácil importación
 __all__ = [
