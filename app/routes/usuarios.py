@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, Response
 from flask_login import login_required
+from app.extensions import csrf
 import csv
 from io import StringIO, BytesIO
 import openpyxl
@@ -120,16 +121,33 @@ def crear_usuario_api():
         from app.models.usuario import Usuario
         from app.extensions import db
 
+        print(f"🔍 DEBUG: Request content type: {request.content_type}")
+        print(f"🔍 DEBUG: Request data: {request.data}")
+        print(f"🔍 DEBUG: Request headers: {dict(request.headers)}")
+
+        # Check if request has JSON data
+        if not request.is_json:
+            error_msg = "Request must be JSON"
+            print(f"❌ DEBUG: Content type error: {error_msg}")
+            return jsonify({"success": False, "error": error_msg}), 400
+
         data = request.get_json()
+        print(f"🔍 DEBUG: Parsed JSON data: {data}")
+
+        # Check if data is None or empty
+        if not data:
+            error_msg = "No JSON data provided"
+            print(f"❌ DEBUG: No data error: {error_msg}")
+            return jsonify({"success": False, "error": error_msg}), 400
 
         # Validar campos requeridos
         required_fields = ["username", "email", "password", "nombre"]
         for field in required_fields:
             if not data.get(field):
+                error_msg = f"El campo {field} es requerido"
+                print(f"❌ DEBUG: Validation error: {error_msg}")
                 return (
-                    jsonify(
-                        {"success": False, "error": f"El campo {field} es requerido"}
-                    ),
+                    jsonify({"success": False, "error": error_msg}),
                     400,
                 )
 
@@ -171,7 +189,16 @@ def crear_usuario_api():
             }
         )
     except Exception as e:
+        print(f"❌ DEBUG: Exception occurred: {type(e).__name__}: {str(e)}")
         db.session.rollback()
+
+        # Check if it's a CSRF error
+        if "CSRF" in str(e) or "csrf" in str(e).lower():
+            return (
+                jsonify({"success": False, "error": "CSRF token validation failed"}),
+                400,
+            )
+
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -467,3 +494,113 @@ def exportar_csv():
         return response
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# Nuevos endpoints para validación en tiempo real
+@usuarios_bp.route("/api/validar-username", methods=["POST"])
+@login_required
+@csrf.exempt  # Para AJAX
+def validar_username():
+    """Valida si un username está disponible"""
+    try:
+        from app.models.usuario import Usuario
+
+        data = request.get_json()
+        if not data or "username" not in data:
+            return jsonify({"error": "Username requerido"}), 400
+
+        username = data["username"].strip()
+        usuario_id = data.get("usuario_id")  # Para edición
+
+        if not username:
+            return (
+                jsonify(
+                    {"disponible": False, "mensaje": "Username no puede estar vacío"}
+                ),
+                200,
+            )
+
+        # Buscar usuario existente
+        query = Usuario.query.filter_by(username=username)
+        if usuario_id:  # En edición, excluir el usuario actual
+            query = query.filter(Usuario.id != usuario_id)
+
+        usuario_existente = query.first()
+
+        if usuario_existente:
+            return (
+                jsonify(
+                    {
+                        "disponible": False,
+                        "mensaje": f"El username '{username}' ya está registrado",
+                    }
+                ),
+                200,
+            )
+        else:
+            return (
+                jsonify(
+                    {"disponible": True, "mensaje": f"Username '{username}' disponible"}
+                ),
+                200,
+            )
+
+    except Exception as e:
+        return jsonify({"error": f"Error al validar username: {str(e)}"}), 500
+
+
+@usuarios_bp.route("/api/validar-email", methods=["POST"])
+@login_required
+@csrf.exempt  # Para AJAX
+def validar_email():
+    """Valida si un email está disponible"""
+    try:
+        from app.models.usuario import Usuario
+        import re
+
+        data = request.get_json()
+        if not data or "email" not in data:
+            return jsonify({"error": "Email requerido"}), 400
+
+        email = data["email"].strip().lower()
+        usuario_id = data.get("usuario_id")  # Para edición
+
+        if not email:
+            return (
+                jsonify({"disponible": False, "mensaje": "Email no puede estar vacío"}),
+                200,
+            )
+
+        # Validar formato de email
+        email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(email_regex, email):
+            return (
+                jsonify({"disponible": False, "mensaje": "Formato de email inválido"}),
+                200,
+            )
+
+        # Buscar email existente
+        query = Usuario.query.filter_by(email=email)
+        if usuario_id:  # En edición, excluir el usuario actual
+            query = query.filter(Usuario.id != usuario_id)
+
+        usuario_existente = query.first()
+
+        if usuario_existente:
+            return (
+                jsonify(
+                    {
+                        "disponible": False,
+                        "mensaje": f"El email '{email}' ya está registrado",
+                    }
+                ),
+                200,
+            )
+        else:
+            return (
+                jsonify({"disponible": True, "mensaje": f"Email '{email}' disponible"}),
+                200,
+            )
+
+    except Exception as e:
+        return jsonify({"error": f"Error al validar email: {str(e)}"}), 500

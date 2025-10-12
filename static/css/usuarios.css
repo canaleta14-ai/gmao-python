@@ -529,3 +529,136 @@
 .btn-limpiar-filtro {
   margin-left: 0.25rem !important;
 }
+
+/* ========================================
+   VALIDACIÓN EN TIEMPO REAL
+   ======================================== */
+
+/* Input groups con iconos de validación */
+.input-group .input-group-text {
+  background: var(--light-bg);
+  border-color: #dee2e6;
+  transition: var(--transition);
+}
+
+/* Estados de validación para input groups */
+.input-group .form-control.is-valid {
+  border-left-color: var(--success-color);
+}
+
+.input-group .form-control.is-invalid {
+  border-left-color: var(--danger-color);
+}
+
+.input-group .form-control.is-valid + .input-group-text,
+.input-group .form-control.is-valid ~ .input-group-text {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.input-group .form-control.is-invalid + .input-group-text,
+.input-group .form-control.is-invalid ~ .input-group-text {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+/* Iconos de estado en input groups */
+.input-group .input-group-text i.bi-check-circle {
+  color: var(--success-color);
+}
+
+.input-group .input-group-text i.bi-x-circle {
+  color: var(--danger-color);
+}
+
+/* Feedback personalizado para validación */
+.feedback {
+  font-size: 0.875em;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.feedback.valid-feedback {
+  color: var(--success-color);
+}
+
+.feedback.invalid-feedback {
+  color: var(--danger-color);
+}
+
+/* Animaciones para transiciones suaves */
+.form-control {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-group-text {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Estados hover para input groups */
+.input-group:hover .input-group-text {
+  background: rgba(30, 64, 175, 0.05);
+}
+
+.input-group .form-control:focus + .input-group-text,
+.input-group .form-control:focus ~ .input-group-text {
+  border-color: var(--primary-color);
+  background: rgba(30, 64, 175, 0.1);
+}
+
+/* Loading spinner para validación */
+.validation-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 0.125rem solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tooltip para mensajes de validación */
+.validation-tooltip {
+  position: absolute;
+  z-index: 1070;
+  display: none;
+  font-size: 0.75rem;
+  word-wrap: break-word;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.validation-tooltip.show {
+  display: block;
+  opacity: 1;
+}
+
+.validation-tooltip .tooltip-inner {
+  max-width: 200px;
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 0.375rem;
+  text-align: center;
+}
+
+/* Mejoras responsivas para validación */
+@media (max-width: 768px) {
+  .feedback {
+    font-size: 0.75em;
+  }
+
+  .validation-tooltip .tooltip-inner {
+    max-width: 150px;
+    font-size: 0.7rem;
+  }
+}
