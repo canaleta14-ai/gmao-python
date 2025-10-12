@@ -239,3 +239,68 @@ def toggle_proveedor_route(id):
         )
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+@proveedores_bp.route("/api/activar-sonepar", methods=["POST"])
+@login_required
+def activar_sonepar_api():
+    """Endpoint temporal para activar Sonepar - SOLO PARA DEBUG"""
+    try:
+        from app.models.proveedor import Proveedor
+        from app.extensions import db
+
+        # Buscar Sonepar
+        sonepar = Proveedor.query.filter_by(nombre="Sonepar").first()
+
+        if not sonepar:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "No se encontró el proveedor 'Sonepar'",
+                    }
+                ),
+                404,
+            )
+
+        estado_anterior = sonepar.activo
+
+        # Activar si está inactivo
+        if not sonepar.activo:
+            sonepar.activo = True
+            db.session.commit()
+
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Proveedor Sonepar activado exitosamente",
+                    "data": {
+                        "id": sonepar.id,
+                        "nombre": sonepar.nombre,
+                        "nif": sonepar.nif,
+                        "estado_anterior": estado_anterior,
+                        "estado_actual": sonepar.activo,
+                    },
+                }
+            )
+        else:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "El proveedor Sonepar ya estaba activo",
+                    "data": {
+                        "id": sonepar.id,
+                        "nombre": sonepar.nombre,
+                        "nif": sonepar.nif,
+                        "estado": sonepar.activo,
+                    },
+                }
+            )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {"success": False, "message": f"Error al activar proveedor: {str(e)}"}
+            ),
+            500,
+        )

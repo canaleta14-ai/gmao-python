@@ -1,0 +1,470 @@
+/**
+ * GMAO PWA - Estilos Móviles Optimizados
+ * Mejoras específicas para dispositivos táctiles y PWA
+ */
+
+/* =============================================================================
+   VARIABLES PWA
+   ============================================================================= */
+:root {
+  --pwa-header-height: 60px;
+  --pwa-touch-target: 44px;
+  --pwa-spacing: 16px;
+  --pwa-border-radius: 12px;
+  --pwa-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --pwa-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =============================================================================
+   DETECCIÓN DE PWA
+   ============================================================================= */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .navbar {
+    padding-top: calc(env(safe-area-inset-top) + 8px);
+  }
+}
+
+/* =============================================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================================= */
+/* Móviles pequeños */
+@media (max-width: 375px) {
+  .container-fluid {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Móviles y tablets */
+@media (max-width: 768px) {
+  /* Sidebar responsive */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+
+  /* Contenido principal en móvil */
+  #main-content-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: var(--pwa-spacing);
+  }
+
+  /* Header móvil */
+  .mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--pwa-header-height);
+    background: var(--bs-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--pwa-spacing);
+    z-index: 1050;
+    box-shadow: var(--pwa-shadow);
+  }
+
+  /* Ajustar contenido para header fijo */
+  .main-content {
+    padding-top: calc(var(--pwa-header-height) + var(--pwa-spacing));
+  }
+
+  /* Tablas responsivas */
+  .table-responsive {
+    border: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap;
+    min-width: 120px;
+    font-size: 0.875rem;
+  }
+
+  /* Cards móviles */
+  .card {
+    margin-bottom: var(--pwa-spacing);
+    border-radius: var(--pwa-border-radius);
+    box-shadow: var(--pwa-shadow);
+  }
+
+  .card-header {
+    padding: 12px var(--pwa-spacing);
+    font-weight: 600;
+  }
+
+  .card-body {
+    padding: var(--pwa-spacing);
+  }
+}
+
+/* =============================================================================
+   MEJORAS TÁCTILES
+   ============================================================================= */
+/* Targets táctiles mínimos */
+.btn,
+.form-control,
+.form-select,
+.nav-link,
+.dropdown-item {
+  min-height: var(--pwa-touch-target);
+  display: flex;
+  align-items: center;
+}
+
+/* Botones táctiles mejorados */
+.btn {
+  border-radius: var(--pwa-border-radius);
+  font-weight: 500;
+  transition: var(--pwa-transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Inputs táctiles */
+.form-control,
+.form-select {
+  border-radius: var(--pwa-border-radius);
+  font-size: 16px; /* Evita zoom en iOS */
+  transition: var(--pwa-transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+  transform: translateY(-1px);
+}
+
+/* =============================================================================
+   NAVEGACIÓN MÓVIL
+   ============================================================================= */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--bs-border-color);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  z-index: 1040;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: var(--bs-secondary);
+  font-size: 0.75rem;
+  padding: 8px;
+  min-width: var(--pwa-touch-target);
+  border-radius: 8px;
+  transition: var(--pwa-transition);
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item.active {
+  color: var(--bs-primary);
+  background: rgba(13, 110, 253, 0.1);
+}
+
+.mobile-nav-item i {
+  font-size: 1.25rem;
+  margin-bottom: 4px;
+}
+
+/* =============================================================================
+   MODALES MÓVILES
+   ============================================================================= */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: var(--pwa-spacing);
+    max-width: calc(100% - 32px);
+  }
+
+  .modal-dialog-centered {
+    min-height: calc(100vh - 32px);
+  }
+
+  .modal-content {
+    border-radius: var(--pwa-border-radius);
+    box-shadow: var(--pwa-shadow);
+  }
+
+  .modal-header {
+    padding: var(--pwa-spacing);
+    border-bottom: 1px solid var(--bs-border-color);
+  }
+
+  .modal-body {
+    padding: var(--pwa-spacing);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: var(--pwa-spacing);
+    border-top: 1px solid var(--bs-border-color);
+    gap: 8px;
+  }
+
+  .modal-footer .btn {
+    flex: 1;
+  }
+}
+
+/* =============================================================================
+   FORMULARIOS MÓVILES
+   ============================================================================= */
+@media (max-width: 768px) {
+  .form-floating {
+    margin-bottom: var(--pwa-spacing);
+  }
+
+  .form-floating .form-control {
+    padding: 1rem 0.75rem 0.5rem;
+  }
+
+  .form-floating label {
+    padding: 1rem 0.75rem;
+  }
+
+  .input-group {
+    margin-bottom: var(--pwa-spacing);
+  }
+
+  .input-group .btn {
+    white-space: nowrap;
+  }
+}
+
+/* =============================================================================
+   DASHBOARD MÓVIL
+   ============================================================================= */
+@media (max-width: 768px) {
+  .dashboard-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--pwa-spacing);
+    margin-bottom: var(--pwa-spacing);
+  }
+
+  .dashboard-card {
+    background: white;
+    border-radius: var(--pwa-border-radius);
+    padding: var(--pwa-spacing);
+    box-shadow: var(--pwa-shadow);
+    text-align: center;
+    transition: var(--pwa-transition);
+  }
+
+  .dashboard-card:active {
+    transform: scale(0.98);
+  }
+
+  .dashboard-card-icon {
+    font-size: 2rem;
+    color: var(--bs-primary);
+    margin-bottom: 8px;
+  }
+
+  .dashboard-card-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .dashboard-card-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--bs-dark);
+  }
+}
+
+/* =============================================================================
+   ALERTAS Y NOTIFICACIONES
+   ============================================================================= */
+.pwa-alert {
+  position: fixed;
+  top: calc(var(--pwa-header-height) + 16px);
+  left: var(--pwa-spacing);
+  right: var(--pwa-spacing);
+  z-index: 1060;
+  border-radius: var(--pwa-border-radius);
+  box-shadow: var(--pwa-shadow);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =============================================================================
+   BOTÓN INSTALAR PWA
+   ============================================================================= */
+.pwa-install-banner {
+  position: fixed;
+  bottom: 80px;
+  left: var(--pwa-spacing);
+  right: var(--pwa-spacing);
+  background: var(--bs-primary);
+  color: white;
+  padding: var(--pwa-spacing);
+  border-radius: var(--pwa-border-radius);
+  box-shadow: var(--pwa-shadow);
+  z-index: 1050;
+  display: none;
+}
+
+.pwa-install-banner.show {
+  display: block;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pwa-install-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pwa-spacing);
+}
+
+.pwa-install-text {
+  flex: 1;
+}
+
+.pwa-install-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.pwa-install-subtitle {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* =============================================================================
+   MEJORAS DE PERFORMANCE
+   ============================================================================= */
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Optimización de renders */
+.card,
+.btn,
+.modal {
+  will-change: transform;
+}
+
+/* Lazy loading para imágenes */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+img[loading="lazy"].loaded {
+  opacity: 1;
+}
+
+/* =============================================================================
+   ACCESIBILIDAD MÓVIL
+   ============================================================================= */
+/* Focus visible mejorado */
+.btn:focus-visible,
+.form-control:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+/* Texto de alta legibilidad */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .small,
+  small {
+    font-size: 0.875rem;
+  }
+
+  .text-muted {
+    color: #6c757d !important;
+  }
+}
+
+/* =============================================================================
+   UTILIDADES PWA
+   ============================================================================= */
+.pwa-only {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  .pwa-only {
+    display: block;
+  }
+
+  .browser-only {
+    display: none;
+  }
+}
+
+.touch-friendly {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

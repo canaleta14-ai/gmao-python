@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GMAO - Modo Offline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .offline-container {
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .offline-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .offline-subtitle {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .retry-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .offline-features {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .feature-icon {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        @media (max-width: 480px) {
+            .offline-container {
+                margin: 10px;
+                padding: 30px 20px;
+            }
+            
+            .offline-icon {
+                font-size: 3rem;
+            }
+            
+            .offline-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon pulse">📱</div>
+        <h1 class="offline-title">GMAO Offline</h1>
+        <p class="offline-subtitle">
+            No hay conexión a internet, pero puedes seguir trabajando con los datos guardados localmente.
+        </p>
+        
+        <a href="/" class="retry-btn" onclick="window.location.reload()">
+            🔄 Reintentar Conexión
+        </a>
+        
+        <div class="offline-features">
+            <div class="feature-item">
+                <span class="feature-icon">✅</span>
+                <span>Dashboard disponible</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">✅</span>
+                <span>Inventario en caché</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">✅</span>
+                <span>Órdenes guardadas</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🔄</span>
+                <span>Sincronización automática al reconectar</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar conexión cada 10 segundos
+        setInterval(() => {
+            if (navigator.onLine) {
+                window.location.href = '/dashboard';
+            }
+        }, 10000);
+        
+        // Escuchar evento de conexión
+        window.addEventListener('online', () => {
+            window.location.href = '/dashboard';
+        });
+        
+        console.log('GMAO PWA: Página offline cargada');
+    </script>
+</body>
+</html>
