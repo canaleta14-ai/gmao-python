@@ -7,9 +7,12 @@ from app.models.movimiento_inventario import (
 from app.models.categoria import Categoria
 from app.extensions import db
 from flask import request
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import random
+import logging
 from sqlalchemy import func, extract
+
+logger = logging.getLogger(__name__)
 
 
 def listar_inventario():
@@ -101,9 +104,7 @@ def crear_item(data):
         categoria_id=categoria_id,
         # Mantener compatibilidad: si `categoria` fue un nombre, almacenarlo
         categoria=(
-            data.get("categoria")
-            if isinstance(data.get("categoria"), str)
-            else None
+            data.get("categoria") if isinstance(data.get("categoria"), str) else None
         ),
         stock_actual=data.get("stock_actual", 0),
         stock_minimo=data.get("stock_minimo", 0),
@@ -228,6 +229,9 @@ def listar_articulos_avanzado(filtros=None, page=1, per_page=10):
 
 def crear_movimiento_inventario_avanzado(data):
     """Crear un movimiento de inventario y actualizar stock"""
+    from app.services.servicio_fifo import ServicioFIFO
+    from datetime import datetime, timedelta
+
     errores = validar_movimiento_inventario(data)
     if errores:
         raise ValueError("; ".join(errores))
@@ -257,21 +261,93 @@ def crear_movimiento_inventario_avanzado(data):
     # Actualizar stock del artículo
     if movimiento.es_entrada:
         articulo.stock_actual += abs(movimiento.cantidad)
-    elif movimiento.es_salida:
-        if articulo.stock_actual < abs(movimiento.cantidad):
-            raise ValueError(
-                f"Stock insuficiente. Stock actual: {articulo.stock_actual}"
+
+        # 🆕 CREACIÓN AUTOMÁTICA DE LOTE FIFO para entradas
+        try:
+            # Generar código de lote automático
+            from datetime import datetime
+
+            fecha_hoy = datetime.now()
+            codigo_lote = f"{articulo.codigo}-{fecha_hoy.strftime('%Y%m%d')}-{movimiento.id or 'AUTO'}"
+
+            # Calcular fecha de vencimiento estimada (si no se proporciona)
+            fecha_vencimiento = data.get("fecha_vencimiento")
+            if not fecha_vencimiento and articulo.categoria:
+                # Asignar vencimiento por defecto según categoría
+                dias_vencimiento = {
+                    "medicamentos": 365,
+                    "quimicos": 180,
+                    "repuestos": 1095,  # 3 años
+                    "consumibles": 365,
+                    "herramientas": 1825,  # 5 años
+                }.get(
+                    articulo.categoria.lower(), 730
+                )  # 2 años por defecto
+
+                fecha_vencimiento = fecha_hoy + timedelta(days=dias_vencimiento)
+
+            # Crear lote FIFO automáticamente
+            lote_fifo = ServicioFIFO.crear_lote_entrada(
+                inventario_id=articulo.id,
+                cantidad=abs(movimiento.cantidad),
+                precio_unitario=movimiento.precio_unitario or 0,
+                codigo_lote=codigo_lote,
+                fecha_vencimiento=fecha_vencimiento,
+                documento_origen=movimiento.documento_referencia,
+                proveedor_id=movimiento.proveedor_id,
+                usuario_id=movimiento.usuario_id or "sistema",
+                observaciones=f"Lote creado automáticamente por entrada de inventario. {movimiento.observaciones or ''}",
             )
+
+            logger.info(
+                f"✅ Lote FIFO creado automáticamente: {lote_fifo.id} para artículo {articulo.codigo}"
+            )
+
+        except Exception as e:
+            logger.error(f"❌ Error al crear lote FIFO automático: {str(e)}")
+            # No fallar la entrada por error en lote, solo registrar
+
+    elif movimiento.es_salida:
+        # 🆕 CONSUMO AUTOMÁTICO FIFO para salidas
+        try:
+            if articulo.stock_actual < abs(movimiento.cantidad):
+                raise ValueError(
+                    f"Stock insuficiente. Stock actual: {articulo.stock_actual}"
+                )
+
+            # Usar ServicioFIFO para consumir automáticamente
+            consumos, cantidad_faltante = ServicioFIFO.consumir_fifo(
+                inventario_id=articulo.id,
+                cantidad_total=abs(movimiento.cantidad),
+                orden_trabajo_id=movimiento.orden_trabajo_id,
+                documento_referencia=movimiento.documento_referencia,
+                usuario_id=movimiento.usuario_id or "sistema",
+                observaciones=f"Consumo automático por salida de inventario. {movimiento.observaciones or ''}",
+            )
+
+            if cantidad_faltante > 0:
+                logger.warning(
+                    f"⚠️ Cantidad faltante en FIFO: {cantidad_faltante} para artículo {articulo.codigo}"
+                )
+
+            logger.info(
+                f"✅ Consumo FIFO automático: {len(consumos)} lotes afectados para artículo {articulo.codigo}"
+            )
+
+        except Exception as e:
+            logger.error(f"❌ Error en consumo FIFO automático: {str(e)}")
+            # Continuar con el método tradicional
+
         articulo.stock_actual -= abs(movimiento.cantidad)
 
     # Actualizar costo promedio en entradas
     if movimiento.es_entrada and movimiento.precio_unitario:
         stock_anterior = articulo.stock_actual - abs(movimiento.cantidad)
-        valor_stock_anterior = stock_anterior * (articulo.costo_promedio or 0)
+        valor_stock_anterior = stock_anterior * (articulo.precio_promedio or 0)
         valor_entrada = abs(movimiento.cantidad) * movimiento.precio_unitario
         valor_total = valor_stock_anterior + valor_entrada
         if articulo.stock_actual > 0:
-            articulo.costo_promedio = valor_total / articulo.stock_actual
+            articulo.precio_promedio = valor_total / articulo.stock_actual
 
     db.session.commit()
     return movimiento
@@ -449,12 +525,15 @@ def obtener_estadisticas_inventario():
 
         # Artículos con stock bajo mínimo
         stats["articulos_bajo_minimo"] = Inventario.query.filter(
-            Inventario.activo == True, Inventario.stock_actual <= Inventario.stock_minimo
+            Inventario.activo == True,
+            Inventario.stock_actual <= Inventario.stock_minimo,
         ).count()
 
         # Valor total del inventario
         valor_total = (
-            db.session.query(func.sum(Inventario.stock_actual * Inventario.precio_promedio))
+            db.session.query(
+                func.sum(Inventario.stock_actual * Inventario.precio_promedio)
+            )
             .filter(Inventario.activo == True)
             .scalar()
             or 0
@@ -489,7 +568,11 @@ def obtener_estadisticas_inventario():
         # Fallback mínimo: contar totales vía SQL directo en AUTOCOMMIT
         total = 0
         try:
-            backend = db.engine.url.get_backend_name() if getattr(db, "engine", None) else None
+            backend = (
+                db.engine.url.get_backend_name()
+                if getattr(db, "engine", None)
+                else None
+            )
             table_name = "inventario"
             if backend == "postgresql":
                 table_name = "public.inventario"
@@ -499,7 +582,9 @@ def obtener_estadisticas_inventario():
                 except Exception:
                     pass
                 with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
-                    res = conn.execute(db.text(f"SELECT COUNT(*) AS total FROM {table_name}")).first()
+                    res = conn.execute(
+                        db.text(f"SELECT COUNT(*) AS total FROM {table_name}")
+                    ).first()
                     total = int(res[0]) if res else 0
         except Exception:
             total = 0

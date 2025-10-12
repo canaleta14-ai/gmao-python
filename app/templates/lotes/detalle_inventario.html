@@ -1,0 +1,849 @@
+{% extends "base.html" %}
+{% set active_page = "lotes" %}
+
+{% block title %}{{ inventario.codigo }} - Detalle de Lotes{% endblock %}
+
+{% block extra_css %}
+<style>
+.header-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    border-right: 1px solid #e9ecef;
+}
+
+.stat-item:last-child {
+    border-right: none;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.lote-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.lote-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.lote-header {
+    padding: 15px 20px 10px;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.lote-body {
+    padding: 15px 20px;
+}
+
+.badge-fifo {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.badge-vencido {
+    background: #dc3545;
+    color: white;
+}
+
+.badge-por-vencer {
+    background: #ffc107;
+    color: #212529;
+}
+
+.badge-activo {
+    background: #28a745;
+    color: white;
+}
+
+.progress-fifo {
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+}
+
+.progress-bar-fifo {
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    border-radius: 4px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-consumir {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.btn-reservar {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #212529;
+}
+
+.btn-trazabilidad {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.timeline-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.timeline-item {
+    border-left: 3px solid #e9ecef;
+    padding-left: 20px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    background: #6c757d;
+    border-radius: 50%;
+}
+
+.timeline-item.entrada::before {
+    background: #28a745;
+}
+
+.timeline-item.salida::before {
+    background: #dc3545;
+}
+
+.timeline-item.reserva::before {
+    background: #ffc107;
+}
+
+.modal-lg {
+    max-width: 900px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.quick-action-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Encabezado del Artículo -->
+    <div class="header-card">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="mr-4">
+                        <i class="fas fa-cube fa-3x"></i>
+                    </div>
+                    <div>
+                        <h1 class="h2 mb-1">{{ inventario.codigo }}</h1>
+                        <h3 class="h4 mb-2">{{ inventario.nombre }}</h3>
+                        <div class="d-flex align-items-center">
+                            <span class="badge badge-fifo mr-2">
+                                <i class="fas fa-arrows-alt-h"></i> FIFO Activo
+                            </span>
+                            <small>Última actualización: {{ moment().format('DD/MM/YYYY HH:mm') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-right">
+                <a href="{{ url_for('lotes.crear_lote') }}?inventario_id={{ inventario.id }}" 
+                   class="btn btn-light btn-lg mr-2">
+                    <i class="fas fa-plus"></i> Nuevo Lote
+                </a>
+                <a href="{{ url_for('lotes.index') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas del Inventario -->
+    <div class="stats-card">
+        <div class="row">
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-primary">{{ stock_info.cantidad_total or 0 }}</div>
+                <div class="stat-label">Stock Total</div>
+                <small class="text-muted">{{ inventario.unidad_medida or 'UN' }}</small>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-success">{{ stock_info.total_lotes or 0 }}</div>
+                <div class="stat-label">Lotes Activos</div>
+                <small class="text-muted">En inventario</small>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-warning">{{ stock_info.lotes_por_vencer or 0 }}</div>
+                <div class="stat-label">Por Vencer</div>
+                <small class="text-muted">Próximos 30 días</small>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-info">€{{ "%.2f"|format(stock_info.valor_total or 0) }}</div>
+                <div class="stat-label">Valor Total</div>
+                <small class="text-muted">Precio de compra</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Panel Principal - Lotes -->
+        <div class="col-lg-8">
+            <!-- Acciones Rápidas -->
+            <div class="quick-action-card">
+                <h5 class="mb-3"><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Consumir Stock (FIFO)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="cantidad-consumir" 
+                                       placeholder="Cantidad" step="0.01" min="0.01">
+                                <div class="input-group-append">
+                                    <button class="btn btn-danger" onclick="consumirRapido()">
+                                        <i class="fas fa-minus"></i> Consumir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Reservar Stock</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="cantidad-reservar" 
+                                       placeholder="Cantidad" step="0.01" min="0.01">
+                                <div class="input-group-append">
+                                    <button class="btn btn-warning" onclick="reservarRapido()">
+                                        <i class="fas fa-bookmark"></i> Reservar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Lotes -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-layer-group"></i> Lotes Disponibles
+                        <span class="badge badge-secondary ml-2">{{ stock_info.total_lotes or 0 }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if stock_info.lotes and stock_info.lotes|length > 0 %}
+                        <div class="list-group list-group-flush">
+                            {% for lote in stock_info.lotes %}
+                            <div class="list-group-item lote-card">
+                                <div class="lote-header">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <strong>{{ lote.codigo_lote or 'Lote-' + lote.id|string }}</strong>
+                                                {% if loop.index == 1 %}
+                                                    <span class="badge badge-fifo ml-2">PRÓXIMO FIFO</span>
+                                                {% endif %}
+                                            </h6>
+                                            <small class="text-muted">
+                                                ID: {{ lote.id }} | 
+                                                Entrada: {{ lote.fecha_entrada.strftime('%d/%m/%Y') }}
+                                                {% if lote.fecha_vencimiento %}
+                                                    | Vence: {{ lote.fecha_vencimiento.strftime('%d/%m/%Y') }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="text-right">
+                                            {% if lote.fecha_vencimiento %}
+                                                {% set dias_vencimiento = (lote.fecha_vencimiento - moment().date()).days %}
+                                                {% if dias_vencimiento < 0 %}
+                                                    <span class="badge badge-vencido">Vencido</span>
+                                                {% elif dias_vencimiento <= 30 %}
+                                                    <span class="badge badge-por-vencer">{{ dias_vencimiento }} días</span>
+                                                {% else %}
+                                                    <span class="badge badge-activo">Activo</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge badge-activo">Sin vencimiento</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="lote-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <div class="h4 mb-1 text-primary">{{ lote.cantidad_actual }}</div>
+                                                <small class="text-muted">{{ inventario.unidad_medida or 'UN' }} disponibles</small>
+                                                <div class="progress progress-fifo mt-2">
+                                                    {% set porcentaje = (lote.cantidad_actual / lote.cantidad_inicial * 100) if lote.cantidad_inicial > 0 else 0 %}
+                                                    <div class="progress-bar progress-bar-fifo" 
+                                                         style="width: {{ porcentaje }}%"></div>
+                                                </div>
+                                                <small class="text-muted">{{ "%.1f"|format(porcentaje) }}% del lote original</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <div class="h5 mb-1">€{{ "%.2f"|format(lote.precio_unitario) }}</div>
+                                                <small class="text-muted">Precio unitario</small>
+                                                <br>
+                                                <div class="mt-2">
+                                                    <strong>€{{ "%.2f"|format(lote.cantidad_actual * lote.precio_unitario) }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">Valor total</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="action-buttons justify-content-center">
+                                                <button class="btn btn-action btn-consumir" 
+                                                        onclick="mostrarModalConsumo({{ lote.id }}, '{{ lote.codigo_lote or 'Lote-' + lote.id|string }}', {{ lote.cantidad_actual }})">
+                                                    <i class="fas fa-minus"></i> Consumir
+                                                </button>
+                                                <button class="btn btn-action btn-reservar" 
+                                                        onclick="mostrarModalReserva({{ lote.id }}, '{{ lote.codigo_lote or 'Lote-' + lote.id|string }}', {{ lote.cantidad_actual }})">
+                                                    <i class="fas fa-bookmark"></i> Reservar
+                                                </button>
+                                                <button class="btn btn-action btn-trazabilidad" 
+                                                        onclick="verTrazabilidad({{ lote.id }})">
+                                                    <i class="fas fa-route"></i> Traza
+                                                </button>
+                                            </div>
+                                            {% if lote.documento_origen %}
+                                                <div class="mt-2 text-center">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-file-alt"></i> {{ lote.documento_origen }}
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h5>No hay lotes disponibles</h5>
+                            <p class="text-muted">
+                                Este artículo no tiene lotes en stock actualmente.
+                            </p>
+                            <a href="{{ url_for('lotes.crear_lote') }}?inventario_id={{ inventario.id }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Crear Primer Lote
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Lateral - Información y Historial -->
+        <div class="col-lg-4">
+            <!-- Información del Artículo -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Información del Artículo</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Código:</dt>
+                        <dd class="col-sm-7">{{ inventario.codigo }}</dd>
+                        
+                        <dt class="col-sm-5">Categoría:</dt>
+                        <dd class="col-sm-7">{{ inventario.categoria.nombre if inventario.categoria else 'N/A' }}</dd>
+                        
+                        <dt class="col-sm-5">Unidad:</dt>
+                        <dd class="col-sm-7">{{ inventario.unidad_medida or 'UN' }}</dd>
+                        
+                        <dt class="col-sm-5">Ubicación:</dt>
+                        <dd class="col-sm-7">{{ inventario.ubicacion or 'No especificada' }}</dd>
+                        
+                        <dt class="col-sm-5">Stock Mínimo:</dt>
+                        <dd class="col-sm-7">{{ inventario.stock_minimo or 'No definido' }}</dd>
+                        
+                        <dt class="col-sm-5">Proveedor:</dt>
+                        <dd class="col-sm-7">{{ inventario.proveedor_principal.nombre if inventario.proveedor_principal else 'N/A' }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Historial Reciente -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history"></i> Historial Reciente
+                        <span class="badge badge-secondary ml-2">{{ movimientos|length }}</span>
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if movimientos and movimientos|length > 0 %}
+                        <div class="timeline-container p-3">
+                            {% for movimiento in movimientos[:10] %}
+                            <div class="timeline-item {{ movimiento.tipo_movimiento }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {% if movimiento.tipo_movimiento == 'entrada' %}
+                                                <i class="fas fa-plus text-success"></i> Entrada
+                                            {% elif movimiento.tipo_movimiento == 'salida' %}
+                                                <i class="fas fa-minus text-danger"></i> Salida
+                                            {% elif movimiento.tipo_movimiento == 'reserva' %}
+                                                <i class="fas fa-bookmark text-warning"></i> Reserva
+                                            {% else %}
+                                                <i class="fas fa-exchange-alt text-info"></i> {{ movimiento.tipo_movimiento.title() }}
+                                            {% endif %}
+                                        </h6>
+                                        <p class="mb-1">
+                                            <strong>{{ movimiento.cantidad }} {{ inventario.unidad_medida or 'UN' }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                Lote: {{ movimiento.lote.codigo_lote or 'Lote-' + movimiento.lote.id|string }}
+                                            </small>
+                                        </p>
+                                        {% if movimiento.documento_referencia %}
+                                            <small class="text-muted">
+                                                <i class="fas fa-file-alt"></i> {{ movimiento.documento_referencia }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-right">
+                                        <small class="text-muted">
+                                            {{ movimiento.fecha.strftime('%d/%m') }}<br>
+                                            {{ movimiento.fecha.strftime('%H:%M') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if movimientos|length > 10 %}
+                        <div class="card-footer text-center">
+                            <a href="{{ url_for('lotes.trazabilidad') }}?inventario_id={{ inventario.id }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                Ver historial completo
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-history fa-2x mb-3"></i>
+                            <p>No hay movimientos registrados</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Consumo -->
+<div class="modal fade" id="modalConsumo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-minus"></i> Consumir Stock
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido del modal de consumo -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Reserva -->
+<div class="modal fade" id="modalReserva" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="fas fa-bookmark"></i> Reservar Stock
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido del modal de reserva -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+const inventarioId = {{ inventario.id }};
+const unidadMedida = '{{ inventario.unidad_medida or "UN" }}';
+
+$(document).ready(function() {
+    // Configurar tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Actualizar información cada 30 segundos
+    setInterval(actualizarInformacion, 30000);
+});
+
+// Consumo rápido desde el panel de acciones
+function consumirRapido() {
+    const cantidad = parseFloat($('#cantidad-consumir').val());
+    
+    if (!cantidad || cantidad <= 0) {
+        mostrarMensaje('Ingrese una cantidad válida', 'warning');
+        return;
+    }
+    
+    // Usar FIFO automático
+    consumirFIFO(cantidad);
+}
+
+// Reserva rápida desde el panel de acciones
+function reservarRapido() {
+    const cantidad = parseFloat($('#cantidad-reservar').val());
+    
+    if (!cantidad || cantidad <= 0) {
+        mostrarMensaje('Ingrese una cantidad válida', 'warning');
+        return;
+    }
+    
+    // Solicitar datos adicionales para la reserva
+    const ordenTrabajo = prompt('Número de Orden de Trabajo (opcional):');
+    const referencia = prompt('Documento de referencia (opcional):');
+    
+    reservarStock(cantidad, ordenTrabajo, referencia);
+}
+
+// Consumir usando FIFO automático
+function consumirFIFO(cantidad, referencia = '', observaciones = '') {
+    const data = {
+        inventario_id: inventarioId,
+        cantidad: cantidad,
+        documento_referencia: referencia,
+        observaciones: observaciones
+    };
+    
+    $.ajax({
+        url: '/lotes/api/consumir',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                mostrarResultadoConsumo(response);
+                actualizarInformacion();
+                $('#cantidad-consumir').val('');
+            } else {
+                mostrarMensaje(response.error, 'error');
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+            mostrarMensaje('Error al consumir stock: ' + error, 'error');
+        }
+    });
+}
+
+// Reservar stock usando FIFO
+function reservarStock(cantidad, ordenTrabajo = '', referencia = '') {
+    if (!ordenTrabajo) {
+        mostrarMensaje('Se requiere un número de orden de trabajo para las reservas', 'warning');
+        return;
+    }
+    
+    const data = {
+        inventario_id: inventarioId,
+        cantidad: cantidad,
+        orden_trabajo_id: parseInt(ordenTrabajo),
+        documento_referencia: referencia,
+        observaciones: 'Reserva desde detalle de inventario'
+    };
+    
+    $.ajax({
+        url: '/lotes/api/reservar',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                mostrarResultadoReserva(response);
+                actualizarInformacion();
+                $('#cantidad-reservar').val('');
+            } else {
+                mostrarMensaje(response.error, 'error');
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+            mostrarMensaje('Error al reservar stock: ' + error, 'error');
+        }
+    });
+}
+
+// Mostrar resultado del consumo
+function mostrarResultadoConsumo(response) {
+    let mensaje = `Se consumieron ${response.total_consumido} ${unidadMedida} de los siguientes lotes:\n`;
+    
+    response.consumos.forEach(function(consumo) {
+        mensaje += `- ${consumo.codigo_lote}: ${consumo.cantidad_consumida} ${unidadMedida}\n`;
+    });
+    
+    if (response.cantidad_faltante > 0) {
+        mensaje += `\nATENCIÓN: Faltan ${response.cantidad_faltante} ${unidadMedida} (stock insuficiente)`;
+        mostrarMensaje(mensaje, 'warning');
+    } else {
+        mostrarMensaje(mensaje, 'success');
+    }
+}
+
+// Mostrar resultado de la reserva
+function mostrarResultadoReserva(response) {
+    let mensaje = `Se reservaron ${response.total_reservado} ${unidadMedida} de los siguientes lotes:\n`;
+    
+    response.reservas.forEach(function(reserva) {
+        mensaje += `- ${reserva.codigo_lote}: ${reserva.cantidad_reservada} ${unidadMedida}\n`;
+    });
+    
+    if (response.cantidad_faltante > 0) {
+        mensaje += `\nATENCIÓN: Faltan ${response.cantidad_faltante} ${unidadMedida} (stock insuficiente)`;
+        mostrarMensaje(mensaje, 'warning');
+    } else {
+        mostrarMensaje(mensaje, 'success');
+    }
+}
+
+// Mostrar modal de consumo para un lote específico
+function mostrarModalConsumo(loteId, codigoLote, cantidadDisponible) {
+    const modalContent = `
+        <form id="form-consumo">
+            <div class="form-group">
+                <label>Lote a consumir:</label>
+                <div class="alert alert-info">
+                    <strong>${codigoLote}</strong><br>
+                    Disponible: ${cantidadDisponible} ${unidadMedida}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="cantidad-modal-consumo">Cantidad a consumir <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="number" class="form-control" id="cantidad-modal-consumo" 
+                           max="${cantidadDisponible}" step="0.01" min="0.01" required>
+                    <div class="input-group-append">
+                        <span class="input-group-text">${unidadMedida}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="referencia-consumo">Documento de referencia</label>
+                <input type="text" class="form-control" id="referencia-consumo" 
+                       placeholder="Ej: Orden de Trabajo #123">
+            </div>
+            <div class="form-group">
+                <label for="observaciones-consumo">Observaciones</label>
+                <textarea class="form-control" id="observaciones-consumo" rows="2" 
+                          placeholder="Comentarios adicionales..."></textarea>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" onclick="ejecutarConsumo(${loteId})">
+                <i class="fas fa-minus"></i> Consumir
+            </button>
+        </div>
+    `;
+    
+    $('#modalConsumo .modal-body').html(modalContent);
+    $('#modalConsumo').modal('show');
+}
+
+// Mostrar modal de reserva para un lote específico
+function mostrarModalReserva(loteId, codigoLote, cantidadDisponible) {
+    const modalContent = `
+        <form id="form-reserva">
+            <div class="form-group">
+                <label>Lote a reservar:</label>
+                <div class="alert alert-warning">
+                    <strong>${codigoLote}</strong><br>
+                    Disponible: ${cantidadDisponible} ${unidadMedida}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="cantidad-modal-reserva">Cantidad a reservar <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="number" class="form-control" id="cantidad-modal-reserva" 
+                           max="${cantidadDisponible}" step="0.01" min="0.01" required>
+                    <div class="input-group-append">
+                        <span class="input-group-text">${unidadMedida}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="orden-trabajo-reserva">Orden de Trabajo <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="orden-trabajo-reserva" 
+                       placeholder="Número de orden de trabajo" required>
+            </div>
+            <div class="form-group">
+                <label for="referencia-reserva">Documento de referencia</label>
+                <input type="text" class="form-control" id="referencia-reserva" 
+                       placeholder="Ej: Solicitud de materiales #456">
+            </div>
+            <div class="form-group">
+                <label for="observaciones-reserva">Observaciones</label>
+                <textarea class="form-control" id="observaciones-reserva" rows="2" 
+                          placeholder="Comentarios adicionales..."></textarea>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-warning" onclick="ejecutarReserva(${loteId})">
+                <i class="fas fa-bookmark"></i> Reservar
+            </button>
+        </div>
+    `;
+    
+    $('#modalReserva .modal-body').html(modalContent);
+    $('#modalReserva').modal('show');
+}
+
+// Ejecutar consumo desde modal
+function ejecutarConsumo(loteId) {
+    const cantidad = parseFloat($('#cantidad-modal-consumo').val());
+    const referencia = $('#referencia-consumo').val();
+    const observaciones = $('#observaciones-consumo').val();
+    
+    if (!cantidad || cantidad <= 0) {
+        mostrarMensaje('Ingrese una cantidad válida', 'warning');
+        return;
+    }
+    
+    $('#modalConsumo').modal('hide');
+    consumirFIFO(cantidad, referencia, observaciones);
+}
+
+// Ejecutar reserva desde modal
+function ejecutarReserva(loteId) {
+    const cantidad = parseFloat($('#cantidad-modal-reserva').val());
+    const ordenTrabajo = $('#orden-trabajo-reserva').val();
+    const referencia = $('#referencia-reserva').val();
+    
+    if (!cantidad || cantidad <= 0) {
+        mostrarMensaje('Ingrese una cantidad válida', 'warning');
+        return;
+    }
+    
+    if (!ordenTrabajo) {
+        mostrarMensaje('Ingrese el número de orden de trabajo', 'warning');
+        return;
+    }
+    
+    $('#modalReserva').modal('hide');
+    reservarStock(cantidad, ordenTrabajo, referencia);
+}
+
+// Ver trazabilidad de un lote
+function verTrazabilidad(loteId) {
+    window.location.href = `/lotes/trazabilidad?lote=${loteId}`;
+}
+
+// Actualizar información de la página
+function actualizarInformacion() {
+    location.reload();
+}
+
+// Función auxiliar para mostrar mensajes
+function mostrarMensaje(mensaje, tipo) {
+    const tipoClase = tipo === 'error' ? 'danger' : tipo;
+    const html = `
+        <div class="alert alert-${tipoClase} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+            ${mensaje.replace(/\n/g, '<br>')}
+            <button type="button" class="close" data-dismiss="alert">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    `;
+    
+    $('body').append(html);
+    
+    // Auto-ocultar después de 5 segundos
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %}

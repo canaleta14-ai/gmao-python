@@ -1,0 +1,547 @@
+{% extends "base.html" %}
+{% set active_page = "lotes" %}
+
+{% block title %}Sistema FIFO - Gestión de Lotes{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+.quick-stats {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    border-right: 1px solid #dee2e6;
+}
+
+.stat-item:last-child {
+    border-right: none;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #495057;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.alert-count {
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    margin-left: 5px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Encabezado Principal -->
+    <div class="dashboard-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-boxes"></i>
+                    Sistema FIFO - Gestión de Lotes
+                </h1>
+                <p class="mb-0">
+                    Control de inventario con trazabilidad completa siguiendo la metodología 
+                    First In, First Out (FIFO) para garantizar la rotación adecuada de productos.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-right">
+                <a href="{{ url_for('lotes.crear_lote') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-plus"></i> Crear Nuevo Lote
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="quick-stats">
+        <div class="row" id="estadisticas-rapidas">
+            <div class="col-md-3 stat-item">
+                <div class="stat-number" id="total-lotes">-</div>
+                <div class="stat-label">Lotes Activos</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number" id="articulos-fifo">-</div>
+                <div class="stat-label">Artículos con FIFO</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-warning" id="proximos-vencer">-</div>
+                <div class="stat-label">Próximos a Vencer</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-danger" id="vencidos">-</div>
+                <div class="stat-label">Lotes Vencidos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Funcionalidades Principales -->
+    <div class="row">
+        <!-- Buscar Artículos -->
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h5 class="card-title">Buscar Artículos</h5>
+                    <p class="card-text text-muted">
+                        Busque cualquier artículo y vea sus lotes disponibles, 
+                        stock actual y próximas fechas de vencimiento.
+                    </p>
+                    <div class="mt-auto">
+                        <input type="text" class="form-control mb-3" 
+                               id="buscar-articulo" 
+                               placeholder="Código o nombre del artículo">
+                        <button class="btn btn-primary btn-block" onclick="buscarArticulo()">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestión de Lotes -->
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <h5 class="card-title">Gestión de Lotes</h5>
+                    <p class="card-text text-muted">
+                        Cree nuevos lotes de entrada, consulte existencias 
+                        y gestione el inventario siguiendo la metodología FIFO.
+                    </p>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('lotes.crear_lote') }}" class="btn btn-success btn-block mb-2">
+                            <i class="fas fa-plus"></i> Crear Lote
+                        </a>
+                        <button class="btn btn-outline-primary btn-block" onclick="verLotesActivos()">
+                            <i class="fas fa-list"></i> Ver Lotes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trazabilidad -->
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h5 class="card-title">Trazabilidad</h5>
+                    <p class="card-text text-muted">
+                        Siga el recorrido completo de cualquier lote desde 
+                        su entrada hasta su consumo final.
+                    </p>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('lotes.trazabilidad') }}" class="btn btn-info btn-block mb-2">
+                            <i class="fas fa-route"></i> Ver Trazabilidad
+                        </a>
+                        <input type="text" class="form-control" 
+                               id="buscar-lote" 
+                               placeholder="ID o código de lote">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vencimientos -->
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                    </div>
+                    <h5 class="card-title">
+                        Control de Vencimientos
+                        <span class="alert-count" id="vencimientos-badge">0</span>
+                    </h5>
+                    <p class="card-text text-muted">
+                        Monitoree productos próximos a vencer y gestione 
+                        las rotaciones de inventario proactivamente.
+                    </p>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('lotes.vencimientos') }}" class="btn btn-warning btn-block">
+                            <i class="fas fa-calendar-exclamation"></i> Ver Vencimientos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Resultados de Búsqueda -->
+    <div class="row" id="resultados-busqueda" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search"></i> Resultados de Búsqueda
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tabla-resultados">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Stock Disponible</th>
+                                    <th>Lotes Activos</th>
+                                    <th>Próximo Vencimiento</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-resultados">
+                                <!-- Resultados dinámicos -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Lotes Activos -->
+    <div class="row" id="tabla-lotes-activos" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-boxes"></i> Lotes Activos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tabla-lotes">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>ID Lote</th>
+                                    <th>Código Lote</th>
+                                    <th>Artículo</th>
+                                    <th>Cantidad Actual</th>
+                                    <th>Fecha Entrada</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-lotes">
+                                <!-- Lotes dinámicos -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let articulosDisponibles = [];
+let lotesActivos = [];
+
+// Cargar datos iniciales
+$(document).ready(function() {
+    cargarEstadisticasRapidas();
+    cargarArticulosDisponibles();
+    
+    // Configurar búsqueda en tiempo real
+    $('#buscar-articulo').on('keyup', function(e) {
+        if (e.keyCode === 13) { // Enter
+            buscarArticulo();
+        }
+    });
+    
+    $('#buscar-lote').on('keyup', function(e) {
+        if (e.keyCode === 13) { // Enter
+            buscarLote();
+        }
+    });
+});
+
+// Cargar estadísticas rápidas
+function cargarEstadisticasRapidas() {
+    // Simulación - en producción esto vendría de la API
+    $('#total-lotes').text('0');
+    $('#articulos-fifo').text('0');
+    $('#proximos-vencer').text('0');
+    $('#vencidos').text('0');
+    $('#vencimientos-badge').text('0');
+}
+
+// Cargar artículos disponibles para autocompletado
+function cargarArticulosDisponibles() {
+    $.get('/api/inventario/activos')
+        .done(function(data) {
+            articulosDisponibles = data.articulos || [];
+            configurarAutocompletado();
+        })
+        .fail(function() {
+            console.log('Error al cargar artículos disponibles');
+        });
+}
+
+// Configurar autocompletado
+function configurarAutocompletado() {
+    $('#buscar-articulo').autocomplete({
+        source: function(request, response) {
+            const term = request.term.toLowerCase();
+            const matches = articulosDisponibles.filter(function(articulo) {
+                return articulo.codigo.toLowerCase().includes(term) ||
+                       articulo.nombre.toLowerCase().includes(term);
+            });
+            response(matches.slice(0, 10).map(function(articulo) {
+                return {
+                    label: `${articulo.codigo} - ${articulo.nombre}`,
+                    value: articulo.codigo,
+                    id: articulo.id
+                };
+            }));
+        },
+        minLength: 2,
+        select: function(event, ui) {
+            $('#buscar-articulo').data('articulo-id', ui.item.id);
+            return true;
+        }
+    });
+}
+
+// Buscar artículo
+function buscarArticulo() {
+    const termino = $('#buscar-articulo').val().trim();
+    const articuloId = $('#buscar-articulo').data('articulo-id');
+    
+    if (!termino) {
+        mostrarMensaje('Por favor ingrese un término de búsqueda', 'warning');
+        return;
+    }
+
+    // Mostrar loading
+    $('#resultados-busqueda').show();
+    $('#tbody-resultados').html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Buscando...</td></tr>');
+
+    // Si tenemos ID específico, buscar ese artículo
+    if (articuloId) {
+        $.get(`/lotes/inventario/${articuloId}`)
+            .done(function(response) {
+                window.location.href = `/lotes/inventario/${articuloId}`;
+            })
+            .fail(function() {
+                mostrarMensaje('Error al cargar información del artículo', 'error');
+            });
+    } else {
+        // Búsqueda general por término
+        buscarArticulosPorTermino(termino);
+    }
+}
+
+// Buscar artículos por término
+function buscarArticulosPorTermino(termino) {
+    $.get('/api/inventario/buscar', { q: termino })
+        .done(function(data) {
+            if (data.success && data.articulos && data.articulos.length > 0) {
+                mostrarResultadosBusqueda(data.articulos);
+            } else {
+                $('#tbody-resultados').html('<tr><td colspan="6" class="text-center text-muted">No se encontraron artículos</td></tr>');
+            }
+        })
+        .fail(function() {
+            $('#tbody-resultados').html('<tr><td colspan="6" class="text-center text-danger">Error al realizar la búsqueda</td></tr>');
+        });
+}
+
+// Mostrar resultados de búsqueda
+function mostrarResultadosBusqueda(articulos) {
+    let html = '';
+    
+    articulos.forEach(function(articulo) {
+        const stockDisponible = articulo.stock_disponible || 0;
+        const lotesActivos = articulo.lotes_activos || 0;
+        const proximoVencimiento = articulo.proximo_vencimiento || 'N/A';
+        
+        html += `
+            <tr>
+                <td><strong>${articulo.codigo}</strong></td>
+                <td>${articulo.nombre}</td>
+                <td>
+                    <span class="badge badge-${stockDisponible > 0 ? 'success' : 'danger'}">
+                        ${stockDisponible} ${articulo.unidad_medida || 'UN'}
+                    </span>
+                </td>
+                <td>${lotesActivos}</td>
+                <td>${proximoVencimiento}</td>
+                <td>
+                    <a href="/lotes/inventario/${articulo.id}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-eye"></i> Ver Lotes
+                    </a>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#tbody-resultados').html(html);
+}
+
+// Ver lotes activos
+function verLotesActivos() {
+    $('#tabla-lotes-activos').show();
+    $('#tbody-lotes').html('<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando lotes...</td></tr>');
+    
+    $.get('/api/lotes/activos')
+        .done(function(data) {
+            if (data.success && data.lotes && data.lotes.length > 0) {
+                mostrarLotesActivos(data.lotes);
+            } else {
+                $('#tbody-lotes').html('<tr><td colspan="8" class="text-center text-muted">No hay lotes activos</td></tr>');
+            }
+        })
+        .fail(function() {
+            $('#tbody-lotes').html('<tr><td colspan="8" class="text-center text-danger">Error al cargar lotes</td></tr>');
+        });
+}
+
+// Mostrar lotes activos
+function mostrarLotesActivos(lotes) {
+    let html = '';
+    
+    lotes.forEach(function(lote) {
+        const fechaVencimiento = lote.fecha_vencimiento ? 
+            new Date(lote.fecha_vencimiento).toLocaleDateString() : 'N/A';
+        const fechaEntrada = new Date(lote.fecha_entrada).toLocaleDateString();
+        
+        // Determinar estado del lote
+        let estadoBadge = 'badge-success';
+        let estadoTexto = 'Activo';
+        
+        if (lote.fecha_vencimiento) {
+            const hoy = new Date();
+            const vencimiento = new Date(lote.fecha_vencimiento);
+            const diasRestantes = Math.ceil((vencimiento - hoy) / (1000 * 60 * 60 * 24));
+            
+            if (diasRestantes < 0) {
+                estadoBadge = 'badge-danger';
+                estadoTexto = 'Vencido';
+            } else if (diasRestantes <= 30) {
+                estadoBadge = 'badge-warning';
+                estadoTexto = 'Por vencer';
+            }
+        }
+        
+        html += `
+            <tr>
+                <td><strong>${lote.id}</strong></td>
+                <td>${lote.codigo_lote || 'Auto-' + lote.id}</td>
+                <td>
+                    <div><strong>${lote.inventario_codigo}</strong></div>
+                    <small class="text-muted">${lote.inventario_nombre}</small>
+                </td>
+                <td>${lote.cantidad_actual} ${lote.unidad_medida || 'UN'}</td>
+                <td>${fechaEntrada}</td>
+                <td>${fechaVencimiento}</td>
+                <td>
+                    <span class="badge ${estadoBadge}">${estadoTexto}</span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="/lotes/inventario/${lote.inventario_id}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button class="btn btn-outline-info btn-sm" onclick="verTrazabilidad(${lote.id})">
+                            <i class="fas fa-route"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#tbody-lotes').html(html);
+}
+
+// Buscar lote específico
+function buscarLote() {
+    const loteId = $('#buscar-lote').val().trim();
+    
+    if (!loteId) {
+        mostrarMensaje('Por favor ingrese un ID de lote', 'warning');
+        return;
+    }
+    
+    verTrazabilidad(loteId);
+}
+
+// Ver trazabilidad de un lote
+function verTrazabilidad(loteId) {
+    window.location.href = `/lotes/trazabilidad?lote=${loteId}`;
+}
+
+// Función auxiliar para mostrar mensajes
+function mostrarMensaje(mensaje, tipo) {
+    const tipoClase = tipo === 'error' ? 'danger' : tipo;
+    const html = `
+        <div class="alert alert-${tipoClase} alert-dismissible fade show">
+            ${mensaje}
+            <button type="button" class="close" data-dismiss="alert">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    `;
+    
+    // Insertar al inicio del contenido
+    $('.container-fluid').prepend(html);
+    
+    // Auto-ocultar después de 5 segundos
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %}

@@ -10,6 +10,7 @@ from .plan_mantenimiento import PlanMantenimiento
 from .proveedor import Proveedor
 from .inventario import Inventario
 from .movimiento_inventario import MovimientoInventario
+from .lote_inventario import LoteInventario, MovimientoLote
 from .usuario import Usuario
 from .manual import Manual
 from .archivo_adjunto import ArchivoAdjunto
@@ -27,6 +28,8 @@ __all__ = [
     "Proveedor",
     "Inventario",
     "MovimientoInventario",
+    "LoteInventario",
+    "MovimientoLote",
     "Usuario",
     "Manual",
     "ArchivoAdjunto",

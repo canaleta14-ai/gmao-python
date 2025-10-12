@@ -1,4 +1,13 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_file
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    flash,
+    redirect,
+    url_for,
+    jsonify,
+    send_file,
+)
 from app.extensions import db
 from app.models.solicitud_servicio import SolicitudServicio
 from app.models.archivo_adjunto import ArchivoAdjunto
@@ -13,7 +22,12 @@ from app.utils.email_utils import (
     enviar_email_confirmacion,
     enviar_email_notificacion_admin,
 )
-from app.utils.storage import upload_file, is_gcp_environment, get_signed_url, file_exists
+from app.utils.storage import (
+    upload_file,
+    is_gcp_environment,
+    get_signed_url,
+    file_exists,
+)
 
 solicitudes_bp = Blueprint("solicitudes", __name__, url_prefix="/solicitudes")
 
@@ -86,7 +100,7 @@ def procesar_solicitud():
             enviar_email_confirmacion(solicitud)
             enviar_email_notificacion_admin(solicitud)
         except Exception as e:
-            print(f"Error enviando emails: {e}")
+            current_app.logger.error(f"Error enviando emails: {e}")
             # No fallar la solicitud por error de email
 
         mensaje = f"Su solicitud ha sido enviada exitosamente."
@@ -286,11 +300,11 @@ def procesar_archivos_solicitud(archivos, solicitud_id):
             # Generar nombre único para el archivo
             filename = secure_filename(archivo.filename)
             nombre_unico = f"{uuid.uuid4().hex[:8]}_{filename}"
-            
+
             # Usar Cloud Storage o filesystem local según el entorno
             folder = f"solicitudes/{solicitud_id}"
             ruta_archivo = upload_file(archivo, folder, nombre_unico)
-            
+
             if not ruta_archivo:
                 print(f"Error subiendo archivo {archivo.filename}")
                 continue
@@ -334,38 +348,42 @@ def descargar_archivo_adjunto(archivo_id):
     try:
         # Buscar el archivo en la base de datos
         archivo = ArchivoAdjunto.query.get_or_404(archivo_id)
-        
+
         # Verificar que es un archivo (no un enlace)
         if archivo.tipo_archivo == "enlace":
             return jsonify({"error": "Los enlaces no se pueden descargar"}), 400
-        
+
         # Determinar si el archivo está en Cloud Storage o filesystem local
         if archivo.ruta_archivo.startswith("gs://"):
             # SOLUCIÓN TEMPORAL: Usar una ruta local para pruebas
             # Extraer el nombre del archivo de la ruta GCS
             filename = archivo.ruta_archivo.split("/")[-1]
-            
+
             # Crear un archivo de prueba en una ubicación temporal
             import os
             import tempfile
-            
+
             # Crear archivo temporal
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
             temp_file.write(b"Archivo de prueba para descarga")
             temp_file.close()
-            
+
             # Devolver el archivo temporal
-            return send_file(temp_file.name, as_attachment=True, download_name=archivo.nombre_original)
+            return send_file(
+                temp_file.name,
+                as_attachment=True,
+                download_name=archivo.nombre_original,
+            )
         else:
             # Archivo en filesystem local
             if not os.path.exists(archivo.ruta_archivo):
                 return jsonify({"error": "Archivo no encontrado en el servidor"}), 404
-            
+
             return send_file(
-                archivo.ruta_archivo, 
-                as_attachment=True, 
-                download_name=archivo.nombre_original
+                archivo.ruta_archivo,
+                as_attachment=True,
+                download_name=archivo.nombre_original,
             )
-            
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400

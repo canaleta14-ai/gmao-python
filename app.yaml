@@ -10,23 +10,23 @@ env_variables:
   GOOGLE_CLOUD_PROJECT: "mantenimiento-470311"
   DB_TYPE: postgresql
   DB_USER: postgres
-  DB_NAME: postgres
+  DB_NAME: gmao_production
   # Actualizado para el proyecto "Mantenimiento" (disfood)
-  DB_HOST: "/cloudsql/mantenimiento-470311:europe-southwest1:gmao-postgres-spain"
+  DB_HOST: "/cloudsql/mantenimiento-470311:europe-southwest1:gmao-madrid-final"
+  DB_PASSWORD: "GmaoMadrid2025!"
   SERVER_URL: https://mantenimiento-470311.ew.r.appspot.com
   # Cloud Storage bucket para persistencia de archivos
-  GCS_BUCKET_NAME: "gmao-mantenimiento-201193253693"
+  GCS_BUCKET_NAME: "mantenimiento-470311-uploads-eu"
   # Configuración de email (Gmail/Google Workspace)
   MAIL_SERVER: smtp.gmail.com
   MAIL_PORT: "587"
   MAIL_USE_TLS: "True"
-  MAIL_USERNAME: j_hidalgo@disfood.com
-  # MAIL_PASSWORD se obtiene vía Secret Manager en runtime
-  MAIL_PASSWORD: ""
+  MAIL_USERNAME: "j_hidalgo@disfood.com"
+  # MAIL_PASSWORD se obtiene desde Secret Manager (gmao-mail-password)
   ADMIN_EMAILS: j_hidalgo@disfood.com
 
 beta_settings:
-  cloud_sql_instances: mantenimiento-470311:europe-southwest1:gmao-postgres-spain
+  cloud_sql_instances: mantenimiento-470311:europe-southwest1:gmao-madrid-final
 
 # Instalación optimizada usando requirements-production.txt
 handlers:

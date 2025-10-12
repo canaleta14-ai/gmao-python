@@ -130,9 +130,15 @@ def ver_solicitud(id):
         return redirect(url_for("web.index"))
 
     solicitud = SolicitudServicio.query.get_or_404(id)
-    archivos_adjuntos = ArchivoAdjunto.query.filter_by(solicitud_servicio_id=solicitud.id).all()
+    archivos_adjuntos = ArchivoAdjunto.query.filter_by(
+        solicitud_servicio_id=solicitud.id
+    ).all()
 
-    return render_template("admin/solicitudes/ver.html", solicitud=solicitud, archivos_adjuntos=archivos_adjuntos)
+    return render_template(
+        "admin/solicitudes/ver.html",
+        solicitud=solicitud,
+        archivos_adjuntos=archivos_adjuntos,
+    )
 
 
 @solicitudes_admin_bp.route("/<int:id>/editar", methods=["GET", "POST"])
@@ -627,9 +633,9 @@ def eliminar_solicitud(id):
 
     try:
         solicitud = SolicitudServicio.query.get_or_404(id)
-        
+
         # Eliminar archivos adjuntos asociados
-        archivos = ArchivoAdjunto.query.filter_by(solicitud_id=id).all()
+        archivos = ArchivoAdjunto.query.filter_by(solicitud_servicio_id=id).all()
         for archivo in archivos:
             # Eliminar archivo físico si existe
             if archivo.ruta_archivo and os.path.exists(archivo.ruta_archivo):
@@ -637,24 +643,24 @@ def eliminar_solicitud(id):
                     os.remove(archivo.ruta_archivo)
                 except OSError:
                     pass  # Continuar aunque no se pueda eliminar el archivo físico
-            
+
             # Eliminar registro de la base de datos
             db.session.delete(archivo)
-        
+
         # Eliminar la solicitud
         db.session.delete(solicitud)
         db.session.commit()
-        
-        return jsonify({
-            "success": True,
-            "message": f"Solicitud #{solicitud.id} eliminada correctamente."
-        })
-        
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Solicitud #{solicitud.id} eliminada correctamente.",
+            }
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "error": f"Error al eliminar la solicitud: {str(e)}"
-        }), 500
+        return jsonify({"error": f"Error al eliminar la solicitud: {str(e)}"}), 500
 
 
 @solicitudes_admin_bp.route("/eliminar-masivo", methods=["DELETE"])
@@ -666,25 +672,27 @@ def eliminar_solicitudes_masivo():
 
     try:
         data = request.get_json()
-        if not data or 'solicitud_ids' not in data:
+        if not data or "solicitud_ids" not in data:
             return jsonify({"error": "No se proporcionaron IDs de solicitudes."}), 400
-        
-        ids = data['solicitud_ids']
+
+        ids = data["solicitud_ids"]
         if not isinstance(ids, list) or not ids:
             return jsonify({"error": "Lista de IDs inválida."}), 400
-        
+
         eliminadas = 0
         errores = []
-        
+
         for solicitud_id in ids:
             try:
                 solicitud = SolicitudServicio.query.get(solicitud_id)
                 if not solicitud:
                     errores.append(f"Solicitud #{solicitud_id} no encontrada")
                     continue
-                
+
                 # Eliminar archivos adjuntos asociados
-                archivos = ArchivoAdjunto.query.filter_by(solicitud_id=solicitud_id).all()
+                archivos = ArchivoAdjunto.query.filter_by(
+                    solicitud_servicio_id=solicitud_id
+                ).all()
                 for archivo in archivos:
                     # Eliminar archivo físico si existe
                     if archivo.ruta_archivo and os.path.exists(archivo.ruta_archivo):
@@ -692,32 +700,32 @@ def eliminar_solicitudes_masivo():
                             os.remove(archivo.ruta_archivo)
                         except OSError:
                             pass  # Continuar aunque no se pueda eliminar el archivo físico
-                    
+
                     # Eliminar registro de la base de datos
                     db.session.delete(archivo)
-                
+
                 # Eliminar la solicitud
                 db.session.delete(solicitud)
                 eliminadas += 1
-                
+
             except Exception as e:
                 errores.append(f"Error al eliminar solicitud #{solicitud_id}: {str(e)}")
-        
+
         db.session.commit()
-        
+
         mensaje = f"Se eliminaron {eliminadas} solicitudes correctamente."
         if errores:
             mensaje += f" Errores: {'; '.join(errores)}"
-        
-        return jsonify({
-            "success": True,
-            "message": mensaje,
-            "eliminadas": eliminadas,
-            "errores": errores
-        })
-        
+
+        return jsonify(
+            {
+                "success": True,
+                "message": mensaje,
+                "eliminadas": eliminadas,
+                "errores": errores,
+            }
+        )
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            "error": f"Error en la eliminación masiva: {str(e)}"
-        }), 500
+        return jsonify({"error": f"Error en la eliminación masiva: {str(e)}"}), 500

@@ -482,7 +482,9 @@ function actualizarTablaArticulos(articulos) {
 
     tr.innerHTML = `
             <td>
-                <input type="checkbox" class="form-check-input item-checkbox" data-id="${articulo.id}">
+                <input type="checkbox" class="form-check-input item-checkbox" data-id="${
+                  articulo.id
+                }">
             </td>
             <td><code>${articulo.codigo}</code></td>
             <td>
@@ -678,10 +680,19 @@ async function guardarNuevoArticulo() {
 
   // Verificar que todos los elementos necesarios existan
   const elementosRequeridos = [
-    "nuevo-codigo", "nuevo-descripcion", "nuevo-categoria",
-    "nuevo-stock-minimo", "nuevo-stock-maximo", "nuevo-ubicacion",
-    "nuevo-precio-unitario", "nuevo-unidad-medida", "nuevo-proveedor",
-    "nuevo-cuenta-contable", "nuevo-grupo-contable", "nuevo-critico", "nuevo-activo"
+    "nuevo-codigo",
+    "nuevo-descripcion",
+    "nuevo-categoria",
+    "nuevo-stock-minimo",
+    "nuevo-stock-maximo",
+    "nuevo-ubicacion",
+    "nuevo-precio-unitario",
+    "nuevo-unidad-medida",
+    "nuevo-proveedor",
+    "nuevo-cuenta-contable",
+    "nuevo-grupo-contable",
+    "nuevo-critico",
+    "nuevo-activo",
   ];
 
   for (const id of elementosRequeridos) {
@@ -1003,7 +1014,7 @@ const MOTIVOS_POR_TIPO = {
     "Ajuste por inventario",
     "Transferencia desde otra ubicación",
     "Producción interna",
-    "Donación recibida"
+    "Donación recibida",
   ],
   salida: [
     "Venta",
@@ -1012,7 +1023,7 @@ const MOTIVOS_POR_TIPO = {
     "Baja por deterioro",
     "Baja por obsolescencia",
     "Devolución a proveedor",
-    "Donación"
+    "Donación",
   ],
   regularizacion: [
     "Ajuste por inventario físico",
@@ -1020,8 +1031,8 @@ const MOTIVOS_POR_TIPO = {
     "Merma detectada",
     "Excedente detectado",
     "Reconteo de stock",
-    "Cambio de valoración"
-  ]
+    "Cambio de valoración",
+  ],
 };
 
 // Función para actualizar motivos según el tipo de movimiento
@@ -1034,7 +1045,7 @@ function actualizarMotivos(tipo) {
 
   // Agregar motivos del tipo seleccionado
   if (tipo && MOTIVOS_POR_TIPO[tipo]) {
-    MOTIVOS_POR_TIPO[tipo].forEach(motivo => {
+    MOTIVOS_POR_TIPO[tipo].forEach((motivo) => {
       const option = document.createElement("option");
       option.value = motivo;
       option.textContent = motivo;
@@ -1092,13 +1103,18 @@ async function guardarMovimiento() {
   // Validar que se haya seleccionado un artículo
   const articuloId = document.getElementById("movimiento-articulo-id").value;
   if (!articuloId) {
-    mostrarAlerta("Debe seleccionar un artículo antes de registrar el movimiento", "warning");
+    mostrarAlerta(
+      "Debe seleccionar un artículo antes de registrar el movimiento",
+      "warning"
+    );
     document.getElementById("movimiento-articulo-info").focus();
     return;
   }
 
   // Validar que la cantidad sea mayor a 0
-  const cantidad = parseInt(document.getElementById("movimiento-cantidad").value);
+  const cantidad = parseInt(
+    document.getElementById("movimiento-cantidad").value
+  );
   if (!cantidad || cantidad <= 0) {
     mostrarAlerta("La cantidad debe ser mayor a 0", "warning");
     document.getElementById("movimiento-cantidad").focus();
@@ -1108,7 +1124,9 @@ async function guardarMovimiento() {
   const data = {
     tipo: document.getElementById("movimiento-tipo").value,
     cantidad: cantidad,
-    precio_unitario: parseFloat(document.getElementById("movimiento-precio-unitario").value) || null,
+    precio_unitario:
+      parseFloat(document.getElementById("movimiento-precio-unitario").value) ||
+      null,
     observaciones: document.getElementById("movimiento-motivo").value,
   };
 
@@ -1118,7 +1136,7 @@ async function guardarMovimiento() {
       cantidad: data.cantidad,
       precio_unitario: data.precio_unitario,
       inventario_id: articuloId,
-      observaciones: data.observaciones
+      observaciones: data.observaciones,
     });
 
     const response = await fetch("/inventario/api/movimientos", {
@@ -1882,18 +1900,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Inicializar sistema de selección masiva
   initSeleccionMasiva({
-    checkboxSelector: '.item-checkbox',
-    selectAllId: 'select-all',
-    contadorId: 'contador-seleccion',
-    accionesId: 'acciones-masivas',
-    tablaId: 'tabla-inventario-body'
+    checkboxSelector: ".item-checkbox",
+    selectAllId: "select-all",
+    contadorId: "contador-seleccion",
+    accionesId: "acciones-masivas",
+    tablaId: "tabla-inventario-body",
   });
 
   // Listener para cambio de tipo de movimiento (mostrar/ocultar precio unitario)
   const tipoMovimientoSelect = document.getElementById("movimiento-tipo");
   if (tipoMovimientoSelect) {
-    tipoMovimientoSelect.addEventListener("change", function() {
-      const precioContainer = document.getElementById("precio-unitario-container");
+    tipoMovimientoSelect.addEventListener("change", function () {
+      const precioContainer = document.getElementById(
+        "precio-unitario-container"
+      );
       const tipo = this.value;
 
       // Mostrar precio unitario solo para entradas y regularizaciones
@@ -1917,17 +1937,17 @@ document.addEventListener("DOMContentLoaded", function () {
  */
 function marcarCriticosMasivo() {
   const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
+
   if (seleccionados.length === 0) {
-    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
     return;
   }
 
   seleccionMasiva.confirmarAccionMasiva({
-    titulo: '¿Marcar como críticos?',
+    titulo: "¿Marcar como críticos?",
     mensaje: `Se marcarán ${seleccionados.length} artículo(s) como críticos. Los artículos críticos tienen prioridad en el inventario.`,
-    textoBotonConfirmar: 'Sí, marcar como críticos',
-    colorBotonConfirmar: 'warning',
+    textoBotonConfirmar: "Sí, marcar como críticos",
+    colorBotonConfirmar: "warning",
     onConfirmar: async () => {
       let exitosos = 0;
       let fallidos = 0;
@@ -1935,9 +1955,9 @@ function marcarCriticosMasivo() {
       for (const id of seleccionados) {
         try {
           const response = await fetch(`/inventario/articulos/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ critico: true })
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ critico: true }),
           });
 
           if (response.ok) {
@@ -1952,16 +1972,22 @@ function marcarCriticosMasivo() {
       }
 
       if (exitosos > 0) {
-        mostrarAlerta(`${exitosos} artículo(s) marcado(s) como críticos correctamente`, 'success');
+        mostrarAlerta(
+          `${exitosos} artículo(s) marcado(s) como críticos correctamente`,
+          "success"
+        );
         cargarArticulos();
         cargarEstadisticas();
         seleccionMasiva.limpiarSeleccion();
       }
 
       if (fallidos > 0) {
-        mostrarAlerta(`${fallidos} artículo(s) no pudieron ser marcados`, 'danger');
+        mostrarAlerta(
+          `${fallidos} artículo(s) no pudieron ser marcados`,
+          "danger"
+        );
       }
-    }
+    },
   });
 }
 
@@ -1970,9 +1996,9 @@ function marcarCriticosMasivo() {
  */
 function ajustarStockMasivo() {
   const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
+
   if (seleccionados.length === 0) {
-    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
     return;
   }
 
@@ -2024,16 +2050,18 @@ function ajustarStockMasivo() {
   `;
 
   // Eliminar modal existente si lo hay
-  const modalExistente = document.getElementById('modalAjusteStockMasivo');
+  const modalExistente = document.getElementById("modalAjusteStockMasivo");
   if (modalExistente) {
     modalExistente.remove();
   }
 
   // Agregar modal al DOM
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-  
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
   // Mostrar modal
-  const modal = new bootstrap.Modal(document.getElementById('modalAjusteStockMasivo'));
+  const modal = new bootstrap.Modal(
+    document.getElementById("modalAjusteStockMasivo")
+  );
   modal.show();
 }
 
@@ -2041,12 +2069,12 @@ function ajustarStockMasivo() {
  * Confirmar y ejecutar ajuste de stock masivo
  */
 async function confirmarAjusteStockMasivo() {
-  const operacion = document.getElementById('ajuste-operacion').value;
-  const cantidad = parseInt(document.getElementById('ajuste-cantidad').value);
-  const motivo = document.getElementById('ajuste-motivo').value;
+  const operacion = document.getElementById("ajuste-operacion").value;
+  const cantidad = parseInt(document.getElementById("ajuste-cantidad").value);
+  const motivo = document.getElementById("ajuste-motivo").value;
 
   if (!cantidad || cantidad <= 0) {
-    mostrarAlerta('Debe ingresar una cantidad válida', 'warning');
+    mostrarAlerta("Debe ingresar una cantidad válida", "warning");
     return;
   }
 
@@ -2055,7 +2083,9 @@ async function confirmarAjusteStockMasivo() {
   let fallidos = 0;
 
   // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('modalAjusteStockMasivo'));
+  const modal = bootstrap.Modal.getInstance(
+    document.getElementById("modalAjusteStockMasivo")
+  );
   modal.hide();
 
   for (const id of seleccionados) {
@@ -2066,31 +2096,32 @@ async function confirmarAjusteStockMasivo() {
         fallidos++;
         continue;
       }
-      
+
       const articulo = await responseGet.json();
       let nuevoStock = articulo.stock_actual;
 
       // Calcular nuevo stock según operación
-      switch(operacion) {
-        case 'entrada':
+      switch (operacion) {
+        case "entrada":
           nuevoStock += cantidad;
           break;
-        case 'salida':
+        case "salida":
           nuevoStock = Math.max(0, nuevoStock - cantidad);
           break;
-        case 'establecer':
+        case "establecer":
           nuevoStock = cantidad;
           break;
       }
 
       // Actualizar stock
       const responsePut = await fetch(`/inventario/articulos/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           stock_actual: nuevoStock,
-          observaciones: motivo || `Ajuste masivo: ${operacion} de ${cantidad} unidades`
-        })
+          observaciones:
+            motivo || `Ajuste masivo: ${operacion} de ${cantidad} unidades`,
+        }),
       });
 
       if (responsePut.ok) {
@@ -2105,14 +2136,20 @@ async function confirmarAjusteStockMasivo() {
   }
 
   if (exitosos > 0) {
-    mostrarAlerta(`Stock ajustado correctamente en ${exitosos} artículo(s)`, 'success');
+    mostrarAlerta(
+      `Stock ajustado correctamente en ${exitosos} artículo(s)`,
+      "success"
+    );
     cargarArticulos();
     cargarEstadisticas();
     seleccionMasiva.limpiarSeleccion();
   }
 
   if (fallidos > 0) {
-    mostrarAlerta(`${fallidos} artículo(s) no pudieron ser actualizados`, 'danger');
+    mostrarAlerta(
+      `${fallidos} artículo(s) no pudieron ser actualizados`,
+      "danger"
+    );
   }
 }
 
@@ -2121,9 +2158,9 @@ async function confirmarAjusteStockMasivo() {
  */
 function cambiarCategoriaMasiva() {
   const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
+
   if (seleccionados.length === 0) {
-    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
     return;
   }
 
@@ -2163,29 +2200,31 @@ function cambiarCategoriaMasiva() {
   `;
 
   // Eliminar modal existente si lo hay
-  const modalExistente = document.getElementById('modalCambiarCategoriaMasivo');
+  const modalExistente = document.getElementById("modalCambiarCategoriaMasivo");
   if (modalExistente) {
     modalExistente.remove();
   }
 
   // Agregar modal al DOM
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
 
   // Cargar categorías en el selector
-  const selectCategoria = document.getElementById('nueva-categoria-masiva');
+  const selectCategoria = document.getElementById("nueva-categoria-masiva");
   if (categoriasDisponibles && categoriasDisponibles.length > 0) {
-    categoriasDisponibles.forEach(cat => {
+    categoriasDisponibles.forEach((cat) => {
       if (cat.activo) {
-        const option = document.createElement('option');
+        const option = document.createElement("option");
         option.value = cat.id;
         option.textContent = `${cat.nombre} (${cat.prefijo})`;
         selectCategoria.appendChild(option);
       }
     });
   }
-  
+
   // Mostrar modal
-  const modal = new bootstrap.Modal(document.getElementById('modalCambiarCategoriaMasivo'));
+  const modal = new bootstrap.Modal(
+    document.getElementById("modalCambiarCategoriaMasivo")
+  );
   modal.show();
 }
 
@@ -2193,10 +2232,10 @@ function cambiarCategoriaMasiva() {
  * Confirmar cambio de categoría masivo
  */
 async function confirmarCambiarCategoriaMasiva() {
-  const categoriaId = document.getElementById('nueva-categoria-masiva').value;
+  const categoriaId = document.getElementById("nueva-categoria-masiva").value;
 
   if (!categoriaId) {
-    mostrarAlerta('Debe seleccionar una categoría', 'warning');
+    mostrarAlerta("Debe seleccionar una categoría", "warning");
     return;
   }
 
@@ -2205,15 +2244,17 @@ async function confirmarCambiarCategoriaMasiva() {
   let fallidos = 0;
 
   // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('modalCambiarCategoriaMasivo'));
+  const modal = bootstrap.Modal.getInstance(
+    document.getElementById("modalCambiarCategoriaMasivo")
+  );
   modal.hide();
 
   for (const id of seleccionados) {
     try {
       const response = await fetch(`/inventario/articulos/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoria_id: parseInt(categoriaId) })
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoria_id: parseInt(categoriaId) }),
       });
 
       if (response.ok) {
@@ -2228,13 +2269,19 @@ async function confirmarCambiarCategoriaMasiva() {
   }
 
   if (exitosos > 0) {
-    mostrarAlerta(`Categoría cambiada correctamente en ${exitosos} artículo(s)`, 'success');
+    mostrarAlerta(
+      `Categoría cambiada correctamente en ${exitosos} artículo(s)`,
+      "success"
+    );
     cargarArticulos();
     seleccionMasiva.limpiarSeleccion();
   }
 
   if (fallidos > 0) {
-    mostrarAlerta(`${fallidos} artículo(s) no pudieron ser actualizados`, 'danger');
+    mostrarAlerta(
+      `${fallidos} artículo(s) no pudieron ser actualizados`,
+      "danger"
+    );
   }
 }
 
@@ -2243,9 +2290,9 @@ async function confirmarCambiarCategoriaMasiva() {
  */
 async function exportarSeleccionados() {
   const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
+
   if (seleccionados.length === 0) {
-    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
     return;
   }
 
@@ -2261,41 +2308,51 @@ async function exportarSeleccionados() {
     }
 
     if (articulos.length === 0) {
-      mostrarAlerta('No se pudieron obtener los datos de los artículos', 'danger');
+      mostrarAlerta(
+        "No se pudieron obtener los datos de los artículos",
+        "danger"
+      );
       return;
     }
 
     // Generar CSV
-    let csv = 'Código,Descripción,Categoría,Stock Actual,Stock Mínimo,Stock Máximo,Ubicación,Precio Unitario,Valor Stock,Crítico\n';
-    
-    articulos.forEach(art => {
+    let csv =
+      "Código,Descripción,Categoría,Stock Actual,Stock Mínimo,Stock Máximo,Ubicación,Precio Unitario,Valor Stock,Crítico\n";
+
+    articulos.forEach((art) => {
       csv += `"${art.codigo}",`;
       csv += `"${art.descripcion}",`;
-      csv += `"${art.categoria || ''}",`;
+      csv += `"${art.categoria || ""}",`;
       csv += `${art.stock_actual},`;
       csv += `${art.stock_minimo},`;
       csv += `${art.stock_maximo},`;
-      csv += `"${art.ubicacion || ''}",`;
+      csv += `"${art.ubicacion || ""}",`;
       csv += `${art.precio_unitario || 0},`;
       csv += `${art.valor_stock || 0},`;
-      csv += `${art.critico ? 'Sí' : 'No'}\n`;
+      csv += `${art.critico ? "Sí" : "No"}\n`;
     });
 
     // Descargar archivo
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `inventario_seleccion_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `inventario_seleccion_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    mostrarAlerta(`${articulos.length} artículo(s) exportados correctamente`, 'success');
+    mostrarAlerta(
+      `${articulos.length} artículo(s) exportados correctamente`,
+      "success"
+    );
   } catch (error) {
-    console.error('Error al exportar artículos:', error);
-    mostrarAlerta('Error al exportar artículos', 'danger');
+    console.error("Error al exportar artículos:", error);
+    mostrarAlerta("Error al exportar artículos", "danger");
   }
 }
 
@@ -2304,17 +2361,17 @@ async function exportarSeleccionados() {
  */
 function eliminarSeleccionados() {
   const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
+
   if (seleccionados.length === 0) {
-    mostrarAlerta('Debe seleccionar al menos un artículo', 'warning');
+    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
     return;
   }
 
   seleccionMasiva.confirmarAccionMasiva({
-    titulo: '¿Eliminar artículos?',
+    titulo: "¿Eliminar artículos?",
     mensaje: `⚠️ Se eliminarán permanentemente ${seleccionados.length} artículo(s) del inventario. Esta acción no se puede deshacer.`,
-    textoBotonConfirmar: 'Sí, eliminar',
-    colorBotonConfirmar: 'danger',
+    textoBotonConfirmar: "Sí, eliminar",
+    colorBotonConfirmar: "danger",
     onConfirmar: async () => {
       let exitosos = 0;
       let fallidos = 0;
@@ -2322,7 +2379,7 @@ function eliminarSeleccionados() {
       for (const id of seleccionados) {
         try {
           const response = await fetch(`/inventario/articulos/${id}`, {
-            method: 'DELETE'
+            method: "DELETE",
           });
 
           if (response.ok) {
@@ -2337,15 +2394,236 @@ function eliminarSeleccionados() {
       }
 
       if (exitosos > 0) {
-        mostrarAlerta(`${exitosos} artículo(s) eliminado(s) correctamente`, 'success');
+        mostrarAlerta(
+          `${exitosos} artículo(s) eliminado(s) correctamente`,
+          "success"
+        );
         cargarArticulos();
         cargarEstadisticas();
         seleccionMasiva.limpiarSeleccion();
       }
 
       if (fallidos > 0) {
-        mostrarAlerta(`${fallidos} artículo(s) no pudieron ser eliminados`, 'danger');
+        mostrarAlerta(
+          `${fallidos} artículo(s) no pudieron ser eliminados`,
+          "danger"
+        );
+      }
+    },
+  });
+}
+
+// ================================
+// FUNCIONES PARA ELIMINAR ARTÍCULOS CON CONFIRMACIÓN
+// ================================
+
+/**
+ * Mostrar modal para eliminar artículos seleccionados
+ */
+function mostrarModalEliminarArticulos() {
+  if (!seleccionMasiva || seleccionMasiva.seleccionados.length === 0) {
+    mostrarAlerta(
+      "Por favor, selecciona al menos un artículo para eliminar",
+      "warning"
+    );
+    return;
+  }
+
+  // Obtener información de los artículos seleccionados
+  const articulosSeleccionados = articulosActuales.filter((articulo) =>
+    seleccionMasiva.seleccionados.includes(articulo.id.toString())
+  );
+
+  // Llenar la lista de artículos a eliminar
+  const listaContainer = document.getElementById("lista-articulos-eliminar");
+  listaContainer.innerHTML = "";
+
+  if (articulosSeleccionados.length > 0) {
+    let html = '<div class="list-group list-group-flush">';
+    articulosSeleccionados.forEach((articulo) => {
+      html += `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>${articulo.codigo}</strong> - ${
+        articulo.descripcion || "Sin descripción"
+      }
+            <br><small class="text-muted">Stock: ${
+              articulo.stock_actual || 0
+            } ${articulo.unidad_medida || "UNI"}</small>
+          </div>
+          <span class="badge bg-danger rounded-pill">
+            <i class="bi bi-trash3"></i>
+          </span>
+        </div>
+      `;
+    });
+    html += "</div>";
+
+    html += `
+      <div class="mt-3 p-3 bg-warning bg-opacity-10 border border-warning rounded">
+        <strong><i class="bi bi-exclamation-triangle me-2"></i>Resumen:</strong>
+        <ul class="mb-0 mt-2">
+          <li>${articulosSeleccionados.length} artículo(s) serán eliminados permanentemente</li>
+          <li>Se eliminarán todos los movimientos asociados</li>
+          <li>Se eliminarán todos los lotes FIFO asociados</li>
+          <li>Esta acción NO se puede deshacer</li>
+        </ul>
+      </div>
+    `;
+
+    listaContainer.innerHTML = html;
+  }
+
+  // Resetear el campo de confirmación
+  const confirmacionInput = document.getElementById("confirmacion-eliminar");
+  confirmacionInput.value = "";
+
+  // Deshabilitar el botón de eliminar
+  const btnEliminar = document.getElementById("btn-confirmar-eliminar");
+  btnEliminar.disabled = true;
+
+  // Agregar listener para el campo de confirmación
+  confirmacionInput.removeEventListener(
+    "input",
+    validarConfirmacionEliminacion
+  );
+  confirmacionInput.addEventListener("input", validarConfirmacionEliminacion);
+
+  // Mostrar el modal
+  const modal = new bootstrap.Modal(
+    document.getElementById("modalEliminarArticulos")
+  );
+  modal.show();
+}
+
+/**
+ * Validar que se escribió "ELIMINAR" correctamente
+ */
+function validarConfirmacionEliminacion() {
+  const confirmacionInput = document.getElementById("confirmacion-eliminar");
+  const btnEliminar = document.getElementById("btn-confirmar-eliminar");
+
+  const textoCorrecto =
+    confirmacionInput.value.trim().toUpperCase() === "ELIMINAR";
+  btnEliminar.disabled = !textoCorrecto;
+
+  if (textoCorrecto) {
+    btnEliminar.classList.remove("btn-danger");
+    btnEliminar.classList.add("btn-danger");
+    btnEliminar.innerHTML = '<i class="bi bi-trash3 me-1"></i>¡ELIMINAR AHORA!';
+  } else {
+    btnEliminar.innerHTML =
+      '<i class="bi bi-trash3 me-1"></i>Eliminar Permanentemente';
+  }
+}
+
+/**
+ * Confirmar y ejecutar la eliminación de artículos
+ */
+async function confirmarEliminacionArticulos() {
+  const confirmacionInput = document.getElementById("confirmacion-eliminar");
+
+  if (confirmacionInput.value.trim().toUpperCase() !== "ELIMINAR") {
+    mostrarAlerta('Debe escribir "ELIMINAR" para confirmar', "danger");
+    return;
+  }
+
+  if (!seleccionMasiva || seleccionMasiva.seleccionados.length === 0) {
+    mostrarAlerta("No hay artículos seleccionados", "warning");
+    return;
+  }
+
+  const btnEliminar = document.getElementById("btn-confirmar-eliminar");
+  btnEliminar.disabled = true;
+  btnEliminar.innerHTML =
+    '<span class="spinner-border spinner-border-sm me-2"></span>Eliminando...';
+
+  try {
+    // Obtener artículos seleccionados
+    const articulosSeleccionados = articulosActuales.filter((articulo) =>
+      seleccionMasiva.seleccionados.includes(articulo.id.toString())
+    );
+
+    let exitosos = 0;
+    let fallidos = 0;
+    const errores = [];
+
+    // Eliminar artículos uno por uno
+    for (const articulo of articulosSeleccionados) {
+      try {
+        const response = await fetch(`/api/inventario/${articulo.id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          exitosos++;
+          console.log(`✅ Artículo ${articulo.codigo} eliminado`);
+        } else {
+          fallidos++;
+          errores.push(`${articulo.codigo}: ${data.message}`);
+          console.error(
+            `❌ Error eliminando ${articulo.codigo}:`,
+            data.message
+          );
+        }
+      } catch (error) {
+        fallidos++;
+        errores.push(`${articulo.codigo}: Error de conexión`);
+        console.error(`❌ Error eliminando ${articulo.codigo}:`, error);
       }
     }
-  });
+
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById("modalEliminarArticulos")
+    );
+    modal.hide();
+
+    // Mostrar resultado
+    if (exitosos > 0) {
+      mostrarAlerta(
+        `✅ ${exitosos} artículo(s) eliminado(s) correctamente`,
+        "success"
+      );
+      cargarArticulos();
+      cargarEstadisticas();
+      seleccionMasiva.limpiarSeleccion();
+    }
+
+    if (fallidos > 0) {
+      const mensajeError = `❌ ${fallidos} artículo(s) no pudieron ser eliminados:\n${errores.join(
+        "\n"
+      )}`;
+      mostrarAlerta(mensajeError, "danger");
+    }
+
+    // Si todos fueron exitosos, mostrar mensaje especial
+    if (exitosos > 0 && fallidos === 0) {
+      setTimeout(() => {
+        mostrarAlerta(
+          "🎉 Eliminación completada. El inventario ha sido actualizado.",
+          "info"
+        );
+      }, 1500);
+    }
+  } catch (error) {
+    console.error("❌ Error general en eliminación:", error);
+    mostrarAlerta("Error inesperado durante la eliminación", "danger");
+
+    // Cerrar modal en caso de error
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById("modalEliminarArticulos")
+    );
+    if (modal) modal.hide();
+  } finally {
+    // Restaurar botón
+    btnEliminar.disabled = false;
+    btnEliminar.innerHTML =
+      '<i class="bi bi-trash3 me-1"></i>Eliminar Permanentemente';
+  }
 }

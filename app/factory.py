@@ -360,6 +360,17 @@ def create_app():
     app.register_blueprint(solicitudes_admin_bp)
     app.register_blueprint(usuarios_controller)
 
+    # Registrar blueprint de limpieza de inventario
+    from limpiar_inventario_web import limpiar_bp
+
+    app.register_blueprint(limpiar_bp)
+
+    # Registrar blueprint de gestión de lotes FIFO
+    from app.blueprints.lotes import lotes_bp
+
+    app.register_blueprint(lotes_bp)
+    app.logger.info("Blueprint de gestión de lotes FIFO registrado")
+
     # Registrar blueprint de cron (tareas programadas)
     from app.routes.cron import cron_bp
 

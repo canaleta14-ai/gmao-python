@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+{% set active_page = "lotes" %}
+
+{% block title %}Crear Nuevo Lote - Sistema FIFO{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 20px 30px;
+}
+
+.form-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.form-section h5 {
+    color: #495057;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.required {
+    color: #dc3545;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.input-group-text {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+.btn-preview {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    color: white;
+    border-radius: 25px;
+    padding: 10px 25px;
+    font-weight: 500;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    border-radius: 25px;
+    padding: 12px 30px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.preview-card {
+    background: white;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.preview-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.preview-item:last-child {
+    border-bottom: none;
+}
+
+.preview-label {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.preview-value {
+    font-weight: 600;
+    color: #495057;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border: none;
+    border-radius: 10px;
+}
+
+.help-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Encabezado -->
+            <div class="card form-card">
+                <div class="form-header">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-plus-circle fa-2x mr-3"></i>
+                        <div>
+                            <h2 class="mb-1">Crear Nuevo Lote</h2>
+                            <p class="mb-0">Registre una nueva entrada de inventario con control FIFO</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Información del Sistema FIFO -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Sobre el Sistema FIFO</h6>
+                        <p class="mb-0">
+                            El sistema FIFO (First In, First Out) garantiza que los productos más antiguos 
+                            se consuman primero, mejorando la rotación de inventario y reduciendo el desperdicio.
+                        </p>
+                    </div>
+
+                    <form method="POST" id="form-crear-lote">
+                        <!-- Sección: Información del Artículo -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-box"></i> Información del Artículo</h5>
+                            
+                            <div class="form-group">
+                                <label for="inventario_id">Artículo <span class="required">*</span></label>
+                                <select class="form-control" id="inventario_id" name="inventario_id" required>
+                                    <option value="">Seleccione un artículo...</option>
+                                    {% for articulo in articulos %}
+                                    <option value="{{ articulo.id }}" 
+                                            data-codigo="{{ articulo.codigo }}"
+                                            data-nombre="{{ articulo.nombre }}"
+                                            data-unidad="{{ articulo.unidad_medida or 'UN' }}"
+                                            data-stock="{{ articulo.stock_actual or 0 }}">
+                                        {{ articulo.codigo }} - {{ articulo.nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="help-text">
+                                    Seleccione el artículo para el cual desea crear el lote
+                                </div>
+                            </div>
+
+                            <!-- Información del artículo seleccionado -->
+                            <div id="info-articulo" class="d-none">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Código del Artículo</label>
+                                            <input type="text" class="form-control" id="display-codigo" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Stock Actual</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="display-stock" readonly>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text" id="display-unidad">UN</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Información del Lote -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-tags"></i> Información del Lote</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="cantidad">Cantidad <span class="required">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="cantidad" name="cantidad" 
+                                                   step="0.01" min="0.01" required>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text" id="unidad-cantidad">UN</span>
+                                            </div>
+                                        </div>
+                                        <div class="help-text">
+                                            Cantidad que ingresa al inventario
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="precio_unitario">Precio Unitario <span class="required">*</span></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">€</span>
+                                            </div>
+                                            <input type="number" class="form-control" id="precio_unitario" name="precio_unitario" 
+                                                   step="0.01" min="0" required>
+                                        </div>
+                                        <div class="help-text">
+                                            Precio de compra por unidad
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="codigo_lote">Código de Lote</label>
+                                        <input type="text" class="form-control" id="codigo_lote" name="codigo_lote" 
+                                               placeholder="Ej: LOTE-2024-001">
+                                        <div class="help-text">
+                                            Opcional. Si no se especifica, se generará automáticamente
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fecha_vencimiento">Fecha de Vencimiento</label>
+                                        <input type="date" class="form-control" id="fecha_vencimiento" name="fecha_vencimiento">
+                                        <div class="help-text">
+                                            Opcional. Para productos perecederos
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Información Adicional -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-file-alt"></i> Información Adicional</h5>
+                            
+                            <div class="form-group">
+                                <label for="documento_origen">Documento de Origen</label>
+                                <input type="text" class="form-control" id="documento_origen" name="documento_origen" 
+                                       placeholder="Ej: Factura #F-2024-001, Orden de Compra #OC-500">
+                                <div class="help-text">
+                                    Referencia del documento que origina esta entrada
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="observaciones">Observaciones</label>
+                                <textarea class="form-control" id="observaciones" name="observaciones" 
+                                          rows="3" placeholder="Comentarios adicionales sobre este lote..."></textarea>
+                                <div class="help-text">
+                                    Información adicional relevante para este lote
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista Previa -->
+                        <div id="vista-previa" class="d-none">
+                            <div class="preview-card">
+                                <h6><i class="fas fa-eye"></i> Vista Previa del Lote</h6>
+                                <div id="preview-content">
+                                    <!-- Contenido dinámico -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="form-group mt-4">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <a href="{{ url_for('lotes.index') }}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-arrow-left"></i> Cancelar
+                                    </a>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-preview mr-3" onclick="mostrarVistaPrevia()">
+                                        <i class="fas fa-eye"></i> Vista Previa
+                                    </button>
+                                    <button type="submit" class="btn btn-submit">
+                                        <i class="fas fa-save"></i> Crear Lote
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Configurar Select2 para mejor experiencia de usuario
+    $('#inventario_id').select2({
+        placeholder: 'Busque por código o nombre...',
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Actualizar información cuando cambie el artículo
+    $('#inventario_id').on('change', function() {
+        actualizarInfoArticulo();
+    });
+
+    // Actualizar cálculos cuando cambien cantidad o precio
+    $('#cantidad, #precio_unitario').on('input', function() {
+        actualizarCalculos();
+    });
+
+    // Configurar fecha mínima (hoy)
+    const hoy = new Date().toISOString().split('T')[0];
+    $('#fecha_vencimiento').attr('min', hoy);
+
+    // Validación del formulario
+    $('#form-crear-lote').on('submit', function(e) {
+        if (!validarFormulario()) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+
+// Actualizar información del artículo seleccionado
+function actualizarInfoArticulo() {
+    const select = $('#inventario_id');
+    const selectedOption = select.find('option:selected');
+    
+    if (selectedOption.val()) {
+        const codigo = selectedOption.data('codigo');
+        const nombre = selectedOption.data('nombre');
+        const unidad = selectedOption.data('unidad');
+        const stock = selectedOption.data('stock');
+        
+        // Mostrar información
+        $('#display-codigo').val(codigo);
+        $('#display-stock').val(stock);
+        $('#display-unidad').text(unidad);
+        $('#unidad-cantidad').text(unidad);
+        
+        $('#info-articulo').removeClass('d-none');
+        
+        // Cargar información de lotes existentes
+        cargarLotesExistentes(selectedOption.val());
+    } else {
+        $('#info-articulo').addClass('d-none');
+        $('#vista-previa').addClass('d-none');
+    }
+}
+
+// Cargar lotes existentes para referencia
+function cargarLotesExistentes(inventarioId) {
+    $.get(`/lotes/api/lotes/${inventarioId}`)
+        .done(function(data) {
+            if (data.success && data.stock_info) {
+                mostrarInfoStock(data.stock_info);
+            }
+        })
+        .fail(function() {
+            console.log('No se pudo cargar información de lotes existentes');
+        });
+}
+
+// Mostrar información de stock actual
+function mostrarInfoStock(stockInfo) {
+    let infoHtml = '';
+    
+    if (stockInfo.total_lotes > 0) {
+        infoHtml = `
+            <div class="alert alert-info mt-2">
+                <small>
+                    <strong>Stock actual:</strong> ${stockInfo.cantidad_total} unidades en ${stockInfo.total_lotes} lote(s)
+                    <br>
+                    <strong>Lote más antiguo:</strong> ${stockInfo.lote_mas_antiguo || 'N/A'}
+                </small>
+            </div>
+        `;
+    }
+    
+    $('#info-articulo').append(infoHtml);
+}
+
+// Actualizar cálculos automáticos
+function actualizarCalculos() {
+    const cantidad = parseFloat($('#cantidad').val()) || 0;
+    const precio = parseFloat($('#precio_unitario').val()) || 0;
+    const total = cantidad * precio;
+    
+    // Actualizar vista previa si está visible
+    if (!$('#vista-previa').hasClass('d-none')) {
+        mostrarVistaPrevia();
+    }
+}
+
+// Mostrar vista previa del lote
+function mostrarVistaPrevia() {
+    const inventarioSelect = $('#inventario_id option:selected');
+    const cantidad = $('#cantidad').val();
+    const precio = $('#precio_unitario').val();
+    const codigoLote = $('#codigo_lote').val();
+    const fechaVencimiento = $('#fecha_vencimiento').val();
+    const documentoOrigen = $('#documento_origen').val();
+    const observaciones = $('#observaciones').val();
+    
+    if (!inventarioSelect.val() || !cantidad || !precio) {
+        mostrarMensaje('Complete los campos obligatorios para ver la vista previa', 'warning');
+        return;
+    }
+    
+    const total = (parseFloat(cantidad) * parseFloat(precio)).toFixed(2);
+    const unidad = inventarioSelect.data('unidad');
+    
+    const previewHtml = `
+        <div class="preview-item">
+            <span class="preview-label">Artículo:</span>
+            <span class="preview-value">${inventarioSelect.data('codigo')} - ${inventarioSelect.data('nombre')}</span>
+        </div>
+        <div class="preview-item">
+            <span class="preview-label">Cantidad:</span>
+            <span class="preview-value">${cantidad} ${unidad}</span>
+        </div>
+        <div class="preview-item">
+            <span class="preview-label">Precio Unitario:</span>
+            <span class="preview-value">€${precio}</span>
+        </div>
+        <div class="preview-item">
+            <span class="preview-label">Valor Total:</span>
+            <span class="preview-value"><strong>€${total}</strong></span>
+        </div>
+        ${codigoLote ? `
+        <div class="preview-item">
+            <span class="preview-label">Código de Lote:</span>
+            <span class="preview-value">${codigoLote}</span>
+        </div>
+        ` : ''}
+        ${fechaVencimiento ? `
+        <div class="preview-item">
+            <span class="preview-label">Fecha de Vencimiento:</span>
+            <span class="preview-value">${new Date(fechaVencimiento).toLocaleDateString()}</span>
+        </div>
+        ` : ''}
+        ${documentoOrigen ? `
+        <div class="preview-item">
+            <span class="preview-label">Documento de Origen:</span>
+            <span class="preview-value">${documentoOrigen}</span>
+        </div>
+        ` : ''}
+        ${observaciones ? `
+        <div class="preview-item">
+            <span class="preview-label">Observaciones:</span>
+            <span class="preview-value">${observaciones}</span>
+        </div>
+        ` : ''}
+    `;
+    
+    $('#preview-content').html(previewHtml);
+    $('#vista-previa').removeClass('d-none');
+    
+    // Scroll suave hacia la vista previa
+    $('html, body').animate({
+        scrollTop: $('#vista-previa').offset().top - 100
+    }, 500);
+}
+
+// Validar formulario antes del envío
+function validarFormulario() {
+    const inventarioId = $('#inventario_id').val();
+    const cantidad = parseFloat($('#cantidad').val());
+    const precio = parseFloat($('#precio_unitario').val());
+    
+    if (!inventarioId) {
+        mostrarMensaje('Debe seleccionar un artículo', 'error');
+        $('#inventario_id').focus();
+        return false;
+    }
+    
+    if (!cantidad || cantidad <= 0) {
+        mostrarMensaje('La cantidad debe ser mayor a cero', 'error');
+        $('#cantidad').focus();
+        return false;
+    }
+    
+    if (!precio || precio < 0) {
+        mostrarMensaje('El precio unitario no puede ser negativo', 'error');
+        $('#precio_unitario').focus();
+        return false;
+    }
+    
+    // Validar fecha de vencimiento
+    const fechaVencimiento = $('#fecha_vencimiento').val();
+    if (fechaVencimiento) {
+        const hoy = new Date();
+        const vencimiento = new Date(fechaVencimiento);
+        
+        if (vencimiento < hoy) {
+            mostrarMensaje('La fecha de vencimiento no puede ser anterior a hoy', 'error');
+            $('#fecha_vencimiento').focus();
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Función auxiliar para mostrar mensajes
+function mostrarMensaje(mensaje, tipo) {
+    const tipoClase = tipo === 'error' ? 'danger' : tipo;
+    const html = `
+        <div class="alert alert-${tipoClase} alert-dismissible fade show">
+            ${mensaje}
+            <button type="button" class="close" data-dismiss="alert">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    `;
+    
+    // Insertar antes del formulario
+    $('#form-crear-lote').before(html);
+    
+    // Scroll al mensaje
+    $('html, body').animate({
+        scrollTop: $('.alert').offset().top - 100
+    }, 300);
+    
+    // Auto-ocultar después de 5 segundos
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %}

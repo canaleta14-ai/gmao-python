@@ -3,6 +3,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import current_app
+import logging
+
+# Configurar logger específico para emails
+logger = logging.getLogger(__name__)
 
 
 def enviar_email(destinatario, asunto, contenido_html, contenido_texto=None):
@@ -16,16 +20,16 @@ def enviar_email(destinatario, asunto, contenido_html, contenido_texto=None):
         contenido_texto (str, optional): Contenido de texto plano alternativo
     """
     try:
-        # Configuración SMTP desde variables de entorno
-        mail_server = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-        mail_port = int(os.getenv("MAIL_PORT", "587"))
-        mail_use_tls = os.getenv("MAIL_USE_TLS", "True").lower() == "true"
-        mail_username = os.getenv("MAIL_USERNAME")
-        mail_password = os.getenv("MAIL_PASSWORD")
+        # Configuración SMTP desde configuración de Flask (que incluye secrets)
+        mail_server = current_app.config.get("MAIL_SERVER", "smtp.gmail.com")
+        mail_port = current_app.config.get("MAIL_PORT", 587)
+        mail_use_tls = current_app.config.get("MAIL_USE_TLS", True)
+        mail_username = current_app.config.get("MAIL_USERNAME")
+        mail_password = current_app.config.get("MAIL_PASSWORD")
 
         if not all([mail_username, mail_password]):
             raise ValueError(
-                "Configuración de email incompleta. Verifique MAIL_USERNAME y MAIL_PASSWORD en .env"
+                f"Configuración de email incompleta. MAIL_USERNAME: {'SET' if mail_username else 'MISSING'}, MAIL_PASSWORD: {'SET' if mail_password else 'MISSING'}"
             )
 
         # Crear mensaje
@@ -50,63 +54,65 @@ def enviar_email(destinatario, asunto, contenido_html, contenido_texto=None):
         msg.attach(part2)
 
         # Conectar al servidor SMTP
-        print(f"Conectando a {mail_server}:{mail_port}")
+        logger.info(f"Conectando a {mail_server}:{mail_port}")
         server = smtplib.SMTP(mail_server, mail_port, timeout=30)
         server.ehlo()
 
         if mail_use_tls:
-            print("Iniciando TLS...")
+            logger.info("Iniciando TLS...")
             server.starttls()
             server.ehlo()
 
         # Autenticar
-        print(f"Autenticando como {mail_username}")
+        logger.info(f"Autenticando como {mail_username}")
         server.login(mail_username, mail_password)
 
         # Enviar email
-        print(f"Enviando email a {destinatario}")
+        logger.info(f"Enviando email a {destinatario}")
         # Convertir a bytes con codificación UTF-8
         server.send_message(msg)
 
         # Cerrar conexión
         server.quit()
 
-        print(f"Email enviado exitosamente a {destinatario}")
+        logger.info(f"Email enviado exitosamente a {destinatario}")
         return True
 
     except smtplib.SMTPAuthenticationError as e:
         error_msg = f"Error de autenticación SMTP: {e}"
-        print(error_msg)
-        print(
+        logger.error(error_msg)
+        logger.error(
             "Para Gmail: Asegúrate de usar una contraseña de aplicación si tienes 2FA habilitado"
         )
-        print(
+        logger.error(
             "Crea una contraseña de aplicación en: https://myaccount.google.com/apppasswords"
         )
         raise ValueError(f"{error_msg}. Verifica las credenciales de Gmail.")
 
     except smtplib.SMTPConnectError as e:
         error_msg = f"Error de conexión SMTP: {e}"
-        print(error_msg)
-        print("Verifica tu conexión a internet y la configuración del servidor SMTP")
+        logger.error(error_msg)
+        logger.error(
+            "Verifica tu conexión a internet y la configuración del servidor SMTP"
+        )
         raise ValueError(f"{error_msg}. Verifica la conexión de red.")
 
     except smtplib.SMTPException as e:
         error_msg = f"Error SMTP: {e}"
-        print(error_msg)
+        logger.error(error_msg)
         if "535" in str(e):
-            print(
+            logger.error(
                 "Error 535: Credenciales incorrectas. Para Gmail, usa contraseña de aplicación."
             )
         elif "534" in str(e):
-            print(
+            logger.error(
                 "Error 534: Autenticación adicional requerida. Habilita aplicaciones menos seguras o usa contraseña de aplicación."
             )
         raise ValueError(f"{error_msg}. Revisa la configuración de Gmail.")
 
     except Exception as e:
         error_msg = f"Error enviando email a {destinatario}: {e}"
-        print(error_msg)
+        logger.error(error_msg)
         raise
 
 
@@ -186,10 +192,10 @@ def enviar_email_confirmacion(solicitud):
         """
 
         enviar_email(solicitud.email_solicitante, asunto, contenido_html)
-        print(f"Email de confirmación enviado a {solicitud.email_solicitante}")
+        logger.info(f"Email de confirmación enviado a {solicitud.email_solicitante}")
 
     except Exception as e:
-        print(f"Error enviando email de confirmación: {e}")
+        logger.error(f"Error enviando email de confirmación: {e}")
         raise
 
 
@@ -206,15 +212,15 @@ def enviar_email_notificacion_admin(solicitud):
 
         # Si no hay administradores en BD, usar email de variable de entorno
         if not admin_emails:
-            admin_email_env = os.getenv("ADMIN_EMAIL")
+            admin_email_env = current_app.config.get("ADMIN_EMAILS")
             if admin_email_env:
                 admin_emails = [admin_email_env]
-                print(
-                    f"Usando email de administrador desde variable de entorno: {admin_email_env}"
+                logger.info(
+                    f"Usando email de administrador desde configuración: {admin_email_env}"
                 )
             else:
-                print(
-                    "No se encontraron administradores con email válido y ADMIN_EMAIL no está configurado"
+                logger.warning(
+                    "No se encontraron administradores con email válido y ADMIN_EMAILS no está configurado"
                 )
                 return
 
@@ -253,10 +259,10 @@ def enviar_email_notificacion_admin(solicitud):
         for email in admin_emails:
             try:
                 enviar_email(email, asunto, contenido_html)
-                print(f"Notificación enviada a administrador: {email}")
+                logger.info(f"Notificación enviada a administrador: {email}")
             except Exception as e:
-                print(f"Error enviando notificación a {email}: {e}")
+                logger.error(f"Error enviando notificación a {email}: {e}")
 
     except Exception as e:
-        print(f"Error enviando notificación a administradores: {e}")
+        logger.error(f"Error enviando notificación a administradores: {e}")
         raise

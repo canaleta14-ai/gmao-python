@@ -5,6 +5,23 @@ from app.models import OrdenTrabajo
 recambios_bp = Blueprint("recambios", __name__)
 
 
+@recambios_bp.route("/recambios", methods=["GET"])
+def obtener_estadisticas_recambios():
+    """Obtener estadísticas generales de recambios"""
+    try:
+        # Simulamos estadísticas básicas de recambios
+        # En una implementación real, esto vendría del controlador
+        estadisticas = {
+            "total_recambios": 0,
+            "recambios_usados": 0,
+            "valor_total": 0,
+            "ordenes_con_recambios": 0,
+        }
+        return jsonify({"success": True, "data": estadisticas})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
 @recambios_bp.route("/ordenes/<int:orden_id>/recambios", methods=["GET"])
 def obtener_recambios(orden_id):
     """Obtener todos los recambios de una orden"""

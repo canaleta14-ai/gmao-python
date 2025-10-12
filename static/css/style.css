@@ -2114,7 +2114,6 @@ body.login-bg .main-content {
   min-height: 44px;
 }
 
-
 /* Links pequeños también touch-friendly */
 a.btn-sm,
 a.btn-icon {
@@ -2152,7 +2151,8 @@ a.btn-icon {
   color: #475569 !important; /* 7:1 contrast ratio */
 }
 
-small, .small {
+small,
+.small {
   color: #475569 !important;
 }
 
@@ -2260,3 +2260,52 @@ a:hover {
   color: #ffffff !important;
 }
 
+/* ============================================
+   ESTILOS PARA INTEGRACIÓN FIFO EN INVENTARIO
+   ============================================ */
+
+/* Botón FIFO integrado en inventario con mejor UX */
+#btn-fifo {
+  position: relative;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+#btn-fifo:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge de notificaciones FIFO en inventario */
+#fifo-notification-badge {
+  font-size: 0.6rem !important;
+  padding: 0.2rem 0.4rem !important;
+  min-width: 18px;
+  text-align: center;
+  font-weight: 700;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Animaciones para alertas FIFO */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes fadeInOut {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}

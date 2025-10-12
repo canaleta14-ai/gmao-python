@@ -29,6 +29,17 @@
                     <a href="{{ url_for('inventario.conteos_page') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-clipboard-check me-1"></i>Conteos
                     </a>
+                    <a href="{{ url_for('lotes.index') }}" class="btn btn-outline-warning position-relative" id="btn-fifo">
+                        <i class="bi bi-layers-fill me-1"></i>Gestión FIFO
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                              id="fifo-notification-badge" style="display: none; font-size: 0.6rem;">
+                            <span id="fifo-notification-count">0</span>
+                        </span>
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" onclick="mostrarModalEliminarArticulos()" 
+                            title="Eliminar artículos seleccionados">
+                        <i class="bi bi-trash3 me-1"></i>Eliminar Artículos
+                    </button>
                     <button type="button" class="btn btn-primary" onclick="mostrarModalNuevoArticulo()">
                         <i class="bi bi-plus-circle me-1"></i>Nuevo Artículo
                     </button>
@@ -651,6 +662,50 @@
     </div>
 </div>
 
+<!-- Modal para eliminar artículos -->
+<div class="modal fade modal-modern" id="modalEliminarArticulos" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Eliminar Artículos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>¡Atención!</strong> Esta acción eliminará permanentemente los artículos seleccionados 
+                    y todos sus datos asociados (movimientos, lotes, etc.). Esta acción NO se puede deshacer.
+                </div>
+                
+                <div id="articulos-a-eliminar">
+                    <h6>Artículos seleccionados para eliminar:</h6>
+                    <div id="lista-articulos-eliminar" class="border rounded p-3 bg-light">
+                        <!-- Se llena dinámicamente con JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <label class="form-label fw-bold">Para confirmar, escriba "ELIMINAR":</label>
+                    <input type="text" class="form-control" id="confirmacion-eliminar" 
+                           placeholder="Escriba ELIMINAR para confirmar" autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar" 
+                        onclick="confirmarEliminacionArticulos()" disabled>
+                    <i class="bi bi-trash3 me-1"></i>Eliminar Permanentemente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -659,4 +714,5 @@
 <script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventario-categorias.js') }}"></script>
 <script src="{{ url_for('static', filename='js/diagnostico-autocomplete.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fifo-inventario-badge.js') }}"></script>
 {% endblock %}

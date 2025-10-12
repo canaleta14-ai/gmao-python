@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-10-12T09:30:51.394166",
+  "url_base": "https://mantenimiento-470311.ew.r.appspot.com",
+  "apis_probadas": 3,
+  "apis_ok": 3,
+  "apis_error": 0,
+  "porcentaje_exito": 100.0,
+  "detalles": [
+    {
+      "name": "API Ordenes Stats",
+      "url": "/ordenes/api/estadisticas",
+      "status_code": 302,
+      "success": true,
+      "response_size": 273
+    },
+    {
+      "name": "API Categorias Stats",
+      "url": "/categorias/estadisticas",
+      "status_code": 200,
+      "success": true,
+      "response_size": 58
+    },
+    {
+      "name": "API Recambios",
+      "url": "/api/recambios",
+      "status_code": 200,
+      "success": true,
+      "response_size": 109
+    }
+  ]
+}

@@ -58,7 +58,7 @@ def ordenes_page():
         return Response(html, mimetype="text/html")
 
 
-@ordenes_bp.route("/api", methods=["GET"]) 
+@ordenes_bp.route("/api", methods=["GET"])
 @login_required
 def listar_ordenes_api():
     """API para listar órdenes de trabajo"""
@@ -87,25 +87,32 @@ def listar_ordenes_api():
             return jsonify(ordenes)
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         # Fallback seguro para no romper el dashboard
         if request.args.get("page") is not None:
             # Estructura de paginación vacía
             page_val = int(request.args.get("page", 1))
             per_page_val = int(request.args.get("per_page", 10))
-            return jsonify({
-                "items": [],
-                "page": page_val,
-                "per_page": per_page_val,
-                "total": 0,
-                "pages": 0,
-                "has_next": False,
-                "has_prev": False,
-            }), 200
+            return (
+                jsonify(
+                    {
+                        "items": [],
+                        "page": page_val,
+                        "per_page": per_page_val,
+                        "total": 0,
+                        "pages": 0,
+                        "has_next": False,
+                        "has_prev": False,
+                    }
+                ),
+                200,
+            )
         # Listado tradicional vacío
         return jsonify([]), 200
 
-@ordenes_bp.route("/api", methods=["POST"]) 
+
+@ordenes_bp.route("/api", methods=["POST"])
 @login_required
 @csrf.exempt
 def crear_orden_api_alias():
@@ -119,7 +126,9 @@ def crear_orden_api_alias():
 
         # Normalizar descripción desde 'descripcion' o 'titulo'
         descripcion = data.get("descripcion") or data.get("titulo")
-        if not descripcion or (isinstance(descripcion, str) and descripcion.strip() == ""):
+        if not descripcion or (
+            isinstance(descripcion, str) and descripcion.strip() == ""
+        ):
             return jsonify({"error": "La descripción es requerida"}), 400
 
         # Tipo por defecto si no se proporciona
@@ -251,7 +260,7 @@ def actualizar_orden_api(id):
         return jsonify({"error": "Solicitud inválida"}), 400
 
 
-@ordenes_bp.route("/api/<int:id>/estado", methods=["PUT", "PATCH"]) 
+@ordenes_bp.route("/api/<int:id>/estado", methods=["PUT", "PATCH"])
 @login_required
 @csrf.exempt
 def actualizar_estado_orden(id):
@@ -271,7 +280,8 @@ def actualizar_estado_orden(id):
     except Exception as e:
         return jsonify({"error": "Solicitud inválida"}), 400
 
-@ordenes_bp.route("/api/<int:id>/asignar", methods=["PATCH"]) 
+
+@ordenes_bp.route("/api/<int:id>/asignar", methods=["PATCH"])
 @login_required
 @csrf.exempt
 def asignar_tecnico_orden(id):
@@ -340,6 +350,7 @@ def obtener_activos():
         return jsonify(activos)
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         # Fallback seguro: lista vacía para no romper autocompletado
         return jsonify([]), 200
@@ -369,8 +380,27 @@ def obtener_estadisticas():
         stats.setdefault("por_estado", stats.get("por_estado", {}))
         return jsonify(stats), 200
     except Exception as e:
+        return jsonify({"error": "Error al obtener estadísticas de órdenes"}), 500
+
+
+@ordenes_bp.route("/api/estadisticas", methods=["GET"])
+@login_required
+def obtener_estadisticas_api():
+    """API endpoint para estadísticas de órdenes"""
+    try:
+        stats = obtener_estadisticas_ordenes()
+        if not isinstance(stats, dict):
+            stats = {}
+        # Asegurar estructura mínima esperada por tests/consumidores
+        stats.setdefault("total", stats.get("total", 0))
+        stats.setdefault("por_estado", stats.get("por_estado", {}))
+        return jsonify(stats), 200
+    except Exception as e:
         # Fallback robusto para evitar romper UI: 200 con estructura mínima
-        return jsonify({"total": 0, "por_estado": {}, "success": False, "error": str(e)}), 200
+        return (
+            jsonify({"total": 0, "por_estado": {}, "success": False, "error": str(e)}),
+            200,
+        )
 
 
 @ordenes_bp.route("/exportar-csv", methods=["GET"])
@@ -452,19 +482,19 @@ def descargar_archivo_adjunto(archivo_id):
     """Descargar archivo adjunto"""
     try:
         resultado = descargar_archivo(archivo_id)
-        
+
         if resultado["type"] == "redirect":
             # Archivo en Cloud Storage - redirigir a URL firmada
             return redirect(resultado["url"])
         elif resultado["type"] == "local":
             # Archivo local - usar send_file
             return send_file(
-                resultado["path"], 
-                as_attachment=True, 
-                download_name=resultado["filename"]
+                resultado["path"],
+                as_attachment=True,
+                download_name=resultado["filename"],
             )
         else:
             return jsonify({"error": "Tipo de archivo no soportado"}), 400
-            
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
