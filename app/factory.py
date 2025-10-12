@@ -370,7 +370,7 @@ def create_app():
     from app.routes.actualizar_fecha import actualizar_fecha_bp
 
     # Registrar blueprint de inicialización (temporal)
-    from app.routes.init_database import init_bp
+    from app.routes.init_db import init_bp
 
     app.register_blueprint(cron_bp)
     app.register_blueprint(diagnostico_bp)
