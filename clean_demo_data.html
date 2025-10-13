@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar Datos de Prueba - GMAO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Limpieza de Datos de Prueba
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Atención:</strong> Esta acción eliminará todos los datos de prueba/demo del sistema de forma permanente.
+                        </div>
+
+                        <div id="loading" class="text-center" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Analizando datos de prueba...</p>
+                        </div>
+
+                        <div id="results" style="display: none;">
+                            <!-- Los resultados se mostrarán aquí -->
+                        </div>
+
+                        <div id="actions" class="text-center">
+                            <button type="button" class="btn btn-primary me-3" onclick="identificarDatos()">
+                                <i class="bi bi-search me-1"></i>
+                                Identificar Datos de Prueba
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="eliminarDatos()" disabled id="btnEliminar">
+                                <i class="bi bi-trash me-1"></i>
+                                Eliminar Datos de Prueba
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let datosEncontrados = null;
+
+        async function identificarDatos() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const btnEliminar = document.getElementById('btnEliminar');
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+
+            try {
+                const response = await fetch('/admin/clean-demo-data', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    datosEncontrados = data.detalle;
+                    
+                    let html = '<div class="alert alert-info">';
+                    html += '<h5>Datos de Prueba Encontrados:</h5>';
+                    html += `<p><i class="bi bi-box me-1"></i> <strong>Artículos de Inventario:</strong> ${data.datos_encontrados.inventario}</p>`;
+                    html += `<p><i class="bi bi-person me-1"></i> <strong>Usuarios:</strong> ${data.datos_encontrados.usuarios}</p>`;
+                    html += '</div>';
+
+                    if (data.datos_encontrados.inventario > 0 || data.datos_encontrados.usuarios > 0) {
+                        html += '<div class="row">';
+                        
+                        // Mostrar artículos de inventario
+                        if (data.detalle.inventario.length > 0) {
+                            html += '<div class="col-md-6">';
+                            html += '<h6>Artículos de Inventario:</h6>';
+                            html += '<ul class="list-group list-group-flush">';
+                            data.detalle.inventario.forEach(item => {
+                                html += `<li class="list-group-item"><code>${item.codigo}</code> - ${item.descripcion}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+
+                        // Mostrar usuarios
+                        if (data.detalle.usuarios.length > 0) {
+                            html += '<div class="col-md-6">';
+                            html += '<h6>Usuarios:</h6>';
+                            html += '<ul class="list-group list-group-flush">';
+                            data.detalle.usuarios.forEach(item => {
+                                html += `<li class="list-group-item"><code>${item.username}</code> - ${item.nombre}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+
+                        html += '</div>';
+                        btnEliminar.disabled = false;
+                    } else {
+                        html += '<div class="alert alert-success">✅ No se encontraron datos de prueba para eliminar.</div>';
+                        btnEliminar.disabled = true;
+                    }
+
+                    results.innerHTML = html;
+                } else {
+                    results.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="alert alert-danger">❌ Error de conexión: ${error.message}</div>`;
+            }
+
+            loading.style.display = 'none';
+            results.style.display = 'block';
+        }
+
+        async function eliminarDatos() {
+            if (!datosEncontrados) {
+                alert('Primero debe identificar los datos de prueba');
+                return;
+            }
+
+            const confirmacion = prompt('Para confirmar la eliminación, escriba "CONFIRMAR":');
+            if (confirmacion !== 'CONFIRMAR') {
+                alert('Eliminación cancelada');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const btnEliminar = document.getElementById('btnEliminar');
+
+            loading.querySelector('p').textContent = 'Eliminando datos de prueba...';
+            loading.style.display = 'block';
+            btnEliminar.disabled = true;
+
+            try {
+                const response = await fetch('/admin/clean-demo-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        confirmar: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = '<div class="alert alert-success">';
+                    html += '<h5>✅ Datos de Prueba Eliminados Correctamente</h5>';
+                    html += '<ul>';
+                    html += `<li>Artículos eliminados: ${data.resultados.inventario_eliminado}</li>`;
+                    html += `<li>Usuarios eliminados: ${data.resultados.usuarios_eliminados}</li>`;
+                    html += `<li>Movimientos eliminados: ${data.resultados.movimientos_eliminados}</li>`;
+                    html += `<li>Recambios eliminados: ${data.resultados.recambios_eliminados}</li>`;
+                    html += '</ul>';
+                    html += '</div>';
+                    
+                    results.innerHTML = html;
+                    datosEncontrados = null;
+                } else {
+                    results.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="alert alert-danger">❌ Error de conexión: ${error.message}</div>`;
+            }
+
+            loading.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
