@@ -176,6 +176,17 @@ function configurarEventosConteos() {
             elemento.addEventListener('change', aplicarFiltrosConteos);
         }
     });
+
+    // Inicializar autocompletados de usuarios para todos los modales
+    // Usar setTimeout para asegurar que los elementos estén en el DOM
+    setTimeout(async () => {
+        // Llenar datalists como fallback
+        await llenarDatalistUsuarios('usuarios-datalist-periodo');
+        await llenarDatalistUsuarios('usuarios-datalist-editar');
+        
+        // Inicializar autocompletado para período
+        inicializarAutocompletadoUsuarioPeriodo();
+    }, 100);
 }
 
 // Aplicar filtros
@@ -498,8 +509,38 @@ function crearDatalistUsuarios(input) {
 }
 
 // Función para llenar datalist de usuarios
-function llenarDatalistUsuarios(datalistId) {
-    const usuarios = [
+async function llenarDatalistUsuarios(datalistId) {
+    console.log(`🔄 Llenando datalist: ${datalistId}`);
+    
+    const datalist = document.getElementById(datalistId);
+    if (!datalist) {
+        console.warn(`⚠️ No se encontró el datalist: ${datalistId}`);
+        return;
+    }
+
+    try {
+        // Intentar obtener usuarios de la API
+        const response = await fetch('/usuarios/api/autocomplete?q=');
+        if (response.ok) {
+            const usuarios = await response.json();
+            
+            datalist.innerHTML = '';
+            usuarios.forEach(usuario => {
+                const option = document.createElement('option');
+                option.value = usuario.username;
+                option.textContent = `${usuario.username} - ${usuario.nombre}`;
+                datalist.appendChild(option);
+            });
+            
+            console.log(`✅ Datalist ${datalistId} llenado con ${usuarios.length} usuarios de la API`);
+            return;
+        }
+    } catch (error) {
+        console.warn(`⚠️ Error al cargar usuarios de la API: ${error.message}`);
+    }
+
+    // Fallback con datos estáticos
+    const usuariosEstaticos = [
         { username: 'admin', nombre: 'Administrador', rol: 'admin' },
         { username: 'supervisor', nombre: 'Supervisor', rol: 'supervisor' },
         { username: 'tecnico1', nombre: 'Técnico Principal', rol: 'tecnico' },
@@ -507,16 +548,15 @@ function llenarDatalistUsuarios(datalistId) {
         { username: 'operador', nombre: 'Operador', rol: 'operador' }
     ];
 
-    const datalist = document.getElementById(datalistId);
-    if (datalist) {
-        datalist.innerHTML = '';
-        usuarios.forEach(usuario => {
-            const option = document.createElement('option');
-            option.value = usuario.username;
-            option.textContent = `${usuario.username} - ${usuario.nombre}`;
-            datalist.appendChild(option);
-        });
-    }
+    datalist.innerHTML = '';
+    usuariosEstaticos.forEach(usuario => {
+        const option = document.createElement('option');
+        option.value = usuario.username;
+        option.textContent = `${usuario.username} - ${usuario.nombre}`;
+        datalist.appendChild(option);
+    });
+    
+    console.log(`✅ Datalist ${datalistId} llenado con datos estáticos`);
 }
 
 // Inicializar autocompletado de usuarios para período

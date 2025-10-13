@@ -604,3 +604,51 @@ def validar_email():
 
     except Exception as e:
         return jsonify({"error": f"Error al validar email: {str(e)}"}), 500
+
+
+@usuarios_bp.route("/api/autocomplete", methods=["GET"])
+@login_required
+def autocomplete_usuarios():
+    """API para autocompletado de usuarios"""
+    try:
+        from app.models.usuario import Usuario
+        from app.extensions import db
+
+        # Obtener parámetro de búsqueda
+        q = request.args.get("q", "").strip()
+        
+        # Si no hay parámetro de búsqueda o es muy corto, devolver usuarios activos limitados
+        if not q or len(q) < 2:
+            usuarios = Usuario.query.filter_by(activo=True).limit(10).all()
+        else:
+            # Buscar usuarios activos que coincidan con la búsqueda
+            search_term = f"%{q}%"
+            usuarios = Usuario.query.filter(
+                db.and_(
+                    Usuario.activo == True,
+                    db.or_(
+                        Usuario.username.ilike(search_term),
+                        Usuario.nombre.ilike(search_term),
+                        Usuario.email.ilike(search_term)
+                    )
+                )
+            ).limit(10).all()
+
+        # Formatear resultados para autocompletado
+        resultados = []
+        for usuario in usuarios:
+            resultados.append({
+                "id": usuario.id,
+                "username": usuario.username,
+                "nombre": usuario.nombre,
+                "email": usuario.email,
+                "rol": usuario.rol,
+                "value": usuario.username,  # Valor que se mostrará en el input
+                "label": f"{usuario.username} - {usuario.nombre}"  # Etiqueta descriptiva
+            })
+
+        return jsonify(resultados)
+
+    except Exception as e:
+        print(f"Error en autocomplete_usuarios: {str(e)}")
+        return jsonify({"error": str(e)}), 500
