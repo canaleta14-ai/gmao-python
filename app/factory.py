@@ -478,19 +478,14 @@ def create_app(config_name=None):
     # Registrar blueprint de inicialización (temporal)
     from app.routes.init_db import init_bp
 
-    # Registrar blueprint de limpieza de datos demo
-    from app.routes.cleanup import cleanup_bp
-
     app.register_blueprint(cron_bp)
     app.register_blueprint(diagnostico_bp)
     app.register_blueprint(actualizar_fecha_bp)
     app.register_blueprint(init_bp)
-    app.register_blueprint(cleanup_bp)
     app.logger.info("Blueprint de cron registrado")
     app.logger.info("Blueprint de diagnóstico registrado")
     app.logger.info("Blueprint de actualizar fecha registrado")
     app.logger.info("Blueprint de inicialización registrado")
-    app.logger.info("Blueprint de limpieza de datos demo registrado")
 
     # Configurar documentación Swagger/OpenAPI para API V2
     try:
