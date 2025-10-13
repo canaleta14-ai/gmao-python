@@ -70,6 +70,80 @@ def clean_demo_data():
             "error": f"Error interno: {str(e)}"
         }), 500
 
+@cleanup_bp.route("/execute-cleanup-now", methods=["GET"])
+def execute_cleanup_now():
+    """Endpoint de emergencia para ejecutar limpieza - UN SOLO USO"""
+    
+    # Verificar token de seguridad en la URL
+    token = request.args.get("token")
+    expected_token = "cleanup-emergency-token-2025"
+    
+    if token != expected_token:
+        return jsonify({
+            "success": False,
+            "error": "Token de acceso no válido"
+        }), 403
+    
+    try:
+        # Verificar si ya se ejecutó (crear un archivo marcador)
+        import os
+        marker_file = "/tmp/cleanup_executed.marker"
+        
+        if os.path.exists(marker_file):
+            return jsonify({
+                "success": False,
+                "error": "La limpieza ya fue ejecutada anteriormente"
+            }), 400
+        
+        # Ejecutar limpieza
+        logger.info("Ejecutando limpieza de emergencia de datos de prueba")
+        
+        datos_demo = identificar_datos_demo()
+        
+        total_items = len(datos_demo['inventario']) + len(datos_demo['usuarios'])
+        
+        if total_items == 0:
+            # Crear marcador de ejecución
+            with open(marker_file, 'w') as f:
+                f.write("cleanup executed - no data found")
+            
+            return jsonify({
+                "success": True,
+                "message": "No se encontraron datos de prueba para eliminar",
+                "resultados": {
+                    "inventario_eliminado": 0,
+                    "usuarios_eliminados": 0,
+                    "movimientos_eliminados": 0,
+                    "recambios_eliminados": 0
+                }
+            })
+        
+        # Eliminar datos
+        resultados = eliminar_datos_demo(datos_demo, dry_run=False)
+        
+        # Crear marcador de ejecución
+        with open(marker_file, 'w') as f:
+            f.write(f"cleanup executed - {total_items} items removed")
+        
+        logger.info(f"Limpieza completada: {resultados}")
+        
+        return jsonify({
+            "success": True,
+            "message": "Datos de prueba eliminados correctamente",
+            "datos_encontrados": {
+                "inventario": len(datos_demo['inventario']),
+                "usuarios": len(datos_demo['usuarios'])
+            },
+            "resultados": resultados
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en execute_cleanup_now: {e}")
+        return jsonify({
+            "success": False,
+            "error": f"Error interno: {str(e)}"
+        }), 500
+
 def identificar_datos_demo():
     """Identificar todos los datos de prueba en el sistema"""
     datos_demo = {
