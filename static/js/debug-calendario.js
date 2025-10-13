@@ -76,8 +76,7 @@
         }
         
         // 3. Verificar logs del servidor
-        console.log('\n\n📝 Para ver los logs del servidor, ejecuta en terminal PowerShell:');
-        console.log('gcloud app logs read --limit=50 --project=gmao-sistema-2025 | Select-String -Pattern "DEBUG Calendario"');
+        console.log('\n\n📝 Para ver los logs del servidor, revisa los logs de la aplicación local');
         
     } catch (error) {
         console.error('❌ Error ejecutando debug:', error);

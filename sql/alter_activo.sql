@@ -1,5 +1,5 @@
 -- Agregar columnas faltantes en la tabla activo para alinear con el modelo
--- Ejecutar en Cloud SQL (PostgreSQL)
+-- Ejecutar en PostgreSQL
 
 ALTER TABLE activo ADD COLUMN IF NOT EXISTS tipo VARCHAR(50);
 ALTER TABLE activo ADD COLUMN IF NOT EXISTS marca VARCHAR(100);

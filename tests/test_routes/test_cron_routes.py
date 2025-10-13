@@ -37,17 +37,17 @@ class TestCronRoutes:
             data = response.get_json()
             assert "error" in data
 
-            # Con header incorrecto - debe fallar
+            # Sin header de autorización - debe fallar
             response = client.post(
                 "/api/cron/generar-ordenes-preventivas",
-                headers={"X-Appengine-Cron": "false"},
+                headers={"X-Cron-Auth": "false"},
             )
             assert response.status_code == 403
 
             # Con header correcto - debe funcionar
             response = client.post(
                 "/api/cron/generar-ordenes-preventivas",
-                headers={"X-Appengine-Cron": "true"},
+                headers={"X-Cron-Auth": "true"},
             )
             assert response.status_code == 200
             data = response.get_json()
@@ -149,7 +149,7 @@ class TestCronRoutes:
 
             # Con header correcto - debe funcionar
             response = client.post(
-                "/api/cron/verificar-alertas", headers={"X-Appengine-Cron": "true"}
+                "/api/cron/verificar-alertas", headers={"X-Cron-Auth": "true"}
             )
             assert response.status_code == 200
 

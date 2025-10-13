@@ -1,5 +1,5 @@
-# Requirements mínimos para producción en App Engine
-# Sin versiones específicas en dependencias para evitar conflictos
+# Requirements para aplicación Flask GMAO
+# Configuración para despliegue local/tradicional
 
 # Core Flask
 Flask==3.0.3
@@ -22,10 +22,6 @@ cryptography==46.0.1
 
 # WSGI Server
 gunicorn==23.0.0
-
-# Google Cloud
-google-cloud-secret-manager==2.24.0
-google-cloud-storage==2.18.2
 
 # Utilities
 python-dateutil==2.9.0.post0

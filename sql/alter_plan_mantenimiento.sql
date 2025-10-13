@@ -1,5 +1,5 @@
 -- Agregar columnas faltantes en plan_mantenimiento para alinear con el modelo
--- Ejecutar en Cloud SQL (PostgreSQL)
+-- Ejecutar en PostgreSQL
 
 ALTER TABLE plan_mantenimiento
     ADD COLUMN IF NOT EXISTS tipo_mantenimiento VARCHAR(50);

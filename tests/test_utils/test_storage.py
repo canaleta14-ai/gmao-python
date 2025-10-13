@@ -33,7 +33,6 @@ class DummyFile:
 def test_upload_and_list_local(tmp_path, app):
     # Forzar entorno local
     os.environ.pop("GAE_ENV", None)
-    os.environ.pop("GOOGLE_CLOUD_PROJECT", None)
     os.environ.pop("K_SERVICE", None)
 
     folder = "ordenes"
@@ -78,7 +77,6 @@ def test_upload_too_large_is_rejected(app):
 def test_list_files_with_prefix_and_uploads_paths(tmp_path, app):
     # Entorno local
     os.environ.pop("GAE_ENV", None)
-    os.environ.pop("GOOGLE_CLOUD_PROJECT", None)
     os.environ.pop("K_SERVICE", None)
 
     folder = "ordenes"

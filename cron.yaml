@@ -1,7 +1,0 @@
-cron:
-# Generación diaria de órdenes preventivas
-- description: "Generar órdenes de mantenimiento preventivo"
-  url: /api/cron/generar-ordenes-preventivas
-  schedule: every day 00:00
-  timezone: Europe/Madrid
-  target: default
