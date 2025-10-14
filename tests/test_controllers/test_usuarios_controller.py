@@ -10,7 +10,10 @@ def test_get_usuarios_api_authenticated(authenticated_client):
     resp = authenticated_client.get("/usuarios/api")
     assert resp.status_code == 200
     data = resp.get_json()
-    assert isinstance(data, list)
+    # El endpoint devuelve un objeto con metadata y lista de usuarios
+    assert isinstance(data, dict)
+    assert "usuarios" in data
+    assert isinstance(data["usuarios"], list)
 
 
 def test_get_usuarios_api_unauthenticated(client):

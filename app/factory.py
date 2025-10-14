@@ -83,13 +83,10 @@ def create_app(config_name=None):
             ],
         )
 
-    # Configuración de SECRET_KEY desde Secret Manager (producción) o .env (desarrollo)
-    from app.utils.secrets import get_secret_or_env
-
-    app.config["SECRET_KEY"] = get_secret_or_env(
-        secret_id="gmao-secret-key",
-        env_var="SECRET_KEY",
-        default="dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION",
+    # Configuración de SECRET_KEY desde .env (desarrollo local)
+    app.config["SECRET_KEY"] = os.getenv(
+        "SECRET_KEY",
+        "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION"
     )
 
     # Log de advertencia si se usa clave por defecto
@@ -207,8 +204,14 @@ def create_app(config_name=None):
                 f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
             )
     else:
-        # Configuración SQLite para desarrollo
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///../instance/database.db"
+        # Configuración SQLite para desarrollo (ruta absoluta dentro de 'instance')
+        instance_dir = os.path.join(base_dir, "instance")
+        try:
+            os.makedirs(instance_dir, exist_ok=True)
+        except OSError:
+            pass
+        db_path = os.path.join(instance_dir, "database.db")
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 
     # Forzar uso de SQLite en memoria para tests unitarios ejecutados con pytest
     # Prioriza memoria incluso si existe variable de entorno del URI
@@ -242,10 +245,8 @@ def create_app(config_name=None):
     app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS", "True").lower() == "true"
     app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME", "")
 
-    # MAIL_PASSWORD desde Secret Manager (producción) o .env (desarrollo)
-    app.config["MAIL_PASSWORD"] = get_secret_or_env(
-        secret_id="gmao-mail-password", env_var="MAIL_PASSWORD", default=""
-    )
+    # MAIL_PASSWORD desde .env (desarrollo local)
+    app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD", "")
 
     app.config["ADMIN_EMAILS"] = os.getenv("ADMIN_EMAILS", "")
 
@@ -421,6 +422,10 @@ def create_app(config_name=None):
     except ImportError as e:
         app.logger.warning(f"Blueprint de performance no disponible: {e}")
 
+    # Registrar blueprints opcionales (optimizaciones/features avanzados)
+    # Se pueden deshabilitar los warnings con SHOW_OPTIONAL_BLUEPRINT_WARNINGS=false
+    show_optional_warnings = os.getenv("SHOW_OPTIONAL_BLUEPRINT_WARNINGS", "false").lower() == "true"
+    
     # Registrar blueprint de FIFO optimizado (OPTIMIZACIÓN)
     try:
         from app.blueprints.fifo_optimizado_bp import fifo_optimizado_bp
@@ -428,7 +433,10 @@ def create_app(config_name=None):
         app.register_blueprint(fifo_optimizado_bp)
         app.logger.info("Blueprint de FIFO optimizado registrado")
     except ImportError as e:
-        app.logger.warning(f"Blueprint de FIFO optimizado no disponible: {e}")
+        if show_optional_warnings:
+            app.logger.warning(f"Blueprint de FIFO optimizado no disponible: {e}")
+        else:
+            app.logger.debug(f"Blueprint de FIFO optimizado no disponible: {e}")
 
     # Registrar blueprint de inventario optimizado (INTEGRACIÓN COMPLETA)
     try:
@@ -441,9 +449,10 @@ def create_app(config_name=None):
             "Blueprint de inventario optimizado documentado (v2) registrado"
         )
     except ImportError as e:
-        app.logger.warning(
-            f"Blueprint de inventario optimizado documentado no disponible: {e}"
-        )
+        if show_optional_warnings:
+            app.logger.warning(f"Blueprint de inventario optimizado documentado no disponible: {e}")
+        else:
+            app.logger.debug(f"Blueprint de inventario optimizado documentado no disponible: {e}")
         # Fallback al blueprint original si el documentado no está disponible
         try:
             from app.blueprints.inventario_optimizado_bp import inventario_optimizado_bp
@@ -453,9 +462,10 @@ def create_app(config_name=None):
                 "Blueprint de inventario optimizado (v2) registrado como fallback"
             )
         except ImportError as e2:
-            app.logger.warning(
-                f"Blueprint de inventario optimizado no disponible: {e2}"
-            )
+            if show_optional_warnings:
+                app.logger.warning(f"Blueprint de inventario optimizado no disponible: {e2}")
+            else:
+                app.logger.debug(f"Blueprint de inventario optimizado no disponible: {e2}")
 
     # Registrar blueprint de dashboard de monitoreo
     try:
@@ -464,10 +474,12 @@ def create_app(config_name=None):
         app.register_blueprint(dashboard_bp)
         app.logger.info("Blueprint de dashboard de monitoreo registrado")
     except ImportError as e:
-        app.logger.warning(f"Blueprint de dashboard no disponible: {e}")
+        if show_optional_warnings:
+            app.logger.warning(f"Blueprint de dashboard no disponible: {e}")
+        else:
+            app.logger.debug(f"Blueprint de dashboard no disponible: {e}")
 
-    # Registrar blueprint de cron (tareas programadas)
-    from app.routes.cron import cron_bp
+    # Registrar blueprint de cron (tareas programadas) - ELIMINADO: sin Google Cloud Scheduler
 
     # Registrar blueprint de diagnóstico
     from app.routes.diagnostico import diagnostico_bp
@@ -478,11 +490,11 @@ def create_app(config_name=None):
     # Registrar blueprint de inicialización (temporal)
     from app.routes.init_db import init_bp
 
-    app.register_blueprint(cron_bp)
+    # app.register_blueprint(cron_bp)  # ELIMINADO: sin Google Cloud Scheduler
     app.register_blueprint(diagnostico_bp)
     app.register_blueprint(actualizar_fecha_bp)
     app.register_blueprint(init_bp)
-    app.logger.info("Blueprint de cron registrado")
+    # app.logger.info("Blueprint de cron registrado")  # ELIMINADO
     app.logger.info("Blueprint de diagnóstico registrado")
     app.logger.info("Blueprint de actualizar fecha registrado")
     app.logger.info("Blueprint de inicialización registrado")

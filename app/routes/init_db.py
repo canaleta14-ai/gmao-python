@@ -13,40 +13,64 @@ init_bp = Blueprint("init_db", __name__)
 def init_database():
     """Inicializa la base de datos con todas las tablas y usuario admin"""
     try:
-        print("🚀 Iniciando inicialización de base de datos...")
+        from sqlalchemy import text
+        import logging
 
-        # 1. Verificar conexión
-        result = db.session.execute(db.text("SELECT current_database(), current_user"))
-        db_info = result.fetchone()
+        logging.info("Iniciando inicializacion de base de datos...")
+
+        # Detectar backend (sqlite/postgresql)
+        backend = db.engine.url.get_backend_name()
+
+        # 1. Verificar conexión y datos básicos del motor
+        if backend in ("postgresql", "postgres"):
+            result = db.session.execute(text("SELECT current_database(), current_user"))
+            db_info = result.fetchone()
+            db_name = db_info[0] if db_info else "unknown"
+            db_user = db_info[1] if db_info else "unknown"
+        else:
+            # SQLite no tiene current_database/current_user
+            result = db.session.execute(text("PRAGMA database_list"))
+            pragma_info = result.fetchall()
+            db_name = pragma_info[0][2] if pragma_info else "sqlite"
+            db_user = "sqlite"
 
         # 2. Verificar tablas existentes
-        result = db.session.execute(
-            db.text(
+        if backend in ("postgresql", "postgres"):
+            result = db.session.execute(
+                text(
+                    """
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public'
+                    ORDER BY table_name
                 """
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public'
-                ORDER BY table_name
-            """
+                )
             )
-        )
-        tablas_antes = [row[0] for row in result.fetchall()]
+            tablas_antes = [row[0] for row in result.fetchall()]
+        else:
+            # SQLite: listar tablas desde sqlite_master
+            result = db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"))
+            tablas_antes = [row[0] for row in result.fetchall()]
 
         # 3. Crear todas las tablas
         db.create_all()
 
         # 4. Verificar tablas después de creación
-        result = db.session.execute(
-            db.text(
+        if backend in ("postgresql", "postgres"):
+            result = db.session.execute(
+                text(
+                    """
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public'
+                    ORDER BY table_name
                 """
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public'
-                ORDER BY table_name
-            """
+                )
             )
-        )
-        tablas_despues = [row[0] for row in result.fetchall()]
+            tablas_despues = [row[0] for row in result.fetchall()]
+        else:
+            result = db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"))
+            tablas_despues = [row[0] for row in result.fetchall()]
 
         # 5. Crear usuario admin si no existe
         admin_existente = Usuario.query.filter_by(username="admin").first()
@@ -74,7 +98,7 @@ def init_database():
         tablas_verificar = ["usuario", "activo", "plan_mantenimiento", "orden_trabajo"]
         for tabla in tablas_verificar:
             try:
-                result = db.session.execute(db.text(f"SELECT COUNT(*) FROM {tabla}"))
+                result = db.session.execute(text(f"SELECT COUNT(*) FROM {tabla}"))
                 count = result.scalar()
                 verificaciones[tabla] = count
             except Exception as e:
@@ -84,8 +108,8 @@ def init_database():
             {
                 "success": True,
                 "message": "Base de datos inicializada correctamente",
-                "database": db_info[0] if db_info else "unknown",
-                "user": db_info[1] if db_info else "unknown",
+                "database": db_name,
+                "user": db_user,
                 "tablas_antes": len(tablas_antes),
                 "tablas_despues": len(tablas_despues),
                 "tablas_creadas": list(set(tablas_despues) - set(tablas_antes)),

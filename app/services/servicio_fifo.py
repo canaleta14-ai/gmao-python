@@ -16,6 +16,79 @@ logger = logging.getLogger(__name__)
 
 
 class ServicioFIFO:
+    @staticmethod
+    def consumir_fifo(
+        inventario_id: int,
+        cantidad_total: float,
+        orden_trabajo_id: Optional[int] = None,
+        documento_referencia: Optional[str] = None,
+        usuario_id: Optional[str] = None,
+        observaciones: Optional[str] = None,
+    ) -> Tuple[List[Tuple[LoteInventario, float]], float]:
+        """
+        Consume stock siguiendo FIFO (First In, First Out).
+
+        Args:
+            inventario_id: ID del artículo de inventario
+            cantidad_total: Cantidad total a consumir
+            orden_trabajo_id: ID de la orden de trabajo (opcional)
+            documento_referencia: Documento de referencia
+            usuario_id: ID del usuario que realiza el consumo
+            observaciones: Observaciones adicionales
+
+        Returns:
+            Tuple[List[Tuple[LoteInventario, float]], float]:
+            Lista de (lote, cantidad_consumida) y cantidad no disponible
+        """
+        try:
+            # Validar que el artículo existe
+            inventario = db.session.get(Inventario, inventario_id)
+            if not inventario:
+                raise ValueError(
+                    f"Artículo de inventario {inventario_id} no encontrado"
+                )
+
+            # Obtener lotes disponibles ordenados por FIFO
+            lotes_consumo, cantidad_faltante = LoteInventario.obtener_lotes_fifo(
+                inventario_id, cantidad_total
+            )
+
+            if cantidad_faltante > 0:
+                logger.warning(
+                    f"Stock insuficiente para artículo {inventario_id}: "
+                    f"solicitado {cantidad_total}, faltante {cantidad_faltante}"
+                )
+
+            # Registrar consumos
+            consumos_realizados = []
+            for lote, cantidad_a_consumir in lotes_consumo:
+                cantidad_consumida = lote.consumir(cantidad_a_consumir)
+
+                if cantidad_consumida > 0:
+                    # Registrar el movimiento del lote
+                    movimiento_lote = MovimientoLote(
+                        lote_id=lote.id,
+                        orden_trabajo_id=orden_trabajo_id,
+                        tipo_movimiento="consumo",
+                        cantidad=Decimal(str(cantidad_consumida)),
+                        documento_referencia=documento_referencia,
+                        observaciones=observaciones,
+                        usuario_id=usuario_id,
+                    )
+                    db.session.add(movimiento_lote)
+
+                    consumos_realizados.append((lote, cantidad_consumida))
+
+                    logger.info(
+                        f"Consumido {cantidad_consumida} del lote {lote.id} "
+                        f"(queda {lote.cantidad_actual})"
+                    )
+
+            return consumos_realizados, cantidad_faltante
+
+        except Exception as e:
+            logger.error(f"Error al consumir FIFO: {str(e)}")
+            raise
     """Servicio para gestionar operaciones FIFO en el inventario"""
 
     @staticmethod
@@ -49,19 +122,23 @@ class ServicioFIFO:
         """
         try:
             # Validar que el artículo existe
-            inventario = Inventario.query.get(inventario_id)
+            inventario = db.session.get(Inventario, inventario_id)
             if not inventario:
                 raise ValueError(
                     f"Artículo de inventario {inventario_id} no encontrado"
                 )
 
-            # Crear el lote
+            # Validar cantidad positiva
+            if cantidad is None or float(cantidad) <= 0:
+                raise ValueError("La cantidad del lote debe ser positiva")
+
             lote = LoteInventario(
                 inventario_id=inventario_id,
                 codigo_lote=codigo_lote,
                 fecha_vencimiento=fecha_vencimiento,
                 cantidad_inicial=Decimal(str(cantidad)),
                 cantidad_actual=Decimal(str(cantidad)),
+                cantidad_reservada=Decimal("0.0"),
                 precio_unitario=Decimal(str(precio_unitario)),
                 costo_total=Decimal(str(cantidad)) * Decimal(str(precio_unitario)),
                 documento_origen=documento_origen,
@@ -69,46 +146,14 @@ class ServicioFIFO:
                 usuario_creacion=usuario_id,
                 observaciones=observaciones,
             )
-
             db.session.add(lote)
-            db.session.flush()  # Para obtener el ID
-
-            logger.info(
-                f"Lote creado: {lote.id} - {cantidad} unidades de artículo {inventario_id}"
-            )
+            db.session.commit()
             return lote
 
         except Exception as e:
             logger.error(f"Error al crear lote: {str(e)}")
             raise
-
-    @staticmethod
-    def consumir_fifo(
-        inventario_id: int,
-        cantidad_total: float,
-        orden_trabajo_id: Optional[int] = None,
-        documento_referencia: Optional[str] = None,
-        usuario_id: Optional[str] = None,
-        observaciones: Optional[str] = None,
-    ) -> Tuple[List[Tuple[LoteInventario, float]], float]:
-        """
-        Consume stock siguiendo FIFO (First In, First Out).
-
-        Args:
-            inventario_id: ID del artículo de inventario
-            cantidad_total: Cantidad total a consumir
-            orden_trabajo_id: ID de la orden de trabajo (opcional)
-            documento_referencia: Documento de referencia
-            usuario_id: ID del usuario que realiza el consumo
-            observaciones: Observaciones adicionales
-
-        Returns:
-            Tuple[List[Tuple[LoteInventario, float]], float]:
-            Lista de (lote, cantidad_consumida) y cantidad no disponible
-        """
-        try:
-            # Validar que el artículo existe
-            inventario = Inventario.query.get(inventario_id)
+            inventario = db.session.get(Inventario, inventario_id)
             if not inventario:
                 raise ValueError(
                     f"Artículo de inventario {inventario_id} no encontrado"

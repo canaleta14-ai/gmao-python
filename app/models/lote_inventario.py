@@ -29,13 +29,13 @@ class LoteInventario(db.Model):
 
     # Cantidades
     cantidad_inicial = db.Column(
-        db.Numeric(10, 2), nullable=False
+        db.Numeric(12, 4), nullable=False
     )  # Cantidad original del lote
     cantidad_actual = db.Column(
-        db.Numeric(10, 2), nullable=False
+        db.Numeric(12, 4), nullable=False
     )  # Cantidad disponible actual
     cantidad_reservada = db.Column(
-        db.Numeric(10, 2), default=0
+        db.Numeric(12, 4), default=0
     )  # Cantidad reservada para órdenes
 
     # Información económica
@@ -196,6 +196,7 @@ class MovimientoLote(db.Model):
     )  # consumo, reserva, liberacion, ajuste
     cantidad = db.Column(db.Numeric(10, 2), nullable=False)
     fecha = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    fecha_movimiento = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Referencias
     documento_referencia = db.Column(db.String(50), nullable=True)

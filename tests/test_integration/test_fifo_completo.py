@@ -262,14 +262,18 @@ class TestFIFOIntegracionCompleta:
 
         # VERIFICACIONES SEGUNDO CONSUMO
         assert faltante_2 == 0
-        assert len(lotes_consumidos_2) == 2
+        assert len(lotes_consumidos_2) == 3
 
-        # Verificar orden FIFO mantenido
-        assert lotes_consumidos_2[0][0].id == lotes[0].id  # Resto del primer lote
-        assert lotes_consumidos_2[0][1] == 20  # 100 - 80 = 20
-
-        assert lotes_consumidos_2[1][0].id == lotes[1].id  # Parte del segundo lote
-        assert lotes_consumidos_2[1][1] == 130  # 150 - 20 = 130
+        # Verificar orden FIFO mantenido y cantidades consumidas
+        # Primer lote: 20 restantes
+        assert lotes_consumidos_2[0][0].id == lotes[0].id
+        assert lotes_consumidos_2[0][1] == 20
+        # Segundo lote: 100 completos
+        assert lotes_consumidos_2[1][0].id == lotes[1].id
+        assert lotes_consumidos_2[1][1] == 100
+        # Tercer lote: 30 restantes
+        assert lotes_consumidos_2[2][0].id == lotes[2].id
+        assert lotes_consumidos_2[2][1] == 30
 
         # Verificar estados finales
         db_session.refresh(lotes[0])
@@ -277,8 +281,8 @@ class TestFIFOIntegracionCompleta:
         db_session.refresh(lotes[2])
 
         assert lotes[0].cantidad_actual == 0  # Completamente consumido
-        assert lotes[1].cantidad_actual == -30  # 100 - 130 = -30 (sobreconsumido)
-        assert lotes[2].cantidad_actual == 100  # Sin tocar
+        assert lotes[1].cantidad_actual == 0  # Completamente consumido
+        assert lotes[2].cantidad_actual == 70  # 100 - 30 = 70
 
     def test_fifo_trazabilidad_movimientos(self, db_session, inventario_test):
         """

@@ -10,4 +10,7 @@ def test_usuarios_api_filters_authenticated(authenticated_client):
     )
     assert resp.status_code == 200
     data = resp.get_json()
-    assert isinstance(data, list)
+    # El endpoint devuelve un objeto con metadata y lista de usuarios
+    assert isinstance(data, dict)
+    assert "usuarios" in data
+    assert isinstance(data["usuarios"], list)
