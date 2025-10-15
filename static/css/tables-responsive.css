@@ -1,0 +1,458 @@
+/* ============================================
+   TABLAS RESPONSIVE MEJORADAS - GMAO SISTEMA
+   Mejoras para elementos th y visualización responsive
+   ============================================ */
+
+/* ========== ESTILOS BASE PARA TABLAS ========== */
+.table-responsive {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: white;
+}
+
+.table {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  table-layout: auto;
+  width: 100%;
+}
+
+/* ========== ESTILOS MEJORADOS PARA TH ========== */
+.table th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.75rem 0.5rem;
+  vertical-align: middle;
+  border-bottom: 2px solid #dee2e6;
+  border-top: none;
+  position: relative;
+  
+  /* Mejorar legibilidad del texto */
+  white-space: normal !important;
+  word-wrap: break-word;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  
+  /* Ancho flexible en lugar de fijo */
+  min-width: 80px;
+  max-width: none;
+}
+
+.table th i {
+  margin-right: 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* ========== ESTILOS PARA TD ========== */
+.table td {
+  padding: 0.6rem 0.5rem;
+  vertical-align: middle;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f1f3f4;
+  
+  /* Mejorar legibilidad del texto */
+  white-space: normal !important;
+  word-wrap: break-word;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+/* ========== CLASES DE PRIORIDAD PARA COLUMNAS ========== */
+/* Columnas críticas - siempre visibles */
+.col-critical {
+  min-width: 100px !important;
+}
+
+/* Columnas importantes - ocultar en móviles pequeños */
+.col-important {
+  min-width: 120px;
+}
+
+/* Columnas opcionales - ocultar en tablets y móviles */
+.col-optional {
+  min-width: 140px;
+}
+
+/* Columnas de detalles - solo en desktop */
+.col-detail {
+  min-width: 160px;
+}
+
+/* ========== RESPONSIVE BREAKPOINTS ========== */
+
+/* Móviles muy pequeños (hasta 480px) */
+@media (max-width: 480px) {
+  .table-responsive {
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.4rem 0.3rem;
+    font-size: 0.75rem;
+  }
+  
+  .table th {
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+  
+  /* Ocultar columnas opcionales y de detalle */
+  .col-optional,
+  .col-detail {
+    display: none !important;
+  }
+  
+  /* Hacer que las columnas importantes sean más estrechas */
+  .col-important {
+    min-width: 80px;
+    max-width: 100px;
+  }
+  
+  .col-critical {
+    min-width: 70px;
+    max-width: 90px;
+  }
+  
+  /* Botones de acción más pequeños */
+  .table .btn-group-sm .btn,
+  .action-btn {
+    padding: 0.15rem 0.25rem !important;
+    font-size: 0.65rem !important;
+    margin: 0.1rem;
+  }
+  
+  /* Badges más pequeños */
+  .badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
+  }
+}
+
+/* Móviles (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .table-responsive {
+    font-size: 0.8rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.8rem;
+  }
+  
+  .table th {
+    font-size: 0.75rem;
+  }
+  
+  /* Ocultar solo columnas de detalle */
+  .col-detail {
+    display: none !important;
+  }
+  
+  /* Ajustar anchos */
+  .col-optional {
+    min-width: 100px;
+    max-width: 120px;
+  }
+  
+  .col-important {
+    min-width: 90px;
+    max-width: 110px;
+  }
+  
+  .col-critical {
+    min-width: 80px;
+    max-width: 100px;
+  }
+}
+
+/* Tablets (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .table th {
+    font-size: 0.8rem;
+  }
+  
+  /* Mostrar todas las columnas excepto algunas de detalle específicas */
+  .col-detail.hide-tablet {
+    display: none !important;
+  }
+  
+  /* Ajustar anchos para tablets */
+  .col-detail {
+    min-width: 120px;
+    max-width: 140px;
+  }
+  
+  .col-optional {
+    min-width: 110px;
+    max-width: 130px;
+  }
+}
+
+/* Desktop (992px en adelante) */
+@media (min-width: 992px) {
+  .table th,
+  .table td {
+    padding: 0.75rem 0.6rem;
+  }
+  
+  /* Restaurar anchos normales en desktop */
+  .col-critical,
+  .col-important,
+  .col-optional,
+  .col-detail {
+    min-width: auto;
+    max-width: none;
+  }
+}
+
+/* ========== ESTILOS ESPECÍFICOS POR TABLA ========== */
+
+/* Tabla de Activos */
+#tabla-activos-main th:nth-child(1) { /* Checkbox */
+  width: 40px !important;
+  min-width: 40px !important;
+}
+
+#tabla-activos-main th:nth-child(2) { /* Código */
+  min-width: 80px;
+}
+
+#tabla-activos-main th:nth-child(3) { /* Departamento */
+  min-width: 120px;
+}
+
+#tabla-activos-main th:nth-child(4) { /* Activo */
+  min-width: 150px;
+}
+
+#tabla-activos-main th:nth-child(5) { /* Tipo */
+  min-width: 80px;
+}
+
+#tabla-activos-main th:nth-child(6) { /* Ubicación */
+  min-width: 100px;
+}
+
+#tabla-activos-main th:nth-child(7) { /* Proveedor */
+  min-width: 100px;
+}
+
+#tabla-activos-main th:nth-child(8) { /* Estado */
+  min-width: 80px;
+}
+
+#tabla-activos-main th:nth-child(9) { /* Prioridad */
+  min-width: 80px;
+}
+
+#tabla-activos-main th:nth-child(10) { /* Último Mant. */
+  min-width: 100px;
+}
+
+#tabla-activos-main th:nth-child(11) { /* Acciones */
+  width: 140px !important;
+  min-width: 140px !important;
+}
+
+/* Tabla de Órdenes */
+.table th:has(i.bi-hash) { /* Número */
+  min-width: 80px;
+}
+
+.table th:has(i.bi-calendar) { /* Fecha */
+  min-width: 100px;
+}
+
+.table th:has(i.bi-cpu) { /* Activo */
+  min-width: 150px;
+}
+
+.table th:has(i.bi-gear) { /* Tipo */
+  min-width: 80px;
+}
+
+.table th:has(i.bi-circle) { /* Estado */
+  min-width: 80px;
+}
+
+/* Tabla de Inventario */
+#tabla-inventario th:nth-child(1) { /* Checkbox */
+  width: 40px !important;
+  min-width: 40px !important;
+}
+
+#tabla-inventario th:nth-child(2) { /* Código */
+  min-width: 80px;
+}
+
+#tabla-inventario th:nth-child(3) { /* Artículo */
+  min-width: 150px;
+}
+
+#tabla-inventario th:nth-child(4) { /* Categoría */
+  min-width: 100px;
+}
+
+#tabla-inventario th:nth-child(5) { /* Stock */
+  min-width: 70px;
+}
+
+#tabla-inventario th:nth-child(6) { /* Mín/Máx */
+  min-width: 80px;
+}
+
+#tabla-inventario th:nth-child(7) { /* Ubicación */
+  min-width: 100px;
+}
+
+#tabla-inventario th:nth-child(8) { /* Precio */
+  min-width: 80px;
+}
+
+#tabla-inventario th:nth-child(9) { /* Valor */
+  min-width: 80px;
+}
+
+#tabla-inventario th:nth-child(10) { /* Estado */
+  min-width: 80px;
+}
+
+#tabla-inventario th:nth-child(11) { /* Acciones */
+  width: 140px !important;
+  min-width: 140px !important;
+}
+
+/* Tabla de Usuarios */
+#tabla-usuarios th:nth-child(1) { /* Checkbox */
+  width: 40px !important;
+  min-width: 40px !important;
+}
+
+#tabla-usuarios th:nth-child(2) { /* ID */
+  min-width: 50px;
+}
+
+#tabla-usuarios th:nth-child(3) { /* Código */
+  min-width: 80px;
+}
+
+#tabla-usuarios th:nth-child(4) { /* Nombre */
+  min-width: 150px;
+}
+
+#tabla-usuarios th:nth-child(5) { /* Teléfono */
+  min-width: 100px;
+}
+
+#tabla-usuarios th:nth-child(6) { /* Cargo */
+  min-width: 100px;
+}
+
+#tabla-usuarios th:nth-child(7) { /* Rol */
+  min-width: 80px;
+}
+
+#tabla-usuarios th:nth-child(8) { /* Estado */
+  min-width: 80px;
+}
+
+#tabla-usuarios th:nth-child(9) { /* Fecha Ingreso */
+  min-width: 100px;
+}
+
+#tabla-usuarios th:nth-child(10) { /* Acciones */
+  width: 140px !important;
+  min-width: 140px !important;
+}
+
+/* ========== MEJORAS PARA SCROLL HORIZONTAL ========== */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ========== INDICADOR DE SCROLL ========== */
+.table-responsive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.table-responsive:hover::after {
+  opacity: 1;
+}
+
+/* ========== MEJORAS DE ACCESIBILIDAD ========== */
+.table th {
+  cursor: default;
+}
+
+.table th:hover {
+  background-color: #e9ecef;
+  transition: background-color 0.2s ease;
+}
+
+/* Focus visible para navegación por teclado */
+.table th:focus-visible,
+.table td:focus-visible {
+  outline: 2px solid #0d6efd;
+  outline-offset: -2px;
+}
+
+/* ========== ANIMACIONES SUAVES ========== */
+.table th,
+.table td {
+  transition: all 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table th,
+  .table td,
+  .table tbody tr {
+    transition: none;
+  }
+}
