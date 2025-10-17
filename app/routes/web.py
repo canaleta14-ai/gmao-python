@@ -18,7 +18,7 @@ from app.controllers.usuarios_controller import autenticar_usuario
 from app.models.orden_trabajo import (
     OrdenTrabajo,
 )  # Ensure this model is defined correctly and properly initialized
-from app.extensions import db  # Importar db correctamente desde extensions
+from app.extensions import db, csrf  # Importar db y csrf correctamente desde extensions
 from app.models.activo import Activo
 from app.models.inventario import Inventario
 from app.models.plan_mantenimiento import PlanMantenimiento
@@ -378,6 +378,7 @@ def index():
 
 
 @web_bp.route("/login", methods=["GET", "POST"])
+@csrf.exempt  # Eximir CSRF para el endpoint de login
 def login():
     """Endpoint de login con soporte JSON y formulario.
 

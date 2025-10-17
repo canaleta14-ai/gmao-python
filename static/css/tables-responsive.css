@@ -20,6 +20,18 @@
   width: 100%;
 }
 
+/* Columnas iguales para listados generales */
+.table.table-even {
+  table-layout: fixed !important;
+}
+
+.table.table-even th,
+.table.table-even td {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
 /* ========== ESTILOS MEJORADOS PARA TH ========== */
 .table th {
   background-color: #f8f9fa;
