@@ -12,9 +12,6 @@ let perPage = 10;
 let paginacionActivos;
 let filtrosActivos = {}; // Variable global para mantener filtros activos
 
-// Variable para selección masiva
-let seleccionMasiva;
-
 // Función de debounce para optimizar búsquedas
 function debounce(func, wait) {
   let timeout;
@@ -28,31 +25,23 @@ function debounce(func, wait) {
   };
 }
 
+// Función nombrada para la paginación (necesaria para que funcione el onclick)
+function cargarActivosPaginados(page) {
+  cargarActivos(page, filtrosActivos);
+}
+
 // Inicialización cuando se carga la página
 document.addEventListener("DOMContentLoaded", function () {
-  // Crear instancia de paginación con wrapper para preservar filtros
+  // Crear instancia de paginación con función nombrada
   paginacionActivos = createPagination(
     "paginacion-activos",
-    (page) => {
-      cargarActivos(page, filtrosActivos);
-    },
+    cargarActivosPaginados,
     {
       perPage: 10,
       showInfo: true,
       showSizeSelector: true,
     }
   );
-
-  // Inicializar sistema de selección masiva
-  seleccionMasiva = initSeleccionMasiva({
-    selectAllId: "select-all",
-    tableBodyId: "tabla-activos",
-    contadorId: "contador-seleccion",
-    accionesMasivasId: "acciones-masivas",
-    entityName: "activos",
-    entityNameSingular: "activo",
-    getData: () => activos,
-  });
 
   // Solo cargar datos esenciales al inicio
   cargarDepartamentos();
@@ -148,14 +137,14 @@ function llenarSelectDepartamentos() {
 // Cargar proveedores desde el servidor
 async function cargarProveedores() {
   try {
-    console.log("🔄 [ACTIVOS] Cargando proveedores desde API...");
-    console.log("🌐 [ACTIVOS] URL base:", window.location.origin);
+    console.log("ð📄 [ACTIVOS] Cargando proveedores desde API...");
+    console.log("🌐 [ACTIVOS] URL base:", window.location.origin);
 
     // Verificar que el elemento select existe
     const select = document.getElementById("nuevo-proveedor");
     if (!select) {
       console.error(
-        "❌ [ACTIVOS] No se encontró el elemento select con ID 'nuevo-proveedor'"
+        "—Œ [ACTIVOS] No se encontró el elemento select con ID 'nuevo-proveedor'"
       );
       return;
     }
@@ -182,12 +171,12 @@ async function cargarProveedores() {
         proveedores.length,
         "total"
       );
-      console.log("📄 [ACTIVOS] Datos completos:", proveedores);
+      console.log("ðŸ“„ [ACTIVOS] Datos completos:", proveedores);
 
       // Verificar estructura de datos
       if (Array.isArray(proveedores) && proveedores.length > 0) {
         console.log(
-          "📋 [ACTIVOS] Primer proveedor estructura:",
+          "ðŸ“‹ [ACTIVOS] Primer proveedor estructura:",
           proveedores[0]
         );
       }
@@ -196,7 +185,7 @@ async function cargarProveedores() {
     } else {
       const errorText = await response.text();
       console.error(
-        "❌ [ACTIVOS] Error en la respuesta del servidor:",
+        "—Œ [ACTIVOS] Error en la respuesta del servidor:",
         response.status,
         response.statusText,
         errorText
@@ -205,10 +194,10 @@ async function cargarProveedores() {
     }
   } catch (error) {
     console.error(
-      "❌ [ACTIVOS] Error de conexión al cargar proveedores:",
+      "—Œ [ACTIVOS] Error de conexión al cargar proveedores:",
       error
     );
-    console.error("❌ [ACTIVOS] Stack trace:", error.stack);
+    console.error("—Œ [ACTIVOS] Stack trace:", error.stack);
     mostrarErrorProveedores(
       "Error de conexión. Verifique que el servidor esté funcionando"
     );
@@ -219,7 +208,7 @@ async function cargarProveedores() {
 function mostrarErrorProveedores(mensaje) {
   const select = document.getElementById("nuevo-proveedor");
   if (select) {
-    select.innerHTML = `<option value="">⚠️ ${mensaje}</option>`;
+    select.innerHTML = `<option value="">⚠  ${mensaje}</option>`;
 
     // Mostrar notificación toast si está disponible
     if (typeof mostrarMensaje === "function") {
@@ -231,14 +220,14 @@ function mostrarErrorProveedores(mensaje) {
 // Llenar el select de proveedores
 function llenarSelectProveedores(proveedores) {
   console.log(
-    "🔄 [ACTIVOS] Iniciando llenarSelectProveedores con:",
+    "ð📄 [ACTIVOS] Iniciando llenarSelectProveedores con:",
     proveedores
   );
 
   const select = document.getElementById("nuevo-proveedor");
   if (!select) {
     console.error(
-      "❌ [ACTIVOS] No se encontró el elemento select con ID 'nuevo-proveedor'"
+      "—Œ [ACTIVOS] No se encontró el elemento select con ID 'nuevo-proveedor'"
     );
     return;
   }
@@ -246,33 +235,33 @@ function llenarSelectProveedores(proveedores) {
   // Limpiar opciones existentes
   select.innerHTML = '<option value="">Seleccionar proveedor...</option>';
   console.log(
-    "🧹 [ACTIVOS] Select limpiado, opciones actuales:",
+    "ðŸ§¹ [ACTIVOS] Select limpiado, opciones actuales:",
     select.children.length
   );
 
   // Verificar si proveedores es un array válido
   if (!Array.isArray(proveedores)) {
     console.error(
-      "❌ [ACTIVOS] Los proveedores no son un array válido:",
+      "—Œ [ACTIVOS] Los proveedores no son un array válido:",
       typeof proveedores,
       proveedores
     );
     select.innerHTML =
-      '<option value="">⚠️ Error: datos inválidos de proveedores</option>';
+      '<option value="">⚠  Error: datos inválidos de proveedores</option>';
     return;
   }
 
   // Filtrar proveedores activos únicamente
   const proveedoresActivos = proveedores.filter((proveedor) => {
     console.log(
-      `🔍 [ACTIVOS] Verificando proveedor: ${proveedor.nombre} - activo: ${
+      `ðŸ” [ACTIVOS] Verificando proveedor: ${proveedor.nombre} - activo: ${
         proveedor.activo
       } (tipo: ${typeof proveedor.activo})`
     );
     return proveedor.activo === true;
   });
   console.log(
-    "📋 [ACTIVOS] Proveedores activos encontrados:",
+    "ðŸ“‹ [ACTIVOS] Proveedores activos encontrados:",
     proveedoresActivos.length,
     "de",
     proveedores.length,
@@ -281,11 +270,11 @@ function llenarSelectProveedores(proveedores) {
 
   if (proveedoresActivos.length === 0) {
     select.innerHTML =
-      '<option value="">⚠️ No hay proveedores activos disponibles</option>';
-    console.warn("⚠️ [ACTIVOS] No se encontraron proveedores activos");
+      '<option value="">⚠  No hay proveedores activos disponibles</option>';
+    console.warn("⚠  [ACTIVOS] No se encontraron proveedores activos");
 
     // Mostrar todos los proveedores para debug
-    console.log("🐛 [ACTIVOS] Debug - Todos los proveedores recibidos:");
+    console.log("ðŸ› [ACTIVOS] Debug - Todos los proveedores recibidos:");
     proveedores.forEach((p, index) => {
       console.log(
         `  ${index + 1}. ${p.nombre} - activo: ${p.activo} (${typeof p.activo})`
@@ -354,10 +343,10 @@ async function cargarActivos(page = 1, filtros = {}) {
     });
 
     const url = `/activos/api?${params}`;
-    console.log("🌐 URL de petición:", url);
+    console.log("🌐 URL de petición:", url);
 
     const response = await fetch(url);
-    console.log("📥 Respuesta recibida - Status:", response.status);
+    console.log("ðŸ“¥ Respuesta recibida - Status:", response.status);
 
     // Manejar redirección de autenticación
     if (response.status === 401 || response.status === 302) {
@@ -381,11 +370,11 @@ async function cargarActivos(page = 1, filtros = {}) {
       // Renderizar paginación
       paginacionActivos.render(data.page, data.per_page, data.total);
     } else {
-      console.error("❌ Error al cargar activos - Status:", response.status);
+      console.error("—Œ Error al cargar activos - Status:", response.status);
       mostrarMensaje("Error al cargar activos", "danger");
     }
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("—Œ Error:", error);
     mostrarMensaje("Error de conexión al cargar activos", "danger");
   } finally {
     mostrarCargando(false);
@@ -395,12 +384,12 @@ async function cargarActivos(page = 1, filtros = {}) {
 // Mostrar activos en la tabla
 function mostrarActivos(activosAMostrar) {
   console.log(
-    "📋 mostrarActivos() - Mostrando",
+    "ðŸ“‹ mostrarActivos() - Mostrando",
     activosAMostrar.length,
     "activos"
   );
   if (activosAMostrar.length > 0) {
-    console.log("📄 Primer activo:", activosAMostrar[0]);
+    console.log("ðŸ“„ Primer activo:", activosAMostrar[0]);
   }
 
   const tbody = document.getElementById("tabla-activos");
@@ -409,7 +398,7 @@ function mostrarActivos(activosAMostrar) {
   tbody.innerHTML = "";
 
   if (activosAMostrar.length === 0) {
-    console.log("⚠️ No hay activos para mostrar");
+    console.log("⚠  No hay activos para mostrar");
     tbody.innerHTML = `
             <tr>
                 <td colspan="11" class="text-center text-muted py-4">
@@ -433,11 +422,6 @@ function mostrarActivos(activosAMostrar) {
     };
 
     fila.innerHTML = `
-            <td>
-                <input type="checkbox" class="form-check-input row-checkbox" data-id="${
-                  activo.id
-                }">
-            </td>
             <td>
                 <span class="codigo-activo">${
                   escapeHtml(activo.codigo) || "Sin código"
@@ -570,7 +554,7 @@ function mostrarModalNuevoActivo() {
   modoEdicionActivo = false; // Desactivar modo edición
   limpiarFormularioActivo();
 
-  console.log("🔄 Abriendo modal de nuevo activo - Cargando proveedores...");
+  console.log("ð📄 Abriendo modal de nuevo activo - Cargando proveedores...");
 
   // Siempre cargar proveedores cuando se abre el modal
   cargarProveedores();
@@ -825,27 +809,27 @@ async function crearActivo() {
 // Filtrar activos
 // Filtrar activos con búsqueda del lado del servidor
 function filtrarActivos() {
-  console.log("🔍 filtrarActivos() ejecutado");
+  console.log("ðŸ” filtrarActivos() ejecutado");
   const filtros = {};
 
   // Filtro de búsqueda
   const buscar = document.getElementById("filtro-buscar").value.trim();
   if (buscar) {
     filtros.q = buscar;
-    console.log("📝 Filtro de búsqueda:", buscar);
+    console.log("ðŸ“ Filtro de búsqueda:", buscar);
   }
 
   // Filtros de selección
   const departamento = document.getElementById("filtro-departamento").value;
   if (departamento) {
     filtros.departamento = departamento;
-    console.log("🏢 Filtro de departamento:", departamento);
+    console.log("ðŸ¢ Filtro de departamento:", departamento);
   }
 
   const tipo = document.getElementById("filtro-tipo").value;
   if (tipo) {
     filtros.tipo = tipo;
-    console.log("🔧 Filtro de tipo:", tipo);
+    console.log("ðŸ”§ Filtro de tipo:", tipo);
   }
 
   const estado = document.getElementById("filtro-estado").value;
@@ -857,16 +841,16 @@ function filtrarActivos() {
   const prioridad = document.getElementById("filtro-prioridad").value;
   if (prioridad) {
     filtros.prioridad = prioridad;
-    console.log("⚡ Filtro de prioridad:", prioridad);
+    console.log("⚠¡ Filtro de prioridad:", prioridad);
   }
 
   // Guardar filtros globalmente
   filtrosActivos = filtros;
-  console.log("💾 Filtros guardados:", filtros);
+  console.log("ðŸ’¾ Filtros guardados:", filtros);
 
   // Reiniciar a la primera página y cargar con filtros
   currentPage = 1;
-  console.log("🔄 Cargando activos con filtros...");
+  console.log("ð📄 Cargando activos con filtros...");
   cargarActivos(1, filtros);
 }
 
@@ -906,6 +890,15 @@ async function verActivo(id) {
 
 async function editarActivo(id) {
   try {
+    // Cerrar el modal de detalles si está abierto
+    const modalDetalles = document.getElementById("modalVerActivo");
+    if (modalDetalles) {
+      const modalDetallesInstance = bootstrap.Modal.getInstance(modalDetalles);
+      if (modalDetallesInstance) {
+        modalDetallesInstance.hide();
+      }
+    }
+
     modoEdicionActivo = true; // Activar modo edición
     const response = await fetch(`/activos/api/${id}`);
     if (response.ok) {
@@ -918,11 +911,15 @@ async function editarActivo(id) {
       }
 
       // Asegurar que los proveedores estén cargados antes de llenar el formulario
-      console.log("🔄 Editando activo - Cargando proveedores...");
+      console.log("📄 Editando activo - Cargando proveedores...");
       await cargarProveedores();
 
       llenarFormularioEdicion(activo);
-      mostrarModalEdicion();
+
+      // Esperar un pequeño delay para que el modal de detalles se cierre completamente
+      setTimeout(() => {
+        mostrarModalEdicion();
+      }, 300);
     } else {
       mostrarMensaje("Error al cargar los datos del activo", "danger");
       modoEdicionActivo = false; // Desactivar modo edición si hay error
@@ -966,7 +963,7 @@ function mostrarDetallesActivo(activo) {
                 <p><strong>Modelo:</strong> ${
                   activo.modelo || "No especificado"
                 }</p>
-                <p><strong>N° Serie:</strong> ${
+                <p><strong>NÂ° Serie:</strong> ${
                   activo.numero_serie || "No especificado"
                 }</p>
                 <p><strong>Proveedor:</strong> ${
@@ -1268,7 +1265,7 @@ function mostrarCargando(mostrar) {
   }
 }
 
-// ========== GESTIÓN DE MANUALES ==========
+// ========== GESTIÍ“N DE MANUALES ==========
 
 // Abrir modal de gestión de manuales
 async function gestionarManuales(activoId) {
@@ -1356,7 +1353,7 @@ function mostrarListaManuales(manuales) {
                                     <small class="text-muted">
                                         ${
                                           manual.tipo
-                                        } • ${tamanoArchivo} • ${fechaSubida}
+                                        } —€¢ ${tamanoArchivo} —€¢ ${fechaSubida}
                                     </small>
                                     ${
                                       manual.descripcion
@@ -1662,297 +1659,4 @@ function mostrarConfirmacionEliminarManual(manualId) {
     document.getElementById("modalEliminarManual")
   );
   modal.show();
-}
-
-// ====================================================================
-// FUNCIONES DE ACCIONES MASIVAS
-// ====================================================================
-
-/**
- * Cambiar estado de múltiples activos
- */
-async function cambiarEstadoMasivo(nuevoEstado) {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay activos seleccionados", "warning");
-    return;
-  }
-
-  const confirmacion = await seleccionMasiva.confirmarAccionMasiva(
-    `¿Cambiar estado a "${nuevoEstado}"?`,
-    `Se cambiará el estado de ${seleccionados.length} activo(s) a "${nuevoEstado}".`
-  );
-
-  if (!confirmacion) return;
-
-  mostrarCargando(true);
-  let exitosos = 0;
-  let errores = 0;
-
-  for (const activo of seleccionados) {
-    try {
-      const response = await fetch(`/activos/editar/${activo.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...activo, estado: nuevoEstado }),
-      });
-
-      if (response.ok) {
-        exitosos++;
-      } else {
-        errores++;
-      }
-    } catch (error) {
-      console.error(`Error al actualizar activo ${activo.id}:`, error);
-      errores++;
-    }
-  }
-
-  mostrarCargando(false);
-
-  if (exitosos > 0) {
-    mostrarMensaje(
-      `${exitosos} activo(s) actualizado(s) exitosamente${
-        errores > 0 ? `. ${errores} error(es).` : ""
-      }`,
-      errores > 0 ? "warning" : "success"
-    );
-    cargarActivos(currentPage, filtrosActivos);
-    cargarEstadisticasActivos();
-  } else {
-    mostrarMensaje("No se pudieron actualizar los activos", "danger");
-  }
-}
-
-/**
- * Cambiar prioridad de múltiples activos
- */
-async function cambiarPrioridadMasiva() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay activos seleccionados", "warning");
-    return;
-  }
-
-  // Crear modal dinámico para seleccionar prioridad
-  const prioridades = ["Baja", "Media", "Alta", "Crítica"];
-  const modalHtml = `
-        <div class="modal fade" id="modalPrioridadMasiva" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-flag me-2"></i>Cambiar Prioridad
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Seleccione la nueva prioridad para ${
-                          seleccionados.length
-                        } activo(s):</p>
-                        <select class="form-select" id="select-prioridad-masiva">
-                            ${prioridades
-                              .map((p) => `<option value="${p}">${p}</option>`)
-                              .join("")}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" onclick="confirmarCambioPrioridadMasiva()">
-                            <i class="bi bi-check-circle me-1"></i>Cambiar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-  // Eliminar modal anterior si existe
-  const modalAnterior = document.getElementById("modalPrioridadMasiva");
-  if (modalAnterior) modalAnterior.remove();
-
-  // Agregar modal al DOM
-  document.body.insertAdjacentHTML("beforeend", modalHtml);
-  const modal = new bootstrap.Modal(
-    document.getElementById("modalPrioridadMasiva")
-  );
-  modal.show();
-
-  // Limpiar modal al cerrarse
-  document
-    .getElementById("modalPrioridadMasiva")
-    .addEventListener("hidden.bs.modal", function () {
-      this.remove();
-    });
-}
-
-/**
- * Confirmar cambio de prioridad masiva
- */
-async function confirmarCambioPrioridadMasiva() {
-  const nuevaPrioridad = document.getElementById(
-    "select-prioridad-masiva"
-  ).value;
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(
-    document.getElementById("modalPrioridadMasiva")
-  );
-  modal.hide();
-
-  mostrarCargando(true);
-  let exitosos = 0;
-  let errores = 0;
-
-  for (const activo of seleccionados) {
-    try {
-      const response = await fetch(`/activos/editar/${activo.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...activo, prioridad: nuevaPrioridad }),
-      });
-
-      if (response.ok) {
-        exitosos++;
-      } else {
-        errores++;
-      }
-    } catch (error) {
-      console.error(`Error al actualizar activo ${activo.id}:`, error);
-      errores++;
-    }
-  }
-
-  mostrarCargando(false);
-
-  if (exitosos > 0) {
-    mostrarMensaje(
-      `${exitosos} activo(s) actualizado(s) a prioridad "${nuevaPrioridad}"${
-        errores > 0 ? `. ${errores} error(es).` : ""
-      }`,
-      errores > 0 ? "warning" : "success"
-    );
-    cargarActivos(currentPage, filtrosActivos);
-  } else {
-    mostrarMensaje("No se pudieron actualizar los activos", "danger");
-  }
-}
-
-/**
- * Exportar activos seleccionados a CSV
- */
-function exportarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay activos seleccionados", "warning");
-    return;
-  }
-
-  // Crear CSV
-  const headers = [
-    "Código",
-    "Nombre",
-    "Departamento",
-    "Tipo",
-    "Ubicación",
-    "Estado",
-    "Prioridad",
-    "Modelo",
-    "Proveedor",
-  ];
-  const rows = seleccionados.map((activo) => [
-    activo.codigo || "",
-    activo.nombre || "",
-    obtenerNombreDepartamento(activo.departamento),
-    activo.tipo || "",
-    activo.ubicacion || "",
-    activo.estado || "",
-    activo.prioridad || "",
-    activo.modelo || "",
-    activo.proveedor || "",
-  ]);
-
-  let csv = headers.join(",") + "\n";
-  rows.forEach((row) => {
-    csv += row.map((cell) => `"${cell}"`).join(",") + "\n";
-  });
-
-  // Descargar archivo
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute(
-    "download",
-    `activos_seleccionados_${new Date().toISOString().split("T")[0]}.csv`
-  );
-  link.style.visibility = "hidden";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  mostrarMensaje(
-    `${seleccionados.length} activo(s) exportado(s) exitosamente`,
-    "success"
-  );
-}
-
-/**
- * Eliminar múltiples activos
- */
-async function eliminarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay activos seleccionados", "warning");
-    return;
-  }
-
-  const confirmacion = await seleccionMasiva.confirmarAccionMasiva(
-    "¿Eliminar activos seleccionados?",
-    `Se eliminarán permanentemente ${seleccionados.length} activo(s). Esta acción no se puede deshacer.`,
-    "danger"
-  );
-
-  if (!confirmacion) return;
-
-  mostrarCargando(true);
-  let exitosos = 0;
-  let errores = 0;
-
-  for (const activo of seleccionados) {
-    try {
-      const response = await fetch(`/activos/eliminar/${activo.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        exitosos++;
-      } else {
-        errores++;
-      }
-    } catch (error) {
-      console.error(`Error al eliminar activo ${activo.id}:`, error);
-      errores++;
-    }
-  }
-
-  mostrarCargando(false);
-
-  if (exitosos > 0) {
-    mostrarMensaje(
-      `${exitosos} activo(s) eliminado(s) exitosamente${
-        errores > 0 ? `. ${errores} error(es).` : ""
-      }`,
-      errores > 0 ? "warning" : "success"
-    );
-    cargarActivos(currentPage, filtrosActivos);
-    cargarEstadisticasActivos();
-  } else {
-    mostrarMensaje("No se pudieron eliminar los activos", "danger");
-  }
 }

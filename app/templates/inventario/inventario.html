@@ -2,8 +2,79 @@
 {% block section_title %}Gestión de Inventarios{% endblock %}
 {% set section = 'inventarios' %}
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/seleccion-masiva.css') }}">
+<!-- Inventario usa solo los estilos globales de base.html -->
+<style>
+/* Estilos específicos con clase personalizada para máxima especificidad */
+.btn-custom-purple.btn-outline-primary {
+  background: transparent !important;
+  border: 2px solid #667eea !important;
+  color: #667eea !important;
+  border-radius: 2px !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500 !important;
+}
+
+.btn-custom-purple.btn-outline-primary:hover,
+.btn-custom-purple.btn-outline-primary:focus,
+.btn-custom-purple.btn-outline-primary:active,
+.btn-custom-purple.btn-outline-primary:active:focus {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-color: #667eea !important;
+  color: white !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4) !important;
+}
+</style>
+<script>
+// Script inline para aplicar estilos morados INMEDIATAMENTE
+(function() {
+    'use strict';
+    
+    function aplicarEstilosBotones() {
+        console.log('🎨 Aplicando estilos a botones de inventario...');
+        
+        const selectores = [
+            'button[onclick="exportarCSV()"]',
+            'button[onclick="mostrarModalMovimientoGeneral()"]',
+            'button[onclick="mostrarMovimientos()"]',
+            'a[href*="conteos_page"]'
+        ];
+        
+        selectores.forEach(selector => {
+            const boton = document.querySelector(selector);
+            if (!boton) {
+                console.warn('⚠️ No se encontró botón:', selector);
+                return;
+            }
+            
+            boton.style.setProperty('background', 'transparent', 'important');
+            boton.style.setProperty('border', '2px solid #667eea', 'important');
+            boton.style.setProperty('color', '#667eea', 'important');
+            boton.style.setProperty('border-radius', '2px', 'important');
+            
+            boton.addEventListener('mouseenter', function() {
+                this.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                this.style.setProperty('color', 'white', 'important');
+            });
+            
+            boton.addEventListener('mouseleave', function() {
+                this.style.setProperty('background', 'transparent', 'important');
+                this.style.setProperty('color', '#667eea', 'important');
+            });
+            
+            console.log('✅ Estilos aplicados a:', selector);
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', aplicarEstilosBotones);
+    } else {
+        aplicarEstilosBotones();
+    }
+    
+    setTimeout(aplicarEstilosBotones, 100);
+})();
+</script>
 {% endblock %}
 
 {% block content %}
@@ -17,16 +88,29 @@
                     <small class="text-muted">Gestión completa de stock y artículos</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+                    <!-- PRUEBA DEFINITIVA 12345 XYZABC -->
+                    <button class="btn btn-outline-primary" onclick="exportarCSV()" 
+                            style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                            onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;';" 
+                            onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;';">
                         <i class="bi bi-download me-1"></i>Exportar CSV
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="mostrarModalMovimientoGeneral()">
+                    <button type="button" class="btn btn-outline-primary" onclick="mostrarModalMovimientoGeneral()"
+                            style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                            onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;';" 
+                            onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;';">
                         <i class="bi bi-plus-circle me-1"></i>Nuevo Movimiento
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="mostrarMovimientos()">
+                    <button type="button" class="btn btn-outline-primary" onclick="mostrarMovimientos()"
+                            style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                            onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;';" 
+                            onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;';">
                         <i class="bi bi-arrow-left-right me-1"></i>Ver Movimientos
                     </button>
-                    <a href="{{ url_for('inventario.conteos_page') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('inventario.conteos_page') }}" class="btn btn-outline-primary"
+                       style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                       onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;';" 
+                       onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;';">
                         <i class="bi bi-clipboard-check me-1"></i>Conteos
                     </a>
                     <a href="{{ url_for('lotes.index') }}" class="btn btn-outline-warning position-relative" id="btn-fifo">
@@ -36,10 +120,6 @@
                             <span id="fifo-notification-count">0</span>
                         </span>
                     </a>
-                    <button type="button" class="btn btn-outline-danger" onclick="mostrarModalEliminarArticulos()" 
-                            title="Eliminar artículos seleccionados">
-                        <i class="bi bi-trash3 me-1"></i>Eliminar Artículos
-                    </button>
                     <button type="button" class="btn btn-primary" onclick="mostrarModalNuevoArticulo()">
                         <i class="bi bi-plus-circle me-1"></i>Nuevo Artículo
                     </button>
@@ -169,24 +249,6 @@
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-secondary" id="contador-articulos">0 artículos</span>
-                        <span class="badge bg-info" id="contador-seleccion" style="display:none;">0 seleccionados</span>
-                        <div class="btn-group" id="acciones-masivas" style="display:none;">
-                            <button class="btn btn-sm btn-warning" onclick="marcarCriticosMasivo()" title="Marcar como críticos">
-                                <i class="bi bi-exclamation-triangle me-1"></i>Críticos
-                            </button>
-                            <button class="btn btn-sm btn-primary" onclick="ajustarStockMasivo()" title="Ajuste masivo de stock">
-                                <i class="bi bi-boxes me-1"></i>Ajustar Stock
-                            </button>
-                            <button class="btn btn-sm btn-secondary" onclick="cambiarCategoriaMasiva()" title="Cambiar categoría">
-                                <i class="bi bi-tag me-1"></i>Categoría
-                            </button>
-                            <button class="btn btn-sm btn-success" onclick="exportarSeleccionados()" title="Exportar seleccionados">
-                                <i class="bi bi-download me-1"></i>Exportar
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="eliminarSeleccionados()" title="Eliminar seleccionados">
-                                <i class="bi bi-trash me-1"></i>Eliminar
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -195,19 +257,15 @@
                     <table class="table table-striped table-hover mb-0 table-even" id="tabla-inventario">
                         <thead class="table-dark">
                             <tr>
-                                <th class="col-critical">
-                                    <input type="checkbox" id="select-all" class="form-check-input" title="Seleccionar todos">
-                                </th>
-                                <th class="col-critical"><i class="bi bi-hash me-1"></i>Código</th>
-                                <th class="col-critical"><i class="bi bi-box me-1"></i>Artículo</th>
-                                <th class="col-important"><i class="bi bi-tag me-1"></i>Categoría</th>
-                                <th class="col-important"><i class="bi bi-stack me-1"></i>Stock</th>
-                                <th class="col-optional"><i class="bi bi-exclamation-triangle me-1"></i>Mín/Máx</th>
-                                <th class="col-detail"><i class="bi bi-geo-alt me-1"></i>Ubicación</th>
-                                <th class="text-end col-detail"><i class="bi bi-currency-euro me-1"></i>Precio</th>
-                                <th class="text-end col-detail"><i class="bi bi-cash-stack me-1"></i>Valor</th>
-                                <th class="col-important"><i class="bi bi-circle me-1"></i>Estado</th>
-                                <th class="text-center col-critical"><i class="bi bi-gear me-1"></i>Acciones</th>
+                                <th style="width: 10%;">Código</th>
+                                <th style="width: 25%;"><i class="bi bi-box me-1"></i>Artículo</th>
+                                <th style="width: 15%;"><i class="bi bi-tag me-1"></i>Categoría</th>
+                                <th style="width: 8%;"><i class="bi bi-stack me-1"></i>Stock</th>
+                                <th style="width: 10%;"><i class="bi bi-exclamation-triangle me-1"></i>Mín/Máx</th>
+                                <th style="width: 12%;"><i class="bi bi-geo-alt me-1"></i>Ubicación</th>
+                                <th style="width: 8%;"><i class="bi bi-currency-euro me-1"></i>Precio</th>
+                                <th style="width: 7%;"><i class="bi bi-circle me-1"></i>Estado</th>
+                                <th class="text-center" style="width: 15%;"><i class="bi bi-gear me-1"></i>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-inventario-body">
@@ -562,8 +620,8 @@
                                 <th>Fecha</th>
                                 <th>Tipo</th>
                                 <th class="text-end">Cantidad</th>
-                                <th class="text-end">Precio Unit.</th>
-                                <th class="text-end">Valor Total</th>
+                                <th>Precio Unit.</th>
+                                <th>Valor Total</th>
                                 <th>Referencia</th>
                             </tr>
                         </thead>
@@ -599,8 +657,8 @@
                                 <th>Tipo</th>
                                 <th>Artículo</th>
                                 <th class="text-end">Cantidad</th>
-                                <th class="text-end">Precio Unit.</th>
-                                <th class="text-end">Valor Total</th>
+                                <th>Precio Unit.</th>
+                                <th>Valor Total</th>
                                 <th>Referencia</th>
                             </tr>
                         </thead>
@@ -662,6 +720,37 @@
     </div>
 </div>
 
+<!-- Modal Confirmación Eliminar Artículo Individual -->
+<div class="modal fade" id="modalEliminarArticulo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea eliminar el artículo <strong id="descripcion-articulo-eliminar"></strong>?</p>
+                <p class="text-muted">Esta acción no se puede deshacer y eliminará:</p>
+                <ul class="text-muted">
+                    <li>El artículo del inventario</li>
+                    <li>Todos sus movimientos asociados</li>
+                    <li>Los lotes relacionados (si usa gestión FIFO)</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminarArticulo()">
+                    <i class="bi bi-trash me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal para eliminar artículos -->
 <div class="modal fade modal-modern" id="modalEliminarArticulos" tabindex="-1">
     <div class="modal-dialog">
@@ -709,11 +798,68 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/csrf-utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
-<script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>
-<script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
+<script src="{{ url_for('static', filename='js/inventario-botones-fix.js') }}?v=20251019e"></script>
+<script src="{{ url_for('static', filename='js/csrf-utils.js') }}?v=20251018"></script>
+<script src="{{ url_for('static', filename='js/pagination.js') }}?v=20251018"></script>
+
+<script src="{{ url_for('static', filename='js/inventario.js') }}?v=20251018"></script>
 <script src="{{ url_for('static', filename='js/inventario-categorias.js') }}"></script>
 <script src="{{ url_for('static', filename='js/diagnostico-autocomplete.js') }}"></script>
 <script src="{{ url_for('static', filename='js/fifo-inventario-badge.js') }}"></script>
+
+<script>
+console.log('🔴🔴🔴 TEST: Script ejecutándose');
+</script>
+
+<script>
+// FIX URGENTE: Aplicar estilos morados a botones de inventario
+(function() {
+    'use strict';
+    console.log('🎨 Script de fix de botones iniciado');
+    
+    function aplicarEstilos() {
+        console.log('🔍 Buscando botones...');
+        
+        const botones = [
+            document.querySelector('button[onclick="exportarCSV()"]'),
+            document.querySelector('button[onclick="mostrarModalMovimientoGeneral()"]'),
+            document.querySelector('button[onclick="mostrarMovimientos()"]'),
+            document.querySelector('a[href*="conteos_page"]')
+        ];
+        
+        botones.forEach((btn, index) => {
+            if (!btn) {
+                console.warn('⚠️ Botón', index, 'no encontrado');
+                return;
+            }
+            
+            console.log('✅ Botón encontrado:', index, btn);
+            
+            // Aplicar estilos con setProperty + important
+            btn.style.setProperty('background', 'transparent', 'important');
+            btn.style.setProperty('border', '2px solid #667eea', 'important');
+            btn.style.setProperty('color', '#667eea', 'important');
+            btn.style.setProperty('border-radius', '2px', 'important');
+            
+            // Hover
+            btn.onmouseenter = function() {
+                this.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                this.style.setProperty('color', 'white', 'important');
+            };
+            
+            btn.onmouseleave = function() {
+                this.style.setProperty('background', 'transparent', 'important');
+                this.style.setProperty('color', '#667eea', 'important');
+            };
+            
+            console.log('✅ Estilos aplicados al botón', index);
+        });
+        
+        console.log('✅ Fix de botones completado');
+    }
+    
+    // Ejecutar AHORA (DOM ya está listo aquí)
+    aplicarEstilos();
+})();
+</script>
 {% endblock %}
