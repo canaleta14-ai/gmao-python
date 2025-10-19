@@ -523,17 +523,22 @@ function inicializarAutocompletadoUsuarios() {
       renderItem: function (item) {
         return `
                     <div class="autocomplete-item">
-                        <strong>${item.username}</strong>
+                        <strong>${item.username || item.nombre || ""}</strong>
                         <br>
                         <small class="text-muted">
-                            ${item.nombre || ""} - ${item.rol || ""}
+                            ${item.nombre || ""} ${
+          item.rol ? "- " + item.rol : ""
+        }
                         </small>
                     </div>
                 `;
       },
       onSelect: function (item) {
-        usuarioInput.value = item.username;
-        usuarioInput.dataset.userId = item.id;
+        // Usar nombre completo en lugar de username
+        usuarioInput.value = item.nombre || item.username || "";
+        if (item.id) {
+          usuarioInput.dataset.userId = item.id;
+        }
       },
       // Agregar fallback para datos estáticos si la API falla
       localData: [
