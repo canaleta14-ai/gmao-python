@@ -162,6 +162,21 @@ dmypy.json
 *.tmp
 *.temp
 
+# Archivos de prueba y scripts temporales
+test_*.py
+test_*.html
+fix_*.py
+verificar_*.py
+*_test.html
+*_temp.html
+
+# Documentación temporal
+INFORME_*.md
+RESUMEN_*.txt
+RESUMEN_*.md
+REVISION_*.md
+DIAGRAMA_*.txt
+
 # Instance folder (contiene configuración sensible)
 instance/
 
