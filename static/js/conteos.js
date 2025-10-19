@@ -482,138 +482,63 @@ function inicializarAutocompletadoUsuarios() {
   const usuarioInput = document.getElementById("conteo-usuario");
 
   console.log("🔄 Inicializando autocompletado de usuarios...");
-  console.log("📝 Input element:", usuarioInput);
-  console.log(
-    "📚 AutoComplete available:",
-    typeof AutoComplete !== "undefined"
-  );
 
   if (!usuarioInput) {
     console.error("❌ No se encontró el elemento conteo-usuario");
     return;
   }
 
-  // Verificar que el elemento esté completamente en el DOM
-  if (!usuarioInput.parentNode) {
-    console.warn("⚠️ Input no tiene parentNode - esperando un momento...");
-    setTimeout(() => inicializarAutocompletadoUsuarios(), 100);
-    return;
-  }
+  // Usar datalist simple y funcional
+  cargarUsuariosEnDatalist();
+}
 
-  if (typeof AutoComplete === "undefined") {
-    console.error("❌ AutoComplete no está disponible - usando fallback");
-    // Usar un fallback simple con datalist
-    crearDatalistUsuarios(usuarioInput);
-    return;
-  }
-
+// Cargar usuarios en datalist
+async function cargarUsuariosEnDatalist() {
   try {
-    // Verificar si ya existe una instancia
-    if (usuarioInput._autocomplete) {
-      console.log("🗑️ Destruyendo instancia anterior");
-      usuarioInput._autocomplete.destroy();
+    const response = await fetch("/usuarios/api?per_page=100");
+    if (!response.ok) {
+      throw new Error("Error al cargar usuarios");
     }
 
-    const autocomplete = new AutoComplete({
-      element: usuarioInput,
-      apiUrl: "/usuarios/api/autocomplete",
-      searchKey: "q",
-      minChars: 2,
-      debounceTime: 300,
-      renderItem: function (item) {
-        return `
-                    <div class="autocomplete-item">
-                        <strong>${item.username || item.nombre || ""}</strong>
-                        <br>
-                        <small class="text-muted">
-                            ${item.nombre || ""} ${
-          item.rol ? "- " + item.rol : ""
-        }
-                        </small>
-                    </div>
-                `;
-      },
-      onSelect: function (item) {
-        // Usar nombre completo en lugar de username
-        usuarioInput.value = item.nombre || item.username || "";
-        if (item.id) {
-          usuarioInput.dataset.userId = item.id;
-        }
-      },
-      // Agregar fallback para datos estáticos si la API falla
-      localData: [
-        { id: 1, username: "admin", nombre: "Administrador", rol: "admin" },
-        {
-          id: 2,
-          username: "supervisor",
-          nombre: "Supervisor",
-          rol: "supervisor",
-        },
-        {
-          id: 3,
-          username: "tecnico1",
-          nombre: "Técnico Principal",
-          rol: "tecnico",
-        },
-        {
-          id: 4,
-          username: "tecnico2",
-          nombre: "Técnico Auxiliar",
-          rol: "tecnico",
-        },
-        { id: 5, username: "operador", nombre: "Operador", rol: "operador" },
-      ],
+    const data = await response.json();
+    const usuarios = data.usuarios || [];
+
+    // Crear o actualizar datalist
+    let datalist = document.getElementById("usuarios-datalist-conteo");
+    if (!datalist) {
+      datalist = document.createElement("datalist");
+      datalist.id = "usuarios-datalist-conteo";
+      document.body.appendChild(datalist);
+    }
+
+    datalist.innerHTML = "";
+
+    // Filtrar solo usuarios activos
+    const usuariosActivos = usuarios.filter((u) => u.estado === "Activo");
+
+    usuariosActivos.forEach((usuario) => {
+      const option = document.createElement("option");
+      // Usar el nombre como value
+      option.value = usuario.nombre;
+      // Mostrar info adicional en el label
+      option.label = `${usuario.nombre} - ${usuario.rol || ""}`;
+      datalist.appendChild(option);
     });
 
-    // Guardar referencia para poder destruirla después
-    usuarioInput._autocomplete = autocomplete;
+    // Asociar datalist al input
+    const usuarioInput = document.getElementById("conteo-usuario");
+    if (usuarioInput) {
+      usuarioInput.setAttribute("list", "usuarios-datalist-conteo");
+    }
 
-    console.log("✅ Autocompletado de usuarios inicializado correctamente");
+    console.log(`✅ Cargados ${usuariosActivos.length} usuarios en datalist`);
   } catch (error) {
-    console.error("❌ Error al inicializar autocompletado de usuarios:", error);
-    // Fallback: usar datalist simple
-    crearDatalistUsuarios(usuarioInput);
+    console.error("Error cargando usuarios:", error);
   }
 }
 
 // Función fallback para crear un datalist simple
-function crearDatalistUsuarios(input) {
-  console.log("🔄 Creando datalist fallback para usuarios");
-
-  // Crear datalist si no existe
-  let datalist = document.getElementById("usuarios-datalist");
-  if (!datalist) {
-    datalist = document.createElement("datalist");
-    datalist.id = "usuarios-datalist";
-
-    // Datos de ejemplo
-    const usuarios = [
-      "admin",
-      "supervisor",
-      "tecnico1",
-      "tecnico2",
-      "operador",
-      "mantenimiento",
-      "jefe_taller",
-    ];
-
-    usuarios.forEach((usuario) => {
-      const option = document.createElement("option");
-      option.value = usuario;
-      datalist.appendChild(option);
-    });
-
-    document.body.appendChild(datalist);
-  }
-
-  // Asociar datalist al input
-  input.setAttribute("list", "usuarios-datalist");
-  input.placeholder = "Escribe el nombre del usuario (ej: admin, tecnico1...)";
-
-  console.log("✅ Datalist fallback creado");
-}
-
-// Función para llenar datalist de usuarios
+// Función para llenar datalist de usuarios (usado en otros modales)
 async function llenarDatalistUsuarios(datalistId) {
   try {
     // Cargar usuarios reales desde la API
