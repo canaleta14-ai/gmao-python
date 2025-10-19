@@ -43,7 +43,7 @@ function setupSessionManagement() {
   console.log("🔐 Configurando gestión de sesiones...");
 
   // Limpiar sesión al cerrar la pestaña/ventana
-  window.addEventListener('beforeunload', function() {
+  window.addEventListener("beforeunload", function () {
     // Solo limpiar si no es una recarga de página
     if (!event.returnValue) {
       // Aquí podríamos hacer una llamada al servidor para invalidar la sesión
@@ -53,7 +53,7 @@ function setupSessionManagement() {
   });
 
   // Verificar sesión periódicamente (simplemente loguear que está activa)
-  setInterval(function() {
+  setInterval(function () {
     console.log("🔐 Verificación periódica de sesión - Sesión activa");
     // En el futuro podríamos hacer una petición al servidor para verificar
     // fetch('/api/session-check', { method: 'GET', credentials: 'same-origin' })
@@ -643,7 +643,9 @@ function openProfileModal() {
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none !important; color: white !important; border-radius: 2px !important;">
+                                <i class="bi bi-x-circle me-1"></i>Cerrar
+                            </button>
                             <button type="button" class="btn btn-primary" onclick="openChangePasswordModal()">
                                 <i class="bi bi-key"></i> Cambiar Contraseña
                             </button>
@@ -703,7 +705,9 @@ function openChangePasswordModal() {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none !important; color: white !important; border-radius: 2px !important;">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
                         <button type="button" class="btn btn-primary" onclick="changePassword()">
                             <i class="bi bi-check-lg"></i> Cambiar Contraseña
                         </button>
@@ -1003,7 +1007,8 @@ function testAlertas() {
       mostrarMensaje(
         `✅ Test completado en ${totalTime.toFixed(2)}ms\nAlertas: ${
           data.alertas ? data.alertas.length : 0
-        }`, "success"
+        }`,
+        "success"
       );
     })
     .catch((error) => {
@@ -1011,7 +1016,10 @@ function testAlertas() {
       console.error(
         `üß™ Error: ${error} después de ${errorTime.toFixed(2)}ms`
       );
-      mostrarMensaje(`❌ Error: ${error.message} (${errorTime.toFixed(2)}ms)`, "danger");
+      mostrarMensaje(
+        `❌ Error: ${error.message} (${errorTime.toFixed(2)}ms)`,
+        "danger"
+      );
     });
 }
 
@@ -2212,24 +2220,28 @@ class ActivosManager {
  * @param {string} nuevoEstado - El nuevo estado para la solicitud
  */
 function cambiarEstadoRapido(nuevoEstado) {
-  const solicitudId = document.querySelector('input[name="solicitud_id"]')?.value;
+  const solicitudId = document.querySelector(
+    'input[name="solicitud_id"]'
+  )?.value;
 
   if (!solicitudId) {
-    mostrarMensaje('Error: No se pudo identificar la solicitud', 'danger');
+    mostrarMensaje("Error: No se pudo identificar la solicitud", "danger");
     return;
   }
 
   // Mostrar modal de confirmación
-  const modal = new bootstrap.Modal(document.getElementById('cambiarEstadoModal'));
-  const selectEstado = document.getElementById('nuevoEstado');
-  const comentarioField = document.getElementById('comentarioEstado');
+  const modal = new bootstrap.Modal(
+    document.getElementById("cambiarEstadoModal")
+  );
+  const selectEstado = document.getElementById("nuevoEstado");
+  const comentarioField = document.getElementById("comentarioEstado");
 
   if (selectEstado) {
     selectEstado.value = nuevoEstado;
   }
 
   if (comentarioField) {
-    comentarioField.value = '';
+    comentarioField.value = "";
   }
 
   modal.show();
@@ -2239,41 +2251,43 @@ function cambiarEstadoRapido(nuevoEstado) {
  * Agrega un comentario a la solicitud actual
  */
 function agregarComentario() {
-  const comentario = prompt('Ingrese su comentario:');
+  const comentario = prompt("Ingrese su comentario:");
 
-  if (!comentario || comentario.trim() === '') {
+  if (!comentario || comentario.trim() === "") {
     return;
   }
 
-  const solicitudId = document.querySelector('input[name="solicitud_id"]')?.value;
+  const solicitudId = document.querySelector(
+    'input[name="solicitud_id"]'
+  )?.value;
 
   if (!solicitudId) {
-    mostrarMensaje('Error: No se pudo identificar la solicitud', 'danger');
+    mostrarMensaje("Error: No se pudo identificar la solicitud", "danger");
     return;
   }
 
   // Enviar comentario al servidor
   fetch(`/admin/solicitudes/${solicitudId}/comentario`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      comentario: comentario.trim()
-    })
+      comentario: comentario.trim(),
+    }),
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      mostrarMensaje('Comentario agregado exitosamente', 'success');
-      // Recargar la página para mostrar el nuevo comentario
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } else {
-      mostrarMensaje(data.message || 'Error al agregar comentario', 'danger');
-    }
-  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        mostrarMensaje("Comentario agregado exitosamente", "success");
+        // Recargar la página para mostrar el nuevo comentario
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        mostrarMensaje(data.message || "Error al agregar comentario", "danger");
+      }
+    });
 }
 
 function getEstadoBadgeClass(estado) {
@@ -2295,7 +2309,7 @@ function getEstadoBadgeClass(estado) {
 async function descargarCSVMejorado(url, nombreArchivo, tipo) {
   try {
     // Mostrar estado de carga
-    if (typeof mostrarCargando === 'function') {
+    if (typeof mostrarCargando === "function") {
       mostrarCargando(true);
     }
 
@@ -2303,32 +2317,37 @@ async function descargarCSVMejorado(url, nombreArchivo, tipo) {
 
     // Hacer la petición
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Accept': tipo === 'CSV' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        Accept:
+          tipo === "CSV"
+            ? "text/csv"
+            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Error en la descarga: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Error en la descarga: ${response.status} ${response.statusText}`
+      );
     }
 
     // Obtener el blob
     const blob = await response.blob();
 
     // Generar nombre de archivo con fecha
-    const fecha = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    let nombreFinal = nombreArchivo.replace('{fecha}', fecha);
+    const fecha = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    let nombreFinal = nombreArchivo.replace("{fecha}", fecha);
     // Asegurar extensión correcta
-    if (tipo === 'CSV' && !nombreFinal.toLowerCase().endsWith('.csv')) {
-      nombreFinal += '.csv';
-    } else if (tipo !== 'CSV' && !nombreFinal.toLowerCase().endsWith('.xlsx')) {
-      nombreFinal += '.xlsx';
+    if (tipo === "CSV" && !nombreFinal.toLowerCase().endsWith(".csv")) {
+      nombreFinal += ".csv";
+    } else if (tipo !== "CSV" && !nombreFinal.toLowerCase().endsWith(".xlsx")) {
+      nombreFinal += ".xlsx";
     }
 
     // Crear enlace de descarga
     const urlBlob = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = urlBlob;
     a.download = nombreFinal;
     document.body.appendChild(a);
@@ -2339,20 +2358,19 @@ async function descargarCSVMejorado(url, nombreArchivo, tipo) {
     console.log(`✅ ${tipo} descargado exitosamente: ${nombreFinal}`);
 
     // Mostrar mensaje de éxito
-    if (typeof mostrarMensaje === 'function') {
-      mostrarMensaje(`${tipo} exportado exitosamente`, 'success');
+    if (typeof mostrarMensaje === "function") {
+      mostrarMensaje(`${tipo} exportado exitosamente`, "success");
     }
-
   } catch (error) {
     console.error(`❌ Error descargando ${tipo}:`, error);
 
     // Mostrar mensaje de error
-    if (typeof mostrarMensaje === 'function') {
-      mostrarMensaje(`Error al exportar ${tipo}: ${error.message}`, 'danger');
+    if (typeof mostrarMensaje === "function") {
+      mostrarMensaje(`Error al exportar ${tipo}: ${error.message}`, "danger");
     }
   } finally {
     // Ocultar estado de carga siempre, incluso si hay error
-    if (typeof mostrarCargando === 'function') {
+    if (typeof mostrarCargando === "function") {
       mostrarCargando(false);
     }
   }

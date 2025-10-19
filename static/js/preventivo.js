@@ -1207,7 +1207,9 @@ function viewPlan(planId) {
                                     }); bootstrap.Modal.getInstance(document.getElementById('viewPlanModal')).hide();">
                                         <i class="bi bi-pencil me-1"></i>Editar Plan
                                     </button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                    <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none !important; color: white !important; border-radius: 2px !important;">
+                                        <i class="bi bi-x-circle me-1"></i>Cerrar
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1357,7 +1359,9 @@ function deletePlan(planId, planCodigo) {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none !important; color: white !important; border-radius: 2px !important;">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
                         <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
                             <i class="bi bi-trash me-1"></i>Eliminar Plan
                         </button>
