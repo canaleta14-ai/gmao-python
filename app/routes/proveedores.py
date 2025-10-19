@@ -121,7 +121,11 @@ def proveedores_list_api():
                 return jsonify({"success": True, "items": lista, "total": len(lista)})
             return jsonify(lista)
     except Exception as e:
-        return jsonify({"error": "Error al obtener proveedores"}), 500
+        import traceback
+
+        print(f"Error en proveedores_list_api: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"error": f"Error al obtener proveedores: {str(e)}"}), 500
 
 
 @proveedores_bp.route("/api/<int:id>", methods=["GET", "PUT", "DELETE"])

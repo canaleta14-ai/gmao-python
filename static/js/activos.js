@@ -1353,7 +1353,7 @@ function mostrarListaManuales(manuales) {
                                     <small class="text-muted">
                                         ${
                                           manual.tipo
-                                        } —€¢ ${tamanoArchivo} —€¢ ${fechaSubida}
+                                        } • ${tamanoArchivo} • ${fechaSubida}
                                     </small>
                                     ${
                                       manual.descripcion

@@ -101,7 +101,13 @@ class LoteInventario(db.Model):
         """
         Consume cantidad del lote siguiendo FIFO.
         Retorna la cantidad realmente consumida.
+
+        Raises:
+            ValueError: Si la cantidad es negativa o si el consumo dejaría cantidad_actual negativa
         """
+        if cantidad < 0:
+            raise ValueError("La cantidad a consumir no puede ser negativa")
+
         if cantidad <= 0:
             return 0
 
@@ -109,14 +115,28 @@ class LoteInventario(db.Model):
         if cantidad_consumible <= 0:
             return 0
 
-        self.cantidad_actual -= Decimal(str(cantidad_consumible))
+        nueva_cantidad = self.cantidad_actual - Decimal(str(cantidad_consumible))
+
+        # Validación de integridad: cantidad_actual nunca debe ser negativa
+        if nueva_cantidad < 0:
+            raise ValueError(
+                f"El consumo dejaría cantidad_actual negativa: {nueva_cantidad}"
+            )
+
+        self.cantidad_actual = nueva_cantidad
         return cantidad_consumible
 
     def reservar(self, cantidad):
         """
         Reserva cantidad del lote para una orden.
         Retorna la cantidad realmente reservada.
+
+        Raises:
+            ValueError: Si la cantidad es negativa
         """
+        if cantidad < 0:
+            raise ValueError("La cantidad a reservar no puede ser negativa")
+
         if cantidad <= 0:
             return 0
 
@@ -130,28 +150,61 @@ class LoteInventario(db.Model):
     def liberar_reserva(self, cantidad):
         """
         Libera cantidad reservada del lote.
+
+        Raises:
+            ValueError: Si la cantidad es negativa o si la liberación dejaría cantidad_reservada negativa
         """
+        if cantidad < 0:
+            raise ValueError("La cantidad a liberar no puede ser negativa")
+
         if cantidad <= 0:
-            return
+            return 0
 
         cantidad_a_liberar = min(float(cantidad), float(self.cantidad_reservada))
-        self.cantidad_reservada -= Decimal(str(cantidad_a_liberar))
+        nueva_cantidad_reservada = self.cantidad_reservada - Decimal(
+            str(cantidad_a_liberar)
+        )
+
+        # Validación de integridad: cantidad_reservada nunca debe ser negativa
+        if nueva_cantidad_reservada < 0:
+            raise ValueError(
+                f"La liberación dejaría cantidad_reservada negativa: {nueva_cantidad_reservada}"
+            )
+
+        self.cantidad_reservada = nueva_cantidad_reservada
         return cantidad_a_liberar
 
     @staticmethod
-    def obtener_lotes_fifo(inventario_id, cantidad_necesaria):
+    def obtener_lotes_fifo(inventario_id, cantidad_necesaria, incluir_vencidos=False):
         """
         Obtiene los lotes necesarios siguiendo orden FIFO para una cantidad específica.
-        Retorna lista de tuplas (lote, cantidad_a_consumir).
+
+        Args:
+            inventario_id: ID del artículo de inventario
+            cantidad_necesaria: Cantidad total necesaria
+            incluir_vencidos: Si True, incluye lotes vencidos (default: False)
+
+        Returns:
+            Tuple[List[Tuple[LoteInventario, float]], float]:
+            Lista de tuplas (lote, cantidad_a_consumir) y cantidad pendiente
         """
-        lotes = (
-            LoteInventario.query.filter_by(inventario_id=inventario_id, activo=True)
-            .filter(LoteInventario.cantidad_actual > 0)
-            .order_by(
-                LoteInventario.fecha_entrada.asc()  # FIFO: primero los más antiguos
+        query = LoteInventario.query.filter_by(
+            inventario_id=inventario_id, activo=True
+        ).filter(LoteInventario.cantidad_actual > 0)
+
+        # Excluir lotes vencidos a menos que se solicite explícitamente
+        if not incluir_vencidos:
+            ahora = datetime.now(timezone.utc)
+            query = query.filter(
+                db.or_(
+                    LoteInventario.fecha_vencimiento.is_(None),
+                    LoteInventario.fecha_vencimiento > ahora,
+                )
             )
-            .all()
-        )
+
+        lotes = query.order_by(
+            LoteInventario.fecha_entrada.asc()  # FIFO: primero los más antiguos
+        ).all()
 
         resultado = []
         cantidad_pendiente = float(cantidad_necesaria)
@@ -196,7 +249,6 @@ class MovimientoLote(db.Model):
     )  # consumo, reserva, liberacion, ajuste
     cantidad = db.Column(db.Numeric(10, 2), nullable=False)
     fecha = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    fecha_movimiento = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Referencias
     documento_referencia = db.Column(db.String(50), nullable=True)

@@ -9,44 +9,24 @@
 </style>
 {% endblock %} {% block content %}
 <div class="container-fluid py-4">
-  <!-- Tarjetas de estadísticas modernizadas -->
-  <div class="row mb-4" id="estadisticas-cards">
-    <div class="col-lg-3 col-md-6 mb-3">
-      <div class="card stats-card primary">
-        <div class="card-body">
-          <i class="bi bi-calendar-check stats-icon text-primary"></i>
-          <div class="stats-number text-primary" id="total-ordenes">0</div>
-          <div class="stats-label">Órdenes Este Mes</div>
-        </div>
+  <!-- Estadísticas Rápidas -->
+  <div class="quick-stats mb-4">
+    <div class="row">
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-primary" id="total-ordenes">0</div>
+        <div class="stat-label">Órdenes Este Mes</div>
       </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-3">
-      <div class="card stats-card warning">
-        <div class="card-body">
-          <i class="bi bi-calendar-event stats-icon text-warning"></i>
-          <div class="stats-number text-warning" id="planes-programados">0</div>
-          <div class="stats-label">Planes Programados</div>
-        </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-warning" id="planes-programados">0</div>
+        <div class="stat-label">Planes Programados</div>
       </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-3">
-      <div class="card stats-card danger">
-        <div class="card-body">
-          <i class="bi bi-clock stats-icon text-danger"></i>
-          <div class="stats-number text-danger" id="ordenes-pendientes">0</div>
-          <div class="stats-label">Pendientes</div>
-        </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-danger" id="ordenes-pendientes">0</div>
+        <div class="stat-label">Pendientes</div>
       </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-3">
-      <div class="card stats-card success">
-        <div class="card-body">
-          <i class="bi bi-check-circle stats-icon text-success"></i>
-          <div class="stats-number text-success" id="ordenes-completadas">
-            0
-          </div>
-          <div class="stats-label">Completadas</div>
-        </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-success" id="ordenes-completadas">0</div>
+        <div class="stat-label">Completadas</div>
       </div>
     </div>
   </div>
@@ -61,9 +41,11 @@
         <i class="bi bi-gear"></i> Generar Órdenes Hoy
       </button>
       <button
-        class="btn btn-outline-secondary btn-sm"
+        class="btn btn-outline-primary btn-sm"
         onclick="actualizarCalendario()"
-      >
+        style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+        onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+        onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
         <i class="bi bi-arrow-clockwise"></i> Actualizar
       </button>
     </div>

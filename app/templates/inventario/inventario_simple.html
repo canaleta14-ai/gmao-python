@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block section_title %}Gestión de Inventarios{% endblock %}
+{% set section = 'inventarios' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
+<style>
+/* Forzar alineación a izquierda para todas las columnas de precio y valor */
+table td:nth-child(7) { text-align: left !important; }
+table td:nth-child(8) { text-align: left !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Inventario</h1>
+    <p>Página de inventario funcionando correctamente.</p>
+    
+    <!-- Tabla básica de prueba -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table" id="tabla-inventario">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Artículo</th>
+                        <th>Categoría</th>
+                        <th>Stock</th>
+                        <th>Mín/Máx</th>
+                        <th>Ubicación</th>
+                        <th>Precio</th>
+                        <th>Valor</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>001</td>
+                        <td>Artículo Test</td>
+                        <td>Categoría Test</td>
+                        <td class="text-end">100</td>
+                        <td>10/200</td>
+                        <td>A-01</td>
+                        <td class="text-end">€25.50</td>
+                        <td class="text-end">€2,550.00</td>
+                        <td class="text-center">Acciones</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

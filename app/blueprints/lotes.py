@@ -218,6 +218,19 @@ def api_consumir_fifo():
     try:
         data = request.get_json()
 
+        # Validar que se recibió JSON
+        if not data:
+            return jsonify({"success": False, "error": "No se recibieron datos"}), 400
+
+        # Validar campos requeridos
+        if "inventario_id" not in data:
+            return (
+                jsonify({"success": False, "error": "inventario_id es requerido"}),
+                400,
+            )
+        if "cantidad" not in data:
+            return jsonify({"success": False, "error": "cantidad es requerida"}), 400
+
         inventario_id = int(data["inventario_id"])
         cantidad = float(data["cantidad"])
         orden_trabajo_id = data.get("orden_trabajo_id")
@@ -265,7 +278,8 @@ def api_consumir_fifo():
             }
         )
 
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
+        db.session.rollback()
         return (
             jsonify({"success": False, "error": f"Error en los datos: {str(e)}"}),
             400,
@@ -283,11 +297,38 @@ def api_reservar_stock():
     try:
         data = request.get_json()
 
+        # Validar que se recibió JSON
+        if not data:
+            return jsonify({"success": False, "error": "No se recibieron datos"}), 400
+
+        # Validar campos requeridos
+        if "inventario_id" not in data:
+            return (
+                jsonify({"success": False, "error": "inventario_id es requerido"}),
+                400,
+            )
+        if "cantidad" not in data:
+            return jsonify({"success": False, "error": "cantidad es requerida"}), 400
+        if "orden_trabajo_id" not in data:
+            return (
+                jsonify({"success": False, "error": "orden_trabajo_id es requerido"}),
+                400,
+            )
+
         inventario_id = int(data["inventario_id"])
         cantidad = float(data["cantidad"])
         orden_trabajo_id = int(data["orden_trabajo_id"])
         documento_referencia = data.get("documento_referencia", "")
         observaciones = data.get("observaciones", "")
+
+        # Validaciones
+        if cantidad <= 0:
+            return (
+                jsonify(
+                    {"success": False, "error": "La cantidad debe ser mayor a cero"}
+                ),
+                400,
+            )
 
         # Reservar usando FIFO
         reservas, faltante = ServicioFIFO.reservar_stock(
@@ -321,13 +362,75 @@ def api_reservar_stock():
             }
         )
 
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
+        db.session.rollback()
         return (
             jsonify({"success": False, "error": f"Error en los datos: {str(e)}"}),
             400,
         )
     except Exception as e:
         logger.error(f"Error al reservar stock: {str(e)}")
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@lotes_bp.route("/api/liberar", methods=["POST"])
+@login_required
+def api_liberar_reservas():
+    """API para liberar reservas de una orden de trabajo"""
+    try:
+        data = request.get_json()
+
+        # Validar que se recibió JSON
+        if not data:
+            return jsonify({"success": False, "error": "No se recibieron datos"}), 400
+
+        # Validar campos requeridos
+        if "orden_trabajo_id" not in data:
+            return (
+                jsonify({"success": False, "error": "orden_trabajo_id es requerido"}),
+                400,
+            )
+
+        orden_trabajo_id = int(data["orden_trabajo_id"])
+        observaciones = data.get("observaciones", "")
+
+        # Liberar reservas usando FIFO
+        liberaciones = ServicioFIFO.liberar_reservas(
+            orden_trabajo_id=orden_trabajo_id,
+            usuario_id=current_user.username,
+            observaciones=observaciones,
+        )
+
+        db.session.commit()
+
+        # Preparar respuesta
+        liberaciones_data = []
+        for lote, cantidad_liberada in liberaciones:
+            liberaciones_data.append(
+                {
+                    "lote_id": lote.id,
+                    "codigo_lote": lote.codigo_lote or f"Lote-{lote.id}",
+                    "cantidad_liberada": cantidad_liberada,
+                }
+            )
+
+        return jsonify(
+            {
+                "success": True,
+                "liberaciones": liberaciones_data,
+                "total_liberado": sum(l[1] for l in liberaciones),
+            }
+        )
+
+    except (ValueError, TypeError) as e:
+        db.session.rollback()
+        return (
+            jsonify({"success": False, "error": f"Error en los datos: {str(e)}"}),
+            400,
+        )
+    except Exception as e:
+        logger.error(f"Error al liberar reservas: {str(e)}")
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -437,3 +540,89 @@ def vencimientos():
         logger.error(f"Error al obtener vencimientos: {str(e)}")
         flash(f"Error al cargar información de vencimientos: {str(e)}", "error")
         return redirect(url_for("lotes.index"))
+
+
+@lotes_bp.route("/api/estadisticas")
+@login_required
+def estadisticas_fifo():
+    """Obtener estadísticas rápidas del sistema FIFO"""
+    try:
+        from datetime import timedelta
+        from sqlalchemy import func, distinct
+
+        # Total de lotes activos
+        total_lotes = LoteInventario.query.filter(
+            LoteInventario.activo == True, LoteInventario.cantidad_actual > 0
+        ).count()
+
+        # Artículos con lotes FIFO
+        articulos_con_fifo = (
+            db.session.query(func.count(distinct(LoteInventario.inventario_id)))
+            .filter(LoteInventario.activo == True, LoteInventario.cantidad_actual > 0)
+            .scalar()
+            or 0
+        )
+
+        # Lotes próximos a vencer (30 días)
+        fecha_hoy = datetime.now(timezone.utc)
+        fecha_limite = fecha_hoy + timedelta(days=30)
+
+        lotes_proximos_vencer = LoteInventario.query.filter(
+            LoteInventario.activo == True,
+            LoteInventario.cantidad_actual > 0,
+            LoteInventario.fecha_vencimiento.isnot(None),
+            LoteInventario.fecha_vencimiento > fecha_hoy,
+            LoteInventario.fecha_vencimiento <= fecha_limite,
+        ).count()
+
+        # Lotes vencidos
+        lotes_vencidos = LoteInventario.query.filter(
+            LoteInventario.activo == True,
+            LoteInventario.cantidad_actual > 0,
+            LoteInventario.fecha_vencimiento.isnot(None),
+            LoteInventario.fecha_vencimiento < fecha_hoy,
+        ).count()
+
+        # Valor total del inventario
+        valor_total = (
+            db.session.query(
+                func.sum(
+                    LoteInventario.cantidad_actual * LoteInventario.precio_unitario
+                )
+            )
+            .filter(LoteInventario.activo == True, LoteInventario.cantidad_actual > 0)
+            .scalar()
+            or 0
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "estadisticas": {
+                    "total_lotes": total_lotes,
+                    "articulos_fifo": articulos_con_fifo,
+                    "proximos_vencer": lotes_proximos_vencer,
+                    "vencidos": lotes_vencidos,
+                    "valor_total": float(valor_total),
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error al obtener estadísticas FIFO: {str(e)}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": str(e),
+                    "estadisticas": {
+                        "total_lotes": 0,
+                        "articulos_fifo": 0,
+                        "proximos_vencer": 0,
+                        "vencidos": 0,
+                        "valor_total": 0,
+                    },
+                }
+            ),
+            500,
+        )

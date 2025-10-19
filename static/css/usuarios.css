@@ -104,24 +104,6 @@
   color: white;
 }
 
-/* Indicador de estado del collapse */
-.filtros-header::after {
-  content: "\F229";
-  /* bi-chevron-down */
-  font-family: "bootstrap-icons";
-  font-size: 1rem;
-  transition: transform 0.3s ease;
-  transform: rotate(0deg);
-}
-
-.filtros-header.collapsed::after {
-  transform: rotate(-90deg);
-}
-
-.filtros-header[aria-expanded="true"]::after {
-  transform: rotate(180deg);
-}
-
 .filtros-body {
   padding: 1.5rem;
   background: var(--light-bg);
@@ -300,7 +282,8 @@
 }
 
 .table-hover tbody tr:hover {
-  background-color: rgba(52, 73, 94, 0.05);
+  /* Hover desactivado */
+  /* background-color: rgba(52, 73, 94, 0.05); */
 }
 
 /* Badges de estado */

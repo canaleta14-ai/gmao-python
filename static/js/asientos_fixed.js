@@ -1,4 +1,4 @@
-// asientos.js - Funcionalidad para gestió³n de asientos contables
+// asientos.js - Funcionalidad para gestin de asientos contables
 
 // Variables globales
 let asientosData = [];
@@ -7,9 +7,9 @@ let asientosPorPagina = 10;
 let asientoEditando = null;
 let vistaDetallada = false;
 
-// Inicializació³n
+// Inicializacin
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('Inicializando mó³dulo de asientos contables...');
+    console.log('Inicializando mdulo de asientos contables...');
 
     // Establecer fecha actual por defecto
     establecerFechasPorDefecto();
@@ -43,7 +43,7 @@ function configurarEventos() {
     // Eventos del modal
     document.getElementById('modal-asiento').addEventListener('shown.bs.modal', function () {
         if (!asientoEditando) {
-            // Agregar primera ló­nea automó¡ticamente
+            // Agregar primera lnea automticamente
             agregarLinea();
         }
     });
@@ -65,7 +65,7 @@ async function cargarAsientos() {
         // Simular llamada a API (reemplazar con endpoint real)
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Datos mock para demostració³n
+        // Datos mock para demostracin
         asientosData = generarDatosMockAsientos();
 
         mostrarAsientos();
@@ -96,7 +96,7 @@ function generarDatosMockAsientos() {
             id: i,
             numero: `AST-${String(i).padStart(4, '0')}`,
             fecha: fecha.toISOString().split('T')[0],
-            concepto: `Asiento contable ${i} - ${['Compra repuestos', 'Pago servicios', 'Regularizació³n'][Math.floor(Math.random() * 3)]}`,
+            concepto: `Asiento contable ${i} - ${['Compra repuestos', 'Pago servicios', 'Regularizacin'][Math.floor(Math.random() * 3)]}`,
             total_debe: totalDebe,
             total_haber: totalDebe, // Asientos cuadrados
             estado: ['borrador', 'confirmado', 'cerrado'][Math.floor(Math.random() * 3)],
@@ -107,14 +107,14 @@ function generarDatosMockAsientos() {
     return asientos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }
 
-// Generar ló­neas mock para un asiento
+// Generar lneas mock para un asiento
 function generarLineasMock(total) {
     const lineas = [];
-    const numLineas = Math.floor(Math.random() * 3) + 2; // 2-4 ló­neas
+    const numLineas = Math.floor(Math.random() * 3) + 2; // 2-4 lneas
     const montoPorLinea = total / numLineas;
 
     const cuentas = ['600000000', '622000000', '400000000', '570000000'];
-    const conceptos = ['Compra material', 'Servicios tó©cnicos', 'Pago a proveedor', 'Efectivo'];
+    const conceptos = ['Compra material', 'Servicios tcnicos', 'Pago a proveedor', 'Efectivo'];
 
     for (let i = 0; i < numLineas; i++) {
         const esDebe = Math.random() > 0.5;
@@ -144,7 +144,7 @@ function mostrarAsientos() {
             (!filtros.fechaHasta || asiento.fecha <= filtros.fechaHasta);
     });
 
-    // Paginació³n
+    // Paginacin
     const inicio = (paginaActual - 1) * asientosPorPagina;
     const fin = inicio + asientosPorPagina;
     const asientosPagina = asientosFiltrados.slice(inicio, fin);
@@ -191,12 +191,12 @@ function mostrarAsientos() {
         tbody.appendChild(fila);
     });
 
-    // Actualizar informació³n de paginació³n
+    // Actualizar informacin de paginacin
     document.getElementById('info-paginacion').textContent =
         `Mostrando ${inicio + 1}-${Math.min(fin, asientosFiltrados.length)} de ${asientosFiltrados.length} asientos`;
 }
 
-// Actualizar estadó­sticas
+// Actualizar estadsticas
 function actualizarEstadisticas() {
     const filtros = obtenerFiltros();
     let asientosFiltrados = asientosData.filter(asiento => {
@@ -251,7 +251,7 @@ function nuevoAsiento() {
     asientoEditando = null;
     limpiarFormularioAsiento();
 
-    // Generar nóºmero automó¡tico
+    // Generar nmero automtico
     const proximoNumero = `AST-${String(asientosData.length + 1).padStart(4, '0')}`;
     document.getElementById('asiento-numero').value = proximoNumero;
 
@@ -278,7 +278,7 @@ function editarAsiento(id) {
     document.getElementById('asiento-fecha').value = asiento.fecha;
     document.getElementById('asiento-concepto').value = asiento.concepto;
 
-    // Cargar ló­neas
+    // Cargar lneas
     const tbody = document.getElementById('lineas-asiento');
     tbody.innerHTML = '';
 
@@ -310,7 +310,7 @@ function verAsiento(id) {
     contenido.innerHTML = `
         <div class="row mb-3">
             <div class="col-md-6">
-                <strong>Nóºmero:</strong> ${asiento.numero}<br>
+                <strong>Nmero:</strong> ${asiento.numero}<br>
                 <strong>Fecha:</strong> ${formatearFecha(asiento.fecha)}<br>
                 <strong>Estado:</strong> <span class="badge bg-${obtenerColorEstado(asiento.estado)}">${asiento.estado}</span>
             </div>
@@ -374,7 +374,7 @@ function eliminarAsiento(id) {
     mostrarConfirmacionEliminarAsiento(id, asiento.numero);
 }
 
-// Agregar ló­nea al asiento
+// Agregar lnea al asiento
 function agregarLinea() {
     const template = document.getElementById('template-linea-asiento');
     const clone = template.content.cloneNode(true);
@@ -382,14 +382,14 @@ function agregarLinea() {
     calcularTotales();
 }
 
-// Eliminar ló­nea del asiento
+// Eliminar lnea del asiento
 function eliminarLinea(boton) {
     const fila = boton.closest('tr');
     fila.remove();
     calcularTotales();
 }
 
-// Validar ló­nea
+// Validar lnea
 function validarLinea(select) {
     const fila = select.closest('tr');
     const debeInput = fila.querySelector('.debe-input');
@@ -452,7 +452,7 @@ async function guardarAsiento() {
         lineas: []
     };
 
-    // Recopilar ló­neas
+    // Recopilar lneas
     const filas = document.querySelectorAll('#lineas-asiento tr');
     filas.forEach(fila => {
         const cuenta = fila.querySelector('.cuenta-select').value;
@@ -471,7 +471,7 @@ async function guardarAsiento() {
     });
 
     if (asientoData.lineas.length < 2) {
-        mostrarMensaje('El asiento debe tener al menos 2 ló­neas', 'warning');
+        mostrarMensaje('El asiento debe tener al menos 2 lneas', 'warning');
         return;
     }
 
@@ -613,7 +613,7 @@ function mostrarVistaDetallada() {
     `).join('');
 }
 
-// Generar paginació³n
+// Generar paginacin
 function generarPaginacion() {
     const filtros = obtenerFiltros();
     const asientosFiltrados = asientosData.filter(asiento => {
@@ -629,14 +629,14 @@ function generarPaginacion() {
 
     let html = '';
 
-    // Botó³n anterior
+    // Botn anterior
     html += `
         <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1})">Anterior</a>
         </li>
     `;
 
-    // Nóºmeros de pó¡gina
+    // Nmeros de pgina
     for (let i = 1; i <= totalPaginas; i++) {
         if (i === 1 || i === totalPaginas || (i >= paginaActual - 2 && i <= paginaActual + 2)) {
             html += `
@@ -649,7 +649,7 @@ function generarPaginacion() {
         }
     }
 
-    // Botó³n siguiente
+    // Botn siguiente
     html += `
         <li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1})">Siguiente</a>
@@ -659,7 +659,7 @@ function generarPaginacion() {
     paginacion.innerHTML = html;
 }
 
-// Cambiar pó¡gina
+// Cambiar pgina
 function cambiarPagina(nuevaPagina) {
     const filtros = obtenerFiltros();
     const asientosFiltrados = asientosData.filter(asiento => {
@@ -681,7 +681,7 @@ function cambiarPagina(nuevaPagina) {
 
 // Exportar asientos
 function exportarAsientos() {
-    mostrarMensaje('Funció³n de exportació³n en desarrollo', 'info');
+    mostrarMensaje('Funcin de exportacin en desarrollo', 'info');
 }
 
 // Imprimir asiento
@@ -740,7 +740,7 @@ function mostrarMensaje(mensaje, tipo) {
     const container = document.querySelector('.container-fluid');
     container.insertBefore(alertDiv, container.firstChild);
 
-    // Auto-remover despuó©s de 5 segundos
+    // Auto-remover despus de 5 segundos
     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();
@@ -779,11 +779,11 @@ function confirmarEliminarAsiento() {
   }
 }
 
-// Mostrar modal de confirmació³n antes de eliminar
+// Mostrar modal de confirmacin antes de eliminar
 function mostrarConfirmacionEliminarAsiento(id, numero) {
   asientoAEliminar = { id, numero };
 
-  // Actualizar nóºmero en el modal
+  // Actualizar nmero en el modal
   const numeroElement = document.getElementById('numero-asiento-eliminar');
   if (numeroElement) {
     numeroElement.textContent = numero;
@@ -796,7 +796,7 @@ function mostrarConfirmacionEliminarAsiento(id, numero) {
 
 // Eliminar asiento confirmado
 function eliminarAsientoConfirmado(id) {
-  // Aquó­ iró­a la llamada a la API para eliminar
+  // Aqu ira la llamada a la API para eliminar
   const index = asientosData.findIndex(a => a.id === id);
   if (index > -1) {
     asientosData.splice(index, 1);

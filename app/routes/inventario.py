@@ -21,6 +21,8 @@ from app.controllers.inventario_controller_simple import (
     obtener_movimientos_articulo,
     obtener_movimientos_generales,
     editar_articulo_simple,
+    eliminar_articulo,
+    crear_articulo_simple,
 )
 from app.controllers.inventario_controller import crear_item as crear_articulo_auto
 from sqlalchemy import text
@@ -47,14 +49,20 @@ def inventario_page():
     """Página principal de inventario"""
     try:
         return render_template("inventario/inventario.html", section="inventario")
+    except Exception as e:
+        # Log del error específico
+        print(f"Error renderizando inventario: {e}")
+        import traceback
 
-    except Exception:
-        html = """
+        traceback.print_exc()
+
+        html = f"""
         <!DOCTYPE html>
-        <html lang=\"es\">
-        <head><meta charset=\"utf-8\"><title>Inventario</title></head>
+        <html lang="es">
+        <head><meta charset="utf-8"><title>Inventario - Error</title></head>
         <body>
-            <h1>Inventario</h1>
+            <h1>Error en Inventario</h1>
+            <p>Error: {str(e)}</p>
             <p>La página de inventario no pudo renderizarse completamente, pero el sistema está operativo.</p>
         </body>
         </html>
@@ -79,9 +87,20 @@ def obtener_estadisticas():
         ]:
             stats.setdefault(key, default)
         return jsonify(stats), 200
+    except (ValueError, KeyError) as e:
+        # Errores de validación o claves faltantes
+        return (
+            jsonify({"success": False, "error": f"Error en estadísticas: {str(e)}"}),
+            400,
+        )
     except Exception as e:
-        # Retornar error 500 para consistencia con el resto del sistema
-        return jsonify({"success": False, "error": str(e)}), 500
+        # Error inesperado del servidor
+        return (
+            jsonify(
+                {"success": False, "error": "Error interno al obtener estadísticas"}
+            ),
+            500,
+        )
 
 
 @inventario_bp.route("/api/articulos", methods=["GET"])
@@ -228,7 +247,6 @@ def diagnostico_inventario():
             table_name = "inventario"
             if backend == "postgresql":
                 table_name = "public.inventario"
-            from sqlalchemy import text as _text
 
             # Primero intentar limpiar cualquier transacción abortada, luego ejecutar en AUTOCOMMIT
             with db.engine.connect() as base_conn:
@@ -241,16 +259,16 @@ def diagnostico_inventario():
                 # Ejecutar consultas de diagnóstico en modo AUTOCOMMIT para evitar estados de transacción
                 with base_conn.execution_options(isolation_level="AUTOCOMMIT") as conn:
                     tot_sql = conn.execute(
-                        _text(f"SELECT COUNT(*) AS total FROM {table_name}")
+                        text(f"SELECT COUNT(*) AS total FROM {table_name}")
                     ).first()
                     tot_act_sql = conn.execute(
-                        _text(
+                        text(
                             f"SELECT COUNT(*) AS total FROM {table_name} WHERE COALESCE(activo, TRUE) = TRUE"
                         )
                     ).first()
                     rows = (
                         conn.execute(
-                            _text(
+                            text(
                                 f"SELECT id, codigo, COALESCE(activo, FALSE) AS activo, descripcion, COALESCE(stock_actual, 0) AS stock_actual FROM {table_name} ORDER BY id LIMIT 5"
                             )
                         )
@@ -294,8 +312,6 @@ def diagnostico_inventario():
 def exportar_csv():
     """Exporta los artículos del inventario a Excel"""
     try:
-        from flask import Response
-
         excel_data = exportar_inventario_csv()
 
         response = Response(
@@ -330,8 +346,19 @@ def crear_articulo():
         )
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
+    except KeyError as e:
+        return (
+            jsonify({"success": False, "error": f"Campo requerido faltante: {str(e)}"}),
+            400,
+        )
     except Exception as e:
-        return jsonify({"success": False, "error": "Error al crear artículo"}), 500
+        import logging
+
+        logging.error(f"Error al crear artículo: {str(e)}")
+        return (
+            jsonify({"success": False, "error": "Error interno al crear artículo"}),
+            500,
+        )
 
 
 # Alias para compatibilidad: algunos tests usan /inventario/api como raíz
@@ -612,8 +639,6 @@ def api_procesar_conteo(conteo_id):
 def api_obtener_conteo(conteo_id):
     """API para obtener un conteo específico"""
     try:
-        from app.models.inventario import ConteoInventario
-
         conteo = ConteoInventario.query.get_or_404(conteo_id)
 
         return jsonify(
@@ -837,8 +862,6 @@ def registrar_movimiento():
         movimiento = registrar_movimiento_inventario(data)
 
         # Obtener información del artículo para mensajes más descriptivos
-        from app.models.inventario import Inventario
-
         articulo = Inventario.query.get(movimiento.inventario_id)
 
         # Crear mensaje descriptivo
@@ -954,14 +977,42 @@ def editar_articulo(articulo_id):
         return jsonify({"success": False, "error": "Error al editar artículo"}), 500
 
 
+# Ruta para eliminar artículo
+@inventario_bp.route("/api/articulos/<int:articulo_id>", methods=["DELETE"])
+@api_login_required
+def eliminar_articulo_route(articulo_id):
+    """API para eliminar un artículo del inventario"""
+    try:
+        eliminar_articulo(articulo_id)
+        return jsonify({"success": True, "message": "Artículo eliminado exitosamente"})
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 404
+    except db.exc.IntegrityError:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "No se puede eliminar: el artículo tiene datos relacionados",
+                }
+            ),
+            409,
+        )
+    except Exception as e:
+        import logging
+
+        logging.error(f"Error al eliminar artículo {articulo_id}: {str(e)}")
+        return (
+            jsonify({"success": False, "error": "Error interno al eliminar artículo"}),
+            500,
+        )
+
+
 # Ruta para obtener un artículo individual
 @inventario_bp.route("/api/articulos/<int:articulo_id>", methods=["GET"])
 @api_login_required
 def obtener_articulo(articulo_id):
     """API para obtener un artículo individual"""
     try:
-        from app.models.inventario import Inventario
-
         articulo = Inventario.query.get(articulo_id)
         if not articulo:
             return jsonify({"success": False, "error": "Artículo no encontrado"}), 404

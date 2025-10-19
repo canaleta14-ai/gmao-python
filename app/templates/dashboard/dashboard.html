@@ -11,63 +11,63 @@
       métricas clave.</small
     >
   </div>
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card stats-card primary">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="stats-icon bg-primary bg-opacity-10 text-primary me-3">
-            <i class="bi bi-wrench"></i>
-          </div>
-          <div>
-            <h6 class="text-muted mb-1">Órdenes Activas</h6>
-            <h3 class="mb-0" id="stat-ordenes-activas">0</h3>
-          </div>
-        </div>
+  
+  <!-- Estadísticas Rápidas -->
+  <div class="quick-stats">
+    <div class="row">
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-primary" id="stat-ordenes-activas">0</div>
+        <div class="stat-label">Órdenes Activas</div>
+      </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-success" id="stat-completadas">0</div>
+        <div class="stat-label">Completadas Hoy</div>
+      </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-warning" id="stat-pendientes">0</div>
+        <div class="stat-label">Pendientes</div>
+      </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-info" id="stat-activos">0</div>
+        <div class="stat-label">Total Activos</div>
       </div>
     </div>
   </div>
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card stats-card success">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="stats-icon bg-success bg-opacity-10 text-success me-3">
-            <i class="bi bi-check-circle"></i>
-          </div>
-          <div>
-            <h6 class="text-muted mb-1">Completadas Hoy</h6>
-            <h3 class="mb-0" id="stat-completadas">0</h3>
-          </div>
-        </div>
-      </div>
-    </div>
+</div>
+
+<!-- Estadísticas FIFO/Inventario -->
+<div class="row mb-4">
+  <div class="col-12 mb-3">
+    <h5 class="mb-1"><i class="bi bi-layers-fill me-2"></i> Sistema FIFO - Gestión de Lotes</h5>
+    <small class="text-muted">Estado del inventario y gestión de lotes FIFO</small>
   </div>
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card stats-card warning">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="stats-icon bg-warning bg-opacity-10 text-warning me-3">
-            <i class="bi bi-exclamation-triangle"></i>
-          </div>
-          <div>
-            <h6 class="text-muted mb-1">Pendientes</h6>
-            <h3 class="mb-0" id="stat-pendientes">0</h3>
-          </div>
-        </div>
+  
+  <!-- Estadísticas FIFO -->
+  <div class="quick-stats">
+    <div class="row">
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-primary" id="stat-total-lotes">0</div>
+        <div class="stat-label">Total Lotes</div>
+        <small class="text-muted d-block mt-1" id="stat-lotes-disponibles-text">0 disponibles</small>
       </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card stats-card info">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="stats-icon bg-info bg-opacity-10 text-info me-3">
-            <i class="bi bi-cpu"></i>
-          </div>
-          <div>
-            <h6 class="text-muted mb-1">Total Activos</h6>
-            <h3 class="mb-0" id="stat-activos">0</h3>
-          </div>
-        </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-success" id="stat-cobertura-fifo">0%</div>
+        <div class="stat-label">Cobertura FIFO</div>
+        <small class="text-muted d-block mt-1" id="stat-articulos-cobertura-text">0 de 0 artículos</small>
+      </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-warning" id="stat-proximos-vencer">0</div>
+        <div class="stat-label">Próximos a Vencer</div>
+        <small class="text-muted d-block mt-1">En 30 días</small>
+      </div>
+      <div class="col-lg-3 col-md-6 stat-item">
+        <div class="stat-number text-danger" id="stat-lotes-vencidos">0</div>
+        <div class="stat-label">Lotes Vencidos</div>
+        <small class="text-muted d-block mt-1">
+          <a href="/lotes/vencimientos" class="text-danger text-decoration-none">
+            <i class="bi bi-arrow-right-circle me-1"></i>Ver detalles
+          </a>
+        </small>
       </div>
     </div>
   </div>
@@ -94,7 +94,7 @@
           <table class="table table-striped table-hover mb-0">
             <thead class="table-dark">
               <tr>
-                <th><i class="bi bi-hash me-1"></i>ID</th>
+                <th>ID</th>
                 <th><i class="bi bi-cpu me-1"></i>Equipo</th>
                 <th><i class="bi bi-gear me-1"></i>Tipo</th>
                 <th>
@@ -318,6 +318,54 @@
           console.log("✅ stat-activos actualizado a:", data.total_activos);
         } else {
           console.error("❌ elemento stat-activos no encontrado");
+        }
+
+        // ================== ACTUALIZAR ESTADÍSTICAS FIFO ==================
+        if (data.fifo_stats) {
+          console.log("📦 Actualizando estadísticas FIFO:", data.fifo_stats);
+          
+          // Total lotes
+          const elementTotalLotes = document.getElementById("stat-total-lotes");
+          if (elementTotalLotes) {
+            elementTotalLotes.textContent = data.fifo_stats.total_lotes || 0;
+          }
+          
+          // Lotes disponibles (texto debajo)
+          const elementLotesDisponiblesText = document.getElementById("stat-lotes-disponibles-text");
+          if (elementLotesDisponiblesText) {
+            elementLotesDisponiblesText.textContent = 
+              `${data.fifo_stats.lotes_disponibles || 0} disponibles`;
+          }
+          
+          // Cobertura FIFO
+          const elementCoberturaFifo = document.getElementById("stat-cobertura-fifo");
+          if (elementCoberturaFifo) {
+            elementCoberturaFifo.textContent = 
+              `${data.fifo_stats.porcentaje_cobertura || 0}%`;
+          }
+          
+          // Artículos con cobertura (texto debajo)
+          const elementArticulosCoberturaText = document.getElementById("stat-articulos-cobertura-text");
+          if (elementArticulosCoberturaText) {
+            elementArticulosCoberturaText.textContent = 
+              `${data.fifo_stats.articulos_con_lotes || 0} de ${data.fifo_stats.total_articulos || 0} artículos`;
+          }
+          
+          // Próximos a vencer
+          const elementProximosVencer = document.getElementById("stat-proximos-vencer");
+          if (elementProximosVencer) {
+            elementProximosVencer.textContent = data.fifo_stats.lotes_proximos_vencer || 0;
+          }
+          
+          // Lotes vencidos
+          const elementLotesVencidos = document.getElementById("stat-lotes-vencidos");
+          if (elementLotesVencidos) {
+            elementLotesVencidos.textContent = data.fifo_stats.lotes_vencidos || 0;
+          }
+          
+          console.log("✅ Estadísticas FIFO actualizadas exitosamente");
+        } else {
+          console.warn("⚠️ No se recibieron estadísticas FIFO en la respuesta");
         }
 
         console.log("🎉 ¡Dashboard actualizado exitosamente!");

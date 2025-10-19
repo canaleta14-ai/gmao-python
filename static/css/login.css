@@ -12,7 +12,7 @@
 }
 
 .login-left {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 40px;
   color: white;
   flex: 1;
@@ -56,8 +56,8 @@
 }
 
 .login-form .form-control:focus {
-  border-color: var(--secondary-color);
-  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
 .btn-login {
@@ -77,8 +77,8 @@
 }
 
 .form-check-input:checked {
-  background-color: var(--secondary-color);
-  border-color: var(--secondary-color);
+  background-color: #667eea;
+  border-color: #667eea;
 }
 
 .alert {
@@ -102,9 +102,99 @@
   font-size: 20px;
 }
 
-@media (max-width: 768px) {
+/* Responsive para tablets y móviles */
+@media (max-width: 992px) {
+  .login-container {
+    max-width: 700px;
+  }
+
   .login-left {
-    display: none;
+    padding: 30px;
+  }
+
+  .login-right {
+    padding: 30px;
+  }
+
+  .logo {
+    font-size: 50px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+    max-width: 500px;
+    margin: 10px;
+  }
+
+  .login-left {
+    display: block;
+    padding: 30px 20px;
+    min-height: auto;
+  }
+
+  .login-right {
+    padding: 30px 20px;
+  }
+
+  .logo {
+    font-size: 40px;
+    margin-bottom: 15px;
+  }
+
+  .features {
+    margin-top: 20px;
+  }
+
+  .feature {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-container {
+    border-radius: 10px;
+    margin: 5px;
+  }
+
+  .login-left {
+    padding: 20px 15px;
+  }
+
+  .login-right {
+    padding: 20px 15px;
+  }
+
+  .logo {
+    font-size: 35px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 10px 15px !important;
+  }
+
+  .features {
+    display: none; /* Ocultar features en móviles muy pequeños */
   }
 }
 
@@ -118,11 +208,11 @@
 }
 
 .form-control:focus + .input-group-text {
-  border-color: var(--secondary-color);
+  border-color: #667eea;
 }
 
 body.login-bg {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;

@@ -1,0 +1,15 @@
+/* Forzar alineación a la izquierda solo para columnas de precio y valor */
+
+/* Tabla principal inventario - columnas específicas de precio (7) */
+#tabla-inventario td:nth-child(7),
+#tabla-inventario td:nth-child(8) {
+  text-align: left !important;
+}
+
+/* Tablas de historial y movimientos - solo precio y valor */
+#historial-tbody td:nth-child(4),
+#historial-tbody td:nth-child(5),
+#movimientos-tbody td:nth-child(5),
+#movimientos-tbody td:nth-child(6) {
+  text-align: left !important;
+}

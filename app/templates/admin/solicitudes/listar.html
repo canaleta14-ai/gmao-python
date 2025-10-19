@@ -29,65 +29,23 @@
             </div>
 
             <!-- Estadísticas -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card h-100 border-start border-primary border-4">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="bi bi-clock-history fs-2 text-primary"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-1 text-primary">{{ estadisticas.total_pendientes }}</h4>
-                                    <small class="text-muted">Pendientes</small>
-                                </div>
-                            </div>
-                        </div>
+            <div class="quick-stats mb-4">
+                <div class="row">
+                    <div class="col-md-3 stat-item">
+                        <div class="stat-number text-primary">{{ estadisticas.total_pendientes }}</div>
+                        <div class="stat-label">Pendientes</div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-start border-warning border-4">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="bi bi-eye fs-2 text-warning"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-1 text-warning">{{ estadisticas.total_revision }}</h4>
-                                    <small class="text-muted">En Revisión</small>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-3 stat-item">
+                        <div class="stat-number text-warning">{{ estadisticas.total_revision }}</div>
+                        <div class="stat-label">En Revisión</div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-start border-info border-4">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="bi bi-gear fs-2 text-info"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-1 text-info">{{ estadisticas.total_progreso }}</h4>
-                                    <small class="text-muted">En Progreso</small>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-3 stat-item">
+                        <div class="stat-number text-info">{{ estadisticas.total_progreso }}</div>
+                        <div class="stat-label">En Progreso</div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-start border-success border-4">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="bi bi-check-circle fs-2 text-success"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-1 text-success">{{ estadisticas.total_completadas }}</h4>
-                                    <small class="text-muted">Completadas</small>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-3 stat-item">
+                        <div class="stat-number text-success">{{ estadisticas.total_completadas }}</div>
+                        <div class="stat-label">Completadas</div>
                     </div>
                 </div>
             </div>
@@ -170,9 +128,6 @@
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="border-0">
-                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" title="Seleccionar todas">
-                                        </th>
                                         <th class="border-0">#</th>
                                         <th class="border-0">Solicitante</th>
                                         <th class="border-0">Tipo</th>
@@ -185,9 +140,6 @@
                                 <tbody>
                                     {% for solicitud in solicitudes %}
                                     <tr>
-                                        <td>
-                                            <input type="checkbox" class="solicitud-checkbox" value="{{ solicitud.id }}" onchange="updateDeleteButton()">
-                                        </td>
                                         <td>
                                             <strong class="text-primary">{{ solicitud.numero_solicitud }}</strong>
                                         </td>
@@ -460,9 +412,6 @@ function actualizarTabla(data) {
 
         html += `
             <tr>
-                <td>
-                    <input type="checkbox" class="solicitud-checkbox" value="${solicitud.id}" onchange="updateDeleteButton()">
-                </td>
                 <td>
                     <strong class="text-primary">${solicitud.numero_solicitud}</strong>
                 </td>
@@ -744,39 +693,7 @@ function eliminarSeleccionadas() {
     });
 }
 
-// Función para seleccionar/deseleccionar todas las solicitudes
-function toggleSelectAll() {
-    const selectAll = document.getElementById('selectAll');
-    const checkboxes = document.querySelectorAll('.solicitud-checkbox');
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll.checked;
-    });
-    
-    updateDeleteButton();
-}
 
-// Función para actualizar la visibilidad del botón de eliminación masiva
-function updateDeleteButton() {
-    const checkboxes = document.querySelectorAll('.solicitud-checkbox:checked');
-    const deleteButton = document.getElementById('eliminarSeleccionadasBtn');
-    const selectAll = document.getElementById('selectAll');
-    
-    if (deleteButton) {
-        if (checkboxes.length > 0) {
-            deleteButton.style.display = 'inline-block';
-        } else {
-            deleteButton.style.display = 'none';
-        }
-    }
-    
-    // Actualizar estado del checkbox "Seleccionar todas"
-    const allCheckboxes = document.querySelectorAll('.solicitud-checkbox');
-    if (allCheckboxes.length > 0) {
-        selectAll.checked = checkboxes.length === allCheckboxes.length;
-        selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
-    }
-}
 
 // Función para mostrar mensajes de notificación
 function mostrarMensaje(mensaje, tipo = 'info') {

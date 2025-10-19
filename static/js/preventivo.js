@@ -2,7 +2,7 @@
 let planesData = [];
 let paginacionPlanes;
 let filtrosPlanes = {}; // Almacenar filtros globalmente
-let seleccionMasiva; // Sistema de selección masiva
+// Sistema de selección masiva
 
 // Función debounce para optimizar búsquedas
 function debounce(func, wait) {
@@ -19,7 +19,7 @@ function debounce(func, wait) {
 
 // Inicializar cuando se carga la página
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("🔧 Módulo de mantenimiento preventivo cargado");
+  console.log("ï£¿ðŸ”§ Módulo de mantenimiento preventivo cargado");
 
   // Configurar paginación
   paginacionPlanes = createPagination("paginacion-planes", cargarPlanes, {
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Configurar búsqueda y filtros
   configurarFiltrosPreventivo();
-  
+
   // Configurar búsqueda en tiempo real
   configurarBusquedaPreventivo();
 
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Configurar filtros de mantenimiento preventivo
 function configurarFiltrosPreventivo() {
-  console.log("🔍 Configurando filtros de mantenimiento preventivo...");
+  console.log("ï£¿ðŸ” Configurando filtros de mantenimiento preventivo...");
 
   // Selectores de filtro
   const filtros = ["filtro-estado", "filtro-frecuencia", "filtro-vencimiento"];
@@ -115,35 +115,35 @@ function configurarFiltrosPreventivo() {
 
 // Configurar búsqueda en tiempo real con debounce
 function configurarBusquedaPreventivo() {
-  console.log("🔍 Configurando búsqueda en tiempo real para preventivo...");
-  
+  console.log("ðŸ” Configurando búsqueda en tiempo real para preventivo...");
+
   const campoBusqueda = document.getElementById("filtro-buscar");
-  
+
   if (campoBusqueda) {
     // Crear función debounced para la búsqueda
     const busquedaDebounced = debounce(() => {
-      console.log("🔎 Ejecutando búsqueda...");
+      console.log("ðŸ”Ž Ejecutando búsqueda...");
       filtrarPlanes();
     }, 500);
-    
+
     // Agregar event listener con debounce
     campoBusqueda.addEventListener("input", busquedaDebounced);
     console.log("✅ Búsqueda en tiempo real configurada");
   } else {
-    console.warn("⚠️ Campo filtro-buscar no encontrado");
+    console.warn("—š  Campo filtro-buscar no encontrado");
   }
 }
 
 // Filtrar planes con búsqueda del lado del servidor
 function filtrarPlanes() {
-  console.log("🔍 filtrarPlanes() ejecutado");
+  console.log("ðŸ” filtrarPlanes() ejecutado");
   const filtros = {};
 
   // Filtro de búsqueda
   const buscar = document.getElementById("filtro-buscar");
   if (buscar && buscar.value.trim()) {
     filtros.q = buscar.value.trim();
-    console.log("📝 Filtro de búsqueda:", filtros.q);
+    console.log("ðŸ“ Filtro de búsqueda:", filtros.q);
   }
 
   // Filtros de selección
@@ -156,21 +156,21 @@ function filtrarPlanes() {
   const frecuencia = document.getElementById("filtro-frecuencia");
   if (frecuencia && frecuencia.value) {
     filtros.frecuencia = frecuencia.value;
-    console.log("🔧 Filtro de frecuencia:", filtros.frecuencia);
+    console.log("ðŸ”§ Filtro de frecuencia:", filtros.frecuencia);
   }
 
   const vencimiento = document.getElementById("filtro-vencimiento");
   if (vencimiento && vencimiento.value) {
     filtros.vencimiento = vencimiento.value;
-    console.log("⚡ Filtro de vencimiento:", filtros.vencimiento);
+    console.log("—š¡ Filtro de vencimiento:", filtros.vencimiento);
   }
 
   // Guardar filtros globalmente
   filtrosPlanes = filtros;
-  console.log("💾 Filtros guardados:", filtros);
+  console.log("ðŸ’¾ Filtros guardados:", filtros);
 
   // Reiniciar a la primera página y cargar con filtros
-  console.log("🔄 Cargando planes con filtros...");
+  console.log("ð📄 Cargando planes con filtros...");
   cargarPlanes(1, null, filtros);
 }
 
@@ -221,7 +221,7 @@ function mostrarCargandoPlanes(mostrar = true) {
 
 // Aplicar filtros a la lista de planes
 function aplicarFiltrosPreventivo() {
-  console.log("🔍 Aplicando filtros de preventivo...");
+  console.log("ï£¿ðŸ” Aplicando filtros de preventivo...");
   // Construir objeto de filtros
   const filtros = {};
 
@@ -241,16 +241,16 @@ function aplicarFiltrosPreventivo() {
     filtros.vencimiento = filtroVencimiento.value;
   }
 
-  console.log("🔍 Filtros aplicados:", filtros);
+  console.log("ï£¿ðŸ” Filtros aplicados:", filtros);
   cargarPlanes(1); // Recargar con filtros aplicados
 }
 
 // Inicializar autocompletado
 function inicializarAutocompletadoPreventivo() {
-  console.log("🔍 Inicializando autocompletado en preventivo...");
+  console.log("ï£¿ðŸ” Inicializando autocompletado en preventivo...");
 
   if (!window.AutoComplete) {
-    console.log("❌ AutoComplete no disponible");
+    console.log("—Œ AutoComplete no disponible");
     return;
   }
 
@@ -274,7 +274,7 @@ function inicializarAutocompletadoPreventivo() {
         );
       },
       onSelect: (item) => {
-        console.log("🔧 Plan seleccionado:", item);
+        console.log("ï£¿ðŸ”§ Plan seleccionado:", item);
         aplicarFiltrosPreventivo();
       },
     });
@@ -284,7 +284,7 @@ function inicializarAutocompletadoPreventivo() {
 
 // Función para limpiar filtros de preventivo
 function limpiarFiltrosPreventivo() {
-  console.log("üßπ Limpiando filtros de preventivo...");
+  console.log("🔧 Limpiando filtros de preventivo...");
 
   // Limpiar campos de filtro
   const filtros = [
@@ -392,9 +392,6 @@ function renderPlanes(planes) {
   planes.forEach((plan) => {
     tbody.innerHTML += `
             <tr>
-                <td>
-                    <input type="checkbox" class="form-check-input item-checkbox" data-id="${plan.id}">
-                </td>
                 <td>${plan.codigo}</td>
                 <td>${plan.nombre}</td>
                 <td>${plan.equipo}</td>
@@ -1353,7 +1350,7 @@ function deletePlan(planId, planCodigo) {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>¬øEstá seguro de que desea eliminar el plan de mantenimiento?</p>
+                        <p>¿Está seguro de que desea eliminar el plan de mantenimiento?</p>
                         <div class="alert alert-warning">
                             <strong>Código del Plan:</strong> ${planCodigo}<br>
                             <strong>Advertencia:</strong> Esta acción no se puede deshacer.
@@ -1441,7 +1438,7 @@ function cargarEstadisticasPlanes() {
       actualizarTarjetasEstadisticas(data);
     })
     .catch((error) => {
-      console.error("❌ Error cargando estadísticas:", error);
+      console.error("—Œ Error cargando estadísticas:", error);
       // En caso de error, mostrar 0 en las tarjetas
       actualizarTarjetasEstadisticas({
         planes_activos: 0,
@@ -1454,13 +1451,13 @@ function cargarEstadisticasPlanes() {
 
 // Función para actualizar las tarjetas de estadísticas
 function actualizarTarjetasEstadisticas(data) {
-  console.log("🎯 Actualizando tarjetas con datos:", data);
+  console.log("ðŸŽ¯ Actualizando tarjetas con datos:", data);
 
   // Función helper para animar contadores
   function animarContador(elementId, valorFinal) {
     const elemento = document.getElementById(elementId);
     if (!elemento) {
-      console.warn(`⚠️ Elemento ${elementId} no encontrado`);
+      console.warn(`—š  Elemento ${elementId} no encontrado`);
       return;
     }
 
@@ -1491,12 +1488,12 @@ function actualizarTarjetasEstadisticas(data) {
   animarContador("stat-vencidos", data.planes_vencidos || 0);
   animarContador("stat-completados", data.planes_completados || 0);
 
-  console.log("🎉 Tarjetas de estadísticas actualizadas exitosamente");
+  console.log("ðŸŽ‰ Tarjetas de estadísticas actualizadas exitosamente");
 }
 
 // Función para exportar planes a CSV
 function exportarCSV() {
-  console.log("📁 Iniciando exportación de planes a CSV...");
+  console.log("ðŸ“ Iniciando exportación de planes a CSV...");
 
   if (!planesData || planesData.length === 0) {
     if (typeof mostrarMensaje === "function") {
@@ -1553,7 +1550,9 @@ function exportarCSV() {
 
     // Crear y descargar el archivo
     // Añadir BOM UTF-8 para evitar caracteres mal codificados en Excel
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
 
     if (!blob || blob.size === 0) {
       throw new Error("No se pudo crear el archivo CSV");
@@ -1599,7 +1598,7 @@ function exportarCSV() {
       throw new Error("Su navegador no soporta la descarga de archivos");
     }
   } catch (error) {
-    console.error("❌ Error al exportar CSV:", error);
+    console.error("—Œ Error al exportar CSV:", error);
     if (typeof mostrarMensaje === "function") {
       mostrarMensaje("Error al exportar el archivo CSV", "danger");
     } else {
@@ -1625,28 +1624,28 @@ function formatearFecha(fechaString) {
 
 // Función para generar órdenes manualmente
 function generarOrdenesManual() {
-  console.log("🔄 Iniciando generación manual de órdenes...");
+  console.log("ð📄 Iniciando generación manual de órdenes...");
 
   // Mostrar modal de confirmación en lugar de confirm()
   showConfirmModal({
-    title: "Generar Órdenes Manualmente",
+    title: "Generar Í“rdenes Manualmente",
     message:
       "Esto generará órdenes de trabajo para todos los planes que NO tengan generación automática activada.<br><br>¿Desea continuar?",
-    confirmText: "Generar Órdenes",
+    confirmText: "Generar Í“rdenes",
     cancelText: "Cancelar",
     type: "warning",
     onConfirm: function () {
       ejecutarGeneracionManual();
     },
     onCancel: function () {
-      console.log("❌ Generación manual cancelada por el usuario");
+      console.log("—Œ Generación manual cancelada por el usuario");
     },
   });
 }
 
 // Función separada para ejecutar la generación después de la confirmación
 function ejecutarGeneracionManual() {
-  console.log("⏳ Ejecutando generación manual...");
+  console.log("—³ Ejecutando generación manual...");
 
   // Hacer la petición sin manipular el botón (el modal ya maneja el loading)
   fetch("/planes/api/generar-ordenes-manual", {
@@ -1669,10 +1668,10 @@ function ejecutarGeneracionManual() {
         const mensaje =
           cantidad > 0
             ? `✅ Generación manual completada: ${cantidad} órdenes creadas`
-            : "ℹ️ No había planes pendientes para generación manual";
+            : "—„¹ No había planes pendientes para generación manual";
 
         showNotificationToast(mensaje, cantidad > 0 ? "success" : "info");
-        
+
         // Recargar datos después de un momento
         setTimeout(() => {
           cargarPlanes(paginacionPlanes?.currentPage || 1);
@@ -1680,447 +1679,18 @@ function ejecutarGeneracionManual() {
         }, 1000);
       } else {
         showNotificationToast(
-          `❌ Error en generación manual: ${result.error || "Error desconocido"}`,
+          `—Œ Error en generación manual: ${
+            result.error || "Error desconocido"
+          }`,
           "error"
         );
       }
     })
     .catch((error) => {
-      console.error("❌ Error en generación manual:", error);
+      console.error("—Œ Error en generación manual:", error);
       showNotificationToast(
-        `❌ Error al generar órdenes: ${error.message}`,
+        `—Œ Error al generar órdenes: ${error.message}`,
         "error"
       );
     });
-}
-
-// ============================================================================
-// FUNCIONES DE ACCIONES MASIVAS
-// ============================================================================
-
-/**
- * Activar autogeneración masiva de planes seleccionados
- */
-function activarAutogeneracionMasiva() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
-  if (seleccionados.length === 0) {
-    showNotificationToast('Debe seleccionar al menos un plan', 'warning');
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva({
-    titulo: '¿Activar autogeneración?',
-    mensaje: `Se activará la generación automática de órdenes para ${seleccionados.length} plan(es). Las órdenes se generarán automáticamente a las 6:00 AM según su frecuencia.`,
-    textoBotonConfirmar: 'Sí, activar',
-    colorBotonConfirmar: 'success',
-    onConfirmar: async () => {
-      let exitosos = 0;
-      let fallidos = 0;
-
-      for (const id of seleccionados) {
-        try {
-          const response = await fetch(`/planes/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ generacion_automatica: true })
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            fallidos++;
-          }
-        } catch (error) {
-          console.error(`Error al activar plan ${id}:`, error);
-          fallidos++;
-        }
-      }
-
-      if (exitosos > 0) {
-        showNotificationToast(`${exitosos} plan(es) con autogeneración activada`, 'success');
-        cargarPlanes(paginacionPlanes?.currentPage || 1);
-        cargarEstadisticasPlanes();
-        seleccionMasiva.limpiarSeleccion();
-      }
-
-      if (fallidos > 0) {
-        showNotificationToast(`${fallidos} plan(es) no pudieron ser activados`, 'error');
-      }
-    }
-  });
-}
-
-/**
- * Desactivar autogeneración masiva de planes seleccionados
- */
-function desactivarAutogeneracionMasiva() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
-  if (seleccionados.length === 0) {
-    showNotificationToast('Debe seleccionar al menos un plan', 'warning');
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva({
-    titulo: '¿Desactivar autogeneración?',
-    mensaje: `Se desactivará la generación automática para ${seleccionados.length} plan(es). Las órdenes deberán generarse manualmente.`,
-    textoBotonConfirmar: 'Sí, desactivar',
-    colorBotonConfirmar: 'warning',
-    onConfirmar: async () => {
-      let exitosos = 0;
-      let fallidos = 0;
-
-      for (const id of seleccionados) {
-        try {
-          const response = await fetch(`/planes/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ generacion_automatica: false })
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            fallidos++;
-          }
-        } catch (error) {
-          console.error(`Error al desactivar plan ${id}:`, error);
-          fallidos++;
-        }
-      }
-
-      if (exitosos > 0) {
-        showNotificationToast(`${exitosos} plan(es) con autogeneración desactivada`, 'success');
-        cargarPlanes(paginacionPlanes?.currentPage || 1);
-        cargarEstadisticasPlanes();
-        seleccionMasiva.limpiarSeleccion();
-      }
-
-      if (fallidos > 0) {
-        showNotificationToast(`${fallidos} plan(es) no pudieron ser desactivados`, 'error');
-      }
-    }
-  });
-}
-
-/**
- * Cambiar frecuencia masiva de planes seleccionados
- */
-function cambiarFrecuenciaMasiva() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
-  if (seleccionados.length === 0) {
-    showNotificationToast('Debe seleccionar al menos un plan', 'warning');
-    return;
-  }
-
-  // Crear modal para cambio de frecuencia
-  const modalHtml = `
-    <div class="modal fade" id="modalFrecuenciaMasiva" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title">
-              <i class="bi bi-clock-history me-2"></i>Cambiar Frecuencia Masiva
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
-              Se cambiará la frecuencia de ${seleccionados.length} plan(es)
-            </div>
-            
-            <div class="mb-3">
-              <label class="form-label fw-bold">Nueva Frecuencia</label>
-              <select class="form-select" id="nueva-frecuencia-masiva">
-                <option value="">Seleccionar frecuencia...</option>
-                <option value="diaria">Diaria</option>
-                <option value="semanal">Semanal</option>
-                <option value="mensual">Mensual</option>
-                <option value="trimestral">Trimestral</option>
-                <option value="semestral">Semestral</option>
-                <option value="anual">Anual</option>
-                <option value="custom">Personalizada</option>
-              </select>
-            </div>
-
-            <div class="mb-3" id="intervalo-custom" style="display:none;">
-              <label class="form-label fw-bold">Intervalo (días)</label>
-              <input type="number" class="form-control" id="intervalo-dias-masivo" min="1" placeholder="Número de días">
-            </div>
-
-            <div class="form-text">
-              <strong>Nota:</strong> El cambio de frecuencia recalculará las próximas fechas de ejecución.
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="confirmarCambiarFrecuenciaMasiva()">
-              <i class="bi bi-check-circle me-1"></i>Cambiar Frecuencia
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Eliminar modal existente si lo hay
-  const modalExistente = document.getElementById('modalFrecuenciaMasiva');
-  if (modalExistente) {
-    modalExistente.remove();
-  }
-
-  // Agregar modal al DOM
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-  // Mostrar/ocultar intervalo custom
-  document.getElementById('nueva-frecuencia-masiva').addEventListener('change', function() {
-    const intervaloCustom = document.getElementById('intervalo-custom');
-    intervaloCustom.style.display = this.value === 'custom' ? 'block' : 'none';
-  });
-  
-  // Mostrar modal
-  const modal = new bootstrap.Modal(document.getElementById('modalFrecuenciaMasiva'));
-  modal.show();
-}
-
-/**
- * Confirmar cambio de frecuencia masivo
- */
-async function confirmarCambiarFrecuenciaMasiva() {
-  const frecuencia = document.getElementById('nueva-frecuencia-masiva').value;
-  const intervaloDias = document.getElementById('intervalo-dias-masivo').value;
-
-  if (!frecuencia) {
-    showNotificationToast('Debe seleccionar una frecuencia', 'warning');
-    return;
-  }
-
-  if (frecuencia === 'custom' && (!intervaloDias || intervaloDias <= 0)) {
-    showNotificationToast('Debe ingresar un intervalo válido', 'warning');
-    return;
-  }
-
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  let exitosos = 0;
-  let fallidos = 0;
-
-  // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('modalFrecuenciaMasiva'));
-  modal.hide();
-
-  for (const id of seleccionados) {
-    try {
-      const datos = { tipo_frecuencia: frecuencia };
-      if (frecuencia === 'custom') {
-        datos.intervalo_dias = parseInt(intervaloDias);
-      }
-
-      const response = await fetch(`/planes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-      });
-
-      if (response.ok) {
-        exitosos++;
-      } else {
-        fallidos++;
-      }
-    } catch (error) {
-      console.error(`Error al cambiar frecuencia del plan ${id}:`, error);
-      fallidos++;
-    }
-  }
-
-  if (exitosos > 0) {
-    showNotificationToast(`Frecuencia cambiada en ${exitosos} plan(es)`, 'success');
-    cargarPlanes(paginacionPlanes?.currentPage || 1);
-    seleccionMasiva.limpiarSeleccion();
-  }
-
-  if (fallidos > 0) {
-    showNotificationToast(`${fallidos} plan(es) no pudieron ser actualizados`, 'error');
-  }
-}
-
-/**
- * Generar órdenes de trabajo masivamente para planes seleccionados
- */
-function generarOrdenesMasivo() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
-  if (seleccionados.length === 0) {
-    showNotificationToast('Debe seleccionar al menos un plan', 'warning');
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva({
-    titulo: '¿Generar órdenes de trabajo?',
-    mensaje: `Se generarán órdenes de trabajo para ${seleccionados.length} plan(es) seleccionado(s). Las órdenes se crearán con estado "Pendiente".`,
-    textoBotonConfirmar: 'Sí, generar',
-    colorBotonConfirmar: 'primary',
-    onConfirmar: async () => {
-      let exitosos = 0;
-      let fallidos = 0;
-      let ordenesGeneradas = [];
-
-      for (const id of seleccionados) {
-        try {
-          const response = await fetch(`/planes/${id}/generar-orden`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              exitosos++;
-              if (result.orden_id) {
-                ordenesGeneradas.push(result.orden_id);
-              }
-            } else {
-              fallidos++;
-            }
-          } else {
-            fallidos++;
-          }
-        } catch (error) {
-          console.error(`Error al generar orden para plan ${id}:`, error);
-          fallidos++;
-        }
-      }
-
-      if (exitosos > 0) {
-        showNotificationToast(
-          `${exitosos} orden(es) de trabajo generada(s) correctamente`,
-          'success'
-        );
-        cargarPlanes(paginacionPlanes?.currentPage || 1);
-        cargarEstadisticasPlanes();
-        seleccionMasiva.limpiarSeleccion();
-      }
-
-      if (fallidos > 0) {
-        showNotificationToast(
-          `${fallidos} plan(es) no pudieron generar órdenes`,
-          'error'
-        );
-      }
-    }
-  });
-}
-
-/**
- * Exportar planes seleccionados a CSV
- */
-async function exportarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
-  if (seleccionados.length === 0) {
-    showNotificationToast('Debe seleccionar al menos un plan', 'warning');
-    return;
-  }
-
-  try {
-    // Obtener datos de los planes seleccionados
-    const planesExportar = [];
-    for (const id of seleccionados) {
-      const response = await fetch(`/planes/${id}`);
-      if (response.ok) {
-        const plan = await response.json();
-        planesExportar.push(plan);
-      }
-    }
-
-    if (planesExportar.length === 0) {
-      showNotificationToast('No se pudieron obtener los datos de los planes', 'error');
-      return;
-    }
-
-    // Generar CSV alineado con exportación estándar (todos los planes)
-    let csv = 'Código,Nombre,Estado,Frecuencia,Última Ejecución,Próxima Ejecución,Tiempo Estimado (hrs),Activo Asignado,Descripción\n';
-
-    planesExportar.forEach(p => {
-      csv += `"${p.codigo || p.codigo_plan || ''}",`;
-      csv += `"${p.nombre || ''}",`;
-      csv += `"${p.estado || ''}",`;
-      csv += `"${p.frecuencia || ''}",`;
-      csv += `"${p.ultima_ejecucion || ''}",`;
-      csv += `"${p.proxima_ejecucion || ''}",`;
-      csv += `${p.tiempo_estimado != null ? p.tiempo_estimado : ''},`;
-      csv += `"${p.activo_nombre || p.equipo || ''}",`;
-      csv += `"${(p.descripcion || p.instrucciones || '').replace(/"/g, '""')}"\n`;
-    });
-
-    // Descargar archivo
-    // Añadir BOM UTF-8 para mejorar compatibilidad con Excel
-    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `planes_mantenimiento_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    showNotificationToast(`${planesExportar.length} plan(es) exportado(s) correctamente`, 'success');
-  } catch (error) {
-    console.error('Error al exportar planes:', error);
-    showNotificationToast('Error al exportar planes', 'error');
-  }
-}
-
-/**
- * Eliminar planes seleccionados
- */
-function eliminarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  
-  if (seleccionados.length === 0) {
-    showNotificationToast('Debe seleccionar al menos un plan', 'warning');
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva({
-    titulo: '¿Eliminar planes?',
-    mensaje: `⚠️ Se eliminarán permanentemente ${seleccionados.length} plan(es) de mantenimiento. Esta acción no se puede deshacer.`,
-    textoBotonConfirmar: 'Sí, eliminar',
-    colorBotonConfirmar: 'danger',
-    onConfirmar: async () => {
-      let exitosos = 0;
-      let fallidos = 0;
-
-      for (const id of seleccionados) {
-        try {
-          const response = await fetch(`/planes/${id}`, {
-            method: 'DELETE'
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            fallidos++;
-          }
-        } catch (error) {
-          console.error(`Error al eliminar plan ${id}:`, error);
-          fallidos++;
-        }
-      }
-
-      if (exitosos > 0) {
-        showNotificationToast(`${exitosos} plan(es) eliminado(s) correctamente`, 'success');
-        cargarPlanes(paginacionPlanes?.currentPage || 1);
-        cargarEstadisticasPlanes();
-        seleccionMasiva.limpiarSeleccion();
-      }
-
-      if (fallidos > 0) {
-        showNotificationToast(`${fallidos} plan(es) no pudieron ser eliminados`, 'error');
-      }
-    }
-  });
 }

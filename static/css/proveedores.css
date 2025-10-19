@@ -1,5 +1,82 @@
 /* Estilos para la página de proveedores */
 
+/* Estilos específicos para campos de contacto y teléfono */
+.table td a[href^="tel:"] {
+  color: var(--success-color);
+  font-weight: 500;
+}
+
+.table td a[href^="tel:"]:hover {
+  color: var(--primary-color);
+  text-decoration: underline !important;
+}
+
+.table td a[href^="mailto:"] {
+  color: var(--accent-color);
+}
+
+.table td a[href^="mailto:"]:hover {
+  color: var(--primary-color);
+  text-decoration: underline !important;
+}
+
+.table td code.small {
+  font-size: 0.85rem;
+  background-color: var(--light-gray);
+  color: var(--dark-gray);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* Mejoras para la responsividad de la tabla */
+@media (max-width: 1200px) {
+  .table th:nth-child(3),
+  .table td:nth-child(3) {
+    /* Dirección */
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .table th:nth-child(6),
+  .table td:nth-child(6) {
+    /* Email */
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 992px) {
+  .table th:nth-child(4),
+  .table td:nth-child(4) {
+    /* Contacto */
+    display: none;
+  }
+
+  .table th:nth-child(7),
+  .table td:nth-child(7) {
+    /* Cuenta */
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .table th:nth-child(3),
+  .table td:nth-child(3) {
+    /* Dirección */
+    display: none;
+  }
+
+  .table th:nth-child(6),
+  .table td:nth-child(6) {
+    /* Email */
+    display: none;
+  }
+}
+
 /* Variables de color coherentes con el sidebar */
 :root {
   --primary-color: #1e40af;
@@ -56,24 +133,6 @@
   margin: 0;
   font-weight: 600;
   font-size: 0.95rem;
-}
-
-/* Indicador de estado del collapse */
-.filtros-header::after {
-  content: "\F229";
-  /* bi-chevron-down */
-  font-family: "bootstrap-icons";
-  font-size: 1rem;
-  transition: transform 0.3s ease;
-  transform: rotate(0deg);
-}
-
-.filtros-header.collapsed::after {
-  transform: rotate(-90deg);
-}
-
-.filtros-header[aria-expanded="true"]::after {
-  transform: rotate(180deg);
 }
 
 .filtros-body {
@@ -239,7 +298,8 @@
 }
 
 .table-hover tbody tr:hover {
-  background-color: rgba(44, 62, 80, 0.05);
+  /* Hover desactivado */
+  /* background-color: rgba(44, 62, 80, 0.05); */
 }
 
 /* Badges para estados */

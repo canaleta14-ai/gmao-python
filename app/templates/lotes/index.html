@@ -8,40 +8,128 @@
 .dashboard-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
 }
 
 .feature-card {
     border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-card .card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 30px 25px;
 }
 
 .feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
 }
 
 .feature-icon {
-    font-size: 3rem;
-    color: #667eea;
+    font-size: 3.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+    transition: transform 0.3s ease;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1);
+}
+
+.feature-card .card-title {
+    font-weight: 600;
+    color: #2d3748;
     margin-bottom: 1rem;
+    font-size: 1.25rem;
+    min-height: 35px;
+    display: flex;
+    align-items: center;
+}
+
+.feature-card .card-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #718096;
+    margin-bottom: 1.5rem;
+    flex: 1;
+    min-height: 90px;
+}
+
+.feature-card .actions-container {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.feature-card .form-control {
+    height: 42px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.feature-card .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+}
+
+.feature-card .btn {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.feature-card .btn i {
+    margin-right: 6px;
 }
 
 .quick-stats {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .stat-item {
     text-align: center;
-    border-right: 1px solid #dee2e6;
+    padding: 15px;
+    border-right: 2px solid rgba(255, 255, 255, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: scale(1.05);
 }
 
 .stat-item:last-child {
@@ -49,23 +137,279 @@
 }
 
 .stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #495057;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover .stat-number {
+    color: #667eea;
 }
 
 .stat-label {
-    color: #6c757d;
-    font-size: 0.875rem;
+    color: #4a5568;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .alert-count {
-    background: #dc3545;
+    background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
     color: white;
-    border-radius: 50%;
-    padding: 2px 6px;
+    border-radius: 20px;
+    padding: 4px 10px;
     font-size: 0.75rem;
-    margin-left: 5px;
+    font-weight: 600;
+    margin-left: 8px;
+    box-shadow: 0 2px 8px rgba(245, 101, 101, 0.4);
+    animation: pulse 2s infinite;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Estilos específicos para botones dentro de tarjetas */
+.btn-block {
+    width: 100%;
+}
+
+.btn.w-100 {
+    width: 100% !important;
+}
+
+/* Botones outline con borde púrpura - Actualizado 2025 */
+.btn-outline-primary {
+    background: transparent !important;
+    border: 2px solid #667eea !important;
+    color: #667eea !important;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-color: #667eea !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Asegurar alineación de inputs */
+input.form-control::placeholder {
+    color: #a0aec0;
+    font-size: 0.9rem;
+}
+
+/* Panel de información de vencimientos */
+.vencimientos-info {
+    background: #f7fafc;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.vencimientos-info .d-flex {
+    align-items: center;
+}
+
+.vencimientos-info i {
+    margin-right: 6px;
+}
+
+.vencimientos-info strong {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.card-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Contenedor uniforme de acciones */
+.actions-container {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.actions-container > * {
+    margin-bottom: 10px;
+}
+
+.actions-container > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Botones uniformes */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    border: none;
+}
+
+.btn i {
+    margin-right: 6px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    border: none;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    border: none;
+}
+
+.btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    border: none;
+    color: white;
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
+}
+
+.btn-light {
+    background: white;
+    color: #667eea;
+    border: 2px solid white;
+    font-weight: 600;
+}
+
+.btn-light:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.5);
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Mejoras para tablas */
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+}
+
+/* Loading animation */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Media queries para responsividad */
+@media (max-width: 1199px) {
+    .feature-card .card-text {
+        min-height: 100px;
+    }
+}
+
+@media (max-width: 991px) {
+    .feature-card .card-text {
+        min-height: 80px;
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        min-height: 60px;
+    }
+}
+
+@media (max-width: 767px) {
+    .feature-card .card-text {
+        min-height: auto;
+    }
+    
+    .feature-card .card-title {
+        min-height: auto;
+    }
+    
+    .feature-icon {
+        min-height: auto;
+    }
+    
+    .stat-item {
+        border-right: none !important;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .stat-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+}
+
+/* Mejoras de accesibilidad */
+.btn:focus,
+.form-control:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Transiciones suaves para todos los elementos interactivos */
+a, button, input, .card {
+    transition: all 0.3s ease;
 }
 </style>
 {% endblock %}
@@ -119,23 +463,26 @@
     <div class="row">
         <!-- Buscar Artículos -->
         <div class="col-md-6 col-xl-3 mb-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center">
+            <div class="card feature-card">
+                <div class="card-body">
                     <div class="feature-icon">
                         <i class="fas fa-search"></i>
                     </div>
                     <h5 class="card-title">Buscar Artículos</h5>
-                    <p class="card-text text-muted">
+                    <p class="card-text">
                         Busque cualquier artículo y vea sus lotes disponibles, 
                         stock actual y próximas fechas de vencimiento.
                     </p>
-                    <div class="mt-auto">
-                        <input type="text" class="form-control mb-3" 
+                    <div class="actions-container">
+                        <input type="text" class="form-control" 
                                id="buscar-articulo" 
                                placeholder="Código o nombre del artículo">
-                        <button class="btn btn-primary btn-block" onclick="buscarArticulo()">
-                            <i class="fas fa-search"></i> Buscar
+                        <button class="btn btn-primary w-100" onclick="buscarArticulo()">
+                            <i class="fas fa-search"></i> Buscar Artículo
                         </button>
+                        <a href="/inventario/" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-list"></i> Ver Inventario
+                        </a>
                     </div>
                 </div>
             </div>
@@ -143,21 +490,21 @@
 
         <!-- Gestión de Lotes -->
         <div class="col-md-6 col-xl-3 mb-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center">
+            <div class="card feature-card">
+                <div class="card-body">
                     <div class="feature-icon">
                         <i class="fas fa-boxes"></i>
                     </div>
                     <h5 class="card-title">Gestión de Lotes</h5>
-                    <p class="card-text text-muted">
+                    <p class="card-text">
                         Cree nuevos lotes de entrada, consulte existencias 
                         y gestione el inventario siguiendo la metodología FIFO.
                     </p>
-                    <div class="mt-auto">
-                        <a href="{{ url_for('lotes.crear_lote') }}" class="btn btn-success btn-block mb-2">
+                    <div class="actions-container">
+                        <a href="{{ url_for('lotes.crear_lote') }}" class="btn btn-success w-100">
                             <i class="fas fa-plus"></i> Crear Lote
                         </a>
-                        <button class="btn btn-outline-primary btn-block" onclick="verLotesActivos()">
+                        <button class="btn btn-outline-primary w-100" onclick="verLotesActivos()">
                             <i class="fas fa-list"></i> Ver Lotes
                         </button>
                     </div>
@@ -167,23 +514,26 @@
 
         <!-- Trazabilidad -->
         <div class="col-md-6 col-xl-3 mb-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center">
+            <div class="card feature-card">
+                <div class="card-body">
                     <div class="feature-icon">
                         <i class="fas fa-route"></i>
                     </div>
                     <h5 class="card-title">Trazabilidad</h5>
-                    <p class="card-text text-muted">
+                    <p class="card-text">
                         Siga el recorrido completo de cualquier lote desde 
                         su entrada hasta su consumo final.
                     </p>
-                    <div class="mt-auto">
-                        <a href="{{ url_for('lotes.trazabilidad') }}" class="btn btn-info btn-block mb-2">
-                            <i class="fas fa-route"></i> Ver Trazabilidad
-                        </a>
+                    <div class="actions-container">
                         <input type="text" class="form-control" 
                                id="buscar-lote" 
                                placeholder="ID o código de lote">
+                        <button class="btn btn-info w-100" onclick="buscarLote()">
+                            <i class="fas fa-search"></i> Buscar Lote
+                        </button>
+                        <a href="{{ url_for('lotes.trazabilidad') }}" class="btn btn-outline-primary w-100" data-style="outline">
+                            <i class="fas fa-route"></i> Ver Todas
+                        </a>
                     </div>
                 </div>
             </div>
@@ -191,8 +541,8 @@
 
         <!-- Vencimientos -->
         <div class="col-md-6 col-xl-3 mb-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center">
+            <div class="card feature-card">
+                <div class="card-body">
                     <div class="feature-icon">
                         <i class="fas fa-exclamation-triangle text-warning"></i>
                     </div>
@@ -200,12 +550,22 @@
                         Control de Vencimientos
                         <span class="alert-count" id="vencimientos-badge">0</span>
                     </h5>
-                    <p class="card-text text-muted">
+                    <p class="card-text">
                         Monitoree productos próximos a vencer y gestione 
                         las rotaciones de inventario proactivamente.
                     </p>
-                    <div class="mt-auto">
-                        <a href="{{ url_for('lotes.vencimientos') }}" class="btn btn-warning btn-block">
+                    <div class="actions-container">
+                        <div class="vencimientos-info mb-3">
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span><i class="fas fa-clock"></i> Próximos 30 días</span>
+                                <strong id="proximos-vencer-mini">0</strong>
+                            </div>
+                            <div class="d-flex justify-content-between text-danger small mt-1">
+                                <span><i class="fas fa-times-circle"></i> Ya vencidos</span>
+                                <strong id="vencidos-mini">0</strong>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('lotes.vencimientos') }}" class="btn btn-warning w-100">
                             <i class="fas fa-calendar-exclamation"></i> Ver Vencimientos
                         </a>
                     </div>
@@ -289,75 +649,126 @@ let articulosDisponibles = [];
 let lotesActivos = [];
 
 // Cargar datos iniciales
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     cargarEstadisticasRapidas();
     cargarArticulosDisponibles();
     
     // Configurar búsqueda en tiempo real
-    $('#buscar-articulo').on('keyup', function(e) {
-        if (e.keyCode === 13) { // Enter
-            buscarArticulo();
-        }
-    });
+    const buscarArticuloInput = document.getElementById('buscar-articulo');
+    if (buscarArticuloInput) {
+        buscarArticuloInput.addEventListener('keyup', function(e) {
+            if (e.keyCode === 13) { // Enter
+                buscarArticulo();
+            }
+        });
+    }
     
-    $('#buscar-lote').on('keyup', function(e) {
-        if (e.keyCode === 13) { // Enter
-            buscarLote();
-        }
-    });
+    const buscarLoteInput = document.getElementById('buscar-lote');
+    if (buscarLoteInput) {
+        buscarLoteInput.addEventListener('keyup', function(e) {
+            if (e.keyCode === 13) { // Enter
+                buscarLote();
+            }
+        });
+    }
 });
 
 // Cargar estadísticas rápidas
 function cargarEstadisticasRapidas() {
-    // Simulación - en producción esto vendría de la API
-    $('#total-lotes').text('0');
-    $('#articulos-fifo').text('0');
-    $('#proximos-vencer').text('0');
-    $('#vencidos').text('0');
-    $('#vencimientos-badge').text('0');
+    // Mostrar indicador de carga
+    const elementos = ['total-lotes', 'articulos-fifo', 'proximos-vencer', 'vencidos'];
+    elementos.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    });
+    
+    // Cargar datos reales desde el API
+    fetch('/lotes/api/estadisticas')
+        .then(response => response.json())
+        .then(response => {
+            if (response.success && response.estadisticas) {
+                const stats = response.estadisticas;
+                
+                // Actualizar valores con animación
+                animateValue('total-lotes', 0, stats.total_lotes, 800);
+                animateValue('articulos-fifo', 0, stats.articulos_fifo, 800);
+                animateValue('proximos-vencer', 0, stats.proximos_vencer, 800);
+                animateValue('vencidos', 0, stats.vencidos, 800);
+                
+                // Actualizar badge de vencimientos
+                const totalVencimientos = stats.proximos_vencer + stats.vencidos;
+                const badge = document.getElementById('vencimientos-badge');
+                if (badge) badge.textContent = totalVencimientos;
+                
+                // Actualizar mini-contadores en la tarjeta de vencimientos
+                const proximosMini = document.getElementById('proximos-vencer-mini');
+                const vencidosMini = document.getElementById('vencidos-mini');
+                if (proximosMini) proximosMini.textContent = stats.proximos_vencer;
+                if (vencidosMini) vencidosMini.textContent = stats.vencidos;
+                
+                console.log('✅ Estadísticas FIFO cargadas:', stats);
+            } else {
+                mostrarErrorEstadisticas();
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al cargar estadísticas:', error);
+            mostrarErrorEstadisticas();
+        });
+}
+
+// Función auxiliar para animar números
+function animateValue(id, start, end, duration) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    
+    const range = end - start;
+    const increment = range / (duration / 16); // ~60fps
+    let current = start;
+    
+    const timer = setInterval(function() {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+        }
+        element.textContent = Math.round(current);
+    }, 16);
+}
+
+// Mostrar error en estadísticas
+function mostrarErrorEstadisticas() {
+    const elementos = {
+        'total-lotes': '0',
+        'articulos-fifo': '0',
+        'proximos-vencer': '0',
+        'vencidos': '0',
+        'vencimientos-badge': '0'
+    };
+    
+    Object.keys(elementos).forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.textContent = elementos[id];
+    });
 }
 
 // Cargar artículos disponibles para autocompletado
 function cargarArticulosDisponibles() {
-    $.get('/api/inventario/activos')
-        .done(function(data) {
+    fetch('/api/inventario/activos')
+        .then(response => response.json())
+        .then(data => {
             articulosDisponibles = data.articulos || [];
-            configurarAutocompletado();
+            console.log('✅ Artículos disponibles cargados:', articulosDisponibles.length);
         })
-        .fail(function() {
-            console.log('Error al cargar artículos disponibles');
+        .catch(error => {
+            console.log('⚠️ Error al cargar artículos disponibles:', error);
         });
-}
-
-// Configurar autocompletado
-function configurarAutocompletado() {
-    $('#buscar-articulo').autocomplete({
-        source: function(request, response) {
-            const term = request.term.toLowerCase();
-            const matches = articulosDisponibles.filter(function(articulo) {
-                return articulo.codigo.toLowerCase().includes(term) ||
-                       articulo.nombre.toLowerCase().includes(term);
-            });
-            response(matches.slice(0, 10).map(function(articulo) {
-                return {
-                    label: `${articulo.codigo} - ${articulo.nombre}`,
-                    value: articulo.codigo,
-                    id: articulo.id
-                };
-            }));
-        },
-        minLength: 2,
-        select: function(event, ui) {
-            $('#buscar-articulo').data('articulo-id', ui.item.id);
-            return true;
-        }
-    });
 }
 
 // Buscar artículo
 function buscarArticulo() {
-    const termino = $('#buscar-articulo').val().trim();
-    const articuloId = $('#buscar-articulo').data('articulo-id');
+    const inputElem = document.getElementById('buscar-articulo');
+    const termino = inputElem ? inputElem.value.trim() : '';
     
     if (!termino) {
         mostrarMensaje('Por favor ingrese un término de búsqueda', 'warning');
@@ -365,37 +776,46 @@ function buscarArticulo() {
     }
 
     // Mostrar loading
-    $('#resultados-busqueda').show();
-    $('#tbody-resultados').html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Buscando...</td></tr>');
-
-    // Si tenemos ID específico, buscar ese artículo
-    if (articuloId) {
-        $.get(`/lotes/inventario/${articuloId}`)
-            .done(function(response) {
-                window.location.href = `/lotes/inventario/${articuloId}`;
-            })
-            .fail(function() {
-                mostrarMensaje('Error al cargar información del artículo', 'error');
-            });
-    } else {
-        // Búsqueda general por término
-        buscarArticulosPorTermino(termino);
+    const resultadosDiv = document.getElementById('resultados-busqueda');
+    const tbodyResultados = document.getElementById('tbody-resultados');
+    
+    if (resultadosDiv) resultadosDiv.style.display = 'block';
+    if (tbodyResultados) {
+        tbodyResultados.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Buscando...</td></tr>';
     }
-}
 
-// Buscar artículos por término
-function buscarArticulosPorTermino(termino) {
-    $.get('/api/inventario/buscar', { q: termino })
-        .done(function(data) {
-            if (data.success && data.articulos && data.articulos.length > 0) {
-                mostrarResultadosBusqueda(data.articulos);
-            } else {
-                $('#tbody-resultados').html('<tr><td colspan="6" class="text-center text-muted">No se encontraron artículos</td></tr>');
-            }
-        })
-        .fail(function() {
-            $('#tbody-resultados').html('<tr><td colspan="6" class="text-center text-danger">Error al realizar la búsqueda</td></tr>');
-        });
+    // Buscar en artículos locales primero
+    const resultadosLocales = articulosDisponibles.filter(art => 
+        art.codigo.toLowerCase().includes(termino.toLowerCase()) ||
+        (art.nombre && art.nombre.toLowerCase().includes(termino.toLowerCase()))
+    );
+    
+    if (resultadosLocales.length === 1) {
+        // Si hay exactamente un resultado, ir directamente a su página
+        window.location.href = `/lotes/inventario/${resultadosLocales[0].id}`;
+    } else if (resultadosLocales.length > 1) {
+        // Mostrar múltiples resultados
+        mostrarResultadosBusqueda(resultadosLocales);
+    } else {
+        // Búsqueda en servidor
+        fetch(`/api/inventario/buscar?q=${encodeURIComponent(termino)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.articulos && data.articulos.length > 0) {
+                    mostrarResultadosBusqueda(data.articulos);
+                } else {
+                    if (tbodyResultados) {
+                        tbodyResultados.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No se encontraron artículos</td></tr>';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error en búsqueda:', error);
+                if (tbodyResultados) {
+                    tbodyResultados.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al realizar la búsqueda</td></tr>';
+                }
+            });
+    }
 }
 
 // Mostrar resultados de búsqueda
@@ -410,7 +830,7 @@ function mostrarResultadosBusqueda(articulos) {
         html += `
             <tr>
                 <td><strong>${articulo.codigo}</strong></td>
-                <td>${articulo.nombre}</td>
+                <td>${articulo.nombre || ''}</td>
                 <td>
                     <span class="badge badge-${stockDisponible > 0 ? 'success' : 'danger'}">
                         ${stockDisponible} ${articulo.unidad_medida || 'UN'}
@@ -427,24 +847,36 @@ function mostrarResultadosBusqueda(articulos) {
         `;
     });
     
-    $('#tbody-resultados').html(html);
+    const tbody = document.getElementById('tbody-resultados');
+    if (tbody) tbody.innerHTML = html;
 }
 
 // Ver lotes activos
 function verLotesActivos() {
-    $('#tabla-lotes-activos').show();
-    $('#tbody-lotes').html('<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando lotes...</td></tr>');
+    const tablaLotesDiv = document.getElementById('tabla-lotes-activos');
+    const tbodyLotes = document.getElementById('tbody-lotes');
     
-    $.get('/api/lotes/activos')
-        .done(function(data) {
+    if (tablaLotesDiv) tablaLotesDiv.style.display = 'block';
+    if (tbodyLotes) {
+        tbodyLotes.innerHTML = '<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando lotes...</td></tr>';
+    }
+    
+    fetch('/api/lotes/activos')
+        .then(response => response.json())
+        .then(data => {
             if (data.success && data.lotes && data.lotes.length > 0) {
                 mostrarLotesActivos(data.lotes);
             } else {
-                $('#tbody-lotes').html('<tr><td colspan="8" class="text-center text-muted">No hay lotes activos</td></tr>');
+                if (tbodyLotes) {
+                    tbodyLotes.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay lotes activos</td></tr>';
+                }
             }
         })
-        .fail(function() {
-            $('#tbody-lotes').html('<tr><td colspan="8" class="text-center text-danger">Error al cargar lotes</td></tr>');
+        .catch(error => {
+            console.error('Error al cargar lotes:', error);
+            if (tbodyLotes) {
+                tbodyLotes.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar lotes</td></tr>';
+            }
         });
 }
 
@@ -503,12 +935,14 @@ function mostrarLotesActivos(lotes) {
         `;
     });
     
-    $('#tbody-lotes').html(html);
+    const tbody = document.getElementById('tbody-lotes');
+    if (tbody) tbody.innerHTML = html;
 }
 
 // Buscar lote específico
 function buscarLote() {
-    const loteId = $('#buscar-lote').val().trim();
+    const inputElem = document.getElementById('buscar-lote');
+    const loteId = inputElem ? inputElem.value.trim() : '';
     
     if (!loteId) {
         mostrarMensaje('Por favor ingrese un ID de lote', 'warning');
@@ -529,19 +963,27 @@ function mostrarMensaje(mensaje, tipo) {
     const html = `
         <div class="alert alert-${tipoClase} alert-dismissible fade show">
             ${mensaje}
-            <button type="button" class="close" data-dismiss="alert">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
     
     // Insertar al inicio del contenido
-    $('.container-fluid').prepend(html);
-    
-    // Auto-ocultar después de 5 segundos
-    setTimeout(function() {
-        $('.alert').fadeOut();
-    }, 5000);
+    const container = document.querySelector('.container-fluid');
+    if (container) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        container.insertBefore(tempDiv.firstElementChild, container.firstChild);
+        
+        // Auto-ocultar después de 5 segundos
+        setTimeout(function() {
+            const alerts = container.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    }
 }
 </script>
 {% endblock %}

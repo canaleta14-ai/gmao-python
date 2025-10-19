@@ -17,13 +17,22 @@
                     <small class="text-muted">Control y seguimiento de inventarios físicos</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ url_for('inventario.inventario_page') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('inventario.inventario_page') }}" class="btn btn-outline-primary"
+                        style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                        onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                        onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                         <i class="bi bi-arrow-left me-1"></i>Volver al Inventario
                     </a>
-                    <button type="button" class="btn btn-outline-secondary" onclick="iniciarPeriodoConteo()">
+                    <button type="button" class="btn btn-outline-primary" onclick="iniciarPeriodoConteo()"
+                        style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                        onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                        onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                         <i class="bi bi-calendar-plus me-1"></i>Nuevo Período
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="generarConteosAleatorios()">
+                    <button type="button" class="btn btn-outline-primary" onclick="generarConteosAleatorios()"
+                        style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                        onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                        onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                         <i class="bi bi-shuffle me-1"></i>Conteos Aleatorios
                     </button>
                 </div>
@@ -31,39 +40,29 @@
         </div>
     </div>
 
-    <!-- Tarjetas de estadísticas modernizadas -->
-    <div class="row mb-4" id="estadisticas-cards">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card primary">
-                <div class="card-body">
-                    <i class="bi bi-calendar-event stats-icon text-primary"></i>
-                    <div class="stats-number text-primary" id="periodo-actual">-</div>
-                    <div class="stats-label">Período Actual</div>
-                </div>
+    <!-- Estadísticas Rápidas -->
+    <div class="quick-stats">
+        <div class="row" id="estadisticas-cards">
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-primary" id="periodo-actual">-</div>
+                <div class="stat-label">Período Actual</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-success" id="total-conteos">-</div>
+                <div class="stat-label">Total Conteos</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-warning" id="conteos-completados">-</div>
+                <div class="stat-label">Completados</div>
+            </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-danger" id="conteos-diferencias">-</div>
+                <div class="stat-label">Con Diferencias</div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card success">
-                <div class="card-body">
-                    <i class="bi bi-list-ol stats-icon text-success"></i>
-                    <div class="stats-number text-success" id="total-conteos">-</div>
-                    <div class="stats-label">Total Conteos</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card warning">
-                <div class="card-body">
-                    <i class="bi bi-check-circle stats-icon text-warning"></i>
-                    <div class="stats-number text-warning" id="conteos-completados">-</div>
-                    <div class="stats-label">Completados</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card danger">
-                <div class="card-body">
-                    <i class="bi bi-exclamation-triangle stats-icon text-danger"></i>
+    </div>
+
+    <!-- Filtros colapsables -->
                     <div class="stats-number text-danger" id="conteos-diferencias">-</div>
                     <div class="stats-label">Con Diferencias</div>
                 </div>
@@ -108,10 +107,16 @@
                         </div>
                         <div class="row mt-3">
                             <div class="col-12">
-                                <button type="button" class="btn btn-primary" onclick="aplicarFiltrosConteos()">
+                                <button type="button" class="btn btn-outline-primary" onclick="aplicarFiltrosConteos()"
+                                    style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                                    onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                                    onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                                     <i class="bi bi-search me-1"></i>Buscar
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary ms-2" onclick="limpiarFiltrosConteos()">
+                                <button type="button" class="btn btn-outline-primary ms-2" onclick="limpiarFiltrosConteos()"
+                                    style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                                    onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                                    onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                                     <i class="bi bi-eraser me-1"></i>Limpiar
                                 </button>
                             </div>
@@ -207,7 +212,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarNuevoPeriodo()">
+                <button type="button" class="btn" onclick="guardarNuevoPeriodo()" style="background: transparent; border: 2px solid #667eea; color: #667eea; border-radius: 8px; padding: 8px 20px; font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.style.color='white'; this.style.borderColor='#667eea';" onmouseout="this.style.background='transparent'; this.style.color='#667eea'; this.style.borderColor='#667eea';">
                     <i class="bi bi-save me-1"></i>Iniciar Período
                 </button>
             </div>
@@ -342,7 +347,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarEditarConteo()">
+                <button type="button" class="btn" onclick="guardarEditarConteo()" style="background: transparent; border: 2px solid #667eea; color: #667eea; border-radius: 8px; padding: 8px 20px; font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.style.color='white'; this.style.borderColor='#667eea';" onmouseout="this.style.background='transparent'; this.style.color='#667eea'; this.style.borderColor='#667eea';">
                     <i class="bi bi-save me-1"></i>Guardar Cambios
                 </button>
             </div>

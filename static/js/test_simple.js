@@ -1,18 +1,18 @@
-// FunciÃ³n de test sÃºper simple
+// Función de test súper simple
 function testDashboardSimple() {
-    console.log('ğŸ§ª TEST: Dashboard sÃºper simple');
+    console.log('ğŸ§ª TEST: Dashboard súper simple');
 
     // Solo cambiar contenido del contenedor de alertas
     const container = document.getElementById('maintenanceAlerts');
     if (container) {
-        container.innerHTML = '<div class="alert alert-success">âœ… Test exitoso - Dashboard funciona</div>';
-        console.log('âœ… Contenedor actualizado exitosamente');
+        container.innerHTML = '<div class="alert alert-success">✅ Test exitoso - Dashboard funciona</div>';
+        console.log('✅ Contenedor actualizado exitosamente');
     } else {
-        console.log('â�Œ Contenedor maintenanceAlerts no encontrado');
+        console.log('—�Œ Contenedor maintenanceAlerts no encontrado');
     }
 }
 
-// FunciÃ³n para probar solo el login
+// Función para probar solo el login
 function testLoginProcess() {
     console.log('ğŸ”� TEST: Proceso de login');
     const loginStart = performance.now();
@@ -28,7 +28,7 @@ function testLoginProcess() {
         })
         .catch(error => {
             const loginTime = performance.now() - loginStart;
-            console.error(`â�Œ Error login despuÃ©s de ${loginTime.toFixed(2)}ms:`, error);
+            console.error(`—�Œ Error login después de ${loginTime.toFixed(2)}ms:`, error);
         });
 }
 

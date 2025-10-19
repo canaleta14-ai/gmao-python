@@ -47,14 +47,6 @@ function inicializarEventListeners() {
     }
   });
 
-  // Event listener para el checkbox "Seleccionar todo"
-  const selectAllCheckbox = document.getElementById("select-all");
-  if (selectAllCheckbox) {
-    selectAllCheckbox.addEventListener("change", function () {
-      toggleSelectAll(this.checked);
-    });
-  }
-
   // Event delegation para botones de acción
   document.addEventListener("click", function (event) {
     const target = event.target.closest("[data-action]");
@@ -264,9 +256,9 @@ function cargarEstadisticas() {
 }
 
 function mostrarUsuarios() {
-  const tbody = document.getElementById("tabla-usuarios");
+  const tbody = document.getElementById("tbody-usuarios");
   if (!tbody) {
-    console.error("No se encontró el elemento tabla-usuarios");
+    console.error("No se encontró el elemento tbody-usuarios");
     return;
   }
 
@@ -336,13 +328,6 @@ function crearFilaUsuario(usuario) {
   };
 
   return `
-        <td>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" data-id="${
-                  usuario.id
-                }">
-            </div>
-        </td>
         <td><span class="text-muted">#${usuario.id}</span></td>
         <td><span class="badge bg-light text-dark">${usuario.codigo}</span></td>
         <td>
@@ -450,7 +435,7 @@ function cambiarPagina(nuevaPagina) {
 }
 
 function filtrarUsuarios() {
-  console.log("🔍 Filtrando usuarios...");
+  console.log("ðŸ” Filtrando usuarios...");
 
   const filtros = {
     q: document.getElementById("filtro-buscar")?.value.trim() || "",
@@ -466,7 +451,7 @@ function filtrarUsuarios() {
 }
 
 function limpiarFiltros() {
-  console.log("🧹 Limpiando filtros...");
+  console.log("ðŸ§¹ Limpiando filtros...");
 
   document.getElementById("filtro-buscar").value = "";
   document.getElementById("filtro-cargo").value = "";
@@ -541,7 +526,7 @@ function generarCodigoUsuario() {
 }
 
 // ========================================
-// FUNCIONES DE VALIDACIÓN EN TIEMPO REAL
+// FUNCIONES DE VALIDACIÍ“N EN TIEMPO REAL
 // ========================================
 
 // Configurar validación en tiempo real cuando se muestran los modales
@@ -720,13 +705,13 @@ function crearUsuario() {
     fecha_ingreso: new Date().toISOString().split("T")[0],
   };
 
-  console.log("📋 Datos a enviar al servidor:", userData);
+  console.log("ðŸ“‹ Datos a enviar al servidor:", userData);
 
   // Debug CSRF token
   const csrfToken = document.querySelector('meta[name="csrf-token"]');
-  console.log("🔐 CSRF meta tag found:", !!csrfToken);
+  console.log("ðŸ” CSRF meta tag found:", !!csrfToken);
   if (csrfToken) {
-    console.log("🔐 CSRF token value:", csrfToken.getAttribute("content"));
+    console.log("ðŸ” CSRF token value:", csrfToken.getAttribute("content"));
   }
 
   const headers = {
@@ -750,7 +735,7 @@ function crearUsuario() {
       return response.json();
     })
     .then((data) => {
-      console.log("📋 Respuesta completa del servidor:", data);
+      console.log("ðŸ“‹ Respuesta completa del servidor:", data);
       if (data.success) {
         const username = document.getElementById("username").value;
         mostrarMensaje(
@@ -760,7 +745,7 @@ function crearUsuario() {
         cerrarModalUsuario();
         cargarUsuarios();
       } else {
-        console.error("❌ Error del servidor:", data.error);
+        console.error("—Œ Error del servidor:", data.error);
         mostrarMensaje(
           "Error: " + (data.error || "Error al crear usuario"),
           "danger"
@@ -934,7 +919,7 @@ async function eliminarUsuario(id, nombre) {
 }
 
 function mostrarConfirmacionEliminarUsuario(id, nombre) {
-  if (!confirm(`¿Está seguro de que desea eliminar al usuario "${nombre}"?`)) {
+  if (!confirm(`Â¿Está seguro de que desea eliminar al usuario "${nombre}"?`)) {
     return;
   }
 
@@ -1029,98 +1014,4 @@ function mostrarMensaje(mensaje, tipo = "info") {
       alerta.remove();
     }
   }, 5000);
-}
-
-// ===== FUNCIONES DE SELECCIÓN MASIVA =====
-
-function toggleSelectAll(seleccionado) {
-  const checkboxes = document.querySelectorAll(
-    '#tabla-usuarios input[type="checkbox"]'
-  );
-  checkboxes.forEach((checkbox) => {
-    checkbox.checked = seleccionado;
-  });
-  actualizarEstadoSeleccion();
-  mostrarAccionesMasivas();
-}
-
-function actualizarEstadoSeleccion() {
-  const checkboxes = document.querySelectorAll(
-    '#tabla-usuarios input[type="checkbox"]'
-  );
-  const selectAllCheckbox = document.getElementById("select-all");
-  const totalCheckboxes = checkboxes.length;
-  const seleccionados = document.querySelectorAll(
-    '#tabla-usuarios input[type="checkbox"]:checked'
-  );
-  const totalSeleccionados = seleccionados.length;
-
-  if (selectAllCheckbox) {
-    if (totalSeleccionados === 0) {
-      selectAllCheckbox.indeterminate = false;
-      selectAllCheckbox.checked = false;
-    } else if (totalSeleccionados === totalCheckboxes) {
-      selectAllCheckbox.indeterminate = false;
-      selectAllCheckbox.checked = true;
-    } else {
-      selectAllCheckbox.indeterminate = true;
-      selectAllCheckbox.checked = false;
-    }
-  }
-
-  // Actualizar contador de seleccionados
-  const contadorSeleccion = document.getElementById("contador-seleccion");
-  if (contadorSeleccion) {
-    if (totalSeleccionados > 0) {
-      contadorSeleccion.textContent = `${totalSeleccionados} seleccionado${
-        totalSeleccionados > 1 ? "s" : ""
-      }`;
-      contadorSeleccion.style.display = "inline";
-    } else {
-      contadorSeleccion.style.display = "none";
-    }
-  }
-}
-
-function mostrarAccionesMasivas() {
-  const seleccionados = document.querySelectorAll(
-    '#tabla-usuarios input[type="checkbox"]:checked'
-  );
-  const accionesMasivas = document.getElementById("acciones-masivas");
-
-  if (accionesMasivas) {
-    if (seleccionados.length > 0) {
-      accionesMasivas.style.display = "block";
-    } else {
-      accionesMasivas.style.display = "none";
-    }
-  }
-}
-
-function obtenerUsuariosSeleccionados() {
-  const seleccionados = document.querySelectorAll(
-    '#tabla-usuarios input[type="checkbox"]:checked'
-  );
-  const idsSeleccionados = Array.from(seleccionados).map((checkbox) =>
-    parseInt(checkbox.getAttribute("data-id"))
-  );
-  return usuarios.filter((usuario) => idsSeleccionados.includes(usuario.id));
-}
-
-function limpiarSeleccion() {
-  const selectAllCheckbox = document.getElementById("select-all");
-  if (selectAllCheckbox) {
-    selectAllCheckbox.checked = false;
-    selectAllCheckbox.indeterminate = false;
-  }
-
-  const checkboxes = document.querySelectorAll(
-    '#tabla-usuarios input[type="checkbox"]'
-  );
-  checkboxes.forEach((checkbox) => {
-    checkbox.checked = false;
-  });
-
-  mostrarAccionesMasivas();
-  actualizarEstadoSeleccion();
 }

@@ -89,6 +89,7 @@ class ServicioFIFO:
         except Exception as e:
             logger.error(f"Error al consumir FIFO: {str(e)}")
             raise
+
     """Servicio para gestionar operaciones FIFO en el inventario"""
 
     @staticmethod
@@ -152,53 +153,6 @@ class ServicioFIFO:
 
         except Exception as e:
             logger.error(f"Error al crear lote: {str(e)}")
-            raise
-            inventario = db.session.get(Inventario, inventario_id)
-            if not inventario:
-                raise ValueError(
-                    f"Artículo de inventario {inventario_id} no encontrado"
-                )
-
-            # Obtener lotes disponibles ordenados por FIFO
-            lotes_consumo, cantidad_faltante = LoteInventario.obtener_lotes_fifo(
-                inventario_id, cantidad_total
-            )
-
-            if cantidad_faltante > 0:
-                logger.warning(
-                    f"Stock insuficiente para artículo {inventario_id}: "
-                    f"solicitado {cantidad_total}, faltante {cantidad_faltante}"
-                )
-
-            # Registrar consumos
-            consumos_realizados = []
-            for lote, cantidad_a_consumir in lotes_consumo:
-                cantidad_consumida = lote.consumir(cantidad_a_consumir)
-
-                if cantidad_consumida > 0:
-                    # Registrar el movimiento del lote
-                    movimiento_lote = MovimientoLote(
-                        lote_id=lote.id,
-                        orden_trabajo_id=orden_trabajo_id,
-                        tipo_movimiento="consumo",
-                        cantidad=Decimal(str(cantidad_consumida)),
-                        documento_referencia=documento_referencia,
-                        observaciones=observaciones,
-                        usuario_id=usuario_id,
-                    )
-                    db.session.add(movimiento_lote)
-
-                    consumos_realizados.append((lote, cantidad_consumida))
-
-                    logger.info(
-                        f"Consumido {cantidad_consumida} del lote {lote.id} "
-                        f"(queda {lote.cantidad_actual})"
-                    )
-
-            return consumos_realizados, cantidad_faltante
-
-        except Exception as e:
-            logger.error(f"Error al consumir FIFO: {str(e)}")
             raise
 
     @staticmethod

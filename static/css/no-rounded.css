@@ -15,7 +15,7 @@
 .offcanvas,
 .popover,
 .toast {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* Headers - Solo bordes superiores redondeados */
@@ -23,7 +23,7 @@
 .modal-header,
 .filtros-header,
 .offcanvas-header {
-  border-radius: 8px 8px 0 0 !important;
+  border-radius: 0 8px 0 0 !important;
 }
 
 /* Footers - Solo bordes inferiores redondeados */
@@ -34,7 +34,7 @@
 }
 
 /* ============================================
-   BOTONES
+   BOTONES - Border radius 2px
    ============================================ */
 
 .btn,
@@ -57,13 +57,13 @@
 .btn-link,
 .navbar-toggler,
 .dropdown-toggle {
-  border-radius: 6px !important;
+  border-radius: 2px !important;
 }
 
 /* Botones pequeños */
 .btn-sm,
 .btn-lg {
-  border-radius: 6px !important;
+  border-radius: 2px !important;
 }
 
 /* ============================================
@@ -84,19 +84,19 @@ input[type="time"],
 input[type="datetime-local"],
 textarea,
 select {
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 /* Input groups */
 .input-group-text {
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 /* Input groups - Primer elemento */
 .input-group > .form-control:not(:last-child),
 .input-group > .form-select:not(:last-child),
 .input-group > .input-group-text:first-child {
-  border-radius: 6px 0 0 6px !important;
+  border-radius: 0 0 0 6px !important;
 }
 
 /* Input groups - Último elemento */
@@ -109,7 +109,7 @@ select {
 /* Input groups - Elemento único */
 .input-group > .form-control:only-child,
 .input-group > .form-select:only-child {
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -117,7 +117,7 @@ select {
    ============================================ */
 
 .badge {
-  border-radius: 12px !important;
+  border-radius: 0 !important;
 }
 
 .rounded-pill {
@@ -129,15 +129,15 @@ select {
    ============================================ */
 
 .nav-pills .nav-link {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 .nav-tabs .nav-link {
-  border-radius: 8px 8px 0 0 !important;
+  border-radius: 0 8px 0 0 !important;
 }
 
 .breadcrumb {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -146,12 +146,12 @@ select {
 
 .dropdown-menu,
 .autocomplete-dropdown {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 .dropdown-item:first-child,
 .autocomplete-item:first-child {
-  border-radius: 8px 8px 0 0 !important;
+  border-radius: 0 8px 0 0 !important;
 }
 
 .dropdown-item:last-child,
@@ -161,7 +161,7 @@ select {
 
 .dropdown-item:only-child,
 .autocomplete-item:only-child {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -169,11 +169,11 @@ select {
    ============================================ */
 
 .list-group {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 .list-group-item:first-child {
-  border-radius: 8px 8px 0 0 !important;
+  border-radius: 0 8px 0 0 !important;
 }
 
 .list-group-item:last-child {
@@ -181,7 +181,7 @@ select {
 }
 
 .list-group-item:only-child {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -189,12 +189,12 @@ select {
    ============================================ */
 
 .table {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
   overflow: hidden;
 }
 
 .table-responsive {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -210,24 +210,65 @@ select {
 .alert-info,
 .alert-light,
 .alert-dark {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
-   PAGINACIÓN
+   PAGINACIÓN MEJORADA
    ============================================ */
 
 .pagination {
-  gap: 4px;
+  margin-bottom: 0;
+  gap: 6px;
 }
 
-.page-link {
-  border-radius: 6px !important;
+.pagination .page-link {
+  border-radius: 0;
+  margin: 0;
+  color: var(--primary-color);
+  border: 2px solid #dee2e6;
+  font-weight: 600;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+}
+
+.pagination .page-link:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pagination .page-link i {
+  font-size: 1.1rem;
 }
 
 .page-item:first-child .page-link,
 .page-item:last-child .page-link {
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -235,16 +276,16 @@ select {
    ============================================ */
 
 .accordion-item {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
   margin-bottom: 8px;
 }
 
 .accordion-button {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 .accordion-button:not(.collapsed) {
-  border-radius: 8px 8px 0 0 !important;
+  border-radius: 0 8px 0 0 !important;
 }
 
 .accordion-collapse {
@@ -256,11 +297,11 @@ select {
    ============================================ */
 
 .progress {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 .progress-bar {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -276,7 +317,7 @@ select {
 /* Imágenes en cards */
 .card-img,
 .card-img-top {
-  border-radius: 8px 8px 0 0 !important;
+  border-radius: 0 8px 0 0 !important;
 }
 
 .card-img-bottom {
@@ -284,8 +325,10 @@ select {
 }
 
 /* Imágenes normales - Borde muy sutil */
-img:not(.avatar):not(.rounded-circle):not(.card-img):not(.card-img-top):not(.card-img-bottom) {
-  border-radius: 4px !important;
+img:not(.avatar):not(.rounded-circle):not(.card-img):not(.card-img-top):not(
+    .card-img-bottom
+  ) {
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -293,7 +336,7 @@ img:not(.avatar):not(.rounded-circle):not(.card-img):not(.card-img-top):not(.car
    ============================================ */
 
 .tooltip-inner {
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
@@ -311,12 +354,12 @@ img:not(.avatar):not(.rounded-circle):not(.card-img):not(.card-img-top):not(.car
 
 /* Redondeo completo */
 .rounded {
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 /* Redondeo en lados específicos */
 .rounded-top {
-  border-radius: 6px 6px 0 0 !important;
+  border-radius: 0 6px 0 0 !important;
 }
 
 .rounded-bottom {
@@ -324,7 +367,7 @@ img:not(.avatar):not(.rounded-circle):not(.card-img):not(.card-img-top):not(.car
 }
 
 .rounded-start {
-  border-radius: 6px 0 0 6px !important;
+  border-radius: 0 0 0 6px !important;
 }
 
 .rounded-end {
@@ -342,12 +385,12 @@ img:not(.avatar):not(.rounded-circle):not(.card-img):not(.card-img-top):not(.car
 
 /* Confirmation modal */
 .confirmation-modal .modal-content {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* Stats cards específicos */
 .stats-card .card-body {
-  border-radius: 8px !important;
+  border-radius: 0 !important;
 }
 
 /* Sidebar si tiene bordes */
@@ -414,4 +457,3 @@ th {
  * ✅ Cumplimiento con estándares de accesibilidad
  * ✅ Coherencia visual en toda la aplicación
  */
-

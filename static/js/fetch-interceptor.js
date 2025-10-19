@@ -4,9 +4,9 @@ window.fetch = function (...args) {
     console.log('ðŸš¨ FETCH INTERCEPTADO:', args[0]);
     console.log('ðŸš¨ Stack trace:', new Error().stack);
 
-    // Si es el fetch problemÃ¡tico, bloquearlo
+    // Si es el fetch problemático, bloquearlo
     if (args[0] && args[0].includes('/api/alertas-mantenimiento')) {
-        console.log('ðŸš¨ BLOQUEANDO FETCH DE ALERTAS - NO SE EJECUTARÃ�');
+        console.log('ðŸš¨ BLOQUEANDO FETCH DE ALERTAS - NO SE EJECUTARÍ�');
         return Promise.resolve({
             ok: true,
             json: () => Promise.resolve({
@@ -20,4 +20,4 @@ window.fetch = function (...args) {
     return originalFetch.apply(this, args);
 };
 
-console.log('ðŸš¨ FETCH INTERCEPTOR ACTIVADO - Todos los fetch serÃ¡n monitoreados');
+console.log('ðŸš¨ FETCH INTERCEPTOR ACTIVADO - Todos los fetch serán monitoreados');

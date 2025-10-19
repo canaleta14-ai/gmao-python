@@ -176,20 +176,52 @@ def listar_articulos_avanzado(filtros=None, page=1, per_page=10):
 
 def crear_articulo_simple(data):
     """Crear un nuevo artículo de inventario simple"""
-    # Validar que el código no exista
+    # Validaciones básicas
+    if not data.get("codigo"):
+        raise ValueError("El código es obligatorio")
+    if not data.get("descripcion"):
+        raise ValueError("La descripción es obligatoria")
+
+    # Validar código único
     if Inventario.query.filter_by(codigo=data["codigo"]).first():
         raise ValueError("Ya existe un artículo con este código")
+
+    # Validar y convertir valores numéricos
+    try:
+        stock_actual = float(data.get("stock_actual", 0))
+        stock_minimo = float(data.get("stock_minimo", 0))
+        stock_maximo = float(data.get("stock_maximo", 100))
+        precio_unitario = float(data.get("precio_unitario", 0))
+        precio_promedio = float(data.get("precio_promedio", 0))
+    except (ValueError, TypeError):
+        raise ValueError("Los valores numéricos deben ser válidos")
+
+    # Validar que los valores no sean negativos
+    if stock_actual < 0:
+        raise ValueError("El stock actual no puede ser negativo")
+    if stock_minimo < 0:
+        raise ValueError("El stock mínimo no puede ser negativo")
+    if stock_maximo < 0:
+        raise ValueError("El stock máximo no puede ser negativo")
+    if precio_unitario < 0:
+        raise ValueError("El precio unitario no puede ser negativo")
+    if precio_promedio < 0:
+        raise ValueError("El precio promedio no puede ser negativo")
+
+    # Validar lógica de stocks
+    if stock_maximo > 0 and stock_minimo > stock_maximo:
+        raise ValueError("El stock mínimo no puede ser mayor que el stock máximo")
 
     articulo = Inventario(
         codigo=data["codigo"],
         descripcion=data["descripcion"],
         categoria=data.get("categoria", ""),
-        stock_actual=data.get("stock_actual", 0),
-        stock_minimo=data.get("stock_minimo", 0),
-        stock_maximo=data.get("stock_maximo", 100),
+        stock_actual=stock_actual,
+        stock_minimo=stock_minimo,
+        stock_maximo=stock_maximo,
         ubicacion=data.get("ubicacion", ""),
-        precio_unitario=data.get("precio_unitario", 0),
-        precio_promedio=data.get("precio_promedio", 0),
+        precio_unitario=precio_unitario,
+        precio_promedio=precio_promedio,
         unidad_medida=data.get("unidad_medida", "UNI"),
         proveedor_principal=data.get("proveedor_principal", ""),
         grupo_contable=data.get("grupo_contable", ""),
@@ -632,6 +664,22 @@ def editar_articulo_simple(articulo_id, data):
 
         db.session.commit()
         return articulo
+
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+
+def eliminar_articulo(articulo_id):
+    """Eliminar un artículo del inventario"""
+    try:
+        articulo = Inventario.query.get(articulo_id)
+        if not articulo:
+            raise ValueError("Artículo no encontrado")
+
+        db.session.delete(articulo)
+        db.session.commit()
+        return True
 
     except Exception as e:
         db.session.rollback()

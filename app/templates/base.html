@@ -10,14 +10,14 @@
     <link rel="alternate icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20251019e">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/autocomplete.css') }}">
     <!-- Estilos responsive para tablas -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables-responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables-responsive.css') }}?v=20251018">
     {% block extra_css %}{% endblock %}
     {% block extra_head %}{% endblock %}
     <!-- IMPORTANTE: Cargar al final para eliminar todos los bordes redondeados -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/no-rounded.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/no-rounded.css') }}?v=20251019e">
     <!-- Estilos para modales de confirmación modernos -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/confirmation-modal.css') }}">
 </head>

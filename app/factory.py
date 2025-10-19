@@ -4,6 +4,7 @@ from flask_login import LoginManager
 import logging
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 
 
 def create_app(config_name=None):
@@ -14,6 +15,11 @@ def create_app(config_name=None):
         config_name (str): 'development', 'testing', 'production' o None para auto-detectar
     """
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Cargar variables de entorno desde .env
+    env_path = os.path.join(base_dir, ".env")
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
     template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
     static_dir = os.path.join(base_dir, "static")
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
@@ -85,8 +91,7 @@ def create_app(config_name=None):
 
     # Configuración de SECRET_KEY desde .env (desarrollo local)
     app.config["SECRET_KEY"] = os.getenv(
-        "SECRET_KEY",
-        "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION"
+        "SECRET_KEY", "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION"
     )
 
     # Log de advertencia si se usa clave por defecto
@@ -270,22 +275,25 @@ def create_app(config_name=None):
     app.logger.info("[OK] Flask-Migrate inicializado")
 
     # Verificación de esquema en desarrollo/testing para prevenir errores 500
-    try:
-        from app.utils.schema_check import ensure_inventario_schema
+    # TEMPORAL: Comentado hasta crear las tablas correctamente
+    # try:
+    #     from app.utils.schema_check import ensure_inventario_schema
 
-        if (
-            app.config.get("TESTING")
-            or app.config.get("FLASK_ENV") in ("development", "testing")
-            or app.config.get("ENV") == "development"
-        ):
-            # Ejecutar dentro de app_context para evitar errores de contexto
-            with app.app_context():
-                res = ensure_inventario_schema(app)
-                app.logger.info(
-                    f"[OK] Verificación de esquema Inventario: columnas añadidas={res.get('added', 0)}"
-                )
-    except Exception as e:
-        app.logger.warning(f"[WARN] Error en verificación de esquema al arranque: {e}")
+    #     if (
+    #         app.config.get("TESTING")
+    #         or app.config.get("FLASK_ENV") in ("development", "testing")
+    #         or app.config.get("ENV") == "development"
+    #     ):
+    #         # Ejecutar dentro de app_context para evitar errores de contexto
+    #         with app.app_context():
+    #             res = ensure_inventario_schema(app)
+    #             app.logger.info(
+    #                 f"[OK] Verificación de esquema Inventario: columnas añadidas={res.get('added', 0)}"
+    #             )
+    # except Exception as e:
+    #     app.logger.warning(f"[WARN] Error en verificación de esquema al arranque: {e}")
+
+    app.logger.info("[OK] Verificación de esquema desactivada temporalmente")
 
     # Inicializar CSRF Protection
     from app.extensions import csrf
@@ -424,8 +432,10 @@ def create_app(config_name=None):
 
     # Registrar blueprints opcionales (optimizaciones/features avanzados)
     # Se pueden deshabilitar los warnings con SHOW_OPTIONAL_BLUEPRINT_WARNINGS=false
-    show_optional_warnings = os.getenv("SHOW_OPTIONAL_BLUEPRINT_WARNINGS", "false").lower() == "true"
-    
+    show_optional_warnings = (
+        os.getenv("SHOW_OPTIONAL_BLUEPRINT_WARNINGS", "false").lower() == "true"
+    )
+
     # Registrar blueprint de FIFO optimizado (OPTIMIZACIÓN)
     try:
         from app.blueprints.fifo_optimizado_bp import fifo_optimizado_bp
@@ -450,9 +460,13 @@ def create_app(config_name=None):
         )
     except ImportError as e:
         if show_optional_warnings:
-            app.logger.warning(f"Blueprint de inventario optimizado documentado no disponible: {e}")
+            app.logger.warning(
+                f"Blueprint de inventario optimizado documentado no disponible: {e}"
+            )
         else:
-            app.logger.debug(f"Blueprint de inventario optimizado documentado no disponible: {e}")
+            app.logger.debug(
+                f"Blueprint de inventario optimizado documentado no disponible: {e}"
+            )
         # Fallback al blueprint original si el documentado no está disponible
         try:
             from app.blueprints.inventario_optimizado_bp import inventario_optimizado_bp
@@ -463,9 +477,13 @@ def create_app(config_name=None):
             )
         except ImportError as e2:
             if show_optional_warnings:
-                app.logger.warning(f"Blueprint de inventario optimizado no disponible: {e2}")
+                app.logger.warning(
+                    f"Blueprint de inventario optimizado no disponible: {e2}"
+                )
             else:
-                app.logger.debug(f"Blueprint de inventario optimizado no disponible: {e2}")
+                app.logger.debug(
+                    f"Blueprint de inventario optimizado no disponible: {e2}"
+                )
 
     # Registrar blueprint de dashboard de monitoreo
     try:

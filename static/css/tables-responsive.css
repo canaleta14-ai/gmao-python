@@ -20,16 +20,18 @@
   width: 100%;
 }
 
-/* Columnas iguales para listados generales */
+/* Columnas distribuidas automáticamente para listados */
 .table.table-even {
-  table-layout: fixed !important;
+  table-layout: auto !important;
+  width: 100% !important;
 }
 
 .table.table-even th,
 .table.table-even td {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-wrap: break-word !important;
 }
 
 /* ========== ESTILOS MEJORADOS PARA TH ========== */
@@ -37,68 +39,138 @@
   background-color: #f8f9fa;
   color: #495057;
   font-weight: 600;
-  font-size: 0.85rem;
-  padding: 0.75rem 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.875rem 0.75rem;
   vertical-align: middle;
   border-bottom: 2px solid #dee2e6;
   border-top: none;
   position: relative;
-  
-  /* Mejorar legibilidad del texto */
-  white-space: normal !important;
-  word-wrap: break-word;
-  overflow: visible !important;
-  text-overflow: clip !important;
-  
-  /* Ancho flexible en lugar de fijo */
-  min-width: 80px;
-  max-width: none;
-}
 
+  /* Alineación por defecto a la izquierda */
+  text-align: left !important;
+
+  /* Mejorar legibilidad del texto */
+  white-space: nowrap !important;
+  word-wrap: normal;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+
+  /* Ancho automático y balanceado */
+  width: auto;
+  min-width: 100px;
+  max-width: 200px;
+}
 .table th i {
   margin-right: 0.25rem;
   font-size: 0.8rem;
   opacity: 0.8;
 }
 
-/* ========== ESTILOS PARA TD ========== */
-.table td {
-  padding: 0.6rem 0.5rem;
-  vertical-align: middle;
-  font-size: 0.85rem;
-  border-bottom: 1px solid #f1f3f4;
-  
-  /* Mejorar legibilidad del texto */
-  white-space: normal !important;
-  word-wrap: break-word;
-  overflow: visible !important;
-  text-overflow: clip !important;
+/* Excepciones específicas para alineación */
+.table th.text-center {
+  text-align: center !important;
 }
 
+.table th.text-end {
+  text-align: right !important;
+}
+
+.table th.text-start {
+  text-align: left !important;
+}
+
+/* Reglas específicas para alineación de datos en celdas */
+.table td {
+  text-align: left !important;
+}
+
+.table td.text-center {
+  text-align: center !important;
+}
+
+.table td.text-end {
+  text-align: right !important;
+}
+
+.table td.text-start {
+  text-align: left !important;
+}
+
+/* ========== ESTILOS PARA TD ========== */
+.table td {
+  padding: 0.75rem 0.75rem;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #f1f3f4;
+
+  /* Mejorar legibilidad del texto */
+  white-space: nowrap !important;
+  word-wrap: normal;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+
+  /* Ancho automático */
+  width: auto;
+  max-width: 200px;
+}
 .table tbody tr:hover {
-  background-color: rgba(0, 123, 255, 0.05);
-  transition: background-color 0.2s ease;
+  /* Hover desactivado */
+  /* background-color: rgba(0, 123, 255, 0.05);
+  transition: background-color 0.2s ease; */
 }
 
 /* ========== CLASES DE PRIORIDAD PARA COLUMNAS ========== */
 /* Columnas críticas - siempre visibles */
 .col-critical {
-  min-width: 100px !important;
+  width: auto !important;
+  min-width: 120px !important;
+  max-width: none !important;
 }
 
 /* Columnas importantes - ocultar en móviles pequeños */
 .col-important {
-  min-width: 120px;
+  width: auto !important;
+  min-width: 100px !important;
+  max-width: none !important;
 }
 
 /* Columnas opcionales - ocultar en tablets y móviles */
 .col-optional {
-  min-width: 140px;
+  width: auto !important;
+  min-width: 90px !important;
+  max-width: none !important;
 }
 
 /* Columnas de detalles - solo en desktop */
 .col-detail {
-  min-width: 160px;
+  width: auto !important;
+  min-width: 110px !important;
+  max-width: none !important;
+}
+
+/* ========== ESTILOS ESPECÍFICOS PARA COLUMNA DE ACCIONES ========== */
+.table th:last-child,
+.table td:last-child {
+  text-align: center !important;
+  width: 140px !important;
+  min-width: 120px !important;
+  max-width: 160px !important;
+  white-space: nowrap !important;
+}
+
+/* Contenedor de botones de acción mejorado */
+.table .btn-group.btn-group-sm {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Asegurar que los botones no se deformen */
+.table .action-btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
 /* ========== RESPONSIVE BREAKPOINTS ========== */
@@ -109,43 +181,48 @@
     font-size: 0.75rem;
     border-radius: 6px;
   }
-  
+
   .table th,
   .table td {
     padding: 0.4rem 0.3rem;
     font-size: 0.75rem;
   }
-  
+
   .table th {
     font-size: 0.7rem;
     font-weight: 700;
   }
-  
+
   /* Ocultar columnas opcionales y de detalle */
   .col-optional,
   .col-detail {
     display: none !important;
   }
-  
+
   /* Hacer que las columnas importantes sean más estrechas */
   .col-important {
     min-width: 80px;
     max-width: 100px;
   }
-  
+
   .col-critical {
     min-width: 70px;
     max-width: 90px;
   }
-  
-  /* Botones de acción más pequeños */
+
+  /* Botones de acción más compactos en móviles pequeños */
   .table .btn-group-sm .btn,
-  .action-btn {
-    padding: 0.15rem 0.25rem !important;
-    font-size: 0.65rem !important;
-    margin: 0.1rem;
+  .table .action-btn {
+    padding: 0.15rem 0.3rem !important;
+    font-size: 0.7rem !important;
+    min-width: 28px !important;
+    margin: 0.05rem !important;
   }
-  
+
+  .table .btn-group.btn-group-sm {
+    gap: 0.1rem !important;
+  }
+
   /* Badges más pequeños */
   .badge {
     padding: 0.2rem 0.4rem;
@@ -158,36 +235,43 @@
   .table-responsive {
     font-size: 0.8rem;
   }
-  
+
   .table th,
   .table td {
     padding: 0.5rem 0.4rem;
     font-size: 0.8rem;
   }
-  
+
   .table th {
     font-size: 0.75rem;
   }
-  
+
   /* Ocultar solo columnas de detalle */
   .col-detail {
     display: none !important;
   }
-  
+
   /* Ajustar anchos */
   .col-optional {
     min-width: 100px;
     max-width: 120px;
   }
-  
+
   .col-important {
     min-width: 90px;
     max-width: 110px;
   }
-  
+
   .col-critical {
-    min-width: 80px;
-    max-width: 100px;
+    min-width: 100px !important;
+    max-width: 120px !important;
+  }
+
+  /* Botones más grandes en móvil para mejor touch */
+  .table .action-btn {
+    padding: 0.25rem 0.4rem !important;
+    font-size: 0.75rem !important;
+    min-width: 32px !important;
   }
 }
 
@@ -196,28 +280,28 @@
   .table-responsive {
     font-size: 0.85rem;
   }
-  
+
   .table th,
   .table td {
     padding: 0.6rem 0.5rem;
     font-size: 0.85rem;
   }
-  
+
   .table th {
     font-size: 0.8rem;
   }
-  
+
   /* Mostrar todas las columnas excepto algunas de detalle específicas */
   .col-detail.hide-tablet {
     display: none !important;
   }
-  
+
   /* Ajustar anchos para tablets */
   .col-detail {
     min-width: 120px;
     max-width: 140px;
   }
-  
+
   .col-optional {
     min-width: 110px;
     max-width: 130px;
@@ -230,7 +314,7 @@
   .table td {
     padding: 0.75rem 0.6rem;
   }
-  
+
   /* Restaurar anchos normales en desktop */
   .col-critical,
   .col-important,
@@ -244,159 +328,196 @@
 /* ========== ESTILOS ESPECÍFICOS POR TABLA ========== */
 
 /* Tabla de Activos */
-#tabla-activos-main th:nth-child(1) { /* Checkbox */
+#tabla-activos-main th:nth-child(1) {
+  /* Checkbox */
   width: 40px !important;
   min-width: 40px !important;
 }
 
-#tabla-activos-main th:nth-child(2) { /* Código */
+#tabla-activos-main th:nth-child(2) {
+  /* Código */
   min-width: 80px;
 }
 
-#tabla-activos-main th:nth-child(3) { /* Departamento */
+#tabla-activos-main th:nth-child(3) {
+  /* Departamento */
   min-width: 120px;
 }
 
-#tabla-activos-main th:nth-child(4) { /* Activo */
+#tabla-activos-main th:nth-child(4) {
+  /* Activo */
   min-width: 150px;
 }
 
-#tabla-activos-main th:nth-child(5) { /* Tipo */
+#tabla-activos-main th:nth-child(5) {
+  /* Tipo */
   min-width: 80px;
 }
 
-#tabla-activos-main th:nth-child(6) { /* Ubicación */
+#tabla-activos-main th:nth-child(6) {
+  /* Ubicación */
   min-width: 100px;
 }
 
-#tabla-activos-main th:nth-child(7) { /* Proveedor */
+#tabla-activos-main th:nth-child(7) {
+  /* Proveedor */
   min-width: 100px;
 }
 
-#tabla-activos-main th:nth-child(8) { /* Estado */
+#tabla-activos-main th:nth-child(8) {
+  /* Estado */
   min-width: 80px;
 }
 
-#tabla-activos-main th:nth-child(9) { /* Prioridad */
+#tabla-activos-main th:nth-child(9) {
+  /* Prioridad */
   min-width: 80px;
 }
 
-#tabla-activos-main th:nth-child(10) { /* Último Mant. */
+#tabla-activos-main th:nth-child(10) {
+  /* Último Mant. */
   min-width: 100px;
 }
 
-#tabla-activos-main th:nth-child(11) { /* Acciones */
+#tabla-activos-main th:nth-child(11) {
+  /* Acciones */
   width: 140px !important;
   min-width: 140px !important;
 }
 
 /* Tabla de Órdenes */
-.table th:has(i.bi-hash) { /* Número */
+.table th:has(i.bi-hash) {
+  /* Número */
   min-width: 80px;
 }
 
-.table th:has(i.bi-calendar) { /* Fecha */
+.table th:has(i.bi-calendar) {
+  /* Fecha */
   min-width: 100px;
 }
 
-.table th:has(i.bi-cpu) { /* Activo */
+.table th:has(i.bi-cpu) {
+  /* Activo */
   min-width: 150px;
 }
 
-.table th:has(i.bi-gear) { /* Tipo */
+.table th:has(i.bi-gear) {
+  /* Tipo */
   min-width: 80px;
 }
 
-.table th:has(i.bi-circle) { /* Estado */
+.table th:has(i.bi-circle) {
+  /* Estado */
   min-width: 80px;
 }
 
 /* Tabla de Inventario */
-#tabla-inventario th:nth-child(1) { /* Checkbox */
+#tabla-inventario th:nth-child(1) {
+  /* Checkbox */
   width: 40px !important;
   min-width: 40px !important;
 }
 
-#tabla-inventario th:nth-child(2) { /* Código */
+#tabla-inventario th:nth-child(2) {
+  /* Código */
   min-width: 80px;
 }
 
-#tabla-inventario th:nth-child(3) { /* Artículo */
+#tabla-inventario th:nth-child(3) {
+  /* Artículo */
   min-width: 150px;
 }
 
-#tabla-inventario th:nth-child(4) { /* Categoría */
+#tabla-inventario th:nth-child(4) {
+  /* Categoría */
   min-width: 100px;
 }
 
-#tabla-inventario th:nth-child(5) { /* Stock */
+#tabla-inventario th:nth-child(5) {
+  /* Stock */
   min-width: 70px;
 }
 
-#tabla-inventario th:nth-child(6) { /* Mín/Máx */
+#tabla-inventario th:nth-child(6) {
+  /* Mín/Máx */
   min-width: 80px;
 }
 
-#tabla-inventario th:nth-child(7) { /* Ubicación */
+#tabla-inventario th:nth-child(7) {
+  /* Ubicación */
   min-width: 100px;
 }
 
-#tabla-inventario th:nth-child(8) { /* Precio */
+#tabla-inventario th:nth-child(8) {
+  /* Precio */
   min-width: 80px;
 }
 
-#tabla-inventario th:nth-child(9) { /* Valor */
+#tabla-inventario th:nth-child(9) {
+  /* Valor */
   min-width: 80px;
 }
 
-#tabla-inventario th:nth-child(10) { /* Estado */
+#tabla-inventario th:nth-child(10) {
+  /* Estado */
   min-width: 80px;
 }
 
-#tabla-inventario th:nth-child(11) { /* Acciones */
+#tabla-inventario th:nth-child(11) {
+  /* Acciones */
   width: 140px !important;
   min-width: 140px !important;
 }
 
 /* Tabla de Usuarios */
-#tabla-usuarios th:nth-child(1) { /* Checkbox */
+#tabla-usuarios th:nth-child(1) {
+  /* Checkbox */
   width: 40px !important;
   min-width: 40px !important;
 }
 
-#tabla-usuarios th:nth-child(2) { /* ID */
+#tabla-usuarios th:nth-child(2) {
+  /* ID */
   min-width: 50px;
 }
 
-#tabla-usuarios th:nth-child(3) { /* Código */
+#tabla-usuarios th:nth-child(3) {
+  /* Código */
   min-width: 80px;
 }
 
-#tabla-usuarios th:nth-child(4) { /* Nombre */
+#tabla-usuarios th:nth-child(4) {
+  /* Nombre */
   min-width: 150px;
 }
 
-#tabla-usuarios th:nth-child(5) { /* Teléfono */
+#tabla-usuarios th:nth-child(5) {
+  /* Teléfono */
   min-width: 100px;
 }
 
-#tabla-usuarios th:nth-child(6) { /* Cargo */
+#tabla-usuarios th:nth-child(6) {
+  /* Cargo */
   min-width: 100px;
 }
 
-#tabla-usuarios th:nth-child(7) { /* Rol */
+#tabla-usuarios th:nth-child(7) {
+  /* Rol */
   min-width: 80px;
 }
 
-#tabla-usuarios th:nth-child(8) { /* Estado */
+#tabla-usuarios th:nth-child(8) {
+  /* Estado */
   min-width: 80px;
 }
 
-#tabla-usuarios th:nth-child(9) { /* Fecha Ingreso */
+#tabla-usuarios th:nth-child(9) {
+  /* Fecha Ingreso */
   min-width: 100px;
 }
 
-#tabla-usuarios th:nth-child(10) { /* Acciones */
+#tabla-usuarios th:nth-child(10) {
+  /* Acciones */
   width: 140px !important;
   min-width: 140px !important;
 }
@@ -422,13 +543,13 @@
 
 /* ========== INDICADOR DE SCROLL ========== */
 .table-responsive::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   right: 0;
   width: 20px;
   height: 100%;
-  background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -467,4 +588,11 @@
   .table tbody tr {
     transition: none;
   }
+}
+
+/* ========== FORZAR ALINEACIÓN IZQUIERDA PARA PRECIO Y VALOR ========== */
+/* Reglas específicas para columnas de precio y valor - añadir al final del archivo */
+.precio-columna,
+.valor-columna {
+  text-align: left !important;
 }

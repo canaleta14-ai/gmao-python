@@ -115,12 +115,17 @@ def descargar_manual_archivo(manual_id):
             )  # 5 min
             return redirect(url)
 
-        # Si es local, verificar existencia y enviar
-        if not os.path.exists(manual.ruta_archivo):
+        # Si es local, convertir a ruta absoluta si es relativa
+        file_path = manual.ruta_archivo
+        if not os.path.isabs(file_path):
+            file_path = os.path.join(os.getcwd(), file_path)
+
+        # Verificar existencia
+        if not os.path.exists(file_path):
             raise Exception("Archivo no encontrado en el servidor")
 
         return send_file(
-            manual.ruta_archivo,
+            file_path,
             as_attachment=True,
             download_name=manual.nombre_archivo,
             mimetype="application/octet-stream",
@@ -148,8 +153,13 @@ def previsualizar_manual_archivo(manual_id):
             )  # 1 hora
             return redirect(url)
 
-        # Si es local, verificar y enviar
-        if not os.path.exists(manual.ruta_archivo):
+        # Si es local, convertir a ruta absoluta si es relativa
+        file_path = manual.ruta_archivo
+        if not os.path.isabs(file_path):
+            file_path = os.path.join(os.getcwd(), file_path)
+
+        # Verificar existencia
+        if not os.path.exists(file_path):
             raise Exception("Archivo no encontrado en el servidor")
 
         # Determinar mimetype
@@ -162,7 +172,7 @@ def previsualizar_manual_archivo(manual_id):
 
         mimetype = mimetypes.get(manual.extension.lower(), "application/octet-stream")
 
-        return send_file(manual.ruta_archivo, mimetype=mimetype, as_attachment=False)
+        return send_file(file_path, mimetype=mimetype, as_attachment=False)
 
     except Exception as e:
         raise Exception(f"Error al previsualizar manual: {str(e)}")

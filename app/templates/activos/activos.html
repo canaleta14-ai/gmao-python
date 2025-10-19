@@ -3,7 +3,7 @@
 {% set section = 'activos' %}
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/activos.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/seleccion-masiva.css') }}">
+
 {% endblock %}
 {% block content %}
 <!-- Encabezado con estadísticas -->
@@ -16,10 +16,16 @@
                     <small class="text-muted">Sistema de codificación por departamentos</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" onclick="exportarCSV()">
+                    <button class="btn btn-outline-primary" onclick="exportarCSV()" 
+                        style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                        onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                        onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                         <i class="bi bi-download me-1"></i>Exportar CSV
                     </button>
-                    <button class="btn btn-primary" onclick="mostrarModalNuevoActivo()">
+                    <button class="btn btn-outline-primary" onclick="mostrarModalNuevoActivo()"
+                        style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                        onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                        onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                         <i class="bi bi-plus-circle me-1"></i>Nuevo Activo
                     </button>
                 </div>
@@ -27,42 +33,24 @@
         </div>
     </div>
 
-    <!-- Tarjetas de estadísticas modernizadas -->
-    <div class="row mb-4" id="estadisticas-cards">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card primary">
-                <div class="card-body">
-                    <i class="bi bi-cpu stats-icon text-primary"></i>
-                    <div class="stats-number text-primary" id="total-activos">0</div>
-                    <div class="stats-label">Total Activos</div>
-                </div>
+    <!-- Estadísticas Rápidas -->
+    <div class="quick-stats">
+        <div class="row" id="estadisticas-cards">
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-primary" id="total-activos">0</div>
+                <div class="stat-label">Total Activos</div>
             </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card success">
-                <div class="card-body">
-                    <i class="bi bi-check-circle stats-icon text-success"></i>
-                    <div class="stats-number text-success" id="activos-operativos">0</div>
-                    <div class="stats-label">Operativos</div>
-                </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-success" id="activos-operativos">0</div>
+                <div class="stat-label">Operativos</div>
             </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card warning">
-                <div class="card-body">
-                    <i class="bi bi-gear stats-icon text-warning"></i>
-                    <div class="stats-number text-warning" id="activos-mantenimiento">0</div>
-                    <div class="stats-label">En Mantenimiento</div>
-                </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-warning" id="activos-mantenimiento">0</div>
+                <div class="stat-label">En Mantenimiento</div>
             </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stats-card danger">
-                <div class="card-body">
-                    <i class="bi bi-exclamation-triangle stats-icon text-danger"></i>
-                    <div class="stats-number text-danger" id="activos-fuera-servicio">0</div>
-                    <div class="stats-label">Fuera de Servicio</div>
-                </div>
+            <div class="col-md-3 stat-item">
+                <div class="stat-number text-danger" id="activos-fuera-servicio">0</div>
+                <div class="stat-label">Fuera de Servicio</div>
             </div>
         </div>
     </div>
@@ -75,70 +63,64 @@
         <div id="filtros-collapse" class="collapse">
             <div class="filtros-body">
                 <div class="row g-3">
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-buscar" class="form-label">Buscar</label>
-                            <input type="text" class="form-control" id="filtro-buscar"
-                                placeholder="Código, nombre o descripción">
-                        </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label for="filtro-buscar" class="form-label fw-bold">Buscar</label>
+                        <input type="text" class="form-control" id="filtro-buscar"
+                            placeholder="Código, nombre o descripción">
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-departamento" class="form-label">Departamento</label>
-                            <select class="form-select" id="filtro-departamento">
-                                <option value="">Todos</option>
-                            </select>
-                        </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label for="filtro-departamento" class="form-label fw-bold">Departamento</label>
+                        <select class="form-select" id="filtro-departamento">
+                            <option value="">Todos</option>
+                        </select>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-tipo" class="form-label">Tipo</label>
-                            <select class="form-select" id="filtro-tipo">
-                                <option value="">Todos</option>
-                                <option value="Máquina">Máquina</option>
-                                <option value="Equipo">Equipo</option>
-                                <option value="Herramienta">Herramienta</option>
-                                <option value="Vehículo">Vehículo</option>
-                                <option value="Instrumentos">Instrumentos</option>
-                            </select>
-                        </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label for="filtro-tipo" class="form-label fw-bold">Tipo</label>
+                        <select class="form-select" id="filtro-tipo">
+                            <option value="">Todos</option>
+                            <option value="Máquina">Máquina</option>
+                            <option value="Equipo">Equipo</option>
+                            <option value="Herramienta">Herramienta</option>
+                            <option value="Vehículo">Vehículo</option>
+                            <option value="Instrumentos">Instrumentos</option>
+                        </select>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-estado" class="form-label">Estado</label>
-                            <select class="form-select" id="filtro-estado">
-                                <option value="">Todos</option>
-                                <option value="Operativo">Operativo</option>
-                                <option value="En Mantenimiento">En Mantenimiento</option>
-                                <option value="Fuera de Servicio">Fuera de Servicio</option>
-                                <option value="En Reparación">En Reparación</option>
-                                <option value="Inactivo">Inactivo</option>
-                            </select>
-                        </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label for="filtro-estado" class="form-label fw-bold">Estado</label>
+                        <select class="form-select" id="filtro-estado">
+                            <option value="">Todos</option>
+                            <option value="Operativo">Operativo</option>
+                            <option value="En Mantenimiento">En Mantenimiento</option>
+                            <option value="Fuera de Servicio">Fuera de Servicio</option>
+                            <option value="En Reparación">En Reparación</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </select>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="filtro-prioridad" class="form-label">Prioridad</label>
-                            <select class="form-select" id="filtro-prioridad">
-                                <option value="">Todas</option>
-                                <option value="Baja">Baja</option>
-                                <option value="Media">Media</option>
-                                <option value="Alta">Alta</option>
-                                <option value="Crítica">Crítica</option>
-                            </select>
-                        </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label for="filtro-prioridad" class="form-label fw-bold">Prioridad</label>
+                        <select class="form-select" id="filtro-prioridad">
+                            <option value="">Todas</option>
+                            <option value="Baja">Baja</option>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Crítica">Crítica</option>
+                        </select>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label class="form-label">Acciones</label>
-                            <div class="d-flex gap-1">
-                                <button class="btn btn-primary" onclick="filtrarActivos()">
-                                    <i class="bi bi-search"></i>Buscar
-                                </button>
-                                <button class="btn btn-outline-secondary btn-limpiar-filtro" onclick="limpiarFiltros()">
-                                    <i class="bi bi-arrow-clockwise"></i>Limpiar
-                                </button>
-                            </div>
+                    <div class="col-12">
+                        <hr class="mb-3">
+                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                            <button type="button" class="btn btn-outline-primary" onclick="filtrarActivos()"
+                                style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                                onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                                onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="limpiarFiltros()"
+                                style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                                onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                                onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -155,33 +137,7 @@
                         <h6 class="mb-0">
                             <i class="bi bi-table me-2"></i>Listado de Activos
                             <span class="badge bg-secondary ms-2" id="contador-activos">0 activos</span>
-                            <span class="badge bg-primary ms-1" id="contador-seleccion" style="display: none;">
-                                0 seleccionados
-                            </span>
                         </h6>
-                    </div>
-                    <!-- Barra de acciones masivas -->
-                    <div id="acciones-masivas" style="display: none;" class="btn-group btn-group-sm">
-                        <button class="btn btn-success" onclick="cambiarEstadoMasivo('Operativo')" 
-                                title="Marcar como operativos">
-                            <i class="bi bi-check-circle me-1"></i>Operativo
-                        </button>
-                        <button class="btn btn-warning" onclick="cambiarEstadoMasivo('En Mantenimiento')" 
-                                title="Marcar en mantenimiento">
-                            <i class="bi bi-gear me-1"></i>Mantenimiento
-                        </button>
-                        <button class="btn btn-info" onclick="cambiarPrioridadMasiva()" 
-                                title="Cambiar prioridad">
-                            <i class="bi bi-flag me-1"></i>Prioridad
-                        </button>
-                        <button class="btn btn-primary" onclick="exportarSeleccionados()" 
-                                title="Exportar seleccionados">
-                            <i class="bi bi-download me-1"></i>Exportar
-                        </button>
-                        <button class="btn btn-danger" onclick="eliminarSeleccionados()" 
-                                title="Eliminar seleccionados">
-                            <i class="bi bi-trash me-1"></i>Eliminar
-                        </button>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -189,15 +145,11 @@
                         <table class="table table-hover table-striped" id="tabla-activos-main">
                             <thead class="table-dark">
                                 <tr>
-                                    <th class="col-critical">
-                                        <input type="checkbox" class="form-check-input" id="select-all" 
-                                               title="Seleccionar todos">
-                                    </th>
-                                    <th class="col-critical"><i class="bi bi-hash me-1"></i>Código</th>
-                                    <th class="col-optional hide-tablet"><i class="bi bi-building me-1"></i>Departamento</th>
-                                    <th class="col-critical"><i class="bi bi-cpu me-1"></i>Activo</th>
-                                    <th class="col-important"><i class="bi bi-gear me-1"></i>Tipo</th>
-                                    <th class="col-detail"><i class="bi bi-geo-alt me-1"></i>Ubicación</th>
+                                    <th style="width: 12%;">Código</th>
+                                    <th style="width: 15%;" class="hide-tablet"><i class="bi bi-building me-1"></i>Departamento</th>
+                                    <th style="width: 25%;"><i class="bi bi-cpu me-1"></i>Activo</th>
+                                    <th style="width: 12%;"><i class="bi bi-gear me-1"></i>Tipo</th>
+                                    <th style="width: 15%;"><i class="bi bi-geo-alt me-1"></i>Ubicación</th>
                                     <th class="col-detail"><i class="bi bi-truck me-1"></i>Proveedor</th>
                                     <th class="col-important"><i class="bi bi-circle me-1"></i>Estado</th>
                                     <th class="col-optional"><i class="bi bi-flag me-1"></i>Prioridad</th>
@@ -209,7 +161,7 @@
                             <tbody id="tabla-activos">
                                 <!-- Indicador de carga inicial -->
                                 <tr id="loading-initial">
-                                    <td colspan="11" class="text-center py-4">
+                                    <td colspan="10" class="text-center py-4">
                                         <div class="d-flex justify-content-center align-items-center">
                                             <div class="spinner-border spinner-border-sm text-primary me-2"
                                                 role="status">
@@ -494,6 +446,6 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/csrf-utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
-<script src="{{ url_for('static', filename='js/seleccion-masiva.js') }}"></script>
+
 <script src="{{ url_for('static', filename='js/activos.js') }}?v=20251012_sonepar_activo_fix"></script>
 {% endblock %}

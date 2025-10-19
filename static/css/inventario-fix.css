@@ -1,0 +1,5 @@
+/* Forzar alineación a la izquierda para precio y valor */
+.precio-columna,
+.valor-columna {
+  text-align: left !important;
+}

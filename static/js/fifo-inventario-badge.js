@@ -114,8 +114,8 @@ window.updateFifoInventoryBadgeAfterOperation = function () {
 };
 
 // CSS animations para el botón
-const style = document.createElement("style");
-style.textContent = `
+const fifoBadgeStyle = document.createElement("style");
+fifoBadgeStyle.textContent = `
 @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.8; transform: scale(1.02); }
@@ -143,4 +143,4 @@ style.textContent = `
     font-weight: 700;
 }
 `;
-document.head.appendChild(style);
+document.head.appendChild(fifoBadgeStyle);

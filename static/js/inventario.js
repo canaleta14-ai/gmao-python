@@ -1,6 +1,6 @@
 // inventario.js - Funcionalidad para el módulo de inventario
 
-console.log("🔧 inventario.js cargado correctamente");
+console.log("ðŸ”§ inventario.js cargado correctamente");
 
 // Variables globales
 let articulosActuales = [];
@@ -9,7 +9,7 @@ let articulosPorPagina = 10;
 let filtrosAplicados = {};
 let paginacionInventario;
 let categoriasDisponibles = []; // Nuevo: array para categorías dinámicas
-let seleccionMasiva; // Sistema de selección masiva
+// Sistema de selección masiva
 
 // Clase principal de la aplicación de inventario
 class InventarioApp {
@@ -203,23 +203,23 @@ class InventarioApp {
 // Instancia global de la aplicación
 let inventarioApp;
 
-console.log("🔧 inventario.js cargado correctamente");
+console.log("ï£¿ðŸ”§ inventario.js cargado correctamente");
 
 // Inicialización cuando se carga la página
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("🚀 Inicializando módulo de inventario...");
-  console.log("üìç DOM elements check:");
+  console.log("ï£¿🚀 Inicializando módulo de inventario...");
+  console.log("ï£¿Í¼Í¬Í§ DOM elements check:");
   console.log(
     "- tabla-inventario-body:",
-    document.getElementById("tabla-inventario-body") ? "✅" : "❌"
+    document.getElementById("tabla-inventario-body") ? "✅" : "—Œ"
   );
   console.log(
     "- paginacion-inventario:",
-    document.getElementById("paginacion-inventario") ? "✅" : "❌"
+    document.getElementById("paginacion-inventario") ? "✅" : "—Œ"
   );
 
   // Inicializar paginación
-  console.log("üìÑ Inicializando paginación...");
+  console.log("ï£¿Í¼Í¬Í‘ Inicializando paginación...");
   paginacionInventario = createPagination(
     "paginacion-inventario",
     cargarArticulos,
@@ -230,15 +230,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   );
   console.log(
-    "üìÑ Paginación inicializada:",
-    paginacionInventario ? "✅" : "❌"
+    "ï£¿Í¼Í¬Í‘ Paginación inicializada:",
+    paginacionInventario ? "✅" : "—Œ"
   );
 
   // Cargar datos iniciales
-  console.log("üìä Cargando estadísticas...");
+  console.log("ï£¿Í¼Í¬Í¤ Cargando estadísticas...");
   cargarEstadisticas();
 
-  console.log("üì¶ Cargando artículos...");
+  console.log("ï£¿Í¼Í¬Â¶ Cargando artículos...");
   cargarArticulos();
 
   // Configurar eventos de filtros
@@ -313,18 +313,18 @@ function actualizarTarjetasEstadisticas(stats) {
 // Función para cargar artículos con filtros y paginación
 async function cargarArticulos(page = 1, filtros = {}) {
   console.log(
-    "🔄 cargarArticulos iniciado - página:",
+    "ï£¿ð📄 cargarArticulos iniciado - página:",
     page,
     "filtros:",
     filtros
   );
 
   const tbody = document.getElementById("tabla-inventario-body");
-  console.log("üìã tbody encontrado:", tbody ? "✅" : "❌");
+  console.log("ï£¿Í¼Í¬Í£ tbody encontrado:", tbody ? "✅" : "—Œ");
 
   // Mostrar estado de carga solo si no es la primera carga
   if (!tbody.querySelector("#loading-row")) {
-    console.log("üìç Mostrando spinner de carga...");
+    console.log("ï£¿Í¼Í¬Í§ Mostrando spinner de carga...");
     mostrarCargando(true);
   }
 
@@ -337,11 +337,11 @@ async function cargarArticulos(page = 1, filtros = {}) {
     });
 
     const url = `/inventario/api/articulos?${params}`;
-    console.log("üåê Haciendo fetch a:", url);
+    console.log("ï£¿Í¼Í¥Íª Haciendo fetch a:", url);
 
     const response = await fetch(url);
     console.log(
-      "üì° Respuesta recibida - Status:",
+      "ï£¿Í¼Í¬Â° Respuesta recibida - Status:",
       response.status,
       "Content-Type:",
       response.headers.get("content-type")
@@ -349,17 +349,17 @@ async function cargarArticulos(page = 1, filtros = {}) {
 
     if (response.status === 401 || response.status === 302) {
       console.log(
-        "üîê Redirección de autenticación detectada - redirigiendo al login"
+        "ï£¿Í¼Í®Íª Redirección de autenticación detectada - redirigiendo al login"
       );
       window.location.href = "/login";
       return;
     }
 
     const data = await response.json();
-    console.log("üì¶ Datos recibidos:", data);
-    console.log("üìä Total artículos:", data.total);
+    console.log("ï£¿Í¼Í¬Â¶ Datos recibidos:", data);
+    console.log("ï£¿Í¼Í¬Í¤ Total artículos:", data.total);
     console.log(
-      "üìã Cantidad de artículos:",
+      "ï£¿Í¼Í¬Í£ Cantidad de artículos:",
       data.articulos ? data.articulos.length : 0
     );
 
@@ -367,9 +367,9 @@ async function cargarArticulos(page = 1, filtros = {}) {
       console.log("✅ Respuesta exitosa, procesando datos...");
       articulosActuales = data.articulos;
 
-      console.log("üìù Llamando a actualizarTablaArticulos...");
+      console.log("ï£¿Í¼Í¬Í¹ Llamando a actualizarTablaArticulos...");
       actualizarTablaArticulos(data.articulos);
-      console.log("üìÑ actualizarTablaArticulos completado");
+      console.log("ï£¿Í¼Í¬Í‘ actualizarTablaArticulos completado");
 
       // Renderizar paginación
       if (
@@ -393,7 +393,7 @@ async function cargarArticulos(page = 1, filtros = {}) {
       if (totalFiltrados) totalFiltrados.textContent = data.total;
     } else {
       // En caso de error, limpiar tabla y mostrar mensaje
-      console.error("❌ Error en respuesta:", data);
+      console.error("—Œ Error en respuesta:", data);
       tbody.innerHTML = `
                 <tr>
                     <td colspan="10" class="text-center py-4">
@@ -412,8 +412,8 @@ async function cargarArticulos(page = 1, filtros = {}) {
       );
     }
   } catch (error) {
-    console.error("❌ Error al cargar artículos:", error);
-    console.log("🔧 Detalles del error:", {
+    console.error("—Œ Error al cargar artículos:", error);
+    console.log("ï£¿ðŸ”§ Detalles del error:", {
       message: error.message,
       stack: error.stack,
       name: error.name,
@@ -445,7 +445,7 @@ function actualizarTablaArticulos(articulos) {
   if (!articulos || articulos.length === 0) {
     tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="text-center py-4">
+                <td colspan="9" class="text-center py-4">
                     <div class="text-muted">
                         <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
                         <p class="mb-0">No se encontraron artículos</p>
@@ -481,11 +481,6 @@ function actualizarTablaArticulos(articulos) {
     }
 
     tr.innerHTML = `
-            <td>
-                <input type="checkbox" class="form-check-input item-checkbox" data-id="${
-                  articulo.id
-                }">
-            </td>
             <td><code>${articulo.codigo}</code></td>
             <td>
                 <strong>${articulo.descripcion}</strong>
@@ -512,21 +507,20 @@ function actualizarTablaArticulos(articulos) {
             </td>
             <td>
                 <small class="text-muted">
-                    <div><strong>${articulo.stock_minimo}</strong></div>
-                    <div><strong>${articulo.stock_maximo}</strong></div>
+                    <div>Mín: <strong>${articulo.stock_minimo}</strong></div>
+                    <div>Máx: <strong>${
+                      articulo.stock_maximo || "-"
+                    }</strong></div>
                 </small>
             </td>
             <td>${
               articulo.ubicacion || '<span class="text-muted">-</span>'
             }</td>
-            <td class="text-end">${
+            <td class="precio-columna">${
               articulo.precio_unitario
                 ? formatearMoneda(articulo.precio_unitario)
                 : '<span class="text-muted">-</span>'
             }</td>
-            <td class="text-end"><strong class="text-success">${formatearMoneda(
-              articulo.valor_stock || 0
-            )}</strong></td>
             <td><span class="badge ${estadoBadge}">${estadoText}</span></td>
             <td class="text-center">
                 <div class="btn-group btn-group-sm" role="group">
@@ -541,6 +535,14 @@ function actualizarTablaArticulos(articulos) {
                       articulo.id
                     })" title="Historial">
                         <i class="bi bi-clock-history"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger action-btn delete" onclick="eliminarArticulo(${
+                      articulo.id
+                    }, '${articulo.descripcion.replace(
+      /'/g,
+      "\\'"
+    )}')" title="Eliminar">
+                        <i class="bi bi-trash"></i>
                     </button>
                 </div>
             </td>
@@ -668,7 +670,7 @@ async function guardarNuevoArticulo() {
   const form = document.getElementById("formNuevoArticulo");
 
   if (!form) {
-    console.error("❌ Formulario formNuevoArticulo no encontrado");
+    console.error("—Œ Formulario formNuevoArticulo no encontrado");
     mostrarAlerta("Error: Formulario no encontrado", "danger");
     return;
   }
@@ -697,33 +699,79 @@ async function guardarNuevoArticulo() {
 
   for (const id of elementosRequeridos) {
     if (!document.getElementById(id)) {
-      console.error(`❌ Elemento ${id} no encontrado`);
+      console.error(`—Œ Elemento ${id} no encontrado`);
       mostrarAlerta(`Error: Elemento ${id} no encontrado`, "danger");
       return;
     }
   }
 
+  // ========================================
+  // VALIDACIONES PERSONALIZADAS
+  // ========================================
+
+  const codigo = (document.getElementById("nuevo-codigo").value || "").trim();
+  const descripcion = document.getElementById("nuevo-descripcion").value.trim();
+  const stockMinimo =
+    parseFloat(document.getElementById("nuevo-stock-minimo").value) || 0;
+  const stockMaximo =
+    parseFloat(document.getElementById("nuevo-stock-maximo").value) || 0;
+  const precioUnitario =
+    parseFloat(document.getElementById("nuevo-precio-unitario").value) || 0;
+
+  // Validar descripción obligatoria (el código puede ser auto-generado)
+  if (!descripcion) {
+    mostrarAlerta("La descripción es obligatoria", "warning");
+    document.getElementById("nuevo-descripcion").focus();
+    return;
+  }
+
+  // Validar valores numéricos no negativos
+  if (stockMinimo < 0) {
+    mostrarAlerta("El stock mínimo no puede ser negativo", "warning");
+    document.getElementById("nuevo-stock-minimo").focus();
+    return;
+  }
+
+  if (stockMaximo < 0) {
+    mostrarAlerta("El stock máximo no puede ser negativo", "warning");
+    document.getElementById("nuevo-stock-maximo").focus();
+    return;
+  }
+
+  if (precioUnitario < 0) {
+    mostrarAlerta("El precio unitario no puede ser negativo", "warning");
+    document.getElementById("nuevo-precio-unitario").focus();
+    return;
+  }
+
+  // Validar lógica de stocks
+  if (stockMaximo > 0 && stockMinimo > stockMaximo) {
+    mostrarAlerta(
+      "El stock mínimo no puede ser mayor que el stock máximo",
+      "warning"
+    );
+    document.getElementById("nuevo-stock-minimo").focus();
+    return;
+  }
+
+  // ========================================
+  // FIN VALIDACIONES
+  // ========================================
+
   const data = {
     // Enviar `null` si el código está vacío para permitir generación automática en backend
-    codigo:
-      (document.getElementById("nuevo-codigo").value || "").trim() !== ""
-        ? document.getElementById("nuevo-codigo").value.trim()
-        : null,
-    descripcion: document.getElementById("nuevo-descripcion").value,
+    codigo: codigo !== "" ? codigo : null,
+    descripcion: descripcion,
     // Enviar también `categoria_id` para que el backend pueda generar el código
     categoria_id: (function () {
       const v = document.getElementById("nuevo-categoria").value;
       return v ? parseInt(v, 10) : null;
     })(),
     categoria: document.getElementById("nuevo-categoria").value,
-    stock_minimo:
-      parseInt(document.getElementById("nuevo-stock-minimo").value) || 0,
-    stock_maximo:
-      parseInt(document.getElementById("nuevo-stock-maximo").value) || 100,
+    stock_minimo: stockMinimo,
+    stock_maximo: stockMaximo,
     ubicacion: document.getElementById("nuevo-ubicacion").value,
-    precio_unitario:
-      parseFloat(document.getElementById("nuevo-precio-unitario").value) ||
-      null,
+    precio_unitario: precioUnitario || null,
     unidad_medida: document.getElementById("nuevo-unidad-medida").value,
     proveedor: document.getElementById("nuevo-proveedor").value,
     cuenta_contable_compra: document.getElementById("nuevo-cuenta-contable")
@@ -766,7 +814,7 @@ function mostrarModalMovimiento(
   codigo = "",
   descripcion = ""
 ) {
-  console.log("📂 Abriendo modal de movimiento:", {
+  console.log("ðŸ“‚ Abriendo modal de movimiento:", {
     articuloId,
     codigo,
     descripcion,
@@ -783,7 +831,7 @@ function mostrarModalMovimiento(
   if (articuloInput) {
     articuloInput.dataset.autocompleteInitialized = "";
     articuloInput.value = "";
-    console.log("🧹 Campo de artículo limpiado para nueva inicialización");
+    console.log("ðŸ§¹ Campo de artículo limpiado para nueva inicialización");
   }
 
   // Si se llama con parámetros específicos, pre-rellenar
@@ -793,11 +841,11 @@ function mostrarModalMovimiento(
     if (articuloInput) {
       articuloInput.value = displayValue;
     }
-    console.log("📝 Artículo pre-seleccionado:", displayValue);
+    console.log("ðŸ“ Artículo pre-seleccionado:", displayValue);
   } else {
     // Si no hay artículo pre-seleccionado, limpiar
     document.getElementById("movimiento-articulo-id").value = "";
-    console.log("🆕 Modal sin artículo pre-seleccionado");
+    console.log("ðŸ†• Modal sin artículo pre-seleccionado");
   }
 
   const modal = new bootstrap.Modal(document.getElementById("modalMovimiento"));
@@ -805,27 +853,27 @@ function mostrarModalMovimiento(
 
   // Siempre inicializar autocompletado después de mostrar el modal
   setTimeout(() => {
-    console.log("⏰ Inicializando autocompletado después de mostrar modal...");
+    console.log("—° Inicializando autocompletado después de mostrar modal...");
     initializeArticuloAutoComplete();
   }, 150);
 }
 
 // Función global para reinicializar autocompletado manualmente
 window.reiniciarAutocompletado = function () {
-  console.log("🔄 Reinicializando autocompletado manualmente...");
+  console.log("ð📄 Reinicializando autocompletado manualmente...");
   const input = document.getElementById("movimiento-articulo-info");
   if (input) {
     // Forzar reinicialización
     input.dataset.autocompleteInitialized = "";
     initializeArticuloAutoComplete();
   } else {
-    console.error("❌ Input no encontrado para reinicialización");
+    console.error("—Œ Input no encontrado para reinicialización");
   }
 };
 
 // Función global para probar API manualmente
 window.probarAPI = function (query = "a") {
-  console.log(`🧪 Probando API con query: "${query}"`);
+  console.log(`ðŸ§ª Probando API con query: "${query}"`);
   fetch(`/inventario/api/articulos?q=${query}&per_page=5`)
     .then((response) => {
       console.log("📡 Status API:", response.status);
@@ -836,33 +884,33 @@ window.probarAPI = function (query = "a") {
       if (data.articulos && data.articulos.length > 0) {
         console.log("✅ API funciona correctamente");
       } else {
-        console.log("⚠️ API responde pero sin artículos");
+        console.log("—š  API responde pero sin artículos");
       }
     })
     .catch((error) => {
-      console.error("❌ Error API:", error);
+      console.error("—Œ Error API:", error);
     });
 };
 
 // Inicializar autocompletado para artículos en modal de movimiento
 function initializeArticuloAutoComplete() {
-  console.log("🔧 Intentando inicializar autocompletado de artículos...");
+  console.log("ðŸ”§ Intentando inicializar autocompletado de artículos...");
 
   const input = document.getElementById("movimiento-articulo-info");
   if (!input) {
-    console.error("❌ Input movimiento-articulo-info no encontrado");
+    console.error("—Œ Input movimiento-articulo-info no encontrado");
     return;
   }
 
   if (input.dataset.autocompleteInitialized) {
     console.log(
-      "⚠️ Autocompletado ya inicializado, forzando reinicialización..."
+      "—š  Autocompletado ya inicializado, forzando reinicialización..."
     );
     // Limpiar inicialización previa
     input.dataset.autocompleteInitialized = "";
     const wrapper = input.closest(".autocomplete-wrapper");
     if (wrapper) {
-      console.log("🧹 Removiendo wrapper anterior");
+      console.log("ðŸ§¹ Removiendo wrapper anterior");
       const originalInput = wrapper.querySelector('input[type="hidden"]');
       if (originalInput) {
         wrapper.parentNode.insertBefore(input, wrapper);
@@ -874,7 +922,7 @@ function initializeArticuloAutoComplete() {
   // Verificar que AutoComplete esté disponible
   if (typeof AutoComplete === "undefined") {
     console.error(
-      "❌ AutoComplete no disponible. Reintentando en 1 segundo..."
+      "—Œ AutoComplete no disponible. Reintentando en 1 segundo..."
     );
     setTimeout(initializeArticuloAutoComplete, 1000);
     return;
@@ -918,7 +966,7 @@ function initializeArticuloAutoComplete() {
         }
       },
       onInput: (value) => {
-        console.log("� Escribiendo:", value);
+        console.log("ï¿½ Escribiendo:", value);
         // Limpiar selección si el usuario está escribiendo
         if (value.length < 2) {
           document.getElementById("movimiento-articulo-id").value = "";
@@ -942,7 +990,7 @@ function initializeArticuloAutoComplete() {
 
     // Test inmediato de la API
     setTimeout(() => {
-      console.log("🧪 Probando API directamente...");
+      console.log("ðŸ§ª Probando API directamente...");
       fetch("/inventario/api/articulos?q=a&per_page=5")
         .then((response) => {
           console.log("📡 Response status:", response.status);
@@ -955,19 +1003,19 @@ function initializeArticuloAutoComplete() {
               "✅ API funciona, artículos encontrados:",
               data.articulos.length
             );
-            console.log("📝 Primer artículo:", data.articulos[0]);
+            console.log("ðŸ“ Primer artículo:", data.articulos[0]);
           } else {
-            console.log("⚠️ API responde pero sin artículos");
+            console.log("—š  API responde pero sin artículos");
           }
         })
         .catch((error) => {
-          console.error("❌ Error en API:", error);
+          console.error("—Œ Error en API:", error);
         });
     }, 500);
 
     return autocompleteInstance;
   } catch (error) {
-    console.error("❌ Error al inicializar autocompletado:", error);
+    console.error("—Œ Error al inicializar autocompletado:", error);
     console.error("Error details:", error.stack);
   }
 }
@@ -985,7 +1033,7 @@ function validarStockParaSalida(articulo) {
         stockAlert.innerHTML = `
                     <div class="alert alert-warning alert-sm mt-2">
                         <i class="fas fa-exclamation-triangle me-1"></i>
-                        ⚠️ Cantidad solicitada (${cantidad}) supera el stock disponible (${articulo.stock_actual})
+                        —š  Cantidad solicitada (${cantidad}) supera el stock disponible (${articulo.stock_actual})
                     </div>
                 `;
         stockAlert.style.display = "block";
@@ -993,7 +1041,7 @@ function validarStockParaSalida(articulo) {
         stockAlert.innerHTML = `
                     <div class="alert alert-info alert-sm mt-2">
                         <i class="fas fa-info-circle me-1"></i>
-                        ℹ️ Esta salida dejará el stock por debajo del mínimo recomendado (${articulo.stock_minimo})
+                        —„¹ Esta salida dejará el stock por debajo del mínimo recomendado (${articulo.stock_minimo})
                     </div>
                 `;
         stockAlert.style.display = "block";
@@ -1130,7 +1178,7 @@ async function guardarMovimiento() {
   };
 
   try {
-    console.log("📦 Registrando movimiento:", {
+    console.log("ðŸ“¦ Registrando movimiento:", {
       tipo: data.tipo,
       cantidad: data.cantidad,
       precio_unitario: data.precio_unitario,
@@ -1164,18 +1212,18 @@ async function guardarMovimiento() {
 
         // Emojis y texto según el tipo de movimiento
         const tipoInfo = {
-          entrada: { emoji: "📦➕", texto: "entrada", color: "success" },
-          salida: { emoji: "📦➖", texto: "salida", color: "danger" },
-          ajuste: { emoji: "⚖️", texto: "ajuste", color: "warning" },
+          entrada: { emoji: "ðŸ“¦—ž•", texto: "entrada", color: "success" },
+          salida: { emoji: "ðŸ“¦—ž–", texto: "salida", color: "danger" },
+          ajuste: { emoji: "—š–", texto: "ajuste", color: "warning" },
           regularizacion: {
-            emoji: "🔄",
+            emoji: "ð📄",
             texto: "regularización",
             color: "info",
           },
         };
 
         const info = tipoInfo[tipo] || {
-          emoji: "📦",
+          emoji: "ðŸ“¦",
           texto: tipo,
           color: "info",
         };
@@ -1190,7 +1238,7 @@ async function guardarMovimiento() {
             stockAnterior !== null &&
             stockAnterior !== articulo.stock_actual
           ) {
-            mensaje += `\n📊 Stock: ${stockAnterior} → ${articulo.stock_actual}`;
+            mensaje += `\n📊 Stock: ${stockAnterior} —†’ ${articulo.stock_actual}`;
           } else {
             mensaje += `\n📊 Stock actual: ${articulo.stock_actual}`;
           }
@@ -1198,10 +1246,10 @@ async function guardarMovimiento() {
 
         // Alertas especiales
         if (tipo === "salida" && articulo.stock_actual <= 0) {
-          mensaje += "\n⚠️ ¡Artículo sin stock!";
+          mensaje += "\n—š  Â¡Artículo sin stock!";
         } else if (articulo.stock_actual < 5) {
           // Umbral bajo configurable
-          mensaje += "\n🟡 Stock bajo";
+          mensaje += "\nðŸŸ¡ Stock bajo";
         }
       }
 
@@ -1218,19 +1266,21 @@ async function guardarMovimiento() {
       // Personalizar mensajes de error comunes
       if (mensajeError.includes("Stock insuficiente")) {
         mensajeError =
-          "⚠️ " +
+          "—š  " +
           mensajeError +
-          "\n💡 Verifica el stock disponible antes de realizar la salida";
+          "\nðŸ’¡ Verifica el stock disponible antes de realizar la salida";
       } else if (mensajeError.includes("Artículo no encontrado")) {
         mensajeError =
-          "❌ " +
+          "—Œ " +
           mensajeError +
-          "\n💡 Selecciona un artículo válido del autocompletado";
+          "\nðŸ’¡ Selecciona un artículo válido del autocompletado";
       } else if (mensajeError.includes("Campo requerido")) {
         mensajeError =
-          "📝 " + mensajeError + "\n💡 Completa todos los campos obligatorios";
+          "ðŸ“ " +
+          mensajeError +
+          "\nðŸ’¡ Completa todos los campos obligatorios";
       } else {
-        mensajeError = "❌ " + mensajeError;
+        mensajeError = "—Œ " + mensajeError;
       }
 
       mostrarAlerta(mensajeError, "danger");
@@ -1421,11 +1471,11 @@ function guardarEdicionArticulo() {
 }
 
 function verHistorial(id) {
-  console.log("📋 Abriendo historial para artículo ID:", id);
+  console.log("ðŸ“‹ Abriendo historial para artículo ID:", id);
 
   // Cargar historial de movimientos del artículo
   const url = `/inventario/api/articulos/${id}/movimientos?page=1&per_page=20`;
-  console.log("🌐 URL de historial:", url);
+  console.log("🌐 URL de historial:", url);
 
   fetch(url)
     .then((response) => {
@@ -1439,7 +1489,7 @@ function verHistorial(id) {
       console.log("📊 Datos de historial:", data);
 
       if (data.error) {
-        console.error("❌ Error en datos de historial:", data.error);
+        console.error("—Œ Error en datos de historial:", data.error);
         mostrarAlerta("Error al cargar historial: " + data.error, "danger");
         return;
       }
@@ -1447,15 +1497,15 @@ function verHistorial(id) {
       // Llenar la tabla de historial
       const tbody = document.getElementById("historial-tbody");
       if (!tbody) {
-        console.error("❌ No se encontró elemento historial-tbody");
+        console.error("—Œ No se encontró elemento historial-tbody");
         return;
       }
 
       tbody.innerHTML = "";
-      console.log("🧹 Tabla de historial limpiada");
+      console.log("ðŸ§¹ Tabla de historial limpiada");
 
       if (!data.movimientos || data.movimientos.length === 0) {
-        console.log("📭 Sin movimientos para mostrar");
+        console.log("ðŸ“­ Sin movimientos para mostrar");
         tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-4">
@@ -1543,10 +1593,10 @@ function verHistorial(id) {
         document.getElementById("modalHistorial")
       );
       modal.show();
-      console.log("📱 Modal de historial mostrado");
+      console.log("ðŸ“± Modal de historial mostrado");
     })
     .catch((error) => {
-      console.error("❌ Error al cargar historial:", error);
+      console.error("—Œ Error al cargar historial:", error);
       mostrarAlerta("Error al cargar historial de movimientos", "danger");
     });
 }
@@ -1665,7 +1715,7 @@ window.mostrarMovimientos = mostrarMovimientos;
 
 function configurarAutocompletado() {
   if (!window.AutoComplete) {
-    console.log("❌ AutoComplete no disponible");
+    console.log("—Œ AutoComplete no disponible");
     return;
   }
 
@@ -1689,7 +1739,7 @@ function configurarAutocompletado() {
         );
       },
       onSelect: (item) => {
-        console.log("üì¶ Item de inventario seleccionado:", item);
+        console.log("ï£¿Í¼Í¬Â¶ Item de inventario seleccionado:", item);
         cargarInventario(1);
       },
     });
@@ -1876,7 +1926,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (modalMovimiento) {
     modalMovimiento.addEventListener("shown.bs.modal", function () {
       console.log(
-        "🎭 Modal de movimiento mostrado, verificando autocompletado..."
+        "ðŸŽ­ Modal de movimiento mostrado, verificando autocompletado..."
       );
       const input = document.getElementById("movimiento-articulo-info");
       const articuloId = document.getElementById(
@@ -1885,26 +1935,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Solo inicializar autocompletado si no hay artículo pre-seleccionado
       if (input && !articuloId) {
-        console.log("🔧 Inicializando autocompletado automáticamente...");
+        console.log("ðŸ”§ Inicializando autocompletado automáticamente...");
         setTimeout(() => {
           initializeArticuloAutoComplete();
         }, 100); // Pequeño delay para asegurar que el DOM esté listo
       } else {
         console.log(
-          "ℹ️ Artículo pre-seleccionado, no se inicializa autocompletado"
+          "—„¹ Artículo pre-seleccionado, no se inicializa autocompletado"
         );
       }
     });
   }
-
-  // Inicializar sistema de selección masiva
-  initSeleccionMasiva({
-    checkboxSelector: ".item-checkbox",
-    selectAllId: "select-all",
-    contadorId: "contador-seleccion",
-    accionesId: "acciones-masivas",
-    tablaId: "tabla-inventario-body",
-  });
 
   // Listener para cambio de tipo de movimiento (mostrar/ocultar precio unitario)
   const tipoMovimientoSelect = document.getElementById("movimiento-tipo");
@@ -1927,702 +1968,71 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// ============================================================================
-// FUNCIONES DE ACCIONES MASIVAS
-// ============================================================================
+// ========================================
+// FUNCIONES DE ELIMINACIÓN
+// ========================================
 
-/**
- * Marcar artículos seleccionados como críticos
- */
-function marcarCriticosMasivo() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+let articuloAEliminar = null;
 
-  if (seleccionados.length === 0) {
-    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva({
-    titulo: "¿Marcar como críticos?",
-    mensaje: `Se marcarán ${seleccionados.length} artículo(s) como críticos. Los artículos críticos tienen prioridad en el inventario.`,
-    textoBotonConfirmar: "Sí, marcar como críticos",
-    colorBotonConfirmar: "warning",
-    onConfirmar: async () => {
-      let exitosos = 0;
-      let fallidos = 0;
-
-      for (const id of seleccionados) {
-        try {
-          const response = await fetch(`/inventario/articulos/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ critico: true }),
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            fallidos++;
-          }
-        } catch (error) {
-          console.error(`Error al marcar artículo ${id} como crítico:`, error);
-          fallidos++;
-        }
-      }
-
-      if (exitosos > 0) {
-        mostrarAlerta(
-          `${exitosos} artículo(s) marcado(s) como críticos correctamente`,
-          "success"
-        );
-        cargarArticulos();
-        cargarEstadisticas();
-        seleccionMasiva.limpiarSeleccion();
-      }
-
-      if (fallidos > 0) {
-        mostrarAlerta(
-          `${fallidos} artículo(s) no pudieron ser marcados`,
-          "danger"
-        );
-      }
-    },
-  });
+function eliminarArticulo(id, descripcion) {
+  console.log("Solicitud de eliminar artículo:", id, descripcion);
+  mostrarConfirmacionEliminarArticulo(id, descripcion);
 }
 
-/**
- * Ajuste masivo de stock - Muestra modal para especificar operación
- */
-function ajustarStockMasivo() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
+function mostrarConfirmacionEliminarArticulo(id, descripcion) {
+  articuloAEliminar = { id, descripcion };
 
-  if (seleccionados.length === 0) {
-    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
-    return;
-  }
-
-  // Crear modal para ajuste de stock
-  const modalHtml = `
-    <div class="modal fade" id="modalAjusteStockMasivo" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title">
-              <i class="bi bi-boxes me-2"></i>Ajuste Masivo de Stock
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
-              Se ajustará el stock de ${seleccionados.length} artículo(s) seleccionado(s)
-            </div>
-            
-            <div class="mb-3">
-              <label class="form-label fw-bold">Tipo de Operación</label>
-              <select class="form-select" id="ajuste-operacion">
-                <option value="entrada">➕ Entrada de Stock</option>
-                <option value="salida">➖ Salida de Stock</option>
-                <option value="establecer">📌 Establecer Stock Fijo</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="ajuste-cantidad" class="form-label fw-bold">Cantidad</label>
-              <input type="number" class="form-control" id="ajuste-cantidad" min="0" step="1" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="ajuste-motivo" class="form-label fw-bold">Motivo</label>
-              <textarea class="form-control" id="ajuste-motivo" rows="2" placeholder="Motivo del ajuste..."></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="confirmarAjusteStockMasivo()">
-              <i class="bi bi-check-circle me-1"></i>Aplicar Ajuste
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Eliminar modal existente si lo hay
-  const modalExistente = document.getElementById("modalAjusteStockMasivo");
-  if (modalExistente) {
-    modalExistente.remove();
-  }
-
-  // Agregar modal al DOM
-  document.body.insertAdjacentHTML("beforeend", modalHtml);
-
-  // Mostrar modal
-  const modal = new bootstrap.Modal(
-    document.getElementById("modalAjusteStockMasivo")
+  // Actualizar descripción en el modal
+  const descripcionElement = document.getElementById(
+    "descripcion-articulo-eliminar"
   );
-  modal.show();
-}
-
-/**
- * Confirmar y ejecutar ajuste de stock masivo
- */
-async function confirmarAjusteStockMasivo() {
-  const operacion = document.getElementById("ajuste-operacion").value;
-  const cantidad = parseInt(document.getElementById("ajuste-cantidad").value);
-  const motivo = document.getElementById("ajuste-motivo").value;
-
-  if (!cantidad || cantidad <= 0) {
-    mostrarAlerta("Debe ingresar una cantidad válida", "warning");
-    return;
-  }
-
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  let exitosos = 0;
-  let fallidos = 0;
-
-  // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(
-    document.getElementById("modalAjusteStockMasivo")
-  );
-  modal.hide();
-
-  for (const id of seleccionados) {
-    try {
-      // Obtener stock actual
-      const responseGet = await fetch(`/inventario/articulos/${id}`);
-      if (!responseGet.ok) {
-        fallidos++;
-        continue;
-      }
-
-      const articulo = await responseGet.json();
-      let nuevoStock = articulo.stock_actual;
-
-      // Calcular nuevo stock según operación
-      switch (operacion) {
-        case "entrada":
-          nuevoStock += cantidad;
-          break;
-        case "salida":
-          nuevoStock = Math.max(0, nuevoStock - cantidad);
-          break;
-        case "establecer":
-          nuevoStock = cantidad;
-          break;
-      }
-
-      // Actualizar stock
-      const responsePut = await fetch(`/inventario/articulos/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          stock_actual: nuevoStock,
-          observaciones:
-            motivo || `Ajuste masivo: ${operacion} de ${cantidad} unidades`,
-        }),
-      });
-
-      if (responsePut.ok) {
-        exitosos++;
-      } else {
-        fallidos++;
-      }
-    } catch (error) {
-      console.error(`Error al ajustar stock del artículo ${id}:`, error);
-      fallidos++;
-    }
-  }
-
-  if (exitosos > 0) {
-    mostrarAlerta(
-      `Stock ajustado correctamente en ${exitosos} artículo(s)`,
-      "success"
-    );
-    cargarArticulos();
-    cargarEstadisticas();
-    seleccionMasiva.limpiarSeleccion();
-  }
-
-  if (fallidos > 0) {
-    mostrarAlerta(
-      `${fallidos} artículo(s) no pudieron ser actualizados`,
-      "danger"
-    );
-  }
-}
-
-/**
- * Cambiar categoría masiva - Muestra modal con selector de categoría
- */
-function cambiarCategoriaMasiva() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
-    return;
-  }
-
-  // Crear modal con selector de categorías
-  const modalHtml = `
-    <div class="modal fade" id="modalCambiarCategoriaMasivo" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header bg-secondary text-white">
-            <h5 class="modal-title">
-              <i class="bi bi-tag me-2"></i>Cambiar Categoría
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
-              Se cambiará la categoría de ${seleccionados.length} artículo(s)
-            </div>
-            
-            <div class="mb-3">
-              <label class="form-label fw-bold">Nueva Categoría</label>
-              <select class="form-select" id="nueva-categoria-masiva">
-                <option value="">Seleccionar categoría...</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="confirmarCambiarCategoriaMasiva()">
-              <i class="bi bi-check-circle me-1"></i>Cambiar Categoría
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Eliminar modal existente si lo hay
-  const modalExistente = document.getElementById("modalCambiarCategoriaMasivo");
-  if (modalExistente) {
-    modalExistente.remove();
-  }
-
-  // Agregar modal al DOM
-  document.body.insertAdjacentHTML("beforeend", modalHtml);
-
-  // Cargar categorías en el selector
-  const selectCategoria = document.getElementById("nueva-categoria-masiva");
-  if (categoriasDisponibles && categoriasDisponibles.length > 0) {
-    categoriasDisponibles.forEach((cat) => {
-      if (cat.activo) {
-        const option = document.createElement("option");
-        option.value = cat.id;
-        option.textContent = `${cat.nombre} (${cat.prefijo})`;
-        selectCategoria.appendChild(option);
-      }
-    });
+  if (descripcionElement) {
+    descripcionElement.textContent = descripcion;
   }
 
   // Mostrar modal
   const modal = new bootstrap.Modal(
-    document.getElementById("modalCambiarCategoriaMasivo")
+    document.getElementById("modalEliminarArticulo")
   );
   modal.show();
 }
 
-/**
- * Confirmar cambio de categoría masivo
- */
-async function confirmarCambiarCategoriaMasiva() {
-  const categoriaId = document.getElementById("nueva-categoria-masiva").value;
-
-  if (!categoriaId) {
-    mostrarAlerta("Debe seleccionar una categoría", "warning");
-    return;
-  }
-
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  let exitosos = 0;
-  let fallidos = 0;
-
-  // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(
-    document.getElementById("modalCambiarCategoriaMasivo")
-  );
-  modal.hide();
-
-  for (const id of seleccionados) {
-    try {
-      const response = await fetch(`/inventario/articulos/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ categoria_id: parseInt(categoriaId) }),
-      });
-
-      if (response.ok) {
-        exitosos++;
-      } else {
-        fallidos++;
-      }
-    } catch (error) {
-      console.error(`Error al cambiar categoría del artículo ${id}:`, error);
-      fallidos++;
+function confirmarEliminarArticulo() {
+  if (articuloAEliminar) {
+    eliminarArticuloConfirmado(articuloAEliminar.id);
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById("modalEliminarArticulo")
+    );
+    if (modal) {
+      modal.hide();
     }
-  }
-
-  if (exitosos > 0) {
-    mostrarAlerta(
-      `Categoría cambiada correctamente en ${exitosos} artículo(s)`,
-      "success"
-    );
-    cargarArticulos();
-    seleccionMasiva.limpiarSeleccion();
-  }
-
-  if (fallidos > 0) {
-    mostrarAlerta(
-      `${fallidos} artículo(s) no pudieron ser actualizados`,
-      "danger"
-    );
+    articuloAEliminar = null;
   }
 }
 
-/**
- * Exportar artículos seleccionados a CSV
- */
-async function exportarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
-    return;
-  }
-
+async function eliminarArticuloConfirmado(id) {
   try {
-    // Obtener datos de los artículos seleccionados
-    const articulos = [];
-    for (const id of seleccionados) {
-      const response = await fetch(`/inventario/articulos/${id}`);
-      if (response.ok) {
-        const articulo = await response.json();
-        articulos.push(articulo);
-      }
-    }
+    mostrarCargando(true);
 
-    if (articulos.length === 0) {
-      mostrarAlerta(
-        "No se pudieron obtener los datos de los artículos",
-        "danger"
-      );
-      return;
-    }
-
-    // Generar CSV
-    let csv =
-      "Código,Descripción,Categoría,Stock Actual,Stock Mínimo,Stock Máximo,Ubicación,Precio Unitario,Valor Stock,Crítico\n";
-
-    articulos.forEach((art) => {
-      csv += `"${art.codigo}",`;
-      csv += `"${art.descripcion}",`;
-      csv += `"${art.categoria || ""}",`;
-      csv += `${art.stock_actual},`;
-      csv += `${art.stock_minimo},`;
-      csv += `${art.stock_maximo},`;
-      csv += `"${art.ubicacion || ""}",`;
-      csv += `${art.precio_unitario || 0},`;
-      csv += `${art.valor_stock || 0},`;
-      csv += `${art.critico ? "Sí" : "No"}\n`;
+    const response = await fetch(`/inventario/api/articulos/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
-    // Descargar archivo
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `inventario_seleccion_${new Date().toISOString().split("T")[0]}.csv`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    mostrarAlerta(
-      `${articulos.length} artículo(s) exportados correctamente`,
-      "success"
-    );
-  } catch (error) {
-    console.error("Error al exportar artículos:", error);
-    mostrarAlerta("Error al exportar artículos", "danger");
-  }
-}
-
-/**
- * Eliminar artículos seleccionados
- */
-function eliminarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarAlerta("Debe seleccionar al menos un artículo", "warning");
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva({
-    titulo: "¿Eliminar artículos?",
-    mensaje: `⚠️ Se eliminarán permanentemente ${seleccionados.length} artículo(s) del inventario. Esta acción no se puede deshacer.`,
-    textoBotonConfirmar: "Sí, eliminar",
-    colorBotonConfirmar: "danger",
-    onConfirmar: async () => {
-      let exitosos = 0;
-      let fallidos = 0;
-
-      for (const id of seleccionados) {
-        try {
-          const response = await fetch(`/inventario/articulos/${id}`, {
-            method: "DELETE",
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            fallidos++;
-          }
-        } catch (error) {
-          console.error(`Error al eliminar artículo ${id}:`, error);
-          fallidos++;
-        }
-      }
-
-      if (exitosos > 0) {
-        mostrarAlerta(
-          `${exitosos} artículo(s) eliminado(s) correctamente`,
-          "success"
-        );
-        cargarArticulos();
-        cargarEstadisticas();
-        seleccionMasiva.limpiarSeleccion();
-      }
-
-      if (fallidos > 0) {
-        mostrarAlerta(
-          `${fallidos} artículo(s) no pudieron ser eliminados`,
-          "danger"
-        );
-      }
-    },
-  });
-}
-
-// ================================
-// FUNCIONES PARA ELIMINAR ARTÍCULOS CON CONFIRMACIÓN
-// ================================
-
-/**
- * Mostrar modal para eliminar artículos seleccionados
- */
-function mostrarModalEliminarArticulos() {
-  if (!seleccionMasiva || seleccionMasiva.seleccionados.length === 0) {
-    mostrarAlerta(
-      "Por favor, selecciona al menos un artículo para eliminar",
-      "warning"
-    );
-    return;
-  }
-
-  // Obtener información de los artículos seleccionados
-  const articulosSeleccionados = articulosActuales.filter((articulo) =>
-    seleccionMasiva.seleccionados.includes(articulo.id.toString())
-  );
-
-  // Llenar la lista de artículos a eliminar
-  const listaContainer = document.getElementById("lista-articulos-eliminar");
-  listaContainer.innerHTML = "";
-
-  if (articulosSeleccionados.length > 0) {
-    let html = '<div class="list-group list-group-flush">';
-    articulosSeleccionados.forEach((articulo) => {
-      html += `
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>${articulo.codigo}</strong> - ${
-        articulo.descripcion || "Sin descripción"
-      }
-            <br><small class="text-muted">Stock: ${
-              articulo.stock_actual || 0
-            } ${articulo.unidad_medida || "UNI"}</small>
-          </div>
-          <span class="badge bg-danger rounded-pill">
-            <i class="bi bi-trash3"></i>
-          </span>
-        </div>
-      `;
-    });
-    html += "</div>";
-
-    html += `
-      <div class="mt-3 p-3 bg-warning bg-opacity-10 border border-warning rounded">
-        <strong><i class="bi bi-exclamation-triangle me-2"></i>Resumen:</strong>
-        <ul class="mb-0 mt-2">
-          <li>${articulosSeleccionados.length} artículo(s) serán eliminados permanentemente</li>
-          <li>Se eliminarán todos los movimientos asociados</li>
-          <li>Se eliminarán todos los lotes FIFO asociados</li>
-          <li>Esta acción NO se puede deshacer</li>
-        </ul>
-      </div>
-    `;
-
-    listaContainer.innerHTML = html;
-  }
-
-  // Resetear el campo de confirmación
-  const confirmacionInput = document.getElementById("confirmacion-eliminar");
-  confirmacionInput.value = "";
-
-  // Deshabilitar el botón de eliminar
-  const btnEliminar = document.getElementById("btn-confirmar-eliminar");
-  btnEliminar.disabled = true;
-
-  // Agregar listener para el campo de confirmación
-  confirmacionInput.removeEventListener(
-    "input",
-    validarConfirmacionEliminacion
-  );
-  confirmacionInput.addEventListener("input", validarConfirmacionEliminacion);
-
-  // Mostrar el modal
-  const modal = new bootstrap.Modal(
-    document.getElementById("modalEliminarArticulos")
-  );
-  modal.show();
-}
-
-/**
- * Validar que se escribió "ELIMINAR" correctamente
- */
-function validarConfirmacionEliminacion() {
-  const confirmacionInput = document.getElementById("confirmacion-eliminar");
-  const btnEliminar = document.getElementById("btn-confirmar-eliminar");
-
-  const textoCorrecto =
-    confirmacionInput.value.trim().toUpperCase() === "ELIMINAR";
-  btnEliminar.disabled = !textoCorrecto;
-
-  if (textoCorrecto) {
-    btnEliminar.classList.remove("btn-danger");
-    btnEliminar.classList.add("btn-danger");
-    btnEliminar.innerHTML = '<i class="bi bi-trash3 me-1"></i>¡ELIMINAR AHORA!';
-  } else {
-    btnEliminar.innerHTML =
-      '<i class="bi bi-trash3 me-1"></i>Eliminar Permanentemente';
-  }
-}
-
-/**
- * Confirmar y ejecutar la eliminación de artículos
- */
-async function confirmarEliminacionArticulos() {
-  const confirmacionInput = document.getElementById("confirmacion-eliminar");
-
-  if (confirmacionInput.value.trim().toUpperCase() !== "ELIMINAR") {
-    mostrarAlerta('Debe escribir "ELIMINAR" para confirmar', "danger");
-    return;
-  }
-
-  if (!seleccionMasiva || seleccionMasiva.seleccionados.length === 0) {
-    mostrarAlerta("No hay artículos seleccionados", "warning");
-    return;
-  }
-
-  const btnEliminar = document.getElementById("btn-confirmar-eliminar");
-  btnEliminar.disabled = true;
-  btnEliminar.innerHTML =
-    '<span class="spinner-border spinner-border-sm me-2"></span>Eliminando...';
-
-  try {
-    // Obtener artículos seleccionados
-    const articulosSeleccionados = articulosActuales.filter((articulo) =>
-      seleccionMasiva.seleccionados.includes(articulo.id.toString())
-    );
-
-    let exitosos = 0;
-    let fallidos = 0;
-    const errores = [];
-
-    // Eliminar artículos uno por uno
-    for (const articulo of articulosSeleccionados) {
-      try {
-        const response = await fetch(`/api/inventario/${articulo.id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          exitosos++;
-          console.log(`✅ Artículo ${articulo.codigo} eliminado`);
-        } else {
-          fallidos++;
-          errores.push(`${articulo.codigo}: ${data.message}`);
-          console.error(
-            `❌ Error eliminando ${articulo.codigo}:`,
-            data.message
-          );
-        }
-      } catch (error) {
-        fallidos++;
-        errores.push(`${articulo.codigo}: Error de conexión`);
-        console.error(`❌ Error eliminando ${articulo.codigo}:`, error);
-      }
-    }
-
-    // Cerrar modal
-    const modal = bootstrap.Modal.getInstance(
-      document.getElementById("modalEliminarArticulos")
-    );
-    modal.hide();
-
-    // Mostrar resultado
-    if (exitosos > 0) {
-      mostrarAlerta(
-        `✅ ${exitosos} artículo(s) eliminado(s) correctamente`,
-        "success"
-      );
-      cargarArticulos();
-      cargarEstadisticas();
-      seleccionMasiva.limpiarSeleccion();
-    }
-
-    if (fallidos > 0) {
-      const mensajeError = `❌ ${fallidos} artículo(s) no pudieron ser eliminados:\n${errores.join(
-        "\n"
-      )}`;
-      mostrarAlerta(mensajeError, "danger");
-    }
-
-    // Si todos fueron exitosos, mostrar mensaje especial
-    if (exitosos > 0 && fallidos === 0) {
-      setTimeout(() => {
-        mostrarAlerta(
-          "🎉 Eliminación completada. El inventario ha sido actualizado.",
-          "info"
-        );
-      }, 1500);
+    if (response.ok) {
+      mostrarAlerta("Artículo eliminado exitosamente", "success");
+      cargarArticulos(paginaActual); // Recargar la lista
+      cargarEstadisticas(); // Actualizar estadísticas
+    } else {
+      const error = await response.json();
+      mostrarAlerta(error.error || "Error al eliminar artículo", "danger");
     }
   } catch (error) {
-    console.error("❌ Error general en eliminación:", error);
-    mostrarAlerta("Error inesperado durante la eliminación", "danger");
-
-    // Cerrar modal en caso de error
-    const modal = bootstrap.Modal.getInstance(
-      document.getElementById("modalEliminarArticulos")
-    );
-    if (modal) modal.hide();
+    console.error("Error al eliminar artículo:", error);
+    mostrarAlerta("Error de conexión al eliminar artículo", "danger");
   } finally {
-    // Restaurar botón
-    btnEliminar.disabled = false;
-    btnEliminar.innerHTML =
-      '<i class="bi bi-trash3 me-1"></i>Eliminar Permanentemente';
+    mostrarCargando(false);
   }
 }

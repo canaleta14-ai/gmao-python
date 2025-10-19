@@ -12,7 +12,7 @@
     <div class="container mt-5">
         <h1>ğŸ§ª Dashboard Test Independiente</h1>
         <div class="alert alert-info">
-            <strong>Test independiente:</strong> Esta pÃ¡gina NO usa main.js ni ningÃºn cÃ³digo problemÃ¡tico.
+            <strong>Test independiente:</strong> Esta página NO usa main.js ni ningún código problemático.
         </div>
 
         <div class="row">
@@ -34,14 +34,14 @@
         <div class="mt-3">
             <button class="btn btn-primary" onclick="testAlerts()">ğŸš¨ Test Alertas Manual</button>
             <button class="btn btn-success" onclick="testUserInfo()">ğŸ‘¤ Test User Info</button>
-            <button class="btn btn-warning" onclick="testStats()">ğŸ“Š Test EstadÃ­sticas</button>
+            <button class="btn btn-warning" onclick="testStats()">ğŸ“Š Test Estadísticas</button>
         </div>
     </div>
 
     <script>
         console.log('ğŸ§ª TEST DASHBOARD INDEPENDIENTE - SIN MAIN.JS');
 
-        // Test automÃ¡tico al cargar
+        // Test automático al cargar
         window.addEventListener('DOMContentLoaded', function () {
             console.log('ğŸš€ Test dashboard cargado');
             setTimeout(runAllTests, 1000);
@@ -62,20 +62,20 @@
                 let summary = '<div class="alert alert-info mt-3"><h6>ğŸ“Š Resumen de Tests:</h6>';
                 summary += `<ul>`;
                 summary += `<li>User Info: ${userResult.status === 'fulfilled' ? 'âœ…' : 'â�Œ'} ${userResult.value?.time || userResult.reason?.time || 'N/A'}ms</li>`;
-                summary += `<li>EstadÃ­sticas: ${statsResult.status === 'fulfilled' ? 'âœ…' : 'â�Œ'} ${statsResult.value?.time || statsResult.reason?.time || 'N/A'}ms</li>`;
+                summary += `<li>Estadísticas: ${statsResult.status === 'fulfilled' ? 'âœ…' : 'â�Œ'} ${statsResult.value?.time || statsResult.reason?.time || 'N/A'}ms</li>`;
                 summary += `<li>Alertas: ${alertsResult.status === 'fulfilled' ? 'âœ…' : 'â�Œ'} ${alertsResult.value?.time || alertsResult.reason?.time || 'N/A'}ms</li>`;
                 summary += `</ul></div>`;
 
                 results.innerHTML += summary;
 
-                // ConclusiÃ³n
+                // Conclusión
                 const allFast = [userResult.value?.time, statsResult.value?.time, alertsResult.value?.time]
                     .filter(t => t !== undefined).every(t => t < 1000);
 
                 if (allFast) {
-                    results.innerHTML += '<div class="alert alert-success mt-3"><h6>ğŸ�¯ CONCLUSIÃ“N:</h6>Todos los endpoints responden RÃ�PIDAMENTE. El problema de lentitud estÃ¡ en el FRONTEND (main.js), no en el backend.</div>';
+                    results.innerHTML += '<div class="alert alert-success mt-3"><h6>ğŸ�¯ CONCLUSIÍ“N:</h6>Todos los endpoints responden RÍ�PIDAMENTE. El problema de lentitud está en el FRONTEND (main.js), no en el backend.</div>';
                 } else {
-                    results.innerHTML += '<div class="alert alert-warning mt-3"><h6>ğŸ�¯ CONCLUSIÃ“N:</h6>Hay endpoints lentos. El problema puede estar en el BACKEND.</div>';
+                    results.innerHTML += '<div class="alert alert-warning mt-3"><h6>ğŸ�¯ CONCLUSIÍ“N:</h6>Hay endpoints lentos. El problema puede estar en el BACKEND.</div>';
                 }
             });
         } async function testUserInfo() {
@@ -97,7 +97,7 @@
                 } else if (response.status === 302 || response.status === 401) {
                     result = `
                         <div class="alert alert-warning">
-                            âš ï¸� <strong>User Info:</strong> ${time.toFixed(2)}ms - Status: ${response.status} - Requiere autenticaciÃ³n (NORMAL)
+                            âš ï¸� <strong>User Info:</strong> ${time.toFixed(2)}ms - Status: ${response.status} - Requiere autenticación (NORMAL)
                         </div>
                     `;
                 } else {
@@ -115,7 +115,7 @@
                 const time = performance.now() - start;
                 const result = `
                     <div class="alert alert-danger">
-                        â�Œ <strong>User Info:</strong> Error despuÃ©s de ${time.toFixed(2)}ms - ${error.message}
+                        â�Œ <strong>User Info:</strong> Error después de ${time.toFixed(2)}ms - ${error.message}
                     </div>
                 `;
                 document.getElementById('test-results').innerHTML += result;
@@ -132,17 +132,17 @@
 
                 const result = `
                     <div class="alert alert-success">
-                        âœ… <strong>EstadÃ­sticas:</strong> ${time.toFixed(2)}ms - Status: ${response.status}
+                        âœ… <strong>Estadísticas:</strong> ${time.toFixed(2)}ms - Status: ${response.status}
                     </div>
                 `;
                 document.getElementById('test-results').innerHTML += result;
-                console.log(`ğŸ“Š EstadÃ­sticas: ${time.toFixed(2)}ms`);
+                console.log(`ğŸ“Š Estadísticas: ${time.toFixed(2)}ms`);
                 return data;
             } catch (error) {
                 const time = performance.now() - start;
                 const result = `
                     <div class="alert alert-danger">
-                        â�Œ <strong>EstadÃ­sticas:</strong> Error despuÃ©s de ${time.toFixed(2)}ms - ${error.message}
+                        â�Œ <strong>Estadísticas:</strong> Error después de ${time.toFixed(2)}ms - ${error.message}
                     </div>
                 `;
                 document.getElementById('test-results').innerHTML += result;
@@ -172,7 +172,7 @@
                 const time = performance.now() - start;
                 const result = `
                     <div class="alert alert-danger">
-                        â�Œ <strong>Alertas:</strong> Error despuÃ©s de ${time.toFixed(2)}ms - ${error.message}
+                        â�Œ <strong>Alertas:</strong> Error después de ${time.toFixed(2)}ms - ${error.message}
                     </div>
                 `;
                 document.getElementById('test-results').innerHTML += result;

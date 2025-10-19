@@ -1,4 +1,4 @@
-// Gestión de Órdenes de Trabajo - JavaScript
+// Gestión de Í“rdenes de Trabajo - JavaScript
 
 // Variables globales
 let ordenes = [];
@@ -12,7 +12,6 @@ let perPage = 10;
 let paginacionOrdenes;
 
 // Variable para selección masiva
-let seleccionMasiva;
 
 // Función debounce para optimizar búsquedas
 function debounce(func, wait) {
@@ -111,17 +110,6 @@ document.addEventListener("DOMContentLoaded", function () {
     showSizeSelector: true,
   });
 
-  // Inicializar sistema de selección masiva
-  seleccionMasiva = initSeleccionMasiva({
-    selectAllId: "select-all",
-    tableBodyId: "tabla-ordenes",
-    contadorId: "contador-seleccion",
-    accionesMasivasId: "acciones-masivas",
-    entityName: "órdenes",
-    entityNameSingular: "orden",
-    getData: () => ordenes,
-  });
-
   if (document.getElementById("modalOrden")) {
     console.log("Modal de orden encontrado, cargando datos...");
     cargarDatosIniciales();
@@ -134,6 +122,9 @@ document.addEventListener("DOMContentLoaded", function () {
       inicializarAutocompletadoRecambio();
     });
   }
+
+  // Configurar filtros en tiempo real
+  configurarFiltrosOrdenes();
 
   cargarOrdenes();
 });
@@ -149,6 +140,29 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+// Configurar filtros en tiempo real
+function configurarFiltrosOrdenes() {
+  console.log("🔧 Configurando filtros en tiempo real para órdenes...");
+
+  // Búsqueda con debounce
+  const campoBuscar = document.getElementById("filtro-buscar");
+  if (campoBuscar) {
+    const aplicarFiltrosDebounced = debounce(aplicarFiltros, 500);
+    campoBuscar.addEventListener("input", aplicarFiltrosDebounced);
+    console.log("✅ Búsqueda en tiempo real configurada");
+  }
+
+  // Selectores sin debounce (cambio inmediato)
+  const filtros = ["filtro-estado", "filtro-tipo", "filtro-prioridad"];
+  filtros.forEach((filtroId) => {
+    const elemento = document.getElementById(filtroId);
+    if (elemento) {
+      elemento.addEventListener("change", aplicarFiltros);
+      console.log(`✅ Filtro ${filtroId} configurado`);
+    }
+  });
 }
 
 // Cargar lista de órdenes con paginación y filtros
@@ -244,11 +258,6 @@ function mostrarOrdenes() {
   ordenes.forEach((orden) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-            <td>
-                <input type="checkbox" class="form-check-input row-checkbox" data-id="${
-                  orden.id
-                }">
-            </td>
             <td>#${orden.id}</td>
             <td>${orden.fecha_creacion || "N/A"}</td>
             <td>${orden.activo_nombre || "Sin asignar"}</td>
@@ -386,7 +395,7 @@ async function editarOrden(id) {
   }
 }
 
-// GESTIÓN DE ESTADOS - Nueva funcionalidad principal
+// GESTIÍ“N DE ESTADOS - Nueva funcionalidad principal
 
 // Mostrar modal para cambiar estado
 function mostrarModalEstado(id) {
@@ -787,7 +796,7 @@ function inicializarAutocompletado() {
 
 // Configurar event listeners para filtros
 function configurarFiltrosOrdenes() {
-  console.log("🔍 Configurando filtros de órdenes...");
+  console.log("ï£¿ðŸ” Configurando filtros de órdenes...");
 
   // Crear función de filtrado con debounce
   const filtrarOrdenesDebounced = debounce(filtrarOrdenes, 500);
@@ -812,7 +821,7 @@ function configurarFiltrosOrdenes() {
 
 // Función para filtrar órdenes (ejecuta búsqueda en servidor)
 function filtrarOrdenes() {
-  console.log("🔍 Filtrando órdenes...");
+  console.log("ðŸ” Filtrando órdenes...");
 
   const filtros = {
     q: document.getElementById("filtro-buscar")?.value.trim() || "",
@@ -829,7 +838,7 @@ function filtrarOrdenes() {
 
 // Aplicar filtros a la lista de órdenes
 function aplicarFiltros() {
-  console.log("🔍 Aplicando filtros...");
+  console.log("ï£¿ðŸ” Aplicando filtros...");
 
   const textoBusqueda =
     document.getElementById("filtro-buscar")?.value.toLowerCase() || "";
@@ -879,7 +888,7 @@ function aplicarFiltros() {
   mostrarOrdenesFiltradas(ordenesFiltradas);
 
   console.log(
-    `🔍 Filtros aplicados: ${ordenesFiltradas.length} de ${ordenes.length} órdenes`
+    `ï£¿ðŸ” Filtros aplicados: ${ordenesFiltradas.length} de ${ordenes.length} órdenes`
   );
 }
 
@@ -1143,7 +1152,7 @@ window.debugDOM = function () {
 };
 
 // ================================
-// GESTIÓN DE ARCHIVOS ADJUNTOS
+// GESTIÍ“N DE ARCHIVOS ADJUNTOS
 // ================================
 
 // Variables globales para archivos
@@ -1275,7 +1284,7 @@ function validarArchivo(file) {
   }
 
   if (file.size > tamañoMaximo) {
-    mostrarMensaje(`Archivo muy grande: ${file.name} (màx. 10MB)`, "danger");
+    mostrarMensaje(`Archivo muy grande: ${file.name} (máx. 10MB)`, "danger");
     return false;
   }
 
@@ -1613,7 +1622,7 @@ async function subirArchivo(archivoTemp, ordenId) {
 
 // Función para limpiar filtros
 function limpiarFiltros() {
-  console.log("üßπ Limpiando filtros...");
+  console.log("🔧 Limpiando filtros...");
 
   // Limpiar campos de filtro
   const filtros = [
@@ -1637,7 +1646,7 @@ function limpiarFiltros() {
 }
 
 // ================================
-// GESTIÓN DE RECAMBIOS
+// GESTIÍ“N DE RECAMBIOS
 // ================================
 
 // Variables globales para recambios
@@ -1702,8 +1711,8 @@ function inicializarAutocompletadoRecambio() {
         const stock = item.stock_actual || 0;
         const stockText =
           stock <= 0
-            ? `⚠️ Sin stock disponible`
-            : `📦 Stock disponible: ${stock} unidades`;
+            ? `—š  Sin stock disponible`
+            : `ðŸ“¦ Stock disponible: ${stock} unidades`;
 
         document.getElementById("recambio-info").innerHTML = `
                     <strong>${item.codigo}</strong> - ${item.descripcion}<br>
@@ -1961,14 +1970,14 @@ async function descontarRecambiosConfirmado() {
       if (result.recambios_descontados?.length > 0) {
         mensaje += "\n\nRecambios descontados:";
         result.recambios_descontados.forEach((r) => {
-          mensaje += `\n• ${r.articulo}: ${r.cantidad} unidades (Stock: ${r.stock_anterior} → ${r.stock_actual})`;
+          mensaje += `\n—€¢ ${r.articulo}: ${r.cantidad} unidades (Stock: ${r.stock_anterior} —†’ ${r.stock_actual})`;
         });
       }
 
       if (result.errores?.length > 0) {
         mensaje += "\n\nErrores:";
         result.errores.forEach((e) => {
-          mensaje += `\n• ${e.articulo}: ${e.error}`;
+          mensaje += `\n—€¢ ${e.articulo}: ${e.error}`;
         });
       }
 
@@ -1983,13 +1992,13 @@ async function descontarRecambiosConfirmado() {
         mensajeError.includes("orden completada") ||
         mensajeError.includes("orden cancelada")
       ) {
-        mensajeError = `🔒 ${mensajeError}\n\n💡 Solo se pueden descontar repuestos de órdenes activas (En Proceso, Pendiente, En Espera).`;
+        mensajeError = `ðŸ”’ ${mensajeError}\n\nðŸ’¡ Solo se pueden descontar repuestos de órdenes activas (En Proceso, Pendiente, En Espera).`;
       } else if (mensajeError.includes("Stock insuficiente")) {
-        mensajeError = `⚠️ ${mensajeError}\n\n💡 Verifica el stock disponible antes de descontar.`;
+        mensajeError = `—š  ${mensajeError}\n\nðŸ’¡ Verifica el stock disponible antes de descontar.`;
       } else if (mensajeError.includes("Orden de trabajo no encontrada")) {
-        mensajeError = `❌ ${mensajeError}\n\n💡 La orden puede haber sido eliminada o no existe.`;
+        mensajeError = `—Œ ${mensajeError}\n\nðŸ’¡ La orden puede haber sido eliminada o no existe.`;
       } else {
-        mensajeError = `❌ ${mensajeError}`;
+        mensajeError = `—Œ ${mensajeError}`;
       }
 
       mostrarMensaje(mensajeError, "danger");
@@ -2098,622 +2107,4 @@ function mostrarConfirmacionDescontarRecambios() {
     document.getElementById("modalDescontarRecambios")
   );
   modal.show();
-}
-
-// ====================================================================
-// FUNCIONES DE ACCIONES MASIVAS
-// ====================================================================
-
-/**
- * Asignar técnico a múltiples órdenes
- */
-async function asignarTecnicoMasivo() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay órdenes seleccionadas", "warning");
-    return;
-  }
-
-  // Cargar técnicos si aún no se han cargado
-  if (tecnicos.length === 0) {
-    await cargarTecnicos();
-  }
-
-  // Crear modal dinámico para seleccionar técnico
-  const modalHtml = `
-        <div class="modal fade" id="modalAsignarTecnicoMasivo" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-person-check me-2"></i>Asignar Técnico
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Seleccione el técnico para ${
-                          seleccionados.length
-                        } orden(es):</p>
-                        <select class="form-select" id="select-tecnico-masivo">
-                            <option value="">Seleccionar técnico</option>
-                            ${tecnicos
-                              .map(
-                                (t) =>
-                                  `<option value="${t.id}">${t.nombre}</option>`
-                              )
-                              .join("")}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" onclick="confirmarAsignarTecnicoMasivo()">
-                            <i class="bi bi-check-circle me-1"></i>Asignar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-  // Eliminar modal anterior si existe
-  const modalAnterior = document.getElementById("modalAsignarTecnicoMasivo");
-  if (modalAnterior) modalAnterior.remove();
-
-  // Agregar modal al DOM
-  document.body.insertAdjacentHTML("beforeend", modalHtml);
-  const modal = new bootstrap.Modal(
-    document.getElementById("modalAsignarTecnicoMasivo")
-  );
-  modal.show();
-
-  // Limpiar modal al cerrarse
-  document
-    .getElementById("modalAsignarTecnicoMasivo")
-    .addEventListener("hidden.bs.modal", function () {
-      this.remove();
-    });
-}
-
-/**
- * Confirmar asignación de técnico masiva
- */
-async function confirmarAsignarTecnicoMasivo() {
-  const tecnicoId = document.getElementById("select-tecnico-masivo").value;
-
-  if (!tecnicoId) {
-    mostrarMensaje("Debe seleccionar un técnico", "warning");
-    return;
-  }
-
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-  const tecnicoNombre =
-    tecnicos.find((t) => t.id == tecnicoId)?.nombre || "Técnico";
-
-  // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(
-    document.getElementById("modalAsignarTecnicoMasivo")
-  );
-  modal.hide();
-
-  let exitosos = 0;
-  let errores = 0;
-
-  for (const orden of seleccionados) {
-    try {
-      const response = await fetch(`/ordenes/${orden.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...orden,
-          tecnico_id: parseInt(tecnicoId),
-        }),
-      });
-
-      if (response.ok) {
-        exitosos++;
-      } else {
-        errores++;
-      }
-    } catch (error) {
-      console.error(`Error al asignar técnico a orden ${orden.id}:`, error);
-      errores++;
-    }
-  }
-
-  if (exitosos > 0) {
-    mostrarMensaje(
-      `${exitosos} orden(es) asignada(s) a ${tecnicoNombre}${
-        errores > 0 ? `. ${errores} error(es).` : ""
-      }`,
-      errores > 0 ? "warning" : "success"
-    );
-    cargarOrdenes(currentPage);
-    actualizarEstadisticas();
-  } else {
-    mostrarMensaje("No se pudieron asignar las órdenes", "danger");
-  }
-}
-
-/**
- * Cambiar estado de múltiples órdenes
- */
-async function cambiarEstadoMasivo(nuevoEstado) {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay órdenes seleccionadas", "warning");
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva(
-    `cambiar estado a "${nuevoEstado}"`,
-    async (seleccionados) => {
-      let exitosos = 0;
-      let errores = 0;
-
-      // Mostrar indicador de carga
-      const loadingToast = mostrarCargando("Cambiando estado...");
-
-      for (const orden of seleccionados) {
-        try {
-          const response = await fetch(`/ordenes/api/${orden.id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              estado: nuevoEstado,
-            }),
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            errores++;
-            console.error(
-              `Error al cambiar estado de orden ${orden.id}:`,
-              await response.text()
-            );
-          }
-        } catch (error) {
-          errores++;
-          console.error(`Error al cambiar estado de orden ${orden.id}:`, error);
-        }
-      }
-
-      // Ocultar indicador de carga
-      if (loadingToast) {
-        loadingToast.close();
-      }
-
-      // Mostrar resultado
-      if (exitosos > 0) {
-        mostrarMensaje(
-          `Estado cambiado exitosamente en ${exitosos} orden(es)`,
-          "success"
-        );
-        await cargarOrdenes(currentPage, perPage);
-        actualizarEstadisticas();
-      }
-
-      if (errores > 0) {
-        mostrarMensaje(
-          `Error al cambiar estado en ${errores} orden(es)`,
-          "error"
-        );
-      }
-    }
-  );
-}
-
-/**
- * Cambiar prioridad de múltiples órdenes
- */
-async function cambiarPrioridadMasiva() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay órdenes seleccionadas", "warning");
-    return;
-  }
-
-  // Crear modal dinámico para seleccionar prioridad
-  const prioridades = ["Crítica", "Alta", "Media", "Baja"];
-  const modalHtml = `
-        <div class="modal fade" id="modalPrioridadMasiva" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-flag me-2"></i>Cambiar Prioridad
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Seleccione la nueva prioridad para ${
-                          seleccionados.length
-                        } orden(es):</p>
-                        <select class="form-select" id="select-prioridad-masiva">
-                            ${prioridades
-                              .map((p) => `<option value="${p}">${p}</option>`)
-                              .join("")}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" onclick="confirmarCambioPrioridadMasivaOrdenes()">
-                            <i class="bi bi-check-circle me-1"></i>Cambiar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-  // Eliminar modal anterior si existe
-  const modalAnterior = document.getElementById("modalPrioridadMasiva");
-  if (modalAnterior) modalAnterior.remove();
-
-  // Agregar modal al DOM
-  document.body.insertAdjacentHTML("beforeend", modalHtml);
-  const modal = new bootstrap.Modal(
-    document.getElementById("modalPrioridadMasiva")
-  );
-  modal.show();
-
-  // Limpiar modal al cerrarse
-  document
-    .getElementById("modalPrioridadMasiva")
-    .addEventListener("hidden.bs.modal", function () {
-      this.remove();
-    });
-}
-
-/**
- * Confirmar cambio de prioridad masiva
- */
-async function confirmarCambioPrioridadMasivaOrdenes() {
-  const nuevaPrioridad = document.getElementById(
-    "select-prioridad-masiva"
-  ).value;
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  // Cerrar modal
-  const modal = bootstrap.Modal.getInstance(
-    document.getElementById("modalPrioridadMasiva")
-  );
-  modal.hide();
-
-  let exitosos = 0;
-  let errores = 0;
-
-  for (const orden of seleccionados) {
-    try {
-      const response = await fetch(`/ordenes/${orden.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...orden, prioridad: nuevaPrioridad }),
-      });
-
-      if (response.ok) {
-        exitosos++;
-      } else {
-        errores++;
-      }
-    } catch (error) {
-      console.error(`Error al actualizar orden ${orden.id}:`, error);
-      errores++;
-    }
-  }
-
-  if (exitosos > 0) {
-    mostrarMensaje(
-      `${exitosos} orden(es) actualizada(s) a prioridad "${nuevaPrioridad}"${
-        errores > 0 ? `. ${errores} error(es).` : ""
-      }`,
-      errores > 0 ? "warning" : "success"
-    );
-    cargarOrdenes(currentPage);
-    actualizarEstadisticas();
-  } else {
-    mostrarMensaje("No se pudieron actualizar las órdenes", "danger");
-  }
-}
-
-/**
- * Exportar órdenes seleccionadas a CSV
- */
-function exportarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay órdenes seleccionadas", "warning");
-    return;
-  }
-
-  // Crear CSV
-  // Encabezados alineados con exportación del servidor (Excel)
-  const headers = [
-    "Número",
-    "Fecha Creación",
-    "Fecha Programada",
-    "Fecha Completada",
-    "Tipo",
-    "Prioridad",
-    "Estado",
-    "Descripción",
-    "Observaciones",
-    "Tiempo Estimado",
-    "Tiempo Real",
-    "Activo",
-    "Técnico",
-  ];
-  const rows = seleccionados.map((orden) => [
-    orden.numero || orden.id || "",
-    orden.fecha_creacion || "",
-    orden.fecha_programada || "",
-    orden.fecha_completada || "",
-    orden.tipo || "",
-    orden.prioridad || "",
-    orden.estado || "",
-    (orden.descripcion || "").replace(/"/g, '""'),
-    (orden.observaciones || "").replace(/"/g, '""'),
-    orden.tiempo_estimado != null ? orden.tiempo_estimado : "",
-    orden.tiempo_real != null ? orden.tiempo_real : "",
-    orden.activo_nombre || "Sin asignar",
-    orden.tecnico_nombre || "Sin asignar",
-  ]);
-
-  let csv = headers.join(",") + "\n";
-  rows.forEach((row) => {
-    csv += row.map((cell) => `"${cell}"`).join(",") + "\n";
-  });
-
-  // Descargar archivo
-  // Añadir BOM UTF-8 para evitar problemas de acentos en Excel
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute(
-    "download",
-    `ordenes_seleccionadas_${new Date().toISOString().split("T")[0]}.csv`
-  );
-  link.style.visibility = "hidden";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  mostrarMensaje(
-    `${seleccionados.length} orden(es) exportada(s) exitosamente`,
-    "success"
-  );
-}
-
-/**
- * Cancelar múltiples órdenes
- */
-async function cancelarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay órdenes seleccionadas", "warning");
-    return;
-  }
-
-  // Verificar que todas las órdenes se pueden cancelar
-  const noCancelables = seleccionados.filter(
-    (orden) => orden.estado === "Completada" || orden.estado === "Cancelada"
-  );
-
-  if (noCancelables.length > 0) {
-    mostrarMensaje(
-      'No se pueden cancelar órdenes que ya están "Completadas" o "Canceladas"',
-      "warning"
-    );
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva(
-    "cancelar órdenes",
-    async (seleccionados) => {
-      let exitosos = 0;
-      let errores = 0;
-
-      // Mostrar indicador de carga
-      const loadingToast = mostrarCargando("Cancelando órdenes...");
-
-      for (const orden of seleccionados) {
-        try {
-          const response = await fetch(`/ordenes/api/${orden.id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              estado: "Cancelada",
-            }),
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            errores++;
-            console.error(
-              `Error al cancelar orden ${orden.id}:`,
-              await response.text()
-            );
-          }
-        } catch (error) {
-          errores++;
-          console.error(`Error al cancelar orden ${orden.id}:`, error);
-        }
-      }
-
-      // Ocultar indicador de carga
-      if (loadingToast) {
-        loadingToast.close();
-      }
-
-      // Mostrar resultado
-      if (exitosos > 0) {
-        mostrarMensaje(
-          `${exitosos} orden(es) cancelada(s) exitosamente`,
-          "success"
-        );
-        await cargarOrdenes(currentPage, perPage);
-      }
-
-      if (errores > 0) {
-        mostrarMensaje(`Error al cancelar ${errores} orden(es)`, "error");
-      }
-    }
-  );
-}
-
-// Variables para eliminación de órdenes
-let ordenAEliminar = null;
-
-// Mostrar modal de confirmación para eliminar orden
-function mostrarModalEliminarOrden(ordenId) {
-  const orden = ordenes.find((o) => o.id === ordenId);
-  if (!orden) {
-    mostrarMensaje("Orden no encontrada", "danger");
-    return;
-  }
-
-  // Verificar que la orden se puede eliminar
-  if (orden.estado !== "Pendiente" && orden.estado !== "Cancelada") {
-    mostrarMensaje(
-      'Solo se pueden eliminar órdenes en estado "Pendiente" o "Cancelada"',
-      "warning"
-    );
-    return;
-  }
-
-  ordenAEliminar = ordenId;
-  document.getElementById("numero-orden-eliminar").textContent =
-    orden.numero_orden;
-
-  const modal = new bootstrap.Modal(
-    document.getElementById("modalEliminarOrden")
-  );
-  modal.show();
-}
-
-/**
- * Eliminar múltiples órdenes seleccionadas
- */
-async function eliminarSeleccionados() {
-  const seleccionados = seleccionMasiva.obtenerSeleccionados();
-
-  if (seleccionados.length === 0) {
-    mostrarMensaje("No hay órdenes seleccionadas", "warning");
-    return;
-  }
-
-  // Verificar que todas las órdenes se pueden eliminar
-  const noEliminables = seleccionados.filter(
-    (orden) => orden.estado !== "Pendiente" && orden.estado !== "Cancelada"
-  );
-
-  if (noEliminables.length > 0) {
-    mostrarMensaje(
-      'Solo se pueden eliminar órdenes en estado "Pendiente" o "Cancelada"',
-      "warning"
-    );
-    return;
-  }
-
-  seleccionMasiva.confirmarAccionMasiva(
-    "eliminar órdenes",
-    async (seleccionados) => {
-      let exitosos = 0;
-      let errores = 0;
-
-      // Mostrar indicador de carga
-      const loadingToast = mostrarCargando("Eliminando órdenes...");
-
-      for (const orden of seleccionados) {
-        try {
-          const response = await fetch(`/ordenes/api/${orden.id}`, {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (response.ok) {
-            exitosos++;
-          } else {
-            errores++;
-            console.error(
-              `Error al eliminar orden ${orden.id}:`,
-              await response.text()
-            );
-          }
-        } catch (error) {
-          errores++;
-          console.error(`Error al eliminar orden ${orden.id}:`, error);
-        }
-      }
-
-      // Ocultar indicador de carga
-      if (loadingToast) {
-        loadingToast.close();
-      }
-
-      // Mostrar resultado
-      if (exitosos > 0) {
-        mostrarMensaje(
-          `${exitosos} orden(es) eliminada(s) exitosamente`,
-          "success"
-        );
-        await cargarOrdenes(currentPage, perPage);
-      }
-
-      if (errores > 0) {
-        mostrarMensaje(`Error al eliminar ${errores} orden(es)`, "error");
-      }
-    }
-  );
-}
-
-// Confirmar eliminación de orden
-async function confirmarEliminarOrden() {
-  if (!ordenAEliminar) return;
-
-  try {
-    const response = await fetch(`/ordenes/api/${ordenAEliminar}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      mostrarMensaje("Orden eliminada exitosamente", "success");
-
-      // Cerrar modal
-      const modal = bootstrap.Modal.getInstance(
-        document.getElementById("modalEliminarOrden")
-      );
-      if (modal) {
-        modal.hide();
-      }
-
-      // Recargar órdenes
-      cargarOrdenes(currentPage);
-    } else {
-      mostrarMensaje("Error: " + result.error, "danger");
-    }
-  } catch (error) {
-    console.error("Error eliminando orden:", error);
-    mostrarMensaje("Error de conexión al eliminar la orden", "danger");
-  } finally {
-    ordenAEliminar = null;
-  }
 }

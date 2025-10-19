@@ -231,6 +231,20 @@
     opacity: 0.5;
 }
 
+/* Estilo para cards de selección de lotes */
+.lote-selection-card {
+    border: 2px solid #667eea !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+    cursor: pointer;
+}
+
+.lote-selection-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3) !important;
+}
+
 @media (max-width: 768px) {
     .timeline::before {
         left: 8px;
@@ -446,6 +460,7 @@ function buscarPorTermino(termino) {
 
 // Mostrar opciones de lotes cuando hay múltiples resultados
 function mostrarOpcionesLotes(lotes) {
+    // Actualizado: Cards con estilo moderno y borde púrpura
     let html = `
         <div class="card">
             <div class="card-header">
@@ -464,8 +479,7 @@ function mostrarOpcionesLotes(lotes) {
         
         html += `
             <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card border-primary h-100" style="cursor: pointer;" 
-                     onclick="buscarPorIdLote(${lote.id})">
+                <div class="card lote-selection-card h-100" onclick="buscarPorIdLote(${lote.id})">
                     <div class="card-body">
                         <h6 class="card-title">${codigoLote}</h6>
                         <p class="card-text">
