@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 {% set active_page = "lotes" %}
 
-{% block title %}Trazabilidad del Lote - Sistema FIFO{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-<script src="{{ url_for('static', filename='js/trazabilidad_lotes.js') }}"></script>
-<script>
-    const LOTE_ID = {{ lote_id }};
-    document.addEventListener('DOMContentLoaded', function() {
-        cargarTrazabilidad(LOTE_ID);
-    });
-</script>
-{% endblock %}
+{% block title %}Trazabilidad de Lotes - Sistema FIFO{% endblock %}
 
 {% block extra_css %}
 <style>
