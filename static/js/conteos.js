@@ -185,21 +185,21 @@ function actualizarTablaConteos(conteos) {
                 <div class="btn-group btn-group-sm" role="group">
                     ${
                       conteo.estado === "pendiente"
-                        ? `<button type="button" class="btn btn-sm btn-outline-success action-btn special" onclick="mostrarModalProcesarConteo(${conteo.id}, '${conteo.articulo.codigo}', '${conteo.articulo.descripcion}', ${conteo.stock_teorico})" title="Procesar conteo">
+                        ? `<button type="button" class="btn btn-outline-success btn-sm" onclick="mostrarModalProcesarConteo(${conteo.id}, '${conteo.articulo.codigo}', '${conteo.articulo.descripcion}', ${conteo.stock_teorico})" title="Procesar conteo">
                             <i class="bi bi-check"></i>
                         </button>`
-                        : `<button type="button" class="btn btn-sm btn-outline-primary action-btn view" onclick="verDetalleConteo(${conteo.id})" title="Ver detalle">
+                        : `<button type="button" class="btn btn-outline-primary btn-sm" onclick="verDetalleConteo(${conteo.id})" title="Ver detalle">
                             <i class="bi bi-eye"></i>
                         </button>`
                     }
-                    <button type="button" class="btn btn-sm btn-outline-secondary action-btn edit" onclick="editarConteo(${
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="editarConteo(${
                       conteo.id
                     })" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
                     ${
                       conteo.estado === "pendiente"
-                        ? `<button type="button" class="btn btn-sm btn-outline-danger action-btn delete" onclick="confirmarEliminarConteo(${conteo.id}, '${conteo.articulo.codigo}')" title="Eliminar conteo">
+                        ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmarEliminarConteo(${conteo.id}, '${conteo.articulo.codigo}')" title="Eliminar conteo">
                             <i class="bi bi-trash"></i>
                         </button>`
                         : ""
