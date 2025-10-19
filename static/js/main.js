@@ -887,7 +887,7 @@ function loadDashboard() {
     });
 
   // Cargar órdenes recientes (paralelo)
-  console.log("üìã Iniciando carga de órdenes recientes...");
+  console.log("🔧 Iniciando carga de órdenes recientes...");
   loadRecentOrders();
 
   // COMENTAR TODO LO DEMÁS TEMPORALMENTE
@@ -919,7 +919,7 @@ function loadDashboard() {
         });
 
     // Cargar órdenes recientes (no bloquea otras cargas)
-    console.log('üìã Iniciando carga de órdenes recientes...');
+    console.log('🔧 Iniciando carga de órdenes recientes...');
     loadRecentOrders();
 
     // Cargar alertas de mantenimiento de forma asíncrona (con retraso mínimo)
@@ -1371,7 +1371,7 @@ function restaurarDashboard() {
     .catch((error) => console.error("❌ Error estadísticas:", error));
 
   // Cargar órdenes
-  console.log("üìã Cargando órdenes...");
+  console.log("🔧 Cargando órdenes...");
   loadRecentOrders();
 
   console.log("✅ Dashboard restaurado completamente");
@@ -1403,7 +1403,7 @@ function testAlertasSimple() {
       console.log("✅ TEST COMPLETADO - La API funciona correctamente");
     })
     .catch((error) => {
-      console.error("❌ TEST FALL√ì:", error);
+      console.error("❌ TEST FALLÓ:", error);
     });
 }
 
@@ -1442,7 +1442,7 @@ function diagnosticoDashboard() {
         } else if (endpoint.includes("alertas")) {
           console.log("   - Alertas:", data?.total || 0, "alertas");
         } else if (endpoint.includes("ordenes")) {
-          console.log("   - √ìrdenes:", data?.length || 0, "órdenes");
+          console.log("   - Órdenes:", data?.length || 0, "órdenes");
         }
       })
       .catch((error) => {
@@ -1488,21 +1488,21 @@ function loadMaintenanceAlertsWithFallback() {
 }
 
 function loadRecentOrders() {
-  console.log("üìã Cargando órdenes recientes...");
+  console.log("🔧 Cargando órdenes recientes...");
   const ordersStart = performance.now();
 
   fetch("/ordenes/api?limit=5")
     .then((response) => {
       const ordersTime = performance.now() - ordersStart;
       console.log(
-        `üìã Respuesta órdenes recibida en ${ordersTime.toFixed(2)}ms`
+        `🔧 Respuesta órdenes recibida en ${ordersTime.toFixed(2)}ms`
       );
       return response.json();
     })
     .then((ordenes) => {
       const ordersTime = performance.now() - ordersStart;
       console.log(
-        `üìã √ìrdenes procesadas en ${ordersTime.toFixed(2)}ms - ${
+        `🔧 Órdenes procesadas en ${ordersTime.toFixed(2)}ms - ${
           ordenes?.length || 0
         } órdenes`
       );
@@ -1784,14 +1784,14 @@ function createOrdersChart(data) {
       labels: getLast7Days(),
       datasets: [
         {
-          label: "√ìrdenes Completadas",
+          label: "Órdenes Completadas",
           data: [12, 19, 3, 5, 2, 3, 7],
           borderColor: "rgb(75, 192, 192)",
           backgroundColor: "rgba(75, 192, 192, 0.2)",
           tension: 0.4,
         },
         {
-          label: "√ìrdenes Creadas",
+          label: "Órdenes Creadas",
           data: [5, 10, 15, 8, 12, 7, 9],
           borderColor: "rgb(255, 99, 132)",
           backgroundColor: "rgba(255, 99, 132, 0.2)",
