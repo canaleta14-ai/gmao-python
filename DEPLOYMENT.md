@@ -33,21 +33,25 @@ Este sistema incluye scripts especializados para migrar datos cuando:
 - Quieres garantizar integridad de datos con verificación de checksums
 - Requieres un proceso seguro con backups automáticos
 
+**Scripts disponibles:**
+
+- `export_production_data.py` / `export_production_data.sh` - Exportación de BD
+- `import_production_data.py` / `import_production_data.sh` - Importación en servidor
+
+> **💡 Recomendación**: Usar los scripts Python (`.py`) ya que funcionan nativamente en Windows, Linux y Mac sin necesidad de Git Bash.
+
 ### 📤 Fase 1: Exportar Datos (Entorno de Desarrollo)
 
 #### 1.1. Preparar el Script de Exportación
 
-El script `export_production_data.sh` exportará tu base de datos con todas las medidas de seguridad:
+Los scripts exportarán tu base de datos con todas las medidas de seguridad:
 
 ```bash
 # En tu máquina de desarrollo (Windows/Linux/Mac)
 cd c:\Users\canal\gmao-python\gmao-sistema
-
-# Dar permisos de ejecución (Linux/Mac)
-chmod +x export_production_data.sh
-
-# Windows Git Bash: no requiere chmod
 ```
+
+> **Nota**: Los scripts Python no requieren permisos especiales ni Git Bash en Windows.
 
 #### 1.2. Verificar Configuración de Base de Datos
 
@@ -59,16 +63,24 @@ DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/gmao_db
 
 #### 1.3. Ejecutar la Exportación
 
+**OPCIÓN RECOMENDADA: Script Python (multiplataforma)**
+
+```bash
+# Windows, Linux, Mac - Funciona en todos los sistemas
+python export_production_data.py
+```
+
+**Opción alternativa: Script Bash (requiere Git Bash en Windows)**
+
 ```bash
 # Linux/Mac
 ./export_production_data.sh
 
 # Windows Git Bash
 bash export_production_data.sh
-
-# Windows PowerShell
-sh export_production_data.sh
 ```
+
+> **💡 Nota**: El script Python es más fácil de usar en Windows ya que detecta automáticamente la instalación de PostgreSQL sin necesidad de configurar PATH ni usar Git Bash.
 
 **Salida esperada:**
 
@@ -178,19 +190,13 @@ sha256sum -c gmao_data_export_*.sql.gz.sha256
 # En el servidor, navegar al directorio del proyecto
 cd /home/gmao/gmao-python/gmao-sistema
 
-# El script ya debería estar en el repositorio
-ls -l import_production_data.sh
-
-# Si no existe, crearlo siguiendo las instrucciones del repositorio
+# Verificar que los scripts están disponibles
+ls -l import_production_data.py import_production_data.sh
 ```
 
-#### 3.4. Dar Permisos de Ejecución
+> **Nota**: Los scripts ya están en el repositorio. Si usas el script Python (`.py`), no necesitas dar permisos de ejecución.
 
-```bash
-chmod +x import_production_data.sh
-```
-
-#### 3.5. **IMPORTANTE: Preparativos Antes de Importar**
+#### 3.4. **IMPORTANTE: Preparativos Antes de Importar**
 
 ⚠️ **ADVERTENCIAS CRÍTICAS:**
 
@@ -210,10 +216,20 @@ chmod +x import_production_data.sh
 
 #### 3.6. Ejecutar la Importación
 
+**OPCIÓN RECOMENDADA: Script Python (multiplataforma)**
+
 ```bash
-# Ejecutar el script con el archivo exportado
+# Windows, Linux, Mac - Funciona en todos los sistemas
+python import_production_data.py gmao_data_export_20240115_103045.sql.gz
+```
+
+**Opción alternativa: Script Bash (Linux/Mac o Git Bash en Windows)**
+
+```bash
 ./import_production_data.sh gmao_data_export_20240115_103045.sql.gz
 ```
+
+> **💡 Nota**: El script Python detecta automáticamente PostgreSQL y puede ejecutarse directamente en PowerShell sin necesidad de Git Bash.
 
 **Proceso interactivo:**
 
@@ -335,15 +351,17 @@ sudo supervisorctl status gmao
 
 ### 📋 Resumen del Proceso Completo
 
-| Fase              | Ubicación             | Comando                                       | Tiempo    |
-| ----------------- | --------------------- | --------------------------------------------- | --------- |
-| **1. Exportar**   | Desarrollo            | `./export_production_data.sh`                 | 2-5 min   |
-| **2. Transferir** | Desarrollo → Servidor | `scp db_export/*.gz* usuario@servidor:/path/` | 5-30 min  |
-| **3. Verificar**  | Servidor              | `sha256sum -c *.sha256`                       | 1 min     |
-| **4. Importar**   | Servidor              | `./import_production_data.sh archivo.sql.gz`  | 5-15 min  |
-| **5. Verificar**  | Servidor              | Pruebas funcionales                           | 10-20 min |
+| Fase              | Ubicación             | Comando                                           | Tiempo    |
+| ----------------- | --------------------- | ------------------------------------------------- | --------- |
+| **1. Exportar**   | Desarrollo            | `python export_production_data.py`                | 2-5 min   |
+| **2. Transferir** | Desarrollo → Servidor | `scp db_export/*.gz* usuario@servidor:/path/`     | 5-30 min  |
+| **3. Verificar**  | Servidor              | `sha256sum -c *.sha256`                           | 1 min     |
+| **4. Importar**   | Servidor              | `python import_production_data.py archivo.sql.gz` | 5-15 min  |
+| **5. Verificar**  | Servidor              | Pruebas funcionales                               | 10-20 min |
 
 **Tiempo total estimado: 23-71 minutos**
+
+> **💡 Scripts disponibles**: Existen versiones en Python (`.py`) y Bash (`.sh`) de ambos scripts. Se recomienda usar los scripts Python por su mejor compatibilidad multiplataforma, especialmente en Windows.
 
 ### 🔐 Consideraciones de Seguridad
 
