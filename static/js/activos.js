@@ -449,9 +449,7 @@ function mostrarActivos(activosAMostrar) {
                 }
             </td>
             <td>
-                <span class="badge bg-secondary">${
-                  escapeHtml(activo.tipo) || "Sin tipo"
-                }</span>
+                ${escapeHtml(activo.tipo) || "Sin tipo"}
             </td>
             <td>${escapeHtml(activo.ubicacion) || "-"}</td>
             <td>

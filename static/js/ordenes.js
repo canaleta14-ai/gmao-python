@@ -372,7 +372,9 @@ async function editarOrden(id) {
     document.getElementById("orden-tipo").value = orden.tipo || "";
     document.getElementById("orden-prioridad").value = orden.prioridad || "";
     document.getElementById("orden-activo").value = orden.activo_id || "";
-    document.getElementById("orden-tecnico").value = orden.tecnico_id || "";
+    // Cargar técnico: nombre visible + ID en campo oculto
+    document.getElementById("orden-tecnico").value = orden.tecnico_nombre || "";
+    document.getElementById("orden-tecnico-id").value = orden.tecnico_id || "";
     document.getElementById("orden-fecha-programada").value =
       orden.fecha_programada || "";
     document.getElementById("orden-tiempo-estimado").value =
@@ -539,6 +541,76 @@ function cambiarEstadoDesdeDetalle() {
   }, 300);
 }
 
+// Variables para eliminación
+let ordenAEliminar = null;
+
+// Mostrar modal de confirmación de eliminación
+function mostrarModalEliminarOrden(ordenId) {
+  // Buscar la orden para verificar su estado
+  const orden = ordenes.find((o) => o.id === ordenId);
+
+  if (!orden) {
+    mostrarMensaje("No se encontró la orden", "danger");
+    return;
+  }
+
+  // Verificar que el estado permita eliminación
+  const estadosPermitidos = ["Pendiente", "Cancelada"];
+  if (!estadosPermitidos.includes(orden.estado)) {
+    mostrarMensaje(
+      `No se puede eliminar una orden en estado "${orden.estado}". Solo se pueden eliminar órdenes Pendientes o Canceladas.`,
+      "warning"
+    );
+    return;
+  }
+
+  // Guardar ID de orden a eliminar
+  ordenAEliminar = ordenId;
+
+  // Mostrar número de orden en el modal
+  document.getElementById("numero-orden-eliminar").textContent = `#${
+    orden.numero_orden || ordenId
+  }`;
+
+  // Mostrar modal
+  const modal = new bootstrap.Modal(
+    document.getElementById("modalEliminarOrden")
+  );
+  modal.show();
+}
+
+// Confirmar eliminación de orden
+async function confirmarEliminarOrden() {
+  if (!ordenAEliminar) return;
+
+  try {
+    const response = await fetch(`/ordenes/api/${ordenAEliminar}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      mostrarMensaje("Orden eliminada exitosamente", "success");
+
+      // Cerrar modal
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalEliminarOrden")
+      );
+      if (modal) modal.hide();
+
+      // Recargar lista de órdenes
+      await cargarOrdenes(currentPage);
+
+      ordenAEliminar = null;
+    } else {
+      const error = await response.json();
+      throw new Error(error.mensaje || "Error al eliminar la orden");
+    }
+  } catch (error) {
+    console.error("Error eliminando orden:", error);
+    mostrarMensaje(error.message || "Error al eliminar la orden", "danger");
+  }
+}
+
 // Editar desde el modal de detalles
 async function editarDesdeDetalle() {
   const ordenId = parseInt(
@@ -665,8 +737,9 @@ async function cargarTecnicos() {
 
       console.log("Técnicos filtrados:", tecnicos);
 
-      // Ya no necesitamos llenar select, usaremos autocompletado
+      // Inicializar autocomplete con los técnicos cargados
       console.log(`Cargados ${tecnicos.length} técnicos para autocompletado`);
+      inicializarAutocompleteTecnicos();
 
       if (tecnicos.length === 0) {
         mostrarMensaje(
@@ -731,7 +804,57 @@ function llenarSelectTecnicos() {
   console.log("Select final HTML:", selectTecnico.innerHTML);
 }
 
-// Inicializar autocompletado en formularios
+// Inicializar autocomplete de técnicos
+function inicializarAutocompleteTecnicos() {
+  const tecnicoInput = document.getElementById("orden-tecnico");
+  const tecnicoIdInput = document.getElementById("orden-tecnico-id");
+
+  if (!tecnicoInput || !tecnicoIdInput) {
+    console.log("Campos de técnico no encontrados");
+    return;
+  }
+
+  if (!window.AutoComplete) {
+    console.log("Librería AutoComplete no disponible");
+    return;
+  }
+
+  // Si ya está inicializado, no recrear
+  if (tecnicoInput.dataset.autocompleteInitialized === "true") {
+    console.log("Autocomplete de técnicos ya inicializado");
+    return;
+  }
+
+  console.log("Inicializando autocomplete con", tecnicos.length, "técnicos");
+
+  // Crear nueva instancia
+  new AutoComplete({
+    element: tecnicoInput,
+    localData: tecnicos,
+    displayKey: (item) => `${item.nombre} - ${item.rol}`,
+    valueKey: "id",
+    placeholder: "Buscar técnico...",
+    allowFreeText: false,
+    customFilter: (item, query) => {
+      if (!query || typeof query !== "string") return false;
+      const q = query.toLowerCase();
+      return (
+        (item.nombre && item.nombre.toLowerCase().includes(q)) ||
+        (item.username && item.username.toLowerCase().includes(q)) ||
+        (item.rol && item.rol.toLowerCase().includes(q))
+      );
+    },
+    onSelect: (item) => {
+      console.log("Técnico seleccionado:", item);
+      // Guardar el ID en el campo oculto
+      tecnicoIdInput.value = item.id;
+    },
+  });
+
+  // Marcar como inicializado
+  tecnicoInput.dataset.autocompleteInitialized = "true";
+  console.log("✅ Autocomplete de técnicos inicializado correctamente");
+} // Inicializar autocompletado en formularios
 function inicializarAutocompletado() {
   console.log("Inicializando autocompletado en órdenes...");
 
@@ -763,30 +886,8 @@ function inicializarAutocompletado() {
     });
   }
 
-  // Autocompletado para técnicos
-  const tecnicoInput = document.getElementById("orden-tecnico");
-  if (tecnicoInput && window.AutoComplete) {
-    new AutoComplete({
-      element: tecnicoInput,
-      localData: tecnicos,
-      displayKey: (item) => `${item.nombre} - ${item.rol}`,
-      valueKey: "id",
-      placeholder: "Buscar técnico...",
-      allowFreeText: false,
-      customFilter: (item, query) => {
-        if (!query || typeof query !== "string") return false;
-        const q = query.toLowerCase();
-        return (
-          (item.nombre && item.nombre.toLowerCase().includes(q)) ||
-          (item.username && item.username.toLowerCase().includes(q)) ||
-          (item.rol && item.rol.toLowerCase().includes(q))
-        );
-      },
-      onSelect: (item) => {
-        console.log("Técnico seleccionado:", item);
-      },
-    });
-  }
+  // Inicializar autocomplete de técnicos
+  inicializarAutocompleteTecnicos();
 
   console.log("Autocompletado inicializado en órdenes");
 
@@ -796,7 +897,7 @@ function inicializarAutocompletado() {
 
 // Configurar event listeners para filtros
 function configurarFiltrosOrdenes() {
-  console.log("ï£¿ðŸ” Configurando filtros de órdenes...");
+  console.log("🔧 Configurando filtros de órdenes...");
 
   // Crear función de filtrado con debounce
   const filtrarOrdenesDebounced = debounce(filtrarOrdenes, 500);
@@ -821,7 +922,7 @@ function configurarFiltrosOrdenes() {
 
 // Función para filtrar órdenes (ejecuta búsqueda en servidor)
 function filtrarOrdenes() {
-  console.log("ðŸ” Filtrando órdenes...");
+  console.log("🔍 Filtrando órdenes...");
 
   const filtros = {
     q: document.getElementById("filtro-buscar")?.value.trim() || "",
@@ -838,7 +939,7 @@ function filtrarOrdenes() {
 
 // Aplicar filtros a la lista de órdenes
 function aplicarFiltros() {
-  console.log("ï£¿ðŸ” Aplicando filtros...");
+  console.log("🔧 Aplicando filtros...");
 
   const textoBusqueda =
     document.getElementById("filtro-buscar")?.value.toLowerCase() || "";
@@ -888,7 +989,7 @@ function aplicarFiltros() {
   mostrarOrdenesFiltradas(ordenesFiltradas);
 
   console.log(
-    `ï£¿ðŸ” Filtros aplicados: ${ordenesFiltradas.length} de ${ordenes.length} órdenes`
+    `🔧 Filtros aplicados: ${ordenesFiltradas.length} de ${ordenes.length} órdenes`
   );
 }
 
@@ -944,6 +1045,9 @@ function mostrarModalNuevaOrden() {
   // Resetear formulario
   document.getElementById("formOrden").reset();
   document.getElementById("orden-id").value = "";
+  // Limpiar campo oculto del técnico
+  const tecnicoIdInput = document.getElementById("orden-tecnico-id");
+  if (tecnicoIdInput) tecnicoIdInput.value = "";
 
   // Cambiar título del modal
   document.getElementById("modalOrdenTitulo").innerHTML =
@@ -995,7 +1099,7 @@ async function guardarOrden() {
       tipo: document.getElementById("orden-tipo").value,
       prioridad: document.getElementById("orden-prioridad").value,
       activo_id: document.getElementById("orden-activo").value || null,
-      tecnico_id: document.getElementById("orden-tecnico").value || null,
+      tecnico_id: document.getElementById("orden-tecnico-id").value || null,
       fecha_programada:
         document.getElementById("orden-fecha-programada").value || null,
       tiempo_estimado:
@@ -1175,21 +1279,24 @@ function inicializarArchivos(ordenId = null) {
     uploadArea.replaceWith(uploadArea.cloneNode(true));
     const newUploadArea = document.getElementById("upload-area");
 
+    // Obtener el nuevo file input después del reemplazo
+    const newFileInput = document.getElementById("file-input");
+    const newBrowseFiles = document.getElementById("browse-files");
+
     // Eventos de drag & drop
     newUploadArea.addEventListener("dragover", handleDragOver);
     newUploadArea.addEventListener("dragleave", handleDragLeave);
     newUploadArea.addEventListener("drop", handleDrop);
-    newUploadArea.addEventListener("click", () => fileInput.click());
+    newUploadArea.addEventListener("click", () => newFileInput.click());
 
     // Limpiar eventos del botón browse
-    const newBrowseFiles = document.getElementById("browse-files");
     newBrowseFiles.addEventListener("click", (e) => {
       e.preventDefault();
-      fileInput.click();
+      newFileInput.click();
     });
 
     // Evento cuando se seleccionan archivos
-    fileInput.addEventListener("change", handleFileSelect);
+    newFileInput.addEventListener("change", handleFileSelect);
   }
 
   // Limpiar campos de enlace
@@ -1711,8 +1818,8 @@ function inicializarAutocompletadoRecambio() {
         const stock = item.stock_actual || 0;
         const stockText =
           stock <= 0
-            ? `—š  Sin stock disponible`
-            : `ðŸ“¦ Stock disponible: ${stock} unidades`;
+            ? `⚠️  Sin stock disponible`
+            : `📦 Stock disponible: ${stock} unidades`;
 
         document.getElementById("recambio-info").innerHTML = `
                     <strong>${item.codigo}</strong> - ${item.descripcion}<br>
@@ -1992,13 +2099,13 @@ async function descontarRecambiosConfirmado() {
         mensajeError.includes("orden completada") ||
         mensajeError.includes("orden cancelada")
       ) {
-        mensajeError = `ðŸ”’ ${mensajeError}\n\nðŸ’¡ Solo se pueden descontar repuestos de órdenes activas (En Proceso, Pendiente, En Espera).`;
+        mensajeError = `🔒 ${mensajeError}\n\n💡 Solo se pueden descontar repuestos de órdenes activas (En Proceso, Pendiente, En Espera).`;
       } else if (mensajeError.includes("Stock insuficiente")) {
-        mensajeError = `—š  ${mensajeError}\n\nðŸ’¡ Verifica el stock disponible antes de descontar.`;
+        mensajeError = `⚠️  ${mensajeError}\n\n💡 Verifica el stock disponible antes de descontar.`;
       } else if (mensajeError.includes("Orden de trabajo no encontrada")) {
-        mensajeError = `—Œ ${mensajeError}\n\nðŸ’¡ La orden puede haber sido eliminada o no existe.`;
+        mensajeError = `❌ ${mensajeError}\n\n💡 La orden puede haber sido eliminada o no existe.`;
       } else {
-        mensajeError = `—Œ ${mensajeError}`;
+        mensajeError = `❌ ${mensajeError}`;
       }
 
       mostrarMensaje(mensajeError, "danger");

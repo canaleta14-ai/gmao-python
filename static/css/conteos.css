@@ -1,0 +1,57 @@
+/* conteos.css - Estilos específicos para conteos de inventario */
+
+/* Variables CSS */
+:root {
+  --primary-color: #1e40af;
+  --secondary-color: #64748b;
+  --light-bg: #f8fafc;
+  --border-radius: 8px;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+/* Filtros modernos colapsables */
+.filtros-container {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.filtros-header {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  );
+  color: white;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filtros-header:hover {
+  background: linear-gradient(
+    135deg,
+    var(--secondary-color) 0%,
+    var(--primary-color) 100%
+  );
+}
+
+.filtros-header h6 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.filtros-body {
+  padding: 1.5rem;
+  background: var(--light-bg);
+  border-top: 1px solid #dee2e6;
+}

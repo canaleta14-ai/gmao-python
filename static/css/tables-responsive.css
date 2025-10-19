@@ -36,8 +36,8 @@
 
 /* ========== ESTILOS MEJORADOS PARA TH ========== */
 .table th {
-  background-color: #f8f9fa;
-  color: #495057;
+  background-color: white !important;
+  color: black !important;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0.875rem 0.75rem;
@@ -542,21 +542,13 @@
 }
 
 /* ========== INDICADOR DE SCROLL ========== */
+/* Desactivado - gradiente eliminado */
 .table-responsive::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 20px;
-  height: 100%;
-  background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  display: none !important;
 }
 
 .table-responsive:hover::after {
-  opacity: 1;
+  display: none !important;
 }
 
 /* ========== MEJORAS DE ACCESIBILIDAD ========== */
@@ -595,4 +587,258 @@
 .precio-columna,
 .valor-columna {
   text-align: left !important;
+}
+
+/* ========== ESTILOS GLOBALES: ELIMINAR BORDES Y FONDOS NO DESEADOS ========== */
+/* Aplicar a TODAS las tablas del sistema el estilo limpio como proveedores */
+
+/* Eliminar bordes de elementos code dentro de tablas */
+.table td code,
+.table th code {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+  color: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Eliminar fondos de colores en celdas de tablas */
+.table td {
+  background-color: transparent !important;
+}
+
+/* Forzar fondo blanco y texto negro en TODOS los th */
+.table th,
+.table thead th,
+.table thead.table-dark th {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Mantener zebra stripes sutiles solo en tbody */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: transparent !important;
+}
+
+/* Hover sutil en filas */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  box-shadow: none !important;
+}
+
+.table tbody tr:hover {
+  box-shadow: none !important;
+}
+
+/* Eliminar bordes de spans de código en todas las tablas */
+.table td .codigo-activo,
+.table td span.codigo-activo,
+.table td code,
+.table td span[class*="codigo"] {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-family: inherit !important;
+}
+
+/* Agregar padding a celdas de código para que no estén pegadas al borde */
+#tablaArticulos td:first-child {
+  padding-left: 1rem !important;
+}
+
+#tablaArticulos th:first-child {
+  padding-left: 1rem !important;
+}
+
+/* Eliminar bordes innecesarios en celdas */
+.table td {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.table th {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* ========== ELIMINAR TODOS LOS BADGES/BOTONES EN TABLAS ========== */
+/* Convertir TODOS los badges dentro de celdas a texto simple */
+.table td .badge,
+.table td span.badge {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+  border-radius: 0 !important;
+  font-weight: normal !important;
+  font-size: inherit !important;
+  display: inline !important;
+}
+
+/* Colores específicos para estados - solo texto de color */
+.table td .badge.bg-success {
+  color: #198754 !important;
+}
+
+.table td .badge.bg-danger {
+  color: #dc3545 !important;
+}
+
+.table td .badge.bg-warning {
+  color: #856404 !important;
+}
+
+.table td .badge.bg-info {
+  color: #0dcaf0 !important;
+}
+
+.table td .badge.bg-primary {
+  color: #0d6efd !important;
+}
+
+.table td .badge.bg-secondary {
+  color: #6c757d !important;
+}
+
+/* Asegurar que inputs y selects en tablas no tengan estilos extraños */
+.table td input,
+.table td select {
+  border: 1px solid #ced4da !important;
+  background: white !important;
+}
+
+/* Eliminar cualquier sombra o borde en elementos dentro de celdas */
+.table td * {
+  box-shadow: none !important;
+}
+
+/* ========== ESTANDARIZAR BOTONES DE ACCIONES EN TABLAS ========== */
+/* Formato uniforme para todos los botones de acción en tablas */
+
+/* Contenedor de botones */
+.table td .btn-group {
+  display: flex !important;
+  gap: 0.25rem !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Botones de acción base */
+.table td .action-btn,
+.table td .btn-group .btn {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  border-radius: 0.2rem !important;
+  border-width: 1px !important;
+  transition: all 0.15s ease-in-out !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Botón Ver (Azul) */
+.table td .btn-outline-primary {
+  color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  background-color: transparent !important;
+}
+
+.table td .btn-outline-primary:hover {
+  color: white !important;
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+/* Botón Editar (Verde) */
+.table td .btn-outline-success {
+  color: #198754 !important;
+  border-color: #198754 !important;
+  background-color: transparent !important;
+}
+
+.table td .btn-outline-success:hover {
+  color: white !important;
+  background-color: #198754 !important;
+  border-color: #198754 !important;
+}
+
+/* Botón Desactivar (Amarillo) */
+.table td .btn-outline-warning {
+  color: #ffc107 !important;
+  border-color: #ffc107 !important;
+  background-color: transparent !important;
+}
+
+.table td .btn-outline-warning:hover {
+  color: black !important;
+  background-color: #ffc107 !important;
+  border-color: #ffc107 !important;
+}
+
+/* Botón Eliminar (Rojo) */
+.table td .btn-outline-danger {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  background-color: transparent !important;
+}
+
+.table td .btn-outline-danger:hover {
+  color: white !important;
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+/* Botón Info (Cyan) */
+.table td .btn-outline-info {
+  color: #0dcaf0 !important;
+  border-color: #0dcaf0 !important;
+  background-color: transparent !important;
+}
+
+.table td .btn-outline-info:hover {
+  color: black !important;
+  background-color: #0dcaf0 !important;
+  border-color: #0dcaf0 !important;
+}
+
+/* Botón Secundario (Gris) */
+.table td .btn-outline-secondary {
+  color: #6c757d !important;
+  border-color: #6c757d !important;
+  background-color: transparent !important;
+}
+
+.table td .btn-outline-secondary:hover {
+  color: white !important;
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+}
+
+/* Iconos dentro de botones */
+.table td .btn i,
+.table td .action-btn i {
+  font-size: 0.875rem !important;
+  line-height: 1 !important;
+}
+
+/* Estado activo de botones */
+.table td .btn:active,
+.table td .action-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Eliminar sombras de botones */
+.table td .btn:focus,
+.table td .action-btn:focus {
+  box-shadow: none !important;
+  outline: none !important;
 }

@@ -4,6 +4,15 @@
 {% block extra_head %}
 <!-- Inventario usa solo los estilos globales de base.html -->
 <style>
+/* Eliminar borde del código en tabla de artículos */
+#tablaArticulos tbody td code,
+#tablaArticulos tbody td {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+}
+
 /* Estilos específicos con clase personalizada para máxima especificidad */
 .btn-custom-purple.btn-outline-primary {
   background: transparent !important;
@@ -239,10 +248,10 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0 table-even" id="tabla-inventario">
+                    <table class="table table-striped table-hover table-even" id="tablaArticulos">
                         <thead class="table-dark">
                             <tr>
-                                <th style="width: 10%;">Código</th>
+                                <th style="width: 10%;"><i class="bi bi-upc me-1"></i>Código</th>
                                 <th style="width: 25%;"><i class="bi bi-box me-1"></i>Artículo</th>
                                 <th style="width: 15%;"><i class="bi bi-tag me-1"></i>Categoría</th>
                                 <th style="width: 8%;"><i class="bi bi-stack me-1"></i>Stock</th>
@@ -787,7 +796,7 @@
 <script src="{{ url_for('static', filename='js/csrf-utils.js') }}?v=20251018"></script>
 <script src="{{ url_for('static', filename='js/pagination.js') }}?v=20251018"></script>
 
-<script src="{{ url_for('static', filename='js/inventario.js') }}?v=20251018"></script>
+<script src="{{ url_for('static', filename='js/inventario.js') }}?v=20251019_fix_encoding"></script>
 <script src="{{ url_for('static', filename='js/inventario-categorias.js') }}"></script>
 <script src="{{ url_for('static', filename='js/diagnostico-autocomplete.js') }}"></script>
 <script src="{{ url_for('static', filename='js/fifo-inventario-badge.js') }}"></script>

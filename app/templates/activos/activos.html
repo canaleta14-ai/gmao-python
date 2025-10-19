@@ -136,8 +136,10 @@
                     <div>
                         <h6 class="mb-0">
                             <i class="bi bi-table me-2"></i>Listado de Activos
-                            <span class="ms-2" id="contador-activos" style="background: transparent !important; color: white !important; padding: 0 !important;">0 activos</span>
                         </h6>
+                    </div>
+                    <div>
+                        <span id="contador-activos" style="background: transparent !important; color: white !important; padding: 0 !important;">0 activos</span>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -447,5 +449,5 @@
 <script src="{{ url_for('static', filename='js/csrf-utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
 
-<script src="{{ url_for('static', filename='js/activos.js') }}?v=20251012_sonepar_activo_fix"></script>
+<script src="{{ url_for('static', filename='js/activos.js') }}?v=20251019_no_badge_tipo"></script>
 {% endblock %}

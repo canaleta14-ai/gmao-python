@@ -8,21 +8,21 @@
 .dashboard-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-radius: 15px;
-    padding: 30px;
-    margin-bottom: 30px;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.35);
 }
 
 .feature-card {
     border: none;
-    border-radius: 15px;
+    border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     overflow: hidden;
@@ -36,81 +36,85 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    padding: 30px 25px;
+    padding: 12px 12px;
 }
 
 .feature-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .feature-icon {
-    font-size: 3.5rem;
+    font-size: 2rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     transition: transform 0.3s ease;
-    min-height: 70px;
+    min-height: 35px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .feature-card:hover .feature-icon {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .feature-card .card-title {
     font-weight: 600;
     color: #2d3748;
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
-    min-height: 35px;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    min-height: 24px;
     display: flex;
     align-items: center;
 }
 
 .feature-card .card-text {
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: 0.8rem;
+    line-height: 1.4;
     color: #718096;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
     flex: 1;
-    min-height: 90px;
+    min-height: 45px;
 }
 
 .feature-card .actions-container {
     margin-top: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 }
 
 .feature-card .form-control {
-    height: 42px;
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
     transition: all 0.3s ease;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
 }
 
 .feature-card .form-control:focus {
     border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    box-shadow: 0 0 0 0.15rem rgba(102, 126, 234, 0.12);
 }
 
 .feature-card .btn {
-    height: 42px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
 }
 
 .feature-card .btn i {
-    margin-right: 6px;
+    margin-right: 4px;
+    font-size: 0.8rem;
 }
 
 .quick-stats {
@@ -462,7 +466,7 @@ a, button, input, .card {
     <!-- Funcionalidades Principales -->
     <div class="row">
         <!-- Buscar Artículos -->
-        <div class="col-md-6 col-xl-3 mb-4">
+        <div class="col-md-6 col-xl-3 mb-2">
             <div class="card feature-card">
                 <div class="card-body">
                     <div class="feature-icon">
@@ -476,7 +480,10 @@ a, button, input, .card {
                     <div class="actions-container">
                         <input type="text" class="form-control" 
                                id="buscar-articulo" 
-                               placeholder="Código o nombre del artículo">
+                               list="articulos-list"
+                               placeholder="Código o nombre del artículo"
+                               autocomplete="off">
+                        <datalist id="articulos-list"></datalist>
                         <button class="btn btn-primary w-100" onclick="buscarArticulo()">
                             <i class="fas fa-search"></i> Buscar Artículo
                         </button>
@@ -489,7 +496,7 @@ a, button, input, .card {
         </div>
 
         <!-- Gestión de Lotes -->
-        <div class="col-md-6 col-xl-3 mb-4">
+        <div class="col-md-6 col-xl-3 mb-2">
             <div class="card feature-card">
                 <div class="card-body">
                     <div class="feature-icon">
@@ -513,7 +520,7 @@ a, button, input, .card {
         </div>
 
         <!-- Trazabilidad -->
-        <div class="col-md-6 col-xl-3 mb-4">
+        <div class="col-md-6 col-xl-3 mb-2">
             <div class="card feature-card">
                 <div class="card-body">
                     <div class="feature-icon">
@@ -527,7 +534,10 @@ a, button, input, .card {
                     <div class="actions-container">
                         <input type="text" class="form-control" 
                                id="buscar-lote" 
-                               placeholder="ID o código de lote">
+                               list="lotes-list"
+                               placeholder="ID o código de lote"
+                               autocomplete="off">
+                        <datalist id="lotes-list"></datalist>
                         <button class="btn btn-info w-100" onclick="buscarLote()">
                             <i class="fas fa-search"></i> Buscar Lote
                         </button>
@@ -540,7 +550,7 @@ a, button, input, .card {
         </div>
 
         <!-- Vencimientos -->
-        <div class="col-md-6 col-xl-3 mb-4">
+        <div class="col-md-6 col-xl-3 mb-2">
             <div class="card feature-card">
                 <div class="card-body">
                     <div class="feature-icon">
@@ -606,28 +616,87 @@ a, button, input, .card {
         </div>
     </div>
 
+    <!-- Panel de Filtros de Lotes -->
+    <div class="row mt-4" id="filtros-lotes-activos" style="display: none;">
+        <div class="col-12">
+            <div class="filtros-container">
+                <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtrosLotes">
+                    <h6>Filtros de Búsqueda</h6>
+                    <i class="bi bi-chevron-down filtros-toggle-icon"></i>
+                </div>
+                <div id="filtrosLotes" class="collapse">
+                    <div class="filtros-body">
+                        <form id="filtros-form-lotes" class="row g-3 p-3">
+                            <div class="col-lg-3 col-md-6">
+                                <label for="filtro-articulo" class="form-label fw-bold">Artículo</label>
+                                <select id="filtro-articulo" class="form-select">
+                                    <option value="">Todos los artículos</option>
+                                </select>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6">
+                                <label for="filtro-codigo-lote" class="form-label fw-bold">Código de Lote</label>
+                                <input type="text" class="form-control" id="filtro-codigo-lote" placeholder="Buscar por código...">
+                            </div>
+
+                            <div class="col-lg-3 col-md-6">
+                                <label for="filtro-fecha-entrada-desde" class="form-label fw-bold">Fecha Entrada Desde</label>
+                                <input type="date" class="form-control" id="filtro-fecha-entrada-desde">
+                            </div>
+
+                            <div class="col-lg-3 col-md-6">
+                                <label for="filtro-fecha-entrada-hasta" class="form-label fw-bold">Fecha Entrada Hasta</label>
+                                <input type="date" class="form-control" id="filtro-fecha-entrada-hasta">
+                            </div>
+
+                            <div class="col-12">
+                                <hr class="mb-3">
+                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                    <button type="button" class="btn btn-primary" onclick="aplicarFiltrosLotes()">
+                                        <i class="bi bi-search me-1"></i>Buscar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltrosLotes()">
+                                        <i class="bi bi-x-circle me-1"></i>Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tabla de Lotes Activos -->
-    <div class="row" id="tabla-lotes-activos" style="display: none;">
+    <div class="row mt-3" id="tabla-lotes-activos" style="display: none;">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-boxes"></i> Lotes Activos
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0"><i class="bi bi-table me-2"></i>Listado de Lotes Activos</h6>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="info-registros" class="text-white-50 small">0 lotes</span>
+                            <button type="button" class="btn btn-sm btn-outline-light" onclick="ocultarLotesActivos()">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover" id="tabla-lotes">
-                            <thead class="thead-light">
+                        <table class="table table-striped table-even" id="tabla-lotes">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>ID Lote</th>
-                                    <th>Código Lote</th>
-                                    <th>Artículo</th>
-                                    <th>Cantidad Actual</th>
-                                    <th>Fecha Entrada</th>
-                                    <th>Fecha Vencimiento</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <th style="width: 8%;">ID</th>
+                                    <th style="width: 12%;"><i class="bi bi-upc-scan me-1"></i>Código Lote</th>
+                                    <th style="width: 25%;"><i class="bi bi-box me-1"></i>Artículo</th>
+                                    <th style="width: 10%;"><i class="bi bi-stack me-1"></i>Disponible</th>
+                                    <th style="width: 10%;"><i class="bi bi-calendar-check me-1"></i>F. Entrada</th>
+                                    <th style="width: 10%;"><i class="bi bi-calendar-x me-1"></i>F. Vencimiento</th>
+                                    <th style="width: 10%;"><i class="bi bi-circle me-1"></i>Estado</th>
+                                    <th class="text-center" style="width: 15%;"><i class="bi bi-gear me-1"></i>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-lotes">
@@ -636,6 +705,10 @@ a, button, input, .card {
                         </table>
                     </div>
                 </div>
+                <!-- Paginación -->
+                <nav aria-label="Paginación de lotes" class="m-2">
+                    <div id="paginacion-lotes"></div>
+                </nav>
             </div>
         </div>
     </div>
@@ -647,15 +720,21 @@ a, button, input, .card {
 // Variables globales
 let articulosDisponibles = [];
 let lotesActivos = [];
+let paginaActualLotes = 1;
+let porPaginaLotes = 10;
+let paginacionInfo = {};
 
 // Cargar datos iniciales
 document.addEventListener('DOMContentLoaded', function() {
     cargarEstadisticasRapidas();
     cargarArticulosDisponibles();
     
-    // Configurar búsqueda en tiempo real
+    // Configurar búsqueda en tiempo real con autocompletado
     const buscarArticuloInput = document.getElementById('buscar-articulo');
     if (buscarArticuloInput) {
+        buscarArticuloInput.addEventListener('input', function(e) {
+            actualizarSugerenciasArticulos(this.value);
+        });
         buscarArticuloInput.addEventListener('keyup', function(e) {
             if (e.keyCode === 13) { // Enter
                 buscarArticulo();
@@ -665,6 +744,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const buscarLoteInput = document.getElementById('buscar-lote');
     if (buscarLoteInput) {
+        buscarLoteInput.addEventListener('input', function(e) {
+            actualizarSugerenciasLotes(this.value);
+        });
         buscarLoteInput.addEventListener('keyup', function(e) {
             if (e.keyCode === 13) { // Enter
                 buscarLote();
@@ -754,15 +836,67 @@ function mostrarErrorEstadisticas() {
 
 // Cargar artículos disponibles para autocompletado
 function cargarArticulosDisponibles() {
-    fetch('/api/inventario/activos')
+    fetch('/lotes/api/inventario/activos')
         .then(response => response.json())
         .then(data => {
             articulosDisponibles = data.articulos || [];
             console.log('✅ Artículos disponibles cargados:', articulosDisponibles.length);
+            // Cargar selector de filtros
+            cargarArticulosFiltro();
         })
         .catch(error => {
             console.log('⚠️ Error al cargar artículos disponibles:', error);
         });
+}
+
+// Actualizar sugerencias de artículos dinámicamente
+function actualizarSugerenciasArticulos(termino) {
+    const datalist = document.getElementById('articulos-list');
+    if (!datalist || !termino || termino.length < 2) {
+        if (datalist) datalist.innerHTML = '';
+        return;
+    }
+    
+    const terminoLower = termino.toLowerCase();
+    const sugerencias = articulosDisponibles
+        .filter(art => 
+            art.codigo.toLowerCase().includes(terminoLower) ||
+            (art.nombre && art.nombre.toLowerCase().includes(terminoLower))
+        )
+        .slice(0, 10); // Limitar a 10 sugerencias
+    
+    datalist.innerHTML = sugerencias
+        .map(art => `<option value="${art.codigo}">${art.nombre}</option>`)
+        .join('');
+}
+
+// Actualizar sugerencias de lotes dinámicamente
+function actualizarSugerenciasLotes(termino) {
+    const datalist = document.getElementById('lotes-list');
+    if (!datalist || !termino || termino.length < 1) {
+        if (datalist) datalist.innerHTML = '';
+        return;
+    }
+    
+    // Hacer fetch de lotes disponibles
+    fetch(`/lotes/api/lotes/activos?page=1&per_page=50`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.lotes) {
+                const terminoLower = termino.toLowerCase();
+                const sugerencias = data.lotes
+                    .filter(lote => 
+                        lote.id.toString().includes(terminoLower) ||
+                        (lote.codigo_lote && lote.codigo_lote.toLowerCase().includes(terminoLower))
+                    )
+                    .slice(0, 10);
+                
+                datalist.innerHTML = sugerencias
+                    .map(lote => `<option value="${lote.codigo_lote || lote.id}">Lote ${lote.codigo_lote || lote.id} - ${lote.inventario_nombre}</option>`)
+                    .join('');
+            }
+        })
+        .catch(error => console.log('Error al cargar sugerencias de lotes:', error));
 }
 
 // Buscar artículo
@@ -852,23 +986,55 @@ function mostrarResultadosBusqueda(articulos) {
 }
 
 // Ver lotes activos
-function verLotesActivos() {
+function verLotesActivos(pagina = 1) {
+    paginaActualLotes = pagina;
+    const filtrosDiv = document.getElementById('filtros-lotes-activos');
     const tablaLotesDiv = document.getElementById('tabla-lotes-activos');
     const tbodyLotes = document.getElementById('tbody-lotes');
     
+    // Mostrar filtros y tabla
+    if (filtrosDiv) filtrosDiv.style.display = 'block';
     if (tablaLotesDiv) tablaLotesDiv.style.display = 'block';
+    
     if (tbodyLotes) {
         tbodyLotes.innerHTML = '<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando lotes...</td></tr>';
     }
     
-    fetch('/api/lotes/activos')
+    // Construir URL con parámetros de paginación y filtros
+    const params = new URLSearchParams({
+        page: pagina,
+        per_page: porPaginaLotes
+    });
+    
+    // Agregar filtros si están activos
+    const filtroArticulo = document.getElementById('filtro-articulo')?.value;
+    const filtroCodigoLote = document.getElementById('filtro-codigo-lote')?.value;
+    const filtroFechaEntradaDesde = document.getElementById('filtro-fecha-entrada-desde')?.value;
+    const filtroFechaEntradaHasta = document.getElementById('filtro-fecha-entrada-hasta')?.value;
+    
+    if (filtroArticulo) params.append('inventario_id', filtroArticulo);
+    if (filtroCodigoLote) params.append('codigo_lote', filtroCodigoLote);
+    if (filtroFechaEntradaDesde) params.append('fecha_entrada_desde', filtroFechaEntradaDesde);
+    if (filtroFechaEntradaHasta) params.append('fecha_entrada_hasta', filtroFechaEntradaHasta);
+    
+    fetch(`/lotes/api/lotes/activos?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.lotes && data.lotes.length > 0) {
-                mostrarLotesActivos(data.lotes);
+            if (data.success) {
+                paginacionInfo = data.pagination || {};
+                if (data.lotes && data.lotes.length > 0) {
+                    mostrarLotesActivos(data.lotes);
+                    actualizarPaginacion();
+                    actualizarInfoRegistros();
+                } else {
+                    if (tbodyLotes) {
+                        tbodyLotes.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay lotes activos</td></tr>';
+                    }
+                    limpiarPaginacion();
+                }
             } else {
                 if (tbodyLotes) {
-                    tbodyLotes.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay lotes activos</td></tr>';
+                    tbodyLotes.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.error || 'Error desconocido') + '</td></tr>';
                 }
             }
         })
@@ -912,22 +1078,26 @@ function mostrarLotesActivos(lotes) {
                 <td><strong>${lote.id}</strong></td>
                 <td>${lote.codigo_lote || 'Auto-' + lote.id}</td>
                 <td>
-                    <div><strong>${lote.inventario_codigo}</strong></div>
-                    <small class="text-muted">${lote.inventario_nombre}</small>
+                    <div><strong>${lote.inventario_codigo || 'N/A'}</strong></div>
+                    <small class="text-muted">${lote.inventario_nombre || 'N/A'}</small>
                 </td>
-                <td>${lote.cantidad_actual} ${lote.unidad_medida || 'UN'}</td>
+                <td>
+                    <strong>${lote.cantidad_disponible || 0}</strong>
+                    <br>
+                    <small class="text-muted">Inicial: ${lote.cantidad_inicial || 0}</small>
+                </td>
                 <td>${fechaEntrada}</td>
                 <td>${fechaVencimiento}</td>
                 <td>
                     <span class="badge ${estadoBadge}">${estadoTexto}</span>
                 </td>
-                <td>
-                    <div class="btn-group btn-group-sm">
-                        <a href="/lotes/inventario/${lote.inventario_id}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <button class="btn btn-outline-info btn-sm" onclick="verTrazabilidad(${lote.id})">
-                            <i class="fas fa-route"></i>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary action-btn" onclick="window.location.href='/lotes/inventario/${lote.inventario_id}'" title="Ver Inventario">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info action-btn info" onclick="verTrazabilidad(${lote.id})" title="Ver Trazabilidad">
+                            <i class="bi bi-diagram-3"></i>
                         </button>
                     </div>
                 </td>
@@ -984,6 +1154,186 @@ function mostrarMensaje(mensaje, tipo) {
             });
         }, 5000);
     }
+}
+
+// ===== FUNCIONES DE PAGINACIÓN Y FILTROS =====
+
+// Actualizar paginación
+function actualizarPaginacion() {
+    const paginationContainer = document.getElementById('paginacion-lotes');
+    
+    if (!paginacionInfo || !paginacionInfo.pages) return;
+    
+    const html = generarHTMLPaginacion();
+    if (paginationContainer) paginationContainer.innerHTML = html;
+}
+
+// Generar HTML de paginación
+function generarHTMLPaginacion() {
+    const { current_page, pages, has_prev, has_next, per_page, total } = paginacionInfo;
+    
+    if (pages <= 1) return '';
+    
+    const desde = ((current_page - 1) * per_page) + 1;
+    const hasta = Math.min(current_page * per_page, total);
+    
+    let html = '<div class="d-flex justify-content-between align-items-center flex-wrap gap-3">';
+    
+    // Info de registros
+    html += `
+        <div class="small text-muted">
+            Mostrando <strong>${desde}</strong> a <strong>${hasta}</strong> de <strong>${total}</strong> lotes
+        </div>
+    `;
+    
+    // Controles de paginación
+    html += '<div class="d-flex align-items-center gap-2">';
+    
+    // Selector de items por página
+    html += `
+        <div class="d-flex align-items-center gap-2">
+            <label class="small mb-0">Mostrar:</label>
+            <select class="form-select form-select-sm" style="width: auto;" onchange="cambiarPorPagina(this.value)">
+                <option value="10" ${per_page === 10 ? 'selected' : ''}>10</option>
+                <option value="25" ${per_page === 25 ? 'selected' : ''}>25</option>
+                <option value="50" ${per_page === 50 ? 'selected' : ''}>50</option>
+                <option value="100" ${per_page === 100 ? 'selected' : ''}>100</option>
+            </select>
+        </div>
+    `;
+    
+    // Botones de paginación
+    html += '<ul class="pagination pagination-sm mb-0">';
+    
+    // Botón Anterior
+    html += `
+        <li class="page-item ${!has_prev ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPaginaLotes(${current_page - 1}); return false;">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+    `;
+    
+    // Números de página
+    const maxVisible = 5;
+    let startPage = Math.max(1, current_page - Math.floor(maxVisible / 2));
+    let endPage = Math.min(pages, startPage + maxVisible - 1);
+    
+    if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    // Primera página
+    if (startPage > 1) {
+        html += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="cambiarPaginaLotes(1); return false;">1</a>
+            </li>
+        `;
+        if (startPage > 2) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    // Páginas visibles
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <li class="page-item ${i === current_page ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="cambiarPaginaLotes(${i}); return false;">${i}</a>
+            </li>
+        `;
+    }
+    
+    // Última página
+    if (endPage < pages) {
+        if (endPage < pages - 1) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+        html += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="cambiarPaginaLotes(${pages}); return false;">${pages}</a>
+            </li>
+        `;
+    }
+    
+    // Botón Siguiente
+    html += `
+        <li class="page-item ${!has_next ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPaginaLotes(${current_page + 1}); return false;">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    `;
+    
+    html += '</ul></div></div>';
+    
+    return html;
+}
+
+// Cambiar página de lotes
+function cambiarPaginaLotes(pagina) {
+    if (pagina < 1 || (paginacionInfo.pages && pagina > paginacionInfo.pages)) return;
+    verLotesActivos(pagina);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Cambiar cantidad por página
+function cambiarPorPagina(valor) {
+    porPaginaLotes = parseInt(valor || 10);
+    verLotesActivos(1); // Volver a la primera página
+}
+
+// Actualizar información de registros
+function actualizarInfoRegistros() {
+    const infoElem = document.getElementById('info-registros');
+    if (!infoElem || !paginacionInfo) return;
+    
+    const { total } = paginacionInfo;
+    infoElem.textContent = `${total} ${total === 1 ? 'lote' : 'lotes'}`;
+}
+
+// Limpiar paginación
+function limpiarPaginacion() {
+    const paginationContainer = document.getElementById('paginacion-lotes');
+    const infoElem = document.getElementById('info-registros');
+    
+    if (paginationContainer) paginationContainer.innerHTML = '';
+    if (infoElem) infoElem.textContent = '0 lotes';
+}
+
+// Aplicar filtros
+function aplicarFiltrosLotes() {
+    verLotesActivos(1); // Volver a la primera página al filtrar
+}
+
+// Limpiar filtros
+function limpiarFiltrosLotes() {
+    document.getElementById('filtro-articulo').value = '';
+    document.getElementById('filtro-codigo-lote').value = '';
+    document.getElementById('filtro-fecha-entrada-desde').value = '';
+    document.getElementById('filtro-fecha-entrada-hasta').value = '';
+    verLotesActivos(1);
+}
+
+// Cargar artículos en el selector de filtros
+function cargarArticulosFiltro() {
+    const selectElem = document.getElementById('filtro-articulo');
+    if (!selectElem || !articulosDisponibles || articulosDisponibles.length === 0) return;
+    
+    let html = '<option value="">Todos los artículos</option>';
+    articulosDisponibles.forEach(articulo => {
+        html += `<option value="${articulo.id}">${articulo.codigo} - ${articulo.nombre}</option>`;
+    });
+    selectElem.innerHTML = html;
+}
+
+// Ocultar lotes activos
+function ocultarLotesActivos() {
+    const filtrosDiv = document.getElementById('filtros-lotes-activos');
+    const tablaLotesDiv = document.getElementById('tabla-lotes-activos');
+    
+    if (filtrosDiv) filtrosDiv.style.display = 'none';
+    if (tablaLotesDiv) tablaLotesDiv.style.display = 'none';
 }
 </script>
 {% endblock %}

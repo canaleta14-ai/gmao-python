@@ -481,7 +481,7 @@ function actualizarTablaArticulos(articulos) {
     }
 
     tr.innerHTML = `
-            <td><code>${articulo.codigo}</code></td>
+            <td>${articulo.codigo}</td>
             <td>
                 <strong>${articulo.descripcion}</strong>
                 ${
@@ -884,7 +884,7 @@ window.probarAPI = function (query = "a") {
       if (data.articulos && data.articulos.length > 0) {
         console.log("✅ API funciona correctamente");
       } else {
-        console.log("—š  API responde pero sin artículos");
+        console.log("⚠️  API responde pero sin artículos");
       }
     })
     .catch((error) => {
@@ -904,7 +904,7 @@ function initializeArticuloAutoComplete() {
 
   if (input.dataset.autocompleteInitialized) {
     console.log(
-      "—š  Autocompletado ya inicializado, forzando reinicialización..."
+      "⚠️  Autocompletado ya inicializado, forzando reinicialización..."
     );
     // Limpiar inicialización previa
     input.dataset.autocompleteInitialized = "";
@@ -1005,7 +1005,7 @@ function initializeArticuloAutoComplete() {
             );
             console.log("ðŸ“ Primer artículo:", data.articulos[0]);
           } else {
-            console.log("—š  API responde pero sin artículos");
+            console.log("⚠️  API responde pero sin artículos");
           }
         })
         .catch((error) => {
@@ -1033,7 +1033,7 @@ function validarStockParaSalida(articulo) {
         stockAlert.innerHTML = `
                     <div class="alert alert-warning alert-sm mt-2">
                         <i class="fas fa-exclamation-triangle me-1"></i>
-                        —š  Cantidad solicitada (${cantidad}) supera el stock disponible (${articulo.stock_actual})
+                        ⚠️  Cantidad solicitada (${cantidad}) supera el stock disponible (${articulo.stock_actual})
                     </div>
                 `;
         stockAlert.style.display = "block";
@@ -1214,7 +1214,7 @@ async function guardarMovimiento() {
         const tipoInfo = {
           entrada: { emoji: "ðŸ“¦—ž•", texto: "entrada", color: "success" },
           salida: { emoji: "ðŸ“¦—ž–", texto: "salida", color: "danger" },
-          ajuste: { emoji: "—š–", texto: "ajuste", color: "warning" },
+          ajuste: { emoji: "⚠️–", texto: "ajuste", color: "warning" },
           regularizacion: {
             emoji: "ð📄",
             texto: "regularización",
@@ -1246,7 +1246,7 @@ async function guardarMovimiento() {
 
         // Alertas especiales
         if (tipo === "salida" && articulo.stock_actual <= 0) {
-          mensaje += "\n—š  Â¡Artículo sin stock!";
+          mensaje += "\n⚠️  Â¡Artículo sin stock!";
         } else if (articulo.stock_actual < 5) {
           // Umbral bajo configurable
           mensaje += "\nðŸŸ¡ Stock bajo";
@@ -1266,7 +1266,7 @@ async function guardarMovimiento() {
       // Personalizar mensajes de error comunes
       if (mensajeError.includes("Stock insuficiente")) {
         mensajeError =
-          "—š  " +
+          "⚠️  " +
           mensajeError +
           "\nðŸ’¡ Verifica el stock disponible antes de realizar la salida";
       } else if (mensajeError.includes("Artículo no encontrado")) {

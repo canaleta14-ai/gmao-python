@@ -328,7 +328,7 @@ function crearFilaUsuario(usuario) {
   };
 
   return `
-        <td><span class="text-muted">#${usuario.id}</span></td>
+        <td><span class="text-muted">${usuario.id}</span></td>
         <td><span class="badge bg-light text-dark">${usuario.codigo}</span></td>
         <td>
             <div class="fw-bold">${usuario.nombre}</div>

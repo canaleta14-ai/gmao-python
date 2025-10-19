@@ -9,7 +9,7 @@ from app.extensions import db
 from app.models import Inventario
 from app.models.lote_inventario import LoteInventario, MovimientoLote
 from app.services.servicio_fifo import ServicioFIFO
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 import logging
 
@@ -199,6 +199,138 @@ def api_inventario_activos():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@lotes_bp.route("/api/lotes/activos")
+@login_required
+def api_lotes_activos():
+    """API para obtener todos los lotes activos con paginación y filtros"""
+    try:
+        # Parámetros de paginación
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        # Parámetros de filtros
+        inventario_id = request.args.get("inventario_id", type=int)
+        codigo_lote = request.args.get("codigo_lote", type=str)
+        fecha_entrada_desde = request.args.get("fecha_entrada_desde", type=str)
+        fecha_entrada_hasta = request.args.get("fecha_entrada_hasta", type=str)
+        fecha_vencimiento_desde = request.args.get("fecha_vencimiento_desde", type=str)
+        fecha_vencimiento_hasta = request.args.get("fecha_vencimiento_hasta", type=str)
+
+        # Parámetros de ordenamiento
+        sort_by = request.args.get("sort_by", "fecha_entrada")
+        sort_order = request.args.get("sort_order", "desc")
+
+        # Query base: lotes con cantidad disponible > 0
+        query = LoteInventario.query.filter(
+            LoteInventario.cantidad_actual > LoteInventario.cantidad_reservada
+        )
+
+        # Aplicar filtros
+        if inventario_id:
+            query = query.filter(LoteInventario.inventario_id == inventario_id)
+
+        if codigo_lote:
+            query = query.filter(LoteInventario.codigo_lote.ilike(f"%{codigo_lote}%"))
+
+        if fecha_entrada_desde:
+            from datetime import datetime
+
+            fecha_desde = datetime.fromisoformat(fecha_entrada_desde)
+            query = query.filter(LoteInventario.fecha_entrada >= fecha_desde)
+
+        if fecha_entrada_hasta:
+            from datetime import datetime
+
+            fecha_hasta = datetime.fromisoformat(fecha_entrada_hasta)
+            query = query.filter(LoteInventario.fecha_entrada <= fecha_hasta)
+
+        if fecha_vencimiento_desde:
+            from datetime import datetime
+
+            fecha_desde = datetime.fromisoformat(fecha_vencimiento_desde)
+            query = query.filter(LoteInventario.fecha_vencimiento >= fecha_desde)
+
+        if fecha_vencimiento_hasta:
+            from datetime import datetime
+
+            fecha_hasta = datetime.fromisoformat(fecha_vencimiento_hasta)
+            query = query.filter(LoteInventario.fecha_vencimiento <= fecha_hasta)
+
+        # Aplicar ordenamiento
+        if sort_by == "codigo_lote":
+            order_col = LoteInventario.codigo_lote
+        elif sort_by == "cantidad_disponible":
+            order_col = (
+                LoteInventario.cantidad_actual
+            )  # No se puede ordenar por property
+        elif sort_by == "fecha_vencimiento":
+            order_col = LoteInventario.fecha_vencimiento
+        else:  # fecha_entrada por defecto
+            order_col = LoteInventario.fecha_entrada
+
+        if sort_order == "asc":
+            query = query.order_by(order_col.asc())
+        else:
+            query = query.order_by(order_col.desc())
+
+        # Ejecutar paginación
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        lotes_data = []
+        for lote in pagination.items:
+            lotes_data.append(
+                {
+                    "id": lote.id,
+                    "codigo_lote": lote.codigo_lote,
+                    "inventario_id": lote.inventario_id,
+                    "inventario_codigo": (
+                        lote.inventario.codigo if lote.inventario else None
+                    ),
+                    "inventario_nombre": (
+                        lote.inventario.nombre if lote.inventario else None
+                    ),
+                    "cantidad_inicial": float(lote.cantidad_inicial),
+                    "cantidad_disponible": float(lote.cantidad_disponible),
+                    "cantidad_reservada": float(lote.cantidad_reservada),
+                    "fecha_entrada": (
+                        lote.fecha_entrada.isoformat() if lote.fecha_entrada else None
+                    ),
+                    "fecha_vencimiento": (
+                        lote.fecha_vencimiento.isoformat()
+                        if lote.fecha_vencimiento
+                        else None
+                    ),
+                    "proveedor_id": lote.proveedor_id,
+                    "documento_origen": lote.documento_origen,
+                    "precio_unitario": (
+                        float(lote.precio_unitario) if lote.precio_unitario else None
+                    ),
+                    "activo": lote.activo,
+                }
+            )
+
+        # Retornar datos con información de paginación
+        return jsonify(
+            {
+                "success": True,
+                "lotes": lotes_data,
+                "pagination": {
+                    "total": pagination.total,
+                    "pages": pagination.pages,
+                    "current_page": pagination.page,
+                    "per_page": pagination.per_page,
+                    "has_next": pagination.has_next,
+                    "has_prev": pagination.has_prev,
+                    "next_page": pagination.next_num if pagination.has_next else None,
+                    "prev_page": pagination.prev_num if pagination.has_prev else None,
+                },
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error al obtener lotes activos: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @lotes_bp.route("/api/lotes/<int:inventario_id>")
 @login_required
 def api_lotes_inventario(inventario_id):
@@ -208,6 +340,64 @@ def api_lotes_inventario(inventario_id):
         return jsonify({"success": True, "stock_info": stock_info})
     except Exception as e:
         logger.error(f"Error en API lotes: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@lotes_bp.route("/api/lote/<int:lote_id>")
+@login_required
+def api_lote_individual(lote_id):
+    """API para obtener información de un lote individual"""
+    try:
+        lote = LoteInventario.query.get_or_404(lote_id)
+
+        # Calcular días hasta vencimiento
+        dias_hasta_vencimiento = None
+        estado_vencimiento = "normal"
+        if lote.fecha_vencimiento:
+            delta = (
+                lote.fecha_vencimiento.replace(tzinfo=timezone.utc)
+                - datetime.now(timezone.utc)
+            ).days
+            dias_hasta_vencimiento = delta
+
+            if delta < 0:
+                estado_vencimiento = "vencido"
+            elif delta <= 7:
+                estado_vencimiento = "critico"
+            elif delta <= 30:
+                estado_vencimiento = "proximo"
+
+        lote_data = {
+            "id": lote.id,
+            "codigo_lote": lote.codigo_lote or f"Lote-{lote.id}",
+            "inventario_id": lote.inventario_id,
+            "inventario_codigo": lote.inventario.codigo,
+            "inventario_nombre": lote.inventario.nombre,
+            "cantidad_inicial": float(lote.cantidad_inicial),
+            "cantidad_actual": float(lote.cantidad_actual),
+            "cantidad_reservada": float(lote.cantidad_reservada or 0),
+            "unidad_medida": lote.inventario.unidad_medida or "UN",
+            "precio_unitario": float(lote.precio_unitario or 0),
+            "valor_total": float(lote.cantidad_actual * (lote.precio_unitario or 0)),
+            "fecha_entrada": (
+                lote.fecha_entrada.isoformat() if lote.fecha_entrada else None
+            ),
+            "fecha_vencimiento": (
+                lote.fecha_vencimiento.isoformat() if lote.fecha_vencimiento else None
+            ),
+            "dias_hasta_vencimiento": dias_hasta_vencimiento,
+            "estado_vencimiento": estado_vencimiento,
+            "documento_origen": lote.documento_origen,
+            "proveedor": lote.proveedor,
+            "observaciones": lote.observaciones,
+            "ubicacion": lote.ubicacion,
+            "activo": lote.activo,
+        }
+
+        return jsonify({"success": True, "lote": lote_data})
+
+    except Exception as e:
+        logger.error(f"Error al obtener lote {lote_id}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -286,6 +476,185 @@ def api_consumir_fifo():
         )
     except Exception as e:
         logger.error(f"Error al consumir FIFO: {str(e)}")
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@lotes_bp.route("/api/lote/<int:lote_id>/priorizar", methods=["POST"])
+@login_required
+def api_priorizar_lote(lote_id):
+    """API para marcar un lote como prioritario en el consumo FIFO"""
+    try:
+        data = request.get_json() or {}
+
+        lote = LoteInventario.query.get_or_404(lote_id)
+
+        # Verificar que el lote está activo y tiene cantidad disponible
+        if not lote.activo:
+            return jsonify({"success": False, "error": "El lote no está activo"}), 400
+
+        if lote.cantidad_actual <= 0:
+            return (
+                jsonify(
+                    {"success": False, "error": "El lote no tiene stock disponible"}
+                ),
+                400,
+            )
+
+        # Obtener la fecha de entrada más antigua del mismo artículo
+        lote_mas_antiguo = (
+            LoteInventario.query.filter_by(
+                inventario_id=lote.inventario_id, activo=True
+            )
+            .filter(LoteInventario.cantidad_actual > 0)
+            .order_by(LoteInventario.fecha_entrada.asc())
+            .first()
+        )
+
+        if not lote_mas_antiguo:
+            return jsonify({"success": False, "error": "No hay lotes disponibles"}), 400
+
+        # Ajustar la fecha de entrada para que sea anterior al más antiguo
+        # Restar 1 día a la fecha más antigua
+        nueva_fecha = lote_mas_antiguo.fecha_entrada - timedelta(days=1)
+
+        fecha_original = lote.fecha_entrada
+        lote.fecha_entrada = nueva_fecha
+
+        # Registrar el cambio en observaciones
+        observacion_prioridad = data.get("observaciones", "Lote priorizado manualmente")
+        if lote.observaciones:
+            lote.observaciones += f"\n[{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}] PRIORIZADO: {observacion_prioridad}"
+        else:
+            lote.observaciones = f"[{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}] PRIORIZADO: {observacion_prioridad}"
+
+        # Registrar movimiento de ajuste
+        movimiento = MovimientoLote(
+            lote_id=lote.id,
+            tipo_movimiento="ajuste_prioridad",
+            cantidad=0,  # Sin cambio de cantidad
+            cantidad_anterior=lote.cantidad_actual,
+            cantidad_nueva=lote.cantidad_actual,
+            documento_referencia=f"Priorización de lote - Fecha original: {fecha_original.strftime('%Y-%m-%d')}",
+            observaciones=observacion_prioridad,
+            usuario_id=current_user.username,
+            fecha=datetime.now(timezone.utc),
+        )
+
+        db.session.add(movimiento)
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Lote priorizado exitosamente",
+                "lote": {
+                    "id": lote.id,
+                    "codigo_lote": lote.codigo_lote or f"Lote-{lote.id}",
+                    "fecha_entrada_original": fecha_original.isoformat(),
+                    "fecha_entrada_nueva": nueva_fecha.isoformat(),
+                    "inventario_codigo": lote.inventario.codigo,
+                    "inventario_nombre": lote.inventario.nombre,
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error al priorizar lote {lote_id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@lotes_bp.route("/api/lote/<int:lote_id>/mover", methods=["POST"])
+@login_required
+def api_mover_lote(lote_id):
+    """API para mover un lote a otra ubicación/almacén"""
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({"success": False, "error": "No se recibieron datos"}), 400
+
+        # Validar campos requeridos
+        if "ubicacion" not in data:
+            return (
+                jsonify({"success": False, "error": "La ubicación es requerida"}),
+                400,
+            )
+
+        lote = LoteInventario.query.get_or_404(lote_id)
+
+        # Verificar que el lote está activo
+        if not lote.activo:
+            return jsonify({"success": False, "error": "El lote no está activo"}), 400
+
+        ubicacion_original = lote.ubicacion or "Sin ubicación"
+        nueva_ubicacion = data["ubicacion"].strip()
+
+        if not nueva_ubicacion:
+            return (
+                jsonify(
+                    {"success": False, "error": "La ubicación no puede estar vacía"}
+                ),
+                400,
+            )
+
+        if ubicacion_original == nueva_ubicacion:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "La nueva ubicación es igual a la actual",
+                    }
+                ),
+                400,
+            )
+
+        # Actualizar ubicación
+        lote.ubicacion = nueva_ubicacion
+
+        # Registrar en observaciones
+        observacion_movimiento = data.get(
+            "observaciones", f"Movido de '{ubicacion_original}' a '{nueva_ubicacion}'"
+        )
+        if lote.observaciones:
+            lote.observaciones += f"\n[{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}] MOVIMIENTO: {observacion_movimiento}"
+        else:
+            lote.observaciones = f"[{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}] MOVIMIENTO: {observacion_movimiento}"
+
+        # Registrar movimiento
+        movimiento = MovimientoLote(
+            lote_id=lote.id,
+            tipo_movimiento="movimiento_ubicacion",
+            cantidad=0,  # Sin cambio de cantidad
+            cantidad_anterior=lote.cantidad_actual,
+            cantidad_nueva=lote.cantidad_actual,
+            documento_referencia=f"Movimiento: {ubicacion_original} → {nueva_ubicacion}",
+            observaciones=observacion_movimiento,
+            usuario_id=current_user.username,
+            fecha=datetime.now(timezone.utc),
+        )
+
+        db.session.add(movimiento)
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Lote movido exitosamente de '{ubicacion_original}' a '{nueva_ubicacion}'",
+                "lote": {
+                    "id": lote.id,
+                    "codigo_lote": lote.codigo_lote or f"Lote-{lote.id}",
+                    "ubicacion_original": ubicacion_original,
+                    "ubicacion_nueva": nueva_ubicacion,
+                    "inventario_codigo": lote.inventario.codigo,
+                    "inventario_nombre": lote.inventario.nombre,
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error al mover lote {lote_id}: {str(e)}")
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -547,7 +916,6 @@ def vencimientos():
 def estadisticas_fifo():
     """Obtener estadísticas rápidas del sistema FIFO"""
     try:
-        from datetime import timedelta
         from sqlalchemy import func, distinct
 
         # Total de lotes activos

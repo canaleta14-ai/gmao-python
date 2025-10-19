@@ -1124,6 +1124,10 @@ body {
   color: white;
 }
 
+.card-header #info-registros {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
 /* Tabla personalizada */
 .table th {
   background: linear-gradient(
@@ -1679,8 +1683,12 @@ body {
 
 .filtros-toggle-icon {
   transition: transform 0.3s ease;
-  font-size: 0.875rem;
-  color: var(--dark-gray, #7f8c8d);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.filtros-header[aria-expanded="false"] .filtros-toggle-icon {
+  transform: rotate(-90deg);
 }
 
 .filtros-counter {
@@ -1894,6 +1902,7 @@ body.login-bg .main-content {
   font-size: 0.95rem;
 }
 
+/* Comentado: ahora usamos el ícono bi-chevron-down en el HTML
 .filtros-header::after {
   content: "";
   width: 0;
@@ -1912,6 +1921,7 @@ body.login-bg .main-content {
 .filtros-header[aria-expanded="true"]::after {
   transform: rotate(0deg);
 }
+*/
 
 .filtros-body {
   padding: 1.5rem;

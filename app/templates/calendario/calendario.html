@@ -142,7 +142,7 @@
 
     // Inicializar calendario (variable global para acceso desde consola)
     calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "dayGridMonth",
+      initialView: "listWeek",
       initialDate: hoy, // Forzar fecha inicial a hoy
       locale: "es",
       timeZone: 'local', // Usar zona horaria local
@@ -160,6 +160,8 @@
         timeGridWeek: "semana",
         listWeek: "lista",
       },
+      allDayText: "Todo el día",
+      noEventsText: "No hay órdenes para mostrar",
       height: "auto",
       events: function (info, successCallback, failureCallback) {
         cargarEventos(info.start, info.end, successCallback, failureCallback);

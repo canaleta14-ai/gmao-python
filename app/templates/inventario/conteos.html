@@ -1,17 +1,16 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block section_title %}Conteos de Inventario{% endblock %}
+{% set section = 'inventario' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/conteos.css') }}?v=20251019_initial">
 
-{% block title %}Conteos de Inventario{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
 {% endblock %}
-
 {% block content %}
+<!-- Encabezado con estadísticas -->
 <div class="container-fluid">
-    <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h5 class="mb-1"><i class="bi bi-clipboard-check me-2"></i>Conteos de Inventario</h5>
                     <small class="text-muted">Control y seguimiento de inventarios físicos</small>
@@ -42,102 +41,102 @@
 
     <!-- Estadísticas Rápidas -->
     <div class="quick-stats">
-        <div class="row" id="estadisticas-cards">
+        <div class="row">
             <div class="col-md-3 stat-item">
                 <div class="stat-number text-primary" id="periodo-actual">-</div>
                 <div class="stat-label">Período Actual</div>
             </div>
             <div class="col-md-3 stat-item">
-                <div class="stat-number text-success" id="total-conteos">-</div>
+                <div class="stat-number text-success" id="total-conteos">0</div>
                 <div class="stat-label">Total Conteos</div>
             </div>
             <div class="col-md-3 stat-item">
-                <div class="stat-number text-warning" id="conteos-completados">-</div>
+                <div class="stat-number text-warning" id="conteos-completados">0</div>
                 <div class="stat-label">Completados</div>
             </div>
             <div class="col-md-3 stat-item">
-                <div class="stat-number text-danger" id="conteos-diferencias">-</div>
+                <div class="stat-number text-danger" id="conteos-diferencias">0</div>
                 <div class="stat-label">Con Diferencias</div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros colapsables -->
-                    <div class="stats-number text-danger" id="conteos-diferencias">-</div>
-                    <div class="stats-label">Con Diferencias</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filtros colapsables -->
+    <!-- Filtros modernos colapsables -->
     <div class="filtros-container">
         <div class="filtros-header" data-bs-toggle="collapse" data-bs-target="#filtros-conteos">
             <h6><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h6>
         </div>
         <div id="filtros-conteos" class="collapse">
             <div class="filtros-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label for="filtro-tipo-conteo" class="form-label">Tipo de Conteo</label>
-                                <select class="form-select" id="filtro-tipo-conteo">
-                                    <option value="">Todos</option>
-                                    <option value="mensual">Mensual</option>
-                                    <option value="aleatorio">Aleatorio</option>
-                                    <option value="anual">Anual</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="filtro-estado-conteo" class="form-label">Estado</label>
-                                <select class="form-select" id="filtro-estado-conteo">
-                                    <option value="">Todos</option>
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="validado">Validado</option>
-                                    <option value="regularizado">Regularizado</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="filtro-fecha-desde" class="form-label">Desde</label>
-                                <input type="date" class="form-control" id="filtro-fecha-desde">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="filtro-fecha-hasta" class="form-label">Hasta</label>
-                                <input type="date" class="form-control" id="filtro-fecha-hasta">
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <button type="button" class="btn btn-outline-primary" onclick="aplicarFiltrosConteos()"
-                                    style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
-                                    onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
-                                    onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
-                                    <i class="bi bi-search me-1"></i>Buscar
-                                </button>
-                                <button type="button" class="btn btn-outline-primary ms-2" onclick="limpiarFiltrosConteos()"
-                                    style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
-                                    onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
-                                    onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
-                                    <i class="bi bi-eraser me-1"></i>Limpiar
-                                </button>
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-tipo-conteo" class="form-label fw-bold">Tipo de Conteo</label>
+                        <select class="form-select" id="filtro-tipo-conteo">
+                            <option value="" selected>Todos</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="aleatorio">Aleatorio</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-estado-conteo" class="form-label fw-bold">Estado</label>
+                        <select class="form-select" id="filtro-estado-conteo">
+                            <option value="" selected>Todos</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="validado">Validado</option>
+                            <option value="regularizado">Regularizado</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-fecha-desde" class="form-label fw-bold">Fecha Desde</label>
+                        <input type="date" class="form-control" id="filtro-fecha-desde">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filtro-fecha-hasta" class="form-label fw-bold">Fecha Hasta</label>
+                        <input type="date" class="form-control" id="filtro-fecha-hasta">
+                    </div>
+                    <div class="col-12">
+                        <hr class="mb-3">
+                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                            <button type="button" class="btn btn-outline-primary" onclick="aplicarFiltrosConteos()"
+                                style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                                onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                                onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="limpiarFiltrosConteos()"
+                                style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                                onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                                onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </button>
+                            <div class="ms-auto text-muted">
+                                Total: <span id="total-conteos-lista">0</span> registros
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Tabla de conteos -->
+    <!-- Tabla de Conteos -->
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Listado de Conteos</h5>
-                    <div class="text-muted">
-                        Total: <span id="total-conteos-lista">0</span> conteos
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0"><i class="bi bi-table me-2"></i>Listado de Conteos</h6>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="total-conteos-lista" style="background: transparent !important; color: white !important; padding: 0 !important;">0 registros</span>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover" id="tabla-conteos">
+                        <table class="table table-striped table-hover table-even" id="tabla-conteos">
                             <thead class="table-dark">
                                 <tr>
                                     <th>Fecha</th>
@@ -357,5 +356,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/conteos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/conteos.js') }}?v=20251019_conteos_fixed"></script>
 {% endblock %}
