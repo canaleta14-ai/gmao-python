@@ -23,6 +23,12 @@ instance/database.db
 .env.production
 .env.development
 
+# Credenciales y claves de servicio
+service-account-key.json
+*-key.json
+*.pem
+*.key
+
 # Archivos de IDE
 # Mantener configuración de VS Code (settings.json, tasks.json, launch.json, extensions.json)
 .vscode/settings.json
