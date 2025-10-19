@@ -6,7 +6,12 @@ from werkzeug.utils import secure_filename
 from flask import request, current_app, redirect
 from app.extensions import db
 from app.models import ArchivoAdjunto, OrdenTrabajo
-from app.utils.storage import upload_file, is_gcp_environment, get_signed_url, file_exists
+from app.utils.storage import (
+    upload_file,
+    is_gcp_environment,
+    get_signed_url,
+    file_exists,
+)
 
 
 def subir_archivo(orden_id, usuario_id):
@@ -33,10 +38,10 @@ def subir_archivo(orden_id, usuario_id):
         # Obtener descripción si se proporcionó
         descripcion = request.form.get("descripcion", "")
 
-        # Subir archivo usando storage utility (Cloud Storage o local según entorno)
+        # Subir archivo al filesystem local
         folder = "ordenes"
         ruta_archivo = upload_file(archivo, folder, nombre_unico)
-        
+
         if not ruta_archivo:
             raise ValueError("Error al subir el archivo")
 
@@ -143,36 +148,13 @@ def descargar_archivo(archivo_id):
     if archivo.tipo_archivo == "enlace":
         raise ValueError("Los enlaces no se pueden descargar")
 
-    # Verificar si es archivo de Cloud Storage (URL que empieza con gs://)
-    if archivo.ruta_archivo.startswith('gs://'):
-        # Extraer folder y filename de la URL de GCS
-        # gs://bucket/ordenes/filename -> folder=ordenes, filename=filename
-        parts = archivo.ruta_archivo.replace('gs://', '').split('/', 2)
-        if len(parts) >= 3:
-            folder = parts[1]  # ordenes
-            filename = parts[2]  # nombre_archivo
-            
-            # Verificar que el archivo existe en GCS
-            if not file_exists(filename, folder):
-                raise ValueError("Archivo no encontrado en el servidor")
-            
-            # Generar URL firmada para descarga
-            signed_url = get_signed_url(filename, folder)
-            if signed_url:
-                # Retornar información especial para indicar que es una redirección
-                return {"type": "redirect", "url": signed_url}
-            else:
-                raise ValueError("Error al generar URL de descarga")
-        else:
-            raise ValueError("Formato de ruta de archivo inválido")
-    else:
-        # Archivo local (desarrollo o archivos legacy)
-        ruta_completa = os.path.join(current_app.static_folder, archivo.ruta_archivo)
-        
-        if not os.path.exists(ruta_completa):
-            raise ValueError("Archivo no encontrado en el servidor")
-        
-        return {"type": "local", "path": ruta_completa, "filename": archivo.nombre_original}
+    # Archivo local
+    ruta_completa = os.path.join(current_app.static_folder, archivo.ruta_archivo)
+
+    if not os.path.exists(ruta_completa):
+        raise ValueError("Archivo no encontrado en el servidor")
+
+    return {"type": "local", "path": ruta_completa, "filename": archivo.nombre_original}
 
 
 def _archivo_permitido(filename):

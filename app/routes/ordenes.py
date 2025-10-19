@@ -483,10 +483,7 @@ def descargar_archivo_adjunto(archivo_id):
     try:
         resultado = descargar_archivo(archivo_id)
 
-        if resultado["type"] == "redirect":
-            # Archivo en Cloud Storage - redirigir a URL firmada
-            return redirect(resultado["url"])
-        elif resultado["type"] == "local":
+        if resultado["type"] == "local":
             # Archivo local - usar send_file
             return send_file(
                 resultado["path"],

@@ -71,14 +71,6 @@ class SecurityAuditor:
         if factory_file.exists():
             content = factory_file.read_text()
 
-            # Verificar que usa Secret Manager en producción
-            if "secretmanager" in content:
-                self.add_issue("PASS", "Usa Google Secret Manager para producción")
-            else:
-                self.add_issue(
-                    "WARNING", "No usa Secret Manager (puede ser intencional)"
-                )
-
             # Verificar que no hay SECRET_KEY hardcodeada
             if re.search(r'SECRET_KEY\s*=\s*["\'][a-zA-Z0-9]{32,}["\']', content):
                 self.add_issue("CRITICAL", "SECRET_KEY hardcodeada en código!")

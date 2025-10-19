@@ -31,7 +31,7 @@ web_bp = Blueprint("web", __name__)
 
 @web_bp.route("/health")
 def health_check():
-    """Health check endpoint para App Engine"""
+    """Health check endpoint"""
     try:
         # Verificar conexión a BD
         db.session.execute(db.text("SELECT 1"))

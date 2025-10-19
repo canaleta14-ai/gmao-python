@@ -71,7 +71,7 @@ def create_app(config_name=None):
 
     # Configuración de logging
     if not app.debug:
-        # Configuración para producción - solo console logging (Google Cloud Logging)
+        # Configuración para producción - console logging
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -104,14 +104,14 @@ def create_app(config_name=None):
 
     # Validación de seguridad adicional: longitud mínima y prohibir default en producción
     is_production_env = (
-        os.getenv("GAE_ENV", "").startswith("standard")
+        os.getenv("PRODUCTION_ENV", "").lower() == "true"
         or os.getenv("FLASK_ENV") == "production"
         or app.config.get("FLASK_ENV") == "production"
     )
     if is_production_env:
         if app.config["SECRET_KEY"] == "dev-secret-key-INSEGURO-CAMBIAR-EN-PRODUCCION":
             raise ValueError(
-                "SECRET_KEY por defecto detectada en producción. Configure una clave segura vía Secret Manager o variable de entorno."
+                "SECRET_KEY por defecto detectada en producción. Configure una clave segura vía variable de entorno."
             )
         if len(app.config.get("SECRET_KEY", "")) < 32:
             raise ValueError(
@@ -141,7 +141,7 @@ def create_app(config_name=None):
 
     # Activar HTTPS solo en producción
     is_production = (
-        os.getenv("GAE_ENV", "").startswith("standard")
+        os.getenv("PRODUCTION_ENV", "").lower() == "true"
         or app.config.get("FLASK_ENV") == "production"
     )
     app.config["SESSION_COOKIE_SECURE"] = is_production
@@ -173,7 +173,7 @@ def create_app(config_name=None):
 
     # Configuración de base de datos
     # Para desarrollo: SQLite
-    # Para producción GCP: Cloud SQL PostgreSQL
+    # Para producción: PostgreSQL
 
     db_type = os.getenv("DB_TYPE", "sqlite")  # 'sqlite' o 'postgresql'
 
@@ -186,28 +186,15 @@ def create_app(config_name=None):
             f"DB_PASSWORD configurada: {'[SET]' if db_password else '[EMPTY]'}"
         )
 
-        # Detectar si estamos en GCP App Engine
-        if os.getenv("GAE_ENV", "").startswith("standard"):
-            # Configuración Cloud SQL para App Engine
-            db_user = os.getenv("DB_USER", "postgres")
-            db_name = os.getenv("DB_NAME", "postgres")
-            db_host = os.getenv(
-                "DB_HOST", "/cloudsql/gmao-sistema:us-central1:gmao-postgres"
-            )
+        # Configuración PostgreSQL estándar
+        db_host = os.getenv("DB_HOST", "localhost")
+        db_port = os.getenv("DB_PORT", "5432")
+        db_name = os.getenv("DB_NAME", "gmao_db")
+        db_user = os.getenv("DB_USER", "postgres")
 
-            app.config["SQLALCHEMY_DATABASE_URI"] = (
-                f"postgresql+psycopg2://{db_user}:{db_password}@/{db_name}?host={db_host}"
-            )
-        else:
-            # Configuración PostgreSQL estándar (desarrollo/producción externa)
-            db_host = os.getenv("DB_HOST", "localhost")
-            db_port = os.getenv("DB_PORT", "5432")
-            db_name = os.getenv("DB_NAME", "gmao_db")
-            db_user = os.getenv("DB_USER", "postgres")
-
-            app.config["SQLALCHEMY_DATABASE_URI"] = (
-                f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-            )
+        app.config["SQLALCHEMY_DATABASE_URI"] = (
+            f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+        )
     else:
         # Configuración SQLite para desarrollo (ruta absoluta dentro de 'instance')
         instance_dir = os.path.join(base_dir, "instance")
@@ -229,12 +216,12 @@ def create_app(config_name=None):
     app.config["UPLOAD_FOLDER"] = os.path.join(base_dir, "uploads")
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB máximo
 
-    # Crear directorio de uploads solo en desarrollo (no en producción GAE)
-    if not os.getenv("GAE_ENV"):  # GAE_ENV existe solo en Google App Engine
+    # Crear directorio de uploads en desarrollo y producción
+    if not os.getenv("PRODUCTION_ENV"):
         try:
             os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
         except OSError:
-            # En producción, usar un directorio temporal o Cloud Storage
+            # En producción, usar un directorio temporal
             app.config["UPLOAD_FOLDER"] = "/tmp/uploads"
             try:
                 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -497,8 +484,6 @@ def create_app(config_name=None):
         else:
             app.logger.debug(f"Blueprint de dashboard no disponible: {e}")
 
-    # Registrar blueprint de cron (tareas programadas) - ELIMINADO: sin Google Cloud Scheduler
-
     # Registrar blueprint de diagnóstico
     from app.routes.diagnostico import diagnostico_bp
 
@@ -508,11 +493,9 @@ def create_app(config_name=None):
     # Registrar blueprint de inicialización (temporal)
     from app.routes.init_db import init_bp
 
-    # app.register_blueprint(cron_bp)  # ELIMINADO: sin Google Cloud Scheduler
     app.register_blueprint(diagnostico_bp)
     app.register_blueprint(actualizar_fecha_bp)
     app.register_blueprint(init_bp)
-    # app.logger.info("Blueprint de cron registrado")  # ELIMINADO
     app.logger.info("Blueprint de diagnóstico registrado")
     app.logger.info("Blueprint de actualizar fecha registrado")
     app.logger.info("Blueprint de inicialización registrado")

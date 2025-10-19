@@ -85,9 +85,9 @@ def enviar_email(destinatario, asunto, contenido_html, contenido_texto=None):
             "Para Gmail: Asegúrate de usar una contraseña de aplicación si tienes 2FA habilitado"
         )
         logger.error(
-            "Crea una contraseña de aplicación en: https://myaccount.google.com/apppasswords"
+            "Configura una contraseña de aplicación en las opciones de seguridad de tu cuenta"
         )
-        raise ValueError(f"{error_msg}. Verifica las credenciales de Gmail.")
+        raise ValueError(f"{error_msg}. Verifica las credenciales de correo.")
 
     except smtplib.SMTPConnectError as e:
         error_msg = f"Error de conexión SMTP: {e}"

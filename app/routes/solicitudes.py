@@ -264,7 +264,7 @@ def generar_numero_solicitud():
 def procesar_archivos_solicitud(archivos, solicitud_id):
     """
     Procesa y guarda archivos adjuntos para una solicitud de servicio
-    Usa Google Cloud Storage en producción y filesystem local en desarrollo
+    Guarda archivos en el filesystem local
 
     Args:
         archivos: Lista de archivos desde request.files.getlist()
@@ -301,7 +301,7 @@ def procesar_archivos_solicitud(archivos, solicitud_id):
             filename = secure_filename(archivo.filename)
             nombre_unico = f"{uuid.uuid4().hex[:8]}_{filename}"
 
-            # Usar Cloud Storage o filesystem local según el entorno
+            # Guardar archivo en el filesystem local
             folder = f"solicitudes/{solicitud_id}"
             ruta_archivo = upload_file(archivo, folder, nombre_unico)
 
@@ -353,37 +353,15 @@ def descargar_archivo_adjunto(archivo_id):
         if archivo.tipo_archivo == "enlace":
             return jsonify({"error": "Los enlaces no se pueden descargar"}), 400
 
-        # Determinar si el archivo está en Cloud Storage o filesystem local
-        if archivo.ruta_archivo.startswith("gs://"):
-            # SOLUCIÓN TEMPORAL: Usar una ruta local para pruebas
-            # Extraer el nombre del archivo de la ruta GCS
-            filename = archivo.ruta_archivo.split("/")[-1]
+        # Verificar que el archivo existe en el filesystem local
+        if not os.path.exists(archivo.ruta_archivo):
+            return jsonify({"error": "Archivo no encontrado en el servidor"}), 404
 
-            # Crear un archivo de prueba en una ubicación temporal
-            import os
-            import tempfile
-
-            # Crear archivo temporal
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-            temp_file.write(b"Archivo de prueba para descarga")
-            temp_file.close()
-
-            # Devolver el archivo temporal
-            return send_file(
-                temp_file.name,
-                as_attachment=True,
-                download_name=archivo.nombre_original,
-            )
-        else:
-            # Archivo en filesystem local
-            if not os.path.exists(archivo.ruta_archivo):
-                return jsonify({"error": "Archivo no encontrado en el servidor"}), 404
-
-            return send_file(
-                archivo.ruta_archivo,
-                as_attachment=True,
-                download_name=archivo.nombre_original,
-            )
+        return send_file(
+            archivo.ruta_archivo,
+            as_attachment=True,
+            download_name=archivo.nombre_original,
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400

@@ -66,7 +66,7 @@ def crear_manual(activo_id, archivo, tipo, descripcion):
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         unique_filename = f"{codigo_activo}_{tipo}_{timestamp}.{extension}"
 
-        # Subir archivo a Cloud Storage (o local en desarrollo)
+        # Subir archivo al filesystem local
         file_url = upload_file(archivo, "manuales", unique_filename)
 
         if not file_url:
