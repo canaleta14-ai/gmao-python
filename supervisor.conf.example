@@ -1,0 +1,45 @@
+[program:gmao]
+# Comando para iniciar la aplicación
+command=/home/gmao/gmao-python/gmao-sistema/start_gunicorn.sh
+
+# Directorio de trabajo
+directory=/home/gmao/gmao-python/gmao-sistema
+
+# Usuario bajo el que correr el proceso
+user=gmao
+
+# Autostart y autorestart
+autostart=true
+autorestart=true
+
+# Reintentos antes de dar up como failed
+startretries=3
+
+# Señal para detener el proceso (TERM es recomendado para Gunicorn)
+stopsignal=TERM
+stopwaitsecs=10
+
+# Tiempo de espera antes de considerar el proceso iniciado
+startsecs=5
+
+# Redireccionar stderr a stdout
+redirect_stderr=true
+
+# Archivos de log
+stdout_logfile=/home/gmao/gmao-python/gmao-sistema/logs/supervisor.log
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=10
+
+stderr_logfile=/home/gmao/gmao-python/gmao-sistema/logs/supervisor-error.log
+stderr_logfile_maxbytes=50MB
+stderr_logfile_backups=10
+
+# Variables de entorno
+environment=PATH="/home/gmao/gmao-python/gmao-sistema/.venv/bin",FLASK_ENV="production"
+
+# Prioridad de inicio (menor número = mayor prioridad)
+priority=999
+
+# Deshabilitar la captura de logs por supervisor (usar logs de Gunicorn)
+stdout_capture_maxbytes=0
+stderr_capture_maxbytes=0
