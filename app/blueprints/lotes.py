@@ -807,63 +807,8 @@ def api_liberar_reservas():
 @lotes_bp.route("/trazabilidad")
 @login_required
 def trazabilidad():
-    """Página de trazabilidad de lotes"""
-    return render_template("lotes/trazabilidad.html")
-
-
-@lotes_bp.route("/api/trazabilidad/<int:lote_id>")
-@login_required
-def api_trazabilidad_lote(lote_id):
-    """API para obtener trazabilidad completa de un lote"""
-    try:
-        lote = LoteInventario.query.get_or_404(lote_id)
-
-        # Obtener todos los movimientos del lote
-        movimientos = (
-            MovimientoLote.query.filter_by(lote_id=lote_id)
-            .order_by(MovimientoLote.fecha.asc())
-            .all()
-        )
-
-        # Preparar datos de trazabilidad
-        trazabilidad = {
-            "lote": {
-                "id": lote.id,
-                "codigo_lote": lote.codigo_lote,
-                "inventario_codigo": lote.inventario.codigo,
-                "inventario_nombre": lote.inventario.nombre,
-                "fecha_entrada": lote.fecha_entrada.isoformat(),
-                "cantidad_inicial": float(lote.cantidad_inicial),
-                "cantidad_actual": float(lote.cantidad_actual),
-                "precio_unitario": float(lote.precio_unitario),
-                "documento_origen": lote.documento_origen,
-                "fecha_vencimiento": (
-                    lote.fecha_vencimiento.isoformat()
-                    if lote.fecha_vencimiento
-                    else None
-                ),
-                "observaciones": lote.observaciones,
-            },
-            "movimientos": [],
-        }
-
-        for mov in movimientos:
-            trazabilidad["movimientos"].append(
-                {
-                    "fecha": mov.fecha.isoformat(),
-                    "tipo": mov.tipo_movimiento,
-                    "cantidad": float(mov.cantidad),
-                    "documento_referencia": mov.documento_referencia,
-                    "observaciones": mov.observaciones,
-                    "usuario": mov.usuario_id,
-                }
-            )
-
-        return jsonify({"success": True, "trazabilidad": trazabilidad})
-
-    except Exception as e:
-        logger.error(f"Error al obtener trazabilidad: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+    """Página principal de trazabilidad de lotes con búsqueda"""
+    return render_template("lotes/trazabilidad_old.html")
 
 
 @lotes_bp.route("/vencimientos")
@@ -1001,7 +946,7 @@ def estadisticas_fifo():
 
 @lotes_bp.route("/trazabilidad/<int:lote_id>")
 @login_required
-def ver_trazabilidad(lote_id): # type: ignore
+def ver_trazabilidad(lote_id):  # type: ignore
     """Vista de trazabilidad completa de un lote"""
     try:
         lote = LoteInventario.query.get_or_404(lote_id)
