@@ -345,12 +345,12 @@ function crearFilaUsuario(usuario) {
         </td>
         <td class="text-center">
             <div class="btn-group btn-group-sm" role="group">
-                <button class="btn btn-sm btn-outline-secondary action-btn edit" data-action="editar" data-id="${
+                <button class="btn btn-sm btn-outline-primary" data-action="editar" data-id="${
                   usuario.id
                 }" title="Editar">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger action-btn delete" data-action="eliminar" data-id="${
+                <button class="btn btn-sm btn-outline-danger" data-action="eliminar" data-id="${
                   usuario.id
                 }" title="Eliminar">
                     <i class="bi bi-trash"></i>
