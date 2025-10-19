@@ -994,3 +994,202 @@ def estadisticas_fifo():
             ),
             500,
         )
+
+
+# ==================== TRAZABILIDAD DE LOTES ====================
+
+
+@lotes_bp.route("/trazabilidad/<int:lote_id>")
+@login_required
+def ver_trazabilidad(lote_id): # type: ignore
+    """Vista de trazabilidad completa de un lote"""
+    try:
+        lote = LoteInventario.query.get_or_404(lote_id)
+        return render_template("lotes/trazabilidad.html", lote=lote)
+    except Exception as e:
+        logger.error(f"Error al cargar trazabilidad del lote {lote_id}: {str(e)}")
+        flash(f"Error al cargar trazabilidad: {str(e)}", "error")
+        return redirect(url_for("lotes.index"))
+
+
+@lotes_bp.route("/api/lotes/<int:lote_id>/trazabilidad")
+@login_required
+def api_trazabilidad_lote(lote_id):
+    """
+    API para obtener trazabilidad completa de un lote
+    Retorna: información del lote, todos los movimientos, órdenes asociadas, estadísticas
+    """
+    try:
+        # Obtener el lote
+        lote = LoteInventario.query.get_or_404(lote_id)
+
+        # Información básica del lote
+        lote_info = {
+            "id": lote.id,
+            "codigo_lote": lote.codigo_lote,
+            "inventario": {
+                "id": lote.inventario.id,
+                "codigo": lote.inventario.codigo,
+                "nombre": lote.inventario.nombre,
+                "unidad_medida": lote.inventario.unidad_medida,
+            },
+            "fecha_entrada": (
+                lote.fecha_entrada.isoformat() if lote.fecha_entrada else None
+            ),
+            "fecha_vencimiento": (
+                lote.fecha_vencimiento.isoformat() if lote.fecha_vencimiento else None
+            ),
+            "cantidad_inicial": float(lote.cantidad_inicial),
+            "cantidad_actual": float(lote.cantidad_actual),
+            "cantidad_reservada": float(lote.cantidad_reservada),
+            "precio_unitario": float(lote.precio_unitario),
+            "costo_total": float(lote.costo_total),
+            "documento_origen": lote.documento_origen,
+            "proveedor": (
+                {
+                    "id": lote.proveedor_id,
+                    "nombre": lote.proveedor.nombre if lote.proveedor_id else None,
+                }
+                if lote.proveedor_id
+                else None
+            ),
+            "activo": lote.activo,
+            "esta_vencido": lote.esta_vencido,
+            "dias_hasta_vencimiento": lote.dias_hasta_vencimiento,
+            "observaciones": lote.observaciones,
+            "usuario_creacion": lote.usuario_creacion,
+            "fecha_creacion": (
+                lote.fecha_creacion.isoformat() if lote.fecha_creacion else None
+            ),
+        }
+
+        # Obtener todos los movimientos del lote con información extendida
+        movimientos = (
+            MovimientoLote.query.filter_by(lote_id=lote_id)
+            .order_by(MovimientoLote.fecha.desc())
+            .all()
+        )
+
+        movimientos_data = []
+        for mov in movimientos:
+            mov_info = {
+                "id": mov.id,
+                "tipo_movimiento": mov.tipo_movimiento,
+                "cantidad": float(mov.cantidad),
+                "fecha": mov.fecha.isoformat() if mov.fecha else None,
+                "documento_referencia": mov.documento_referencia,
+                "observaciones": mov.observaciones,
+                "usuario_id": mov.usuario_id,
+            }
+
+            # Agregar información de la orden de trabajo si existe
+            if mov.orden_trabajo_id:
+                from app.models import OrdenTrabajo
+
+                orden = OrdenTrabajo.query.get(mov.orden_trabajo_id)
+                if orden:
+                    mov_info["orden_trabajo"] = {
+                        "id": orden.id,
+                        "numero": orden.numero,
+                        "descripcion": orden.descripcion,
+                        "estado": orden.estado,
+                        "activo": orden.activo.codigo if orden.activo else None,
+                        "tecnico": orden.tecnico.username if orden.tecnico else None,
+                    }
+
+            # Agregar información del movimiento de inventario si existe
+            if mov.movimiento_inventario_id:
+                from app.models import MovimientoInventario
+
+                mov_inv = MovimientoInventario.query.get(mov.movimiento_inventario_id)
+                if mov_inv:
+                    mov_info["movimiento_inventario"] = {
+                        "id": mov_inv.id,
+                        "tipo": mov_inv.tipo,
+                        "cantidad": float(mov_inv.cantidad),
+                        "motivo": mov_inv.motivo,
+                    }
+
+            movimientos_data.append(mov_info)
+
+        # Estadísticas de consumo
+        total_consumido = sum(
+            float(m.cantidad) for m in movimientos if m.tipo_movimiento == "consumo"
+        )
+        total_reservado = sum(
+            float(m.cantidad) for m in movimientos if m.tipo_movimiento == "reserva"
+        )
+        total_liberado = sum(
+            float(m.cantidad) for m in movimientos if m.tipo_movimiento == "liberacion"
+        )
+        total_ajustes = sum(
+            float(m.cantidad) for m in movimientos if m.tipo_movimiento == "ajuste"
+        )
+
+        # Órdenes de trabajo asociadas (únicas)
+        ordenes_ids = set(m.orden_trabajo_id for m in movimientos if m.orden_trabajo_id)
+        ordenes_info = []
+        if ordenes_ids:
+            from app.models import OrdenTrabajo
+
+            ordenes = OrdenTrabajo.query.filter(OrdenTrabajo.id.in_(ordenes_ids)).all()
+            for orden in ordenes:
+                ordenes_info.append(
+                    {
+                        "id": orden.id,
+                        "numero": orden.numero,
+                        "descripcion": orden.descripcion,
+                        "estado": orden.estado,
+                        "fecha_creacion": (
+                            orden.fecha_creacion.isoformat()
+                            if orden.fecha_creacion
+                            else None
+                        ),
+                        "activo": (
+                            {
+                                "codigo": orden.activo.codigo,
+                                "nombre": orden.activo.nombre,
+                            }
+                            if orden.activo
+                            else None
+                        ),
+                    }
+                )
+
+        # Resumen estadístico
+        estadisticas = {
+            "total_movimientos": len(movimientos_data),
+            "cantidad_consumida": total_consumido,
+            "cantidad_reservada": total_reservado,
+            "cantidad_liberada": total_liberado,
+            "cantidad_ajustada": total_ajustes,
+            "porcentaje_utilizado": (
+                round((total_consumido / float(lote.cantidad_inicial)) * 100, 2)
+                if lote.cantidad_inicial > 0
+                else 0
+            ),
+            "valor_consumido": round(total_consumido * float(lote.precio_unitario), 2),
+            "valor_restante": round(
+                float(lote.cantidad_actual) * float(lote.precio_unitario), 2
+            ),
+            "ordenes_asociadas": len(ordenes_info),
+            "dias_desde_entrada": (
+                (datetime.now(timezone.utc) - lote.fecha_entrada).days
+                if lote.fecha_entrada
+                else 0
+            ),
+        }
+
+        return jsonify(
+            {
+                "success": True,
+                "lote": lote_info,
+                "movimientos": movimientos_data,
+                "ordenes_trabajo": ordenes_info,
+                "estadisticas": estadisticas,
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error al obtener trazabilidad del lote {lote_id}: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500

@@ -1,715 +1,307 @@
 {% extends "base.html" %}
 {% set active_page = "lotes" %}
 
-{% block title %}Trazabilidad de Lotes - Sistema FIFO{% endblock %}
+{% block title %}Trazabilidad del Lote - Sistema FIFO{% endblock %}
 
 {% block extra_css %}
 <style>
-.search-card {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
-    border-radius: 15px;
-    padding: 25px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.timeline {
-    position: relative;
-    padding: 20px 0;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(to bottom, #007bff, #17a2b8);
-    transform: translateX(-50%);
-}
-
-.timeline-item {
-    position: relative;
-    margin-bottom: 30px;
-    width: 50%;
-    padding: 20px;
-}
-
-.timeline-item.left {
-    left: 0;
-    text-align: right;
-    padding-right: 30px;
-}
-
-.timeline-item.right {
-    left: 50%;
-    text-align: left;
-    padding-left: 30px;
-}
-
-.timeline-item::before {
-    content: '';
-    position: absolute;
-    top: 20px;
-    width: 15px;
-    height: 15px;
-    background: white;
-    border: 3px solid;
-    border-radius: 50%;
-    z-index: 1;
-}
-
-.timeline-item.left::before {
-    right: -8px;
-}
-
-.timeline-item.right::before {
-    left: -8px;
-}
-
-.timeline-item.entrada::before {
-    border-color: #28a745;
-    background: #28a745;
-}
-
-.timeline-item.salida::before {
-    border-color: #dc3545;
-    background: #dc3545;
-}
-
-.timeline-item.reserva::before {
-    border-color: #ffc107;
-    background: #ffc107;
-}
-
-.timeline-item.devolucion::before {
-    border-color: #6f42c1;
-    background: #6f42c1;
-}
-
-.timeline-content {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-}
-
-.timeline-item.left .timeline-content::after {
-    content: '';
-    position: absolute;
-    right: -10px;
-    top: 20px;
-    border: 10px solid transparent;
-    border-left-color: white;
-}
-
-.timeline-item.right .timeline-content::after {
-    content: '';
-    position: absolute;
-    left: -10px;
-    top: 20px;
-    border: 10px solid transparent;
-    border-right-color: white;
-}
-
-.timeline-date {
-    font-size: 0.875rem;
-    color: #6c757d;
-    margin-bottom: 5px;
-}
-
-.timeline-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #495057;
-}
-
-.timeline-details {
-    color: #6c757d;
-    font-size: 0.9rem;
-}
-
-.timeline-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    margin-top: 8px;
-}
-
-.badge-entrada {
-    background: #d4edda;
-    color: #155724;
-}
-
-.badge-salida {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.badge-reserva {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.badge-devolucion {
-    background: #e2d8f0;
-    color: #553c9a;
-}
-
-.lote-summary {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.summary-stats {
-    display: flex;
-    justify-content: space-around;
-    text-align: center;
-}
-
-.stat-item {
-    flex: 1;
-}
-
-.stat-number {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #495057;
-}
-
-.stat-label {
-    color: #6c757d;
-    font-size: 0.875rem;
-}
-
-.search-form {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 20px;
-}
-
-.form-control-white {
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    color: #495057;
-}
-
-.form-control-white::placeholder {
-    color: #6c757d;
-}
-
-.btn-search {
-    background: rgba(255, 255, 255, 0.9);
-    color: #17a2b8;
-    border: none;
-    font-weight: 600;
-}
-
-.btn-search:hover {
-    background: white;
-    color: #138496;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #6c757d;
-}
-
-.empty-state i {
-    font-size: 4rem;
-    margin-bottom: 20px;
-    opacity: 0.5;
-}
-
-/* Estilo para cards de selección de lotes */
-.lote-selection-card {
-    border: 2px solid #667eea !important;
-    border-radius: 8px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
-    cursor: pointer;
-}
-
-.lote-selection-card:hover {
-    transform: translateY(-5px) !important;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3) !important;
-}
-
-@media (max-width: 768px) {
+    .stat-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card.primary { border-left-color: #007bff; }
+    .stat-card.success { border-left-color: #28a745; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.info { border-left-color: #17a2b8; }
+    
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
     .timeline::before {
-        left: 8px;
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(to bottom, #007bff, #17a2b8, #28a745);
+        transform: translateX(-50%);
     }
     
     .timeline-item {
-        width: 100%;
-        left: 0 !important;
-        text-align: left !important;
-        padding-left: 50px !important;
-        padding-right: 20px !important;
+        position: relative;
+        margin-bottom: 30px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-left: 55%;
+        width: 42%;
     }
     
-    .timeline-item::before {
-        left: 0 !important;
-        right: auto !important;
+    .timeline-item:nth-child(even) {
+        margin-left: 3%;
+        margin-right: 55%;
     }
     
-    .timeline-content::after {
-        left: -10px !important;
-        right: auto !important;
-        border-right-color: white !important;
-        border-left-color: transparent !important;
+    .timeline-marker {
+        position: absolute;
+        top: 20px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid;
+        z-index: 10;
     }
-}
+    
+    .timeline-item:nth-child(odd) .timeline-marker {
+        left: -42px;
+    }
+    
+    .timeline-item:nth-child(even) .timeline-marker {
+        right: -42px;
+    }
+    
+    .timeline-marker.entrada { border-color: #28a745; background-color: #28a745; }
+    .timeline-marker.consumo { border-color: #dc3545; background-color: #dc3545; }
+    .timeline-marker.reserva { border-color: #ffc107; background-color: #ffc107; }
+    .timeline-marker.liberacion { border-color: #17a2b8; background-color: #17a2b8; }
+    .timeline-marker.ajuste { border-color: #6f42c1; background-color: #6f42c1; }
+    
+    .badge-tipo {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+    
+    .badge-entrada { background-color: #28a745; }
+    .badge-consumo { background-color: #dc3545; }
+    .badge-reserva { background-color: #ffc107; color: #000; }
+    .badge-liberacion { background-color: #17a2b8; }
+    .badge-ajuste { background-color: #6f42c1; }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    @media (max-width: 768px) {
+        .timeline::before {
+            left: 20px;
+        }
+        
+        .timeline-item,
+        .timeline-item:nth-child(even) {
+            margin-left: 50px !important;
+            margin-right: 0 !important;
+            width: calc(100% - 60px) !important;
+        }
+        
+        .timeline-item:nth-child(odd) .timeline-marker,
+        .timeline-item:nth-child(even) .timeline-marker {
+            left: -40px;
+            right: auto;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <!-- Encabezado de Búsqueda -->
-    <div class="search-card">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="h2 mb-2">
-                    <i class="fas fa-route"></i> Trazabilidad de Lotes
-                </h1>
-                <p class="mb-0">
-                    Siga el recorrido completo de cualquier lote desde su entrada 
-                    hasta su consumo final con control FIFO.
-                </p>
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-route"></i> Trazabilidad del Lote
+            </h1>
+            <p class="text-muted mb-0">Seguimiento completo del ciclo de vida del lote</p>
+        </div>
+        <div>
+            <a href="{{ url_for('lotes.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+            <button onclick="exportarExcel()" class="btn btn-outline-success">
+                <i class="fas fa-file-excel"></i> Exportar
+            </button>
+        </div>
+    </div>
+    
+    <!-- Loading -->
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando trazabilidad...</p>
+    </div>
+    
+    <!-- Contenido -->
+    <div id="contenido" style="display: none;">
+        <!-- Información del Lote -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-box"></i> Información del Lote</h5>
             </div>
-            <div class="col-lg-6">
-                <div class="search-form">
-                    <form id="form-busqueda">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <input type="text" class="form-control form-control-white" 
-                                       id="buscar-lote" name="lote" 
-                                       placeholder="ID de lote, código de lote o artículo..."
-                                       value="{{ request.args.get('lote', '') }}">
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-search btn-block">
-                                    <i class="fas fa-search"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+            <div class="card-body" id="info-lote">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+        
+        <!-- Estadísticas -->
+        <div class="row mb-4" id="estadisticas">
+            <div class="col-md-3">
+                <div class="card stat-card primary">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Cantidad Inicial</h6>
+                        <h3 class="mb-0" id="stat-inicial">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card success">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Cantidad Consumida</h6>
+                        <h3 class="mb-0" id="stat-consumido">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card warning">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Cantidad Disponible</h6>
+                        <h3 class="mb-0" id="stat-disponible">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card info">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">% Utilizado</h6>
+                        <h3 class="mb-0" id="stat-porcentaje">0%</h3>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Acciones Rápidas -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <a href="{{ url_for('lotes.index') }}" class="btn btn-outline-primary btn-block">
-                <i class="fas fa-arrow-left"></i> Volver a Gestión de Lotes
-            </a>
+        
+        <!-- Timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Línea de Tiempo</h5>
+                    <select class="form-control form-control-sm" style="width: auto;" id="filtro-tipo" onchange="filtrarMovimientos()">
+                        <option value="">Todos los movimientos</option>
+                        <option value="entrada">Entradas</option>
+                        <option value="consumo">Consumos</option>
+                        <option value="reserva">Reservas</option>
+                        <option value="liberacion">Liberaciones</option>
+                        <option value="ajuste">Ajustes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="timeline" class="timeline">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <button class="btn btn-outline-info btn-block" onclick="exportarTrazabilidad()">
-                <i class="fas fa-download"></i> Exportar Trazabilidad
-            </button>
+        
+        <!-- Gráficos -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Evolución de Cantidad</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="chartEvolucion"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Distribución de Movimientos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="chartDistribucion"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <button class="btn btn-outline-success btn-block" onclick="imprimirTrazabilidad()">
-                <i class="fas fa-print"></i> Imprimir Reporte
-            </button>
+        
+        <!-- Tabla de Movimientos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Detalle de Movimientos</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tabla-movimientos">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Cantidad</th>
+                                <th>Documento</th>
+                                <th>Orden de Trabajo</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <!-- Contenido Principal -->
-    <div id="contenido-trazabilidad">
-        <!-- Se carga dinámicamente -->
-        <div class="empty-state">
-            <i class="fas fa-search"></i>
-            <h4>Buscar Trazabilidad</h4>
-            <p>
-                Ingrese un ID de lote, código de lote o nombre de artículo 
-                para ver su trazabilidad completa.
-            </p>
+        
+        <!-- Órdenes de Trabajo Asociadas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-wrench"></i> Órdenes de Trabajo Asociadas</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tabla-ordenes">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Activo</th>
+                                <th>Técnico</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- jQuery UI para autocompletado -->
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script src="{{ url_for('static', filename='js/trazabilidad_lotes.js') }}"></script>
 <script>
-$(document).ready(function() {
-    // Buscar automáticamente si hay parámetro en URL
-    const loteParam = new URLSearchParams(window.location.search).get('lote');
-    if (loteParam) {
-        buscarTrazabilidad(loteParam);
-    }
-    
-    // Configurar formulario de búsqueda
-    $('#form-busqueda').on('submit', function(e) {
-        e.preventDefault();
-        const termino = $('#buscar-lote').val().trim();
-        if (termino) {
-            buscarTrazabilidad(termino);
-        }
+    const LOTE_ID = {{ lote_id }};
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarTrazabilidad(LOTE_ID);
     });
-    
-    // Configurar autocompletado
-    configurarAutocompletado();
-});
-
-// Configurar autocompletado de lotes
-function configurarAutocompletado() {
-    $('#buscar-lote').autocomplete({
-        source: function(request, response) {
-            $.get('/api/lotes/buscar', { q: request.term })
-                .done(function(data) {
-                    if (data.success && data.lotes) {
-                        const suggestions = data.lotes.map(function(lote) {
-                            return {
-                                label: `${lote.codigo_lote || 'Lote-' + lote.id} - ${lote.inventario_codigo}`,
-                                value: lote.id,
-                                lote: lote
-                            };
-                        });
-                        response(suggestions.slice(0, 10));
-                    } else {
-                        response([]);
-                    }
-                })
-                .fail(function() {
-                    response([]);
-                });
-        },
-        minLength: 2,
-        select: function(event, ui) {
-            $('#buscar-lote').val(ui.item.label);
-            buscarTrazabilidad(ui.item.value);
-            return false;
-        }
-    });
-}
-
-// Buscar trazabilidad
-function buscarTrazabilidad(termino) {
-    // Mostrar loading
-    $('#contenido-trazabilidad').html(`
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="sr-only">Cargando...</span>
-            </div>
-            <p class="mt-3">Buscando trazabilidad...</p>
-        </div>
-    `);
-    
-    // Determinar si es un ID numérico o texto
-    const isNumeric = /^\d+$/.test(termino);
-    
-    if (isNumeric) {
-        // Buscar por ID de lote
-        buscarPorIdLote(parseInt(termino));
-    } else {
-        // Buscar por código de lote o artículo
-        buscarPorTermino(termino);
-    }
-}
-
-// Buscar por ID de lote específico
-function buscarPorIdLote(loteId) {
-    $.get(`/lotes/api/trazabilidad/${loteId}`)
-        .done(function(data) {
-            if (data.success && data.trazabilidad) {
-                mostrarTrazabilidad(data.trazabilidad);
-            } else {
-                mostrarError('No se encontró el lote especificado.');
-            }
-        })
-        .fail(function(xhr) {
-            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Error al buscar trazabilidad';
-            mostrarError(error);
-        });
-}
-
-// Buscar por término (código o artículo)
-function buscarPorTermino(termino) {
-    $.get('/api/lotes/buscar', { q: termino })
-        .done(function(data) {
-            if (data.success && data.lotes && data.lotes.length > 0) {
-                if (data.lotes.length === 1) {
-                    // Un solo resultado, mostrar directamente
-                    buscarPorIdLote(data.lotes[0].id);
-                } else {
-                    // Múltiples resultados, mostrar lista para elegir
-                    mostrarOpcionesLotes(data.lotes);
-                }
-            } else {
-                mostrarError('No se encontraron lotes que coincidan con la búsqueda.');
-            }
-        })
-        .fail(function() {
-            mostrarError('Error al realizar la búsqueda.');
-        });
-}
-
-// Mostrar opciones de lotes cuando hay múltiples resultados
-function mostrarOpcionesLotes(lotes) {
-    // Actualizado: Cards con estilo moderno y borde púrpura
-    let html = `
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-list"></i> Seleccione un Lote
-                    <span class="badge badge-secondary ml-2">${lotes.length} encontrados</span>
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-    `;
-    
-    lotes.forEach(function(lote, index) {
-        const codigoLote = lote.codigo_lote || `Lote-${lote.id}`;
-        const fechaEntrada = new Date(lote.fecha_entrada).toLocaleDateString();
-        
-        html += `
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card lote-selection-card h-100" onclick="buscarPorIdLote(${lote.id})">
-                    <div class="card-body">
-                        <h6 class="card-title">${codigoLote}</h6>
-                        <p class="card-text">
-                            <strong>${lote.inventario_codigo}</strong><br>
-                            <small class="text-muted">${lote.inventario_nombre}</small>
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">Entrada: ${fechaEntrada}</small>
-                            <span class="badge badge-primary">${lote.cantidad_actual} ${lote.unidad_medida || 'UN'}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += `
-                </div>
-            </div>
-        </div>
-    `;
-    
-    $('#contenido-trazabilidad').html(html);
-}
-
-// Mostrar trazabilidad completa
-function mostrarTrazabilidad(trazabilidad) {
-    const lote = trazabilidad.lote;
-    const movimientos = trazabilidad.movimientos;
-    
-    // Resumen del lote
-    const fechaEntrada = new Date(lote.fecha_entrada).toLocaleDateString();
-    const fechaVencimiento = lote.fecha_vencimiento ? 
-        new Date(lote.fecha_vencimiento).toLocaleDateString() : 'Sin vencimiento';
-    
-    let html = `
-        <!-- Resumen del Lote -->
-        <div class="lote-summary">
-            <div class="row">
-                <div class="col-lg-8">
-                    <h4 class="mb-3">
-                        <i class="fas fa-box"></i> 
-                        ${lote.codigo_lote || 'Lote-' + lote.id}
-                    </h4>
-                    <dl class="row">
-                        <dt class="col-sm-3">Artículo:</dt>
-                        <dd class="col-sm-9">
-                            <strong>${lote.inventario_codigo}</strong> - ${lote.inventario_nombre}
-                        </dd>
-                        
-                        <dt class="col-sm-3">Fecha Entrada:</dt>
-                        <dd class="col-sm-9">${fechaEntrada}</dd>
-                        
-                        <dt class="col-sm-3">Fecha Vencimiento:</dt>
-                        <dd class="col-sm-9">${fechaVencimiento}</dd>
-                        
-                        <dt class="col-sm-3">Documento Origen:</dt>
-                        <dd class="col-sm-9">${lote.documento_origen || 'No especificado'}</dd>
-                        
-                        <dt class="col-sm-3">Observaciones:</dt>
-                        <dd class="col-sm-9">${lote.observaciones || 'Ninguna'}</dd>
-                    </dl>
-                </div>
-                <div class="col-lg-4">
-                    <div class="summary-stats">
-                        <div class="stat-item">
-                            <div class="stat-number text-primary">${lote.cantidad_inicial}</div>
-                            <div class="stat-label">Cantidad Inicial</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-success">${lote.cantidad_actual}</div>
-                            <div class="stat-label">Cantidad Actual</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-info">€${lote.precio_unitario}</div>
-                            <div class="stat-label">Precio Unitario</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    if (movimientos && movimientos.length > 0) {
-        html += `
-            <!-- Timeline de Movimientos -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-history"></i> Historial de Movimientos
-                        <span class="badge badge-secondary ml-2">${movimientos.length}</span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="timeline">
-        `;
-        
-        movimientos.forEach(function(movimiento, index) {
-            const fecha = new Date(movimiento.fecha);
-            const fechaFormateada = fecha.toLocaleDateString();
-            const horaFormateada = fecha.toLocaleTimeString();
-            
-            const isLeft = index % 2 === 0;
-            const positionClass = isLeft ? 'left' : 'right';
-            
-            // Determinar icono y título según tipo de movimiento
-            let icono, titulo, descripcion;
-            switch(movimiento.tipo) {
-                case 'entrada':
-                    icono = 'fas fa-plus';
-                    titulo = 'Entrada de Inventario';
-                    descripcion = `Se agregaron ${movimiento.cantidad} unidades al lote`;
-                    break;
-                case 'salida':
-                    icono = 'fas fa-minus';
-                    titulo = 'Consumo de Material';
-                    descripcion = `Se consumieron ${movimiento.cantidad} unidades del lote`;
-                    break;
-                case 'reserva':
-                    icono = 'fas fa-bookmark';
-                    titulo = 'Reserva de Stock';
-                    descripcion = `Se reservaron ${movimiento.cantidad} unidades del lote`;
-                    break;
-                case 'devolucion':
-                    icono = 'fas fa-undo';
-                    titulo = 'Devolución';
-                    descripcion = `Se devolvieron ${movimiento.cantidad} unidades al lote`;
-                    break;
-                default:
-                    icono = 'fas fa-exchange-alt';
-                    titulo = movimiento.tipo.charAt(0).toUpperCase() + movimiento.tipo.slice(1);
-                    descripcion = `Movimiento de ${movimiento.cantidad} unidades`;
-            }
-            
-            html += `
-                <div class="timeline-item ${positionClass} ${movimiento.tipo}">
-                    <div class="timeline-content">
-                        <div class="timeline-date">${fechaFormateada} - ${horaFormateada}</div>
-                        <div class="timeline-title">
-                            <i class="${icono}"></i> ${titulo}
-                        </div>
-                        <div class="timeline-details">
-                            <p class="mb-2">${descripcion}</p>
-                            ${movimiento.documento_referencia ? 
-                                `<p class="mb-1"><strong>Documento:</strong> ${movimiento.documento_referencia}</p>` : ''}
-                            ${movimiento.observaciones ? 
-                                `<p class="mb-1"><strong>Observaciones:</strong> ${movimiento.observaciones}</p>` : ''}
-                            <p class="mb-0"><strong>Usuario:</strong> ${movimiento.usuario}</p>
-                        </div>
-                        <span class="timeline-badge badge-${movimiento.tipo}">${movimiento.tipo.toUpperCase()}</span>
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += `
-                    </div>
-                </div>
-            </div>
-        `;
-    } else {
-        html += `
-            <div class="card">
-                <div class="card-body text-center text-muted">
-                    <i class="fas fa-inbox fa-3x mb-3"></i>
-                    <h5>Sin Movimientos Registrados</h5>
-                    <p>Este lote aún no tiene movimientos adicionales registrados.</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    $('#contenido-trazabilidad').html(html);
-    
-    // Actualizar URL sin recargar página
-    const newUrl = window.location.pathname + '?lote=' + (lote.codigo_lote || lote.id);
-    history.pushState(null, '', newUrl);
-}
-
-// Mostrar error
-function mostrarError(mensaje) {
-    $('#contenido-trazabilidad').html(`
-        <div class="alert alert-danger">
-            <h5><i class="fas fa-exclamation-triangle"></i> Error</h5>
-            <p class="mb-0">${mensaje}</p>
-        </div>
-        <div class="empty-state">
-            <i class="fas fa-search"></i>
-            <h4>Intente una Nueva Búsqueda</h4>
-            <p>Verifique el ID del lote o el código e intente nuevamente.</p>
-        </div>
-    `);
-}
-
-// Exportar trazabilidad
-function exportarTrazabilidad() {
-    // Implementar exportación a Excel/PDF
-    mostrarMensaje('Función de exportación en desarrollo', 'info');
-}
-
-// Imprimir trazabilidad
-function imprimirTrazabilidad() {
-    window.print();
-}
-
-// Función auxiliar para mostrar mensajes
-function mostrarMensaje(mensaje, tipo) {
-    const tipoClase = tipo === 'error' ? 'danger' : tipo;
-    const html = `
-        <div class="alert alert-${tipoClase} alert-dismissible fade show position-fixed" 
-             style="top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
-            ${mensaje}
-            <button type="button" class="close" data-dismiss="alert">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    `;
-    
-    $('body').append(html);
-    
-    // Auto-ocultar después de 5 segundos
-    setTimeout(function() {
-        $('.alert').fadeOut();
-    }, 5000);
-}
 </script>
 {% endblock %}
