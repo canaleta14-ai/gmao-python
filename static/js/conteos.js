@@ -197,6 +197,13 @@ function actualizarTablaConteos(conteos) {
                     })" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
+                    ${
+                      conteo.estado === "pendiente"
+                        ? `<button type="button" class="btn btn-sm btn-outline-danger action-btn delete" onclick="confirmarEliminarConteo(${conteo.id}, '${conteo.articulo.codigo}')" title="Eliminar conteo">
+                            <i class="bi bi-trash"></i>
+                        </button>`
+                        : ""
+                    }
                 </div>
             </td>
         `;
@@ -900,6 +907,65 @@ window.guardarNuevoPeriodo = guardarNuevoPeriodo;
 window.generarConteosAleatorios = generarConteosAleatorios;
 window.guardarConteosAleatorios = guardarConteosAleatorios;
 window.mostrarModalProcesarConteo = mostrarModalProcesarConteo;
+window.confirmarEliminarConteo = confirmarEliminarConteo;
+window.eliminarConteo = eliminarConteo;
+
+// Variables para eliminar conteo
+let conteoIdParaEliminar = null;
+
+// Confirmar eliminación de conteo
+function confirmarEliminarConteo(id, codigoArticulo) {
+  conteoIdParaEliminar = id;
+  document.getElementById("codigo-articulo-eliminar-conteo").textContent =
+    codigoArticulo;
+
+  const modal = new bootstrap.Modal(
+    document.getElementById("modalEliminarConteo")
+  );
+  modal.show();
+}
+
+// Eliminar conteo
+async function eliminarConteo() {
+  if (!conteoIdParaEliminar) return;
+
+  try {
+    const response = await fetch(
+      `/inventario/api/conteos/${conteoIdParaEliminar}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      mostrarAlerta("Conteo eliminado correctamente", "success");
+
+      // Cerrar modal
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalEliminarConteo")
+      );
+      modal.hide();
+
+      // Recargar lista
+      cargarConteos(paginaActualConteos, filtrosConteos);
+      cargarResumenConteos();
+    } else {
+      mostrarAlerta("Error al eliminar conteo: " + data.error, "danger");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    mostrarAlerta("Error al eliminar el conteo", "danger");
+  }
+
+  conteoIdParaEliminar = null;
+}
+
 window.guardarConteoFisico = guardarConteoFisico;
 window.guardarEditarConteo = guardarEditarConteo;
 window.aplicarFiltrosConteos = aplicarFiltrosConteos;

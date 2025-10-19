@@ -345,14 +345,43 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn" onclick="guardarEditarConteo()" style="background: transparent; border: 2px solid #667eea; color: #667eea; border-radius: 8px; padding: 8px 20px; font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.style.color='white'; this.style.borderColor='#667eea';" onmouseout="this.style.background='transparent'; this.style.color='#667eea'; this.style.borderColor='#667eea';">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;" onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'" onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn" onclick="guardarEditarConteo()" style="background: transparent; border: 2px solid #667eea; color: #667eea; border-radius: 2px; padding: 8px 20px; font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.style.color='white'; this.style.borderColor='#667eea';" onmouseout="this.style.background='transparent'; this.style.color='#667eea'; this.style.borderColor='#667eea';">
                     <i class="bi bi-save me-1"></i>Guardar Cambios
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal Confirmar Eliminar Conteo -->
+<div class="modal fade" id="modalEliminarConteo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea eliminar el conteo del artículo <strong><code id="codigo-articulo-eliminar-conteo"></code></strong>?</p>
+                <p class="text-muted">Esta acción no se puede deshacer. Solo se pueden eliminar conteos que aún no han sido realizados (estado pendiente).</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;" onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'" onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="eliminarConteo()">
+                    <i class="bi bi-trash me-1"></i>Eliminar Conteo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}

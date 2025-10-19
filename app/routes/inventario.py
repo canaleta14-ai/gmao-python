@@ -704,6 +704,39 @@ def api_editar_conteo(conteo_id):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@inventario_bp.route("/api/conteos/<int:conteo_id>", methods=["DELETE"])
+@api_login_required
+def api_eliminar_conteo(conteo_id):
+    """API para eliminar un conteo físico (solo si está pendiente)"""
+    try:
+        conteo = ConteoInventario.query.get(conteo_id)
+
+        if not conteo:
+            return jsonify({"success": False, "error": "Conteo no encontrado"}), 404
+
+        # Solo permitir eliminar conteos pendientes
+        if conteo.estado != "pendiente":
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Solo se pueden eliminar conteos en estado pendiente",
+                    }
+                ),
+                400,
+            )
+
+        # Eliminar el conteo
+        db.session.delete(conteo)
+        db.session.commit()
+
+        return jsonify({"success": True, "message": "Conteo eliminado correctamente"})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @inventario_bp.route("/api/periodos-inventario", methods=["GET", "POST"])
 @api_login_required
 def api_periodos_inventario():
