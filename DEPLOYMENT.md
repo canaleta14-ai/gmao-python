@@ -20,7 +20,353 @@
 
 ---
 
-## 🔧 Paso 1: Preparar el Servidor
+## � IMPORTANTE: Migración de Datos de Producción
+
+**Si tienes datos existentes en tu entorno de desarrollo que necesitas migrar a producción**, sigue esta sección ANTES de continuar con el despliegue.
+
+### Escenario de Migración
+
+Este sistema incluye scripts especializados para migrar datos cuando:
+
+- Tus datos de desarrollo son en realidad datos de producción
+- Necesitas transferir una base de datos PostgreSQL completa
+- Quieres garantizar integridad de datos con verificación de checksums
+- Requieres un proceso seguro con backups automáticos
+
+### 📤 Fase 1: Exportar Datos (Entorno de Desarrollo)
+
+#### 1.1. Preparar el Script de Exportación
+
+El script `export_production_data.sh` exportará tu base de datos con todas las medidas de seguridad:
+
+```bash
+# En tu máquina de desarrollo (Windows/Linux/Mac)
+cd c:\Users\canal\gmao-python\gmao-sistema
+
+# Dar permisos de ejecución (Linux/Mac)
+chmod +x export_production_data.sh
+
+# Windows Git Bash: no requiere chmod
+```
+
+#### 1.2. Verificar Configuración de Base de Datos
+
+Asegúrate de que tu archivo `.env` contiene las credenciales correctas:
+
+```env
+DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/gmao_db
+```
+
+#### 1.3. Ejecutar la Exportación
+
+```bash
+# Linux/Mac
+./export_production_data.sh
+
+# Windows Git Bash
+bash export_production_data.sh
+
+# Windows PowerShell
+sh export_production_data.sh
+```
+
+**Salida esperada:**
+
+```
+📦 Exportación de Base de Datos GMAO - Producción
+================================================================
+📅 Fecha: 2024-01-15 10:30:45
+🖥️  Sistema: Windows/Linux/Mac
+================================================================
+
+✅ Directorio de exportación creado: db_export/
+📊 Exportando base de datos...
+✅ Base de datos exportada: db_export/gmao_data_export_20240115_103045.sql
+🗜️  Comprimiendo archivo...
+✅ Archivo comprimido: db_export/gmao_data_export_20240115_103045.sql.gz
+🔐 Generando checksum SHA256...
+✅ Checksum generado: db_export/gmao_data_export_20240115_103045.sql.gz.sha256
+📝 README generado: db_export/README.txt
+
+================================================================
+✅ EXPORTACIÓN COMPLETADA
+================================================================
+Archivos generados en: db_export/
+
+Archivos:
+- gmao_data_export_20240115_103045.sql.gz (archivo de datos)
+- gmao_data_export_20240115_103045.sql.gz.sha256 (checksum)
+- README.txt (instrucciones)
+
+Tamaño: 15.3 MB
+
+SIGUIENTE PASO:
+1. Transferir estos archivos al servidor de producción:
+   scp db_export/gmao_data_export_*.sql.gz* usuario@servidor:/ruta/
+2. En el servidor, ejecutar: ./import_production_data.sh
+```
+
+#### 1.4. Verificar los Archivos Generados
+
+```bash
+ls -lh db_export/
+
+# Deberías ver:
+# gmao_data_export_YYYYMMDD_HHMMSS.sql.gz         (base de datos comprimida)
+# gmao_data_export_YYYYMMDD_HHMMSS.sql.gz.sha256  (checksum de verificación)
+# README.txt                                       (instrucciones detalladas)
+```
+
+### 🔄 Fase 2: Transferir Archivos al Servidor
+
+#### 2.1. Usar SCP para Transferencia Segura
+
+```bash
+# Desde tu máquina de desarrollo
+scp db_export/gmao_data_export_*.sql.gz* usuario@tu-servidor.com:/home/gmao/
+
+# Ejemplo con IP específica
+scp db_export/gmao_data_export_*.sql.gz* gmao@192.168.1.100:/home/gmao/
+```
+
+#### 2.2. Alternativas de Transferencia
+
+**Opción 2: SFTP**
+
+```bash
+sftp usuario@tu-servidor.com
+put db_export/gmao_data_export_*.sql.gz*
+exit
+```
+
+**Opción 3: rsync (más robusto para archivos grandes)**
+
+```bash
+rsync -avz --progress db_export/gmao_data_export_*.sql.gz* \
+  usuario@tu-servidor.com:/home/gmao/
+```
+
+**Opción 4: Servicios en la nube (si el archivo es muy grande)**
+
+- Subir a Google Drive / Dropbox / OneDrive
+- Descargar desde el servidor con `wget` o `curl`
+
+### 📥 Fase 3: Importar Datos (Servidor de Producción)
+
+#### 3.1. Conectarse al Servidor
+
+```bash
+ssh usuario@tu-servidor.com
+cd /home/gmao
+```
+
+#### 3.2. Verificar Archivos Recibidos
+
+```bash
+ls -lh gmao_data_export_*.sql.gz*
+
+# Verificar integridad con el checksum
+sha256sum -c gmao_data_export_*.sql.gz.sha256
+
+# Salida esperada:
+# gmao_data_export_20240115_103045.sql.gz: OK
+```
+
+#### 3.3. Copiar Script de Importación al Servidor
+
+```bash
+# En el servidor, navegar al directorio del proyecto
+cd /home/gmao/gmao-python/gmao-sistema
+
+# El script ya debería estar en el repositorio
+ls -l import_production_data.sh
+
+# Si no existe, crearlo siguiendo las instrucciones del repositorio
+```
+
+#### 3.4. Dar Permisos de Ejecución
+
+```bash
+chmod +x import_production_data.sh
+```
+
+#### 3.5. **IMPORTANTE: Preparativos Antes de Importar**
+
+⚠️ **ADVERTENCIAS CRÍTICAS:**
+
+1. **La aplicación se detendrá durante la importación** (aprox. 5-15 minutos)
+2. **Se creará un backup automático** de cualquier dato existente
+3. **La base de datos actual será reemplazada completamente**
+4. **Requiere contraseña de PostgreSQL y confirmación explícita**
+
+**Checklist Pre-Importación:**
+
+- [ ] Base de datos PostgreSQL ya creada (ver Paso 1.3 de esta guía)
+- [ ] Usuario PostgreSQL con permisos (ver Paso 1.3)
+- [ ] Archivo `.env` configurado con credenciales correctas
+- [ ] Supervisor configurado (si ya está en uso)
+- [ ] Backup manual adicional realizado (opcional pero recomendado)
+- [ ] Ventana de mantenimiento coordinada con usuarios
+
+#### 3.6. Ejecutar la Importación
+
+```bash
+# Ejecutar el script con el archivo exportado
+./import_production_data.sh gmao_data_export_20240115_103045.sql.gz
+```
+
+**Proceso interactivo:**
+
+```
+================================================================
+📥 IMPORTACIÓN DE BASE DE DATOS GMAO - PRODUCCIÓN
+================================================================
+
+📦 Archivo a importar: gmao_data_export_20240115_103045.sql.gz
+🔐 Verificando checksum...
+✅ Checksum verificado correctamente
+
+⚠️  ADVERTENCIA IMPORTANTE ⚠️
+================================================================
+Este proceso:
+1. Detendrá la aplicación GMAO (si está corriendo)
+2. Creará un backup de la base de datos actual
+3. Reemplazará TODOS los datos con el archivo importado
+4. Ejecutará las migraciones de Flask
+5. Reiniciará la aplicación
+
+Tiempo estimado: 5-15 minutos
+================================================================
+
+Para confirmar, escribe: SI CONFIRMO
+Confirmación: _
+```
+
+Escribe exactamente: **SI CONFIRMO**
+
+**Salida del proceso:**
+
+```
+✅ Confirmación recibida
+
+🛑 Paso 1/6: Deteniendo aplicación...
+gmao: stopped
+✅ Aplicación detenida
+
+💾 Paso 2/6: Creando backup de seguridad...
+✅ Backup creado: /home/gmao/backups/pre_import_backup_20240115_112030.sql
+
+📦 Paso 3/6: Descomprimiendo archivo...
+✅ Archivo descomprimido: gmao_data_export_20240115_103045.sql
+
+📥 Paso 4/6: Importando datos a PostgreSQL...
+[... salida de psql ...]
+✅ Datos importados correctamente
+
+🔄 Paso 5/6: Ejecutando migraciones de Flask...
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+✅ Migraciones completadas
+
+🚀 Paso 6/6: Reiniciando aplicación...
+gmao: started
+✅ Aplicación reiniciada
+
+================================================================
+✅ IMPORTACIÓN COMPLETADA EXITOSAMENTE
+================================================================
+
+📊 Verificación post-importación:
+- Backup previo: /home/gmao/backups/pre_import_backup_20240115_112030.sql
+- Base de datos actualizada: gmao_db
+- Aplicación: CORRIENDO
+
+🔍 Próximos pasos:
+1. Verificar que la aplicación funciona: http://tu-servidor.com
+2. Revisar logs: tail -f logs/gunicorn-access.log
+3. Probar inicio de sesión y funcionalidades críticas
+4. Mantener el backup por al menos 7 días
+
+En caso de problemas, ver sección de ROLLBACK abajo.
+```
+
+#### 3.7. Verificación Post-Importación
+
+**Verificar aplicación:**
+
+```bash
+# Estado del servicio
+sudo supervisorctl status gmao
+
+# Ver logs en tiempo real
+tail -f /home/gmao/gmao-python/gmao-sistema/logs/gunicorn-access.log
+
+# Verificar conexión a base de datos
+psql -U gmao_user -d gmao_db -c "SELECT COUNT(*) FROM usuario;"
+```
+
+**Pruebas funcionales:**
+
+```bash
+# Probar endpoint de salud (si existe)
+curl http://localhost:5000/health
+
+# Verificar desde navegador
+http://tu-servidor.com
+```
+
+#### 3.8. 🔙 ROLLBACK en Caso de Problemas
+
+Si algo sale mal durante o después de la importación:
+
+```bash
+# 1. Detener la aplicación
+sudo supervisorctl stop gmao
+
+# 2. Restaurar el backup automático
+psql -U gmao_user -d gmao_db < /home/gmao/backups/pre_import_backup_20240115_112030.sql
+
+# 3. Reiniciar la aplicación
+sudo supervisorctl start gmao
+
+# 4. Verificar que todo funciona
+sudo supervisorctl status gmao
+```
+
+### 📋 Resumen del Proceso Completo
+
+| Fase              | Ubicación             | Comando                                       | Tiempo    |
+| ----------------- | --------------------- | --------------------------------------------- | --------- |
+| **1. Exportar**   | Desarrollo            | `./export_production_data.sh`                 | 2-5 min   |
+| **2. Transferir** | Desarrollo → Servidor | `scp db_export/*.gz* usuario@servidor:/path/` | 5-30 min  |
+| **3. Verificar**  | Servidor              | `sha256sum -c *.sha256`                       | 1 min     |
+| **4. Importar**   | Servidor              | `./import_production_data.sh archivo.sql.gz`  | 5-15 min  |
+| **5. Verificar**  | Servidor              | Pruebas funcionales                           | 10-20 min |
+
+**Tiempo total estimado: 23-71 minutos**
+
+### 🔐 Consideraciones de Seguridad
+
+1. **Credenciales**: Nunca incluir contraseñas en el control de versiones
+2. **Checksums**: Siempre verificar integridad antes de importar
+3. **Backups**: El script crea backup automático, pero considera hacer uno manual adicional
+4. **Permisos**: Los archivos `.sql` pueden contener datos sensibles, eliminarlos después de importar
+5. **Red**: Usar conexiones cifradas (SSH/SCP) para transferir archivos
+
+### 🗑️ Limpieza Post-Migración
+
+```bash
+# En el servidor, después de verificar que todo funciona (esperar 7 días)
+rm -f /home/gmao/gmao_data_export_*.sql.gz*
+rm -f /home/gmao/gmao_data_export_*.sql
+
+# En desarrollo, puedes mantener los exports como backup adicional
+# o eliminarlos si ya tienes otros backups
+```
+
+---
+
+## �🔧 Paso 1: Preparar el Servidor
 
 ### 1.1. Actualizar el Sistema
 
