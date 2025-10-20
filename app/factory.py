@@ -193,7 +193,7 @@ def create_app(config_name=None):
         db_user = os.getenv("DB_USER", "postgres")
 
         app.config["SQLALCHEMY_DATABASE_URI"] = (
-            f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+            f"postgresql+psycopg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
         )
     else:
         # Configuración SQLite para desarrollo (ruta absoluta dentro de 'instance')
