@@ -19,10 +19,14 @@
                     <button type="button" class="btn btn-outline-primary" onclick="exportarSolicitudes()">
                         <i class="bi bi-download me-1"></i>Exportar
                     </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="eliminarSeleccionadas()" id="btnEliminarMasivo" style="display: none;">
+                    <button type="button" class="btn btn-outline-danger" onclick="eliminarSeleccionadas()"
+                        id="btnEliminarMasivo" style="display: none;">
                         <i class="bi bi-trash me-1"></i>Eliminar Seleccionadas
                     </button>
-                    <button type="button" class="btn" onclick="location.reload()" style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;" onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'" onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
+                    <button type="button" class="btn" onclick="location.reload()"
+                        style="background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;"
+                        onmouseover="this.style.cssText='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: 2px solid #667eea !important; color: white !important; border-radius: 2px !important;'"
+                        onmouseout="this.style.cssText='background: transparent !important; border: 2px solid #667eea !important; color: #667eea !important; border-radius: 2px !important;'">
                         <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
                     </button>
                 </div>
@@ -62,40 +66,55 @@
                                 <label for="estado" class="form-label fw-bold">Estado</label>
                                 <select class="form-select" id="estado" name="estado">
                                     <option value="">Todos los estados</option>
-                                    <option value="pendiente" {{ 'selected' if request.args.get('estado') == 'pendiente' }}>Pendiente</option>
-                                    <option value="en_revision" {{ 'selected' if request.args.get('estado') == 'en_revision' }}>En Revisión</option>
-                                    <option value="aprobada" {{ 'selected' if request.args.get('estado') == 'aprobada' }}>Aprobada</option>
-                                    <option value="en_progreso" {{ 'selected' if request.args.get('estado') == 'en_progreso' }}>En Progreso</option>
-                                    <option value="completada" {{ 'selected' if request.args.get('estado') == 'completada' }}>Completada</option>
-                                    <option value="rechazada" {{ 'selected' if request.args.get('estado') == 'rechazada' }}>Rechazada</option>
-                                    <option value="cancelada" {{ 'selected' if request.args.get('estado') == 'cancelada' }}>Cancelada</option>
+                                    <option value="pendiente" {{ 'selected' if request.args.get('estado')=='pendiente'
+                                        }}>Pendiente</option>
+                                    <option value="en_revision" {{ 'selected' if
+                                        request.args.get('estado')=='en_revision' }}>En Revisión</option>
+                                    <option value="aprobada" {{ 'selected' if request.args.get('estado')=='aprobada' }}>
+                                        Aprobada</option>
+                                    <option value="en_progreso" {{ 'selected' if
+                                        request.args.get('estado')=='en_progreso' }}>En Progreso</option>
+                                    <option value="completada" {{ 'selected' if request.args.get('estado')=='completada'
+                                        }}>Completada</option>
+                                    <option value="rechazada" {{ 'selected' if request.args.get('estado')=='rechazada'
+                                        }}>Rechazada</option>
+                                    <option value="cancelada" {{ 'selected' if request.args.get('estado')=='cancelada'
+                                        }}>Cancelada</option>
                                 </select>
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <label for="prioridad" class="form-label fw-bold">Prioridad</label>
                                 <select class="form-select" id="prioridad" name="prioridad">
                                     <option value="">Todas las prioridades</option>
-                                    <option value="baja" {{ 'selected' if request.args.get('prioridad') == 'baja' }}>Baja</option>
-                                    <option value="normal" {{ 'selected' if request.args.get('prioridad') == 'normal' }}>Normal</option>
-                                    <option value="alta" {{ 'selected' if request.args.get('prioridad') == 'alta' }}>Alta</option>
-                                    <option value="urgente" {{ 'selected' if request.args.get('prioridad') == 'urgente' }}>Urgente</option>
+                                    <option value="baja" {{ 'selected' if request.args.get('prioridad')=='baja' }}>Baja
+                                    </option>
+                                    <option value="normal" {{ 'selected' if request.args.get('prioridad')=='normal' }}>
+                                        Normal</option>
+                                    <option value="alta" {{ 'selected' if request.args.get('prioridad')=='alta' }}>Alta
+                                    </option>
+                                    <option value="urgente" {{ 'selected' if request.args.get('prioridad')=='urgente'
+                                        }}>Urgente</option>
                                 </select>
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <label for="tipo_servicio" class="form-label fw-bold">Tipo de Servicio</label>
                                 <select class="form-select" id="tipo_servicio" name="tipo_servicio">
                                     <option value="">Todos los tipos</option>
-                                    <option value="mantenimiento" {{ 'selected' if request.args.get('tipo_servicio') == 'mantenimiento' }}>Mantenimiento</option>
-                                    <option value="reparacion" {{ 'selected' if request.args.get('tipo_servicio') == 'reparacion' }}>Reparación</option>
-                                    <option value="instalacion" {{ 'selected' if request.args.get('tipo_servicio') == 'instalacion' }}>Instalación</option>
-                                    <option value="otro" {{ 'selected' if request.args.get('tipo_servicio') == 'otro' }}>Otro</option>
+                                    <option value="mantenimiento" {{ 'selected' if
+                                        request.args.get('tipo_servicio')=='mantenimiento' }}>Mantenimiento</option>
+                                    <option value="reparacion" {{ 'selected' if
+                                        request.args.get('tipo_servicio')=='reparacion' }}>Reparación</option>
+                                    <option value="instalacion" {{ 'selected' if
+                                        request.args.get('tipo_servicio')=='instalacion' }}>Instalación</option>
+                                    <option value="otro" {{ 'selected' if request.args.get('tipo_servicio')=='otro' }}>
+                                        Otro</option>
                                 </select>
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <label for="busqueda" class="form-label fw-bold">Buscar</label>
                                 <input type="text" class="form-control" id="busqueda" name="busqueda"
-                                       value="{{ request.args.get('busqueda', '') }}"
-                                       placeholder="Número, nombre, email...">
+                                    value="{{ request.args.get('busqueda', '') }}"
+                                    placeholder="Número, nombre, email...">
                             </div>
                             <div class="col-12">
                                 <hr class="mb-3">
@@ -122,102 +141,108 @@
                         </h6>
                     </div>
                     <div class="d-flex align-items-center gap-3">
-                        <span id="contador-solicitudes" style="background: transparent !important; color: white !important; padding: 0 !important;">{{ solicitudes.total }} solicitudes</span>
+                        <span id="contador-solicitudes"
+                            style="background: transparent !important; color: white !important; padding: 0 !important;">{{
+                            solicitudes.total }} solicitudes</span>
                         <!-- <small style="color: white !important;">Mostrando {{ solicitudes.items|length }}</small> -->
                     </div>
                 </div>
                 <div class="card-body p-0">
                     {% if solicitudes %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="border-0">Número</th>
-                                        <th class="border-0">Solicitante</th>
-                                        <th class="border-0">Tipo</th>
-                                        <th class="border-0">Prioridad</th>
-                                        <th class="border-0">Estado</th>
-                                        <th class="border-0">Fecha</th>
-                                        <th class="border-0">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for solicitud in solicitudes %}
-                                    <tr>
-                                        <td>
-                                            <strong class="text-primary">{{ solicitud.numero_solicitud }}</strong>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <strong>{{ solicitud.nombre_solicitante }}</strong>
-                                                <br>
-                                                <small class="text-muted">{{ solicitud.email_solicitante }}</small>
-                                                {% if solicitud.telefono_solicitante %}
-                                                <br>
-                                                <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ solicitud.telefono_solicitante }}</small>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">{{ solicitud.tipo_servicio_display }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-{{ 'secondary' if solicitud.prioridad == 'baja' else 'primary' if solicitud.prioridad == 'normal' else 'warning' if solicitud.prioridad == 'alta' else 'danger' }}">
-                                                {{ solicitud.prioridad_display }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-{{ 'primary' if solicitud.estado == 'pendiente' else 'warning' if solicitud.estado == 'en_revision' else 'success' if solicitud.estado == 'aprobada' else 'info' if solicitud.estado == 'en_progreso' else 'success' if solicitud.estado == 'completada' else 'danger' if solicitud.estado == 'rechazada' else 'secondary' }}">
-                                                {{ solicitud.estado_display }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <small>{{ solicitud.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0">Número</th>
+                                    <th class="border-0">Solicitante</th>
+                                    <th class="border-0">Tipo</th>
+                                    <th class="border-0">Prioridad</th>
+                                    <th class="border-0">Estado</th>
+                                    <th class="border-0">Fecha</th>
+                                    <th class="border-0">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for solicitud in solicitudes %}
+                                <tr>
+                                    <td>
+                                        <strong class="text-primary">{{ solicitud.numero_solicitud }}</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ solicitud.nombre_solicitante }}</strong>
                                             <br>
-                                            <small class="text-muted">{{ solicitud.fecha_creacion.strftime('%H:%M') }}</small>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex gap-1 justify-content-center">
-                                                <button class="btn btn-sm btn-outline-primary action-btn view"
-                                                        onclick="window.location.href='{{ url_for('solicitudes_admin.ver_solicitud', id=solicitud.id) }}'"
-                                                        title="Ver detalles">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-secondary action-btn edit"
-                                                        onclick="window.location.href='{{ url_for('solicitudes_admin.editar_solicitud', id=solicitud.id) }}'"
-                                                        title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-info action-btn info"
-                                                        onclick="cambiarEstado({{ solicitud.id }}, '{{ solicitud.estado }}')"
-                                                        title="Cambiar estado">
-                                                    <i class="bi bi-arrow-right-circle"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger action-btn delete"
-                                                        onclick="eliminarSolicitud({{ solicitud.id }})"
-                                                        title="Eliminar solicitud">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                            <small class="text-muted">{{ solicitud.email_solicitante }}</small>
+                                            {% if solicitud.telefono_solicitante %}
+                                            <br>
+                                            <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{
+                                                solicitud.telefono_solicitante }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ solicitud.tipo_servicio_display }}</span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{{ 'secondary' if solicitud.prioridad == 'baja' else 'primary' if solicitud.prioridad == 'normal' else 'warning' if solicitud.prioridad == 'alta' else 'danger' }}">
+                                            {{ solicitud.prioridad_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{{ 'primary' if solicitud.estado == 'pendiente' else 'warning' if solicitud.estado == 'en_revision' else 'success' if solicitud.estado == 'aprobada' else 'info' if solicitud.estado == 'en_progreso' else 'success' if solicitud.estado == 'completada' else 'danger' if solicitud.estado == 'rechazada' else 'secondary' }}">
+                                            {{ solicitud.estado_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{ solicitud.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ solicitud.fecha_creacion.strftime('%H:%M')
+                                            }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            <button class="btn btn-sm btn-outline-primary action-btn view"
+                                                onclick="window.location.href='{{ url_for('solicitudes_admin.ver_solicitud', id=solicitud.id) }}'"
+                                                title="Ver detalles">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary action-btn edit"
+                                                onclick="window.location.href='{{ url_for('solicitudes_admin.editar_solicitud', id=solicitud.id) }}'"
+                                                title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info action-btn info"
+                                                onclick="cambiarEstado({{ solicitud.id }}, '{{ solicitud.estado }}')"
+                                                title="Cambiar estado">
+                                                <i class="bi bi-arrow-right-circle"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger action-btn delete"
+                                                onclick="eliminarSolicitud({{ solicitud.id }})"
+                                                title="Eliminar solicitud">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <!-- Paginación dinámica -->
-                        <div class="card-footer">
-                            <div class="pagination-container">
-                                <!-- La paginación se actualizará dinámicamente con JavaScript -->
-                            </div>
+                    <!-- Paginación dinámica -->
+                    <div class="card-footer">
+                        <div class="pagination-container">
+                            <!-- La paginación se actualizará dinámicamente con JavaScript -->
                         </div>
+                    </div>
                     {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
-                            <h5 class="text-muted">No se encontraron solicitudes</h5>
-                            <p class="text-muted mb-0">No hay solicitudes que coincidan con los criterios de búsqueda.</p>
-                        </div>
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">No se encontraron solicitudes</h5>
+                        <p class="text-muted mb-0">No hay solicitudes que coincidan con los criterios de búsqueda.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -251,11 +276,12 @@
                     <div class="mb-3">
                         <label for="comentarioEstado" class="form-label">Comentario (opcional)</label>
                         <textarea class="form-control" id="comentarioEstado" name="comentario" rows="3"
-                                  placeholder="Agregue un comentario sobre el cambio de estado..."></textarea>
+                            placeholder="Agregue un comentario sobre el cambio de estado..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none !important; color: white !important; border-radius: 2px !important;">
+                    <button type="button" class="btn" data-bs-dismiss="modal"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none !important; color: white !important; border-radius: 2px !important;">
                         <i class="bi bi-x-circle me-1"></i>Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary">Cambiar Estado</button>
@@ -266,138 +292,138 @@
 </div>
 
 <script>
-function cambiarEstado(solicitudId, estadoActual) {
-    document.getElementById('solicitudId').value = solicitudId;
-    document.getElementById('nuevoEstado').value = estadoActual;
-    new bootstrap.Modal(document.getElementById('cambiarEstadoModal')).show();
-}
-
-document.getElementById('cambiarEstadoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-    const solicitudId = formData.get('solicitud_id');
-    const nuevoEstado = formData.get('estado');
-    const comentario = formData.get('comentario');
-
-    fetch(`/admin/solicitudes/${solicitudId}/estado`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            estado: nuevoEstado,
-            comentario: comentario
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('cambiarEstadoModal')).hide();
-            location.reload();
-        } else {
-            mostrarMensaje('Error al cambiar el estado: ' + data.message, 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        mostrarMensaje('Error de conexión', 'danger');
-    });
-});
-
-function exportarSolicitudes() {
-    const url = new URL(window.location);
-    url.pathname = '/admin/solicitudes/exportar';
-    window.open(url, '_blank');
-}
-
-// ========== FUNCIONES PARA FILTROS DINÁMICOS ==========
-
-let currentPage = 1;
-let currentFilters = {};
-
-// Función para aplicar filtros
-function aplicarFiltros(page = 1) {
-    const filtros = {
-        estado: document.getElementById('estado').value,
-        prioridad: document.getElementById('prioridad').value,
-        tipo_servicio: document.getElementById('tipo_servicio').value,
-        busqueda: document.getElementById('busqueda').value.trim(),
-        page: page
-    };
-
-    currentFilters = filtros;
-    currentPage = page;
-
-    // Mostrar loading
-    mostrarCargando();
-
-    const url = '/admin/solicitudes/api/filtrar?' + new URLSearchParams(filtros);
-
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) {
-                    // Sesión expirada
-                    throw new Error('Sesión expirada. Por favor, recarga la página e inicia sesión nuevamente.');
-                } else if (response.status === 403) {
-                    // Sin permisos
-                    throw new Error('No tienes permisos para realizar esta acción.');
-                } else {
-                    throw new Error('Error HTTP: ' + response.status);
-                }
-            }
-            return response.json();
-        })
-        .then(data => {
-            actualizarTabla(data);
-            actualizarPaginacion(data);
-            ocultarCargando();
-        })
-        .catch(error => {
-            console.error('Error al filtrar:', error);
-            ocultarCargando();
-            
-            // Mostrar mensaje de error
-            if (typeof mostrarMensaje === 'function') {
-                mostrarMensaje('Error al aplicar filtros: ' + error.message, 'danger');
-            } else if (typeof mostrarAlerta === 'function') {
-                mostrarAlerta('Error al aplicar filtros: ' + error.message, 'danger');
-            } else {
-                console.error('Error al aplicar filtros:', error.message);
-            }
-        });
-}
-
-// Función para limpiar filtros
-function limpiarFiltros() {
-    document.getElementById('estado').value = '';
-    document.getElementById('prioridad').value = '';
-    document.getElementById('tipo_servicio').value = '';
-    document.getElementById('busqueda').value = '';
-    currentFilters = {};
-    currentPage = 1;
-    aplicarFiltros(1);
-}
-
-// Función para actualizar la tabla con los resultados
-function actualizarTabla(data) {
-    const tbody = document.querySelector('.table tbody');
-    const header = document.querySelector('.card-header small');
-
-    if (!tbody) {
-        console.error('No se encontró el tbody de la tabla');
-        return;
+    function cambiarEstado(solicitudId, estadoActual) {
+        document.getElementById('solicitudId').value = solicitudId;
+        document.getElementById('nuevoEstado').value = estadoActual;
+        new bootstrap.Modal(document.getElementById('cambiarEstadoModal')).show();
     }
 
-    if (data.solicitudes.length === 0) {
-        tbody.innerHTML = `
+    document.getElementById('cambiarEstadoForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const solicitudId = formData.get('solicitud_id');
+        const nuevoEstado = formData.get('estado');
+        const comentario = formData.get('comentario');
+
+        fetch(`/admin/solicitudes/${solicitudId}/estado`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                estado: nuevoEstado,
+                comentario: comentario
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('cambiarEstadoModal')).hide();
+                    location.reload();
+                } else {
+                    mostrarMensaje('Error al cambiar el estado: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarMensaje('Error de conexión', 'danger');
+            });
+    });
+
+    function exportarSolicitudes() {
+        const url = new URL(window.location);
+        url.pathname = '/admin/solicitudes/exportar';
+        window.open(url, '_blank');
+    }
+
+    // ========== FUNCIONES PARA FILTROS DINÁMICOS ==========
+
+    let currentPage = 1;
+    let currentFilters = {};
+
+    // Función para aplicar filtros
+    function aplicarFiltros(page = 1) {
+        const filtros = {
+            estado: document.getElementById('estado').value,
+            prioridad: document.getElementById('prioridad').value,
+            tipo_servicio: document.getElementById('tipo_servicio').value,
+            busqueda: document.getElementById('busqueda').value.trim(),
+            page: page
+        };
+
+        currentFilters = filtros;
+        currentPage = page;
+
+        // Mostrar loading
+        mostrarCargando();
+
+        const url = '/admin/solicitudes/api/filtrar?' + new URLSearchParams(filtros);
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Sesión expirada
+                        throw new Error('Sesión expirada. Por favor, recarga la página e inicia sesión nuevamente.');
+                    } else if (response.status === 403) {
+                        // Sin permisos
+                        throw new Error('No tienes permisos para realizar esta acción.');
+                    } else {
+                        throw new Error('Error HTTP: ' + response.status);
+                    }
+                }
+                return response.json();
+            })
+            .then(data => {
+                actualizarTabla(data);
+                actualizarPaginacion(data);
+                ocultarCargando();
+            })
+            .catch(error => {
+                console.error('Error al filtrar:', error);
+                ocultarCargando();
+
+                // Mostrar mensaje de error
+                if (typeof mostrarMensaje === 'function') {
+                    mostrarMensaje('Error al aplicar filtros: ' + error.message, 'danger');
+                } else if (typeof mostrarAlerta === 'function') {
+                    mostrarAlerta('Error al aplicar filtros: ' + error.message, 'danger');
+                } else {
+                    console.error('Error al aplicar filtros:', error.message);
+                }
+            });
+    }
+
+    // Función para limpiar filtros
+    function limpiarFiltros() {
+        document.getElementById('estado').value = '';
+        document.getElementById('prioridad').value = '';
+        document.getElementById('tipo_servicio').value = '';
+        document.getElementById('busqueda').value = '';
+        currentFilters = {};
+        currentPage = 1;
+        aplicarFiltros(1);
+    }
+
+    // Función para actualizar la tabla con los resultados
+    function actualizarTabla(data) {
+        const tbody = document.querySelector('.table tbody');
+        const header = document.querySelector('.card-header small');
+
+        if (!tbody) {
+            console.error('No se encontró el tbody de la tabla');
+            return;
+        }
+
+        if (data.solicitudes.length === 0) {
+            tbody.innerHTML = `
             <tr>
                 <td colspan="8" class="text-center py-4">
                     <i class="bi bi-inbox fs-1 text-muted mb-2"></i>
@@ -405,18 +431,18 @@ function actualizarTabla(data) {
                 </td>
             </tr>
         `;
-        if (header) {
-            header.textContent = `Mostrando 0 de ${data.total} solicitudes`;
+            if (header) {
+                header.textContent = `Mostrando 0 de ${data.total} solicitudes`;
+            }
+            return;
         }
-        return;
-    }
 
-    let html = '';
-    data.solicitudes.forEach(solicitud => {
-        const estadoClass = getEstadoClass(solicitud.estado);
-        const prioridadClass = getPrioridadClass(solicitud.prioridad);
+        let html = '';
+        data.solicitudes.forEach(solicitud => {
+            const estadoClass = getEstadoClass(solicitud.estado);
+            const prioridadClass = getPrioridadClass(solicitud.prioridad);
 
-        html += `
+            html += `
             <tr>
                 <td>
                     <strong class="text-primary">${solicitud.numero_solicitud}</strong>
@@ -467,270 +493,273 @@ function actualizarTabla(data) {
                 </td>
             </tr>
         `;
-    });
+        });
 
-    tbody.innerHTML = html;
-    if (header) {
-        header.textContent = `Mostrando ${data.solicitudes.length} de ${data.total} solicitudes`;
-    }
-}
-
-// Función para actualizar la paginación
-function actualizarPaginacion(data) {
-    const paginationContainer = document.querySelector('.pagination-container');
-    if (!paginationContainer) return;
-
-    if (data.pages <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
+        tbody.innerHTML = html;
+        if (header) {
+            header.textContent = `Mostrando ${data.solicitudes.length} de ${data.total} solicitudes`;
+        }
     }
 
-    let html = '<nav><ul class="pagination justify-content-center">';
+    // Función para actualizar la paginación
+    function actualizarPaginacion(data) {
+        const paginationContainer = document.querySelector('.pagination-container');
+        if (!paginationContainer) return;
 
-    // Botón anterior
-    if (data.has_prev) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${data.prev_page})">Anterior</a></li>`;
-    } else {
-        html += '<li class="page-item disabled"><span class="page-link">Anterior</span></li>';
-    }
+        if (data.pages <= 1) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
 
-    // Páginas
-    for (let i = Math.max(1, data.current_page - 2); i <= Math.min(data.pages, data.current_page + 2); i++) {
-        if (i === data.current_page) {
-            html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+        let html = '<nav><ul class="pagination justify-content-center">';
+
+        // Botón anterior
+        if (data.has_prev) {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${data.prev_page})">Anterior</a></li>`;
         } else {
-            html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${i})">${i}</a></li>`;
+            html += '<li class="page-item disabled"><span class="page-link">Anterior</span></li>';
+        }
+
+        // Páginas
+        for (let i = Math.max(1, data.current_page - 2); i <= Math.min(data.pages, data.current_page + 2); i++) {
+            if (i === data.current_page) {
+                html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+            } else {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${i})">${i}</a></li>`;
+            }
+        }
+
+        // Botón siguiente
+        if (data.has_next) {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${data.next_page})">Siguiente</a></li>`;
+        } else {
+            html += '<li class="page-item disabled"><span class="page-link">Siguiente</span></li>';
+        }
+
+        html += '</ul></nav>';
+        paginationContainer.innerHTML = html;
+    }
+
+    // Funciones auxiliares para estilos
+    function getEstadoClass(estado) {
+        const classes = {
+            'pendiente': 'bg-warning text-dark',
+            'en_revision': 'bg-info',
+            'aprobada': 'bg-success',
+            'en_progreso': 'bg-primary',
+            'completada': 'bg-success',
+            'rechazada': 'bg-danger',
+            'cancelada': 'bg-secondary'
+        };
+        return classes[estado] || 'bg-secondary';
+    }
+
+    function getEstadoTexto(estado) {
+        const textos = {
+            'pendiente': 'Pendiente',
+            'en_revision': 'En Revisión',
+            'aprobada': 'Aprobada',
+            'en_progreso': 'En Progreso',
+            'completada': 'Completada',
+            'rechazada': 'Rechazada',
+            'cancelada': 'Cancelada'
+        };
+        return textos[estado] || estado;
+    }
+
+    function getPrioridadClass(prioridad) {
+        const classes = {
+            'baja': 'bg-success',
+            'normal': 'bg-warning text-dark',
+            'alta': 'bg-danger',
+            'urgente': 'bg-danger'
+        };
+        return classes[prioridad] || 'bg-secondary';
+    }
+
+    // Función para mostrar loading
+    function mostrarCargando() {
+        const tabla = document.querySelector('.table-responsive');
+        if (tabla) {
+            tabla.style.opacity = '0.5';
+            tabla.style.pointerEvents = 'none';
         }
     }
 
-    // Botón siguiente
-    if (data.has_next) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="aplicarFiltros(${data.next_page})">Siguiente</a></li>`;
-    } else {
-        html += '<li class="page-item disabled"><span class="page-link">Siguiente</span></li>';
+    // Función para ocultar loading
+    function ocultarCargando() {
+        const tabla = document.querySelector('.table-responsive');
+        if (tabla) {
+            tabla.style.opacity = '1';
+            tabla.style.pointerEvents = 'auto';
+        }
     }
 
-    html += '</ul></nav>';
-    paginationContainer.innerHTML = html;
-}
-
-// Funciones auxiliares para estilos
-function getEstadoClass(estado) {
-    const classes = {
-        'pendiente': 'bg-warning text-dark',
-        'en_revision': 'bg-info',
-        'aprobada': 'bg-success',
-        'en_progreso': 'bg-primary',
-        'completada': 'bg-success',
-        'rechazada': 'bg-danger',
-        'cancelada': 'bg-secondary'
-    };
-    return classes[estado] || 'bg-secondary';
-}
-
-function getEstadoTexto(estado) {
-    const textos = {
-        'pendiente': 'Pendiente',
-        'en_revision': 'En Revisión',
-        'aprobada': 'Aprobada',
-        'en_progreso': 'En Progreso',
-        'completada': 'Completada',
-        'rechazada': 'Rechazada',
-        'cancelada': 'Cancelada'
-    };
-    return textos[estado] || estado;
-}
-
-function getPrioridadClass(prioridad) {
-    const classes = {
-        'baja': 'bg-success',
-        'normal': 'bg-warning text-dark',
-        'alta': 'bg-danger',
-        'urgente': 'bg-danger'
-    };
-    return classes[prioridad] || 'bg-secondary';
-}
-
-// Función para mostrar loading
-function mostrarCargando() {
-    const tabla = document.querySelector('.table-responsive');
-    if (tabla) {
-        tabla.style.opacity = '0.5';
-        tabla.style.pointerEvents = 'none';
-    }
-}
-
-// Función para ocultar loading
-function ocultarCargando() {
-    const tabla = document.querySelector('.table-responsive');
-    if (tabla) {
-        tabla.style.opacity = '1';
-        tabla.style.pointerEvents = 'auto';
-    }
-}
-
-// Inicializar filtros dinámicos cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    // Prevenir submit del formulario de filtros
-    const filtrosForm = document.getElementById('filtrosForm');
-    if (filtrosForm) {
-        filtrosForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            aplicarFiltros(1);
-        });
-    }
-
-    // Agregar event listeners para los selects de filtro
-    const estadoSelect = document.getElementById('estado');
-    const prioridadSelect = document.getElementById('prioridad');
-    const tipoServicioSelect = document.getElementById('tipo_servicio');
-
-    if (estadoSelect) {
-        estadoSelect.addEventListener('change', () => aplicarFiltros(1));
-    }
-    if (prioridadSelect) {
-        prioridadSelect.addEventListener('change', () => aplicarFiltros(1));
-    }
-    if (tipoServicioSelect) {
-        tipoServicioSelect.addEventListener('change', () => aplicarFiltros(1));
-    }
-
-    // Agregar event listeners para búsqueda en tiempo real
-    const busquedaInput = document.getElementById('busqueda');
-    if (busquedaInput) {
-        let timeoutId;
-        busquedaInput.addEventListener('input', function() {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
+    // Inicializar filtros dinámicos cuando se carga la página
+    document.addEventListener('DOMContentLoaded', function () {
+        // Prevenir submit del formulario de filtros
+        const filtrosForm = document.getElementById('filtrosForm');
+        if (filtrosForm) {
+            filtrosForm.addEventListener('submit', function (e) {
+                e.preventDefault();
                 aplicarFiltros(1);
-            }, 500);
+            });
+        }
+
+        // Agregar event listeners para los selects de filtro
+        const estadoSelect = document.getElementById('estado');
+        const prioridadSelect = document.getElementById('prioridad');
+        const tipoServicioSelect = document.getElementById('tipo_servicio');
+
+        if (estadoSelect) {
+            estadoSelect.addEventListener('change', () => aplicarFiltros(1));
+        }
+        if (prioridadSelect) {
+            prioridadSelect.addEventListener('change', () => aplicarFiltros(1));
+        }
+        if (tipoServicioSelect) {
+            tipoServicioSelect.addEventListener('change', () => aplicarFiltros(1));
+        }
+
+        // Agregar event listeners para búsqueda en tiempo real
+        const busquedaInput = document.getElementById('busqueda');
+        if (busquedaInput) {
+            let timeoutId;
+            busquedaInput.addEventListener('input', function () {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    aplicarFiltros(1);
+                }, 500);
+            });
+        }
+
+        // Aplicar filtros iniciales (vacíos) - esto carga todos los datos
+        setTimeout(() => aplicarFiltros(1), 100);
+    });
+
+    // ========== FUNCIONES PARA ELIMINACIÓN ==========
+
+    // Función para eliminar una solicitud individual
+    function eliminarSolicitud(solicitudId) {
+        showConfirmModal({
+            title: "Eliminar Solicitud",
+            message: "¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.",
+            confirmText: "Eliminar",
+            cancelText: "Cancelar",
+            type: "danger",
+            onConfirm: function () {
+                fetch(`/admin/solicitudes/${solicitudId}/eliminar`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            mostrarMensaje('Solicitud eliminada correctamente', 'success');
+                            // Recargar la tabla con los filtros actuales
+                            aplicarFiltros(currentPage);
+                        } else {
+                            mostrarMensaje('Error al eliminar la solicitud: ' + data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarMensaje('Error de conexión al eliminar la solicitud', 'danger');
+                    });
+            }
         });
     }
 
-    // Aplicar filtros iniciales (vacíos) - esto carga todos los datos
-    setTimeout(() => aplicarFiltros(1), 100);
-});
+    // Función para eliminar solicitudes seleccionadas
+    function eliminarSeleccionadas() {
+        const checkboxes = document.querySelectorAll('.solicitud-checkbox:checked');
+        const solicitudIds = Array.from(checkboxes).map(cb => cb.value);
 
-// ========== FUNCIONES PARA ELIMINACIÓN ==========
-
-// Función para eliminar una solicitud individual
-function eliminarSolicitud(solicitudId) {
-    showConfirmModal({
-        title: "Eliminar Solicitud",
-        message: "¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.",
-        confirmText: "Eliminar",
-        cancelText: "Cancelar",
-        type: "danger",
-        onConfirm: function() {
-            fetch(`/admin/solicitudes/${solicitudId}/eliminar`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarMensaje('Solicitud eliminada correctamente', 'success');
-                    // Recargar la tabla con los filtros actuales
-                    aplicarFiltros(currentPage);
-                } else {
-                    mostrarMensaje('Error al eliminar la solicitud: ' + data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarMensaje('Error de conexión al eliminar la solicitud', 'danger');
-            });
+        if (solicitudIds.length === 0) {
+            mostrarMensaje('Por favor, selecciona al menos una solicitud para eliminar', 'warning');
+            return;
         }
-    });
-}
 
-// Función para eliminar solicitudes seleccionadas
-function eliminarSeleccionadas() {
-    const checkboxes = document.querySelectorAll('.solicitud-checkbox:checked');
-    const solicitudIds = Array.from(checkboxes).map(cb => cb.value);
-    
-    if (solicitudIds.length === 0) {
-        mostrarMensaje('Por favor, selecciona al menos una solicitud para eliminar', 'warning');
-        return;
-    }
-    
-    const mensaje = solicitudIds.length === 1 
-        ? '¿Estás seguro de que deseas eliminar la solicitud seleccionada?' 
-        : `¿Estás seguro de que deseas eliminar las ${solicitudIds.length} solicitudes seleccionadas?`;
-    
-    showConfirmModal({
-        title: "Eliminar Solicitudes",
-        message: mensaje + ' Esta acción no se puede deshacer.',
-        confirmText: "Eliminar",
-        cancelText: "Cancelar",
-        type: "danger",
-        onConfirm: function() {
-            fetch('/admin/solicitudes/eliminar-masivo', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    solicitud_ids: solicitudIds
+        const mensaje = solicitudIds.length === 1
+            ? '¿Estás seguro de que deseas eliminar la solicitud seleccionada?'
+            : `¿Estás seguro de que deseas eliminar las ${solicitudIds.length} solicitudes seleccionadas?`;
+
+        showConfirmModal({
+            title: "Eliminar Solicitudes",
+            message: mensaje + ' Esta acción no se puede deshacer.',
+            confirmText: "Eliminar",
+            cancelText: "Cancelar",
+            type: "danger",
+            onConfirm: function () {
+                fetch('/admin/solicitudes/eliminar-masivo', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        solicitud_ids: solicitudIds
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarMensaje(`${data.eliminadas} solicitud(es) eliminada(s) correctamente`, 'success');
-                    // Limpiar selecciones
-                    document.getElementById('selectAll').checked = false;
-                    updateDeleteButton();
-                    // Recargar la tabla con los filtros actuales
-                    aplicarFiltros(currentPage);
-                } else {
-                    mostrarMensaje('Error al eliminar las solicitudes: ' + data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarMensaje('Error de conexión al eliminar las solicitudes', 'danger');
-            });
-        }
-    });
-}
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            mostrarMensaje(`${data.eliminadas} solicitud(es) eliminada(s) correctamente`, 'success');
+                            // Limpiar selecciones
+                            document.getElementById('selectAll').checked = false;
+                            updateDeleteButton();
+                            // Recargar la tabla con los filtros actuales
+                            aplicarFiltros(currentPage);
+                        } else {
+                            mostrarMensaje('Error al eliminar las solicitudes: ' + data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarMensaje('Error de conexión al eliminar las solicitudes', 'danger');
+                    });
+            }
+        });
+    }
 
 
 
-// Función para mostrar mensajes de notificación
-function mostrarMensaje(mensaje, tipo = 'info') {
-    // Crear alerta Bootstrap
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
+    // Función para mostrar mensajes de notificación
+    function mostrarMensaje(mensaje, tipo = 'info') {
+        // Crear alerta Bootstrap
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
         ${mensaje}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
 
-    // Agregar al inicio del contenedor principal
-    const container = document.querySelector('.container-fluid');
-    if (container) {
-        container.insertBefore(alertDiv, container.firstChild);
-    } else {
-        // Fallback si no hay container-fluid
-        const body = document.body;
-        body.insertBefore(alertDiv, body.firstChild);
-    }
-
-    // Auto-remover después de 5 segundos
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
+        // Agregar al inicio del contenedor principal
+        const container = document.querySelector('.container-fluid');
+        if (container) {
+            container.insertBefore(alertDiv, container.firstChild);
+        } else {
+            // Fallback si no hay container-fluid
+            const body = document.body;
+            body.insertBefore(alertDiv, body.firstChild);
         }
-    }, 5000);
-}
+
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
 
 
 </script>
+
+<!-- Cargar módulo de solicitudes -->
+<script src="{{ url_for('static', filename='js/solicitudes.js') }}"></script>
 
 <!-- Los scripts principales (main.js, etc.) ya están cargados en base.html -->
 {% endblock %}

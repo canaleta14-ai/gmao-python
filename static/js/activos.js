@@ -171,12 +171,12 @@ async function cargarProveedores() {
         proveedores.length,
         "total"
       );
-      console.log("ðŸ“„ [ACTIVOS] Datos completos:", proveedores);
+      console.log("📄 [ACTIVOS] Datos completos:", proveedores);
 
       // Verificar estructura de datos
       if (Array.isArray(proveedores) && proveedores.length > 0) {
         console.log(
-          "ðŸ“‹ [ACTIVOS] Primer proveedor estructura:",
+          "📋 [ACTIVOS] Primer proveedor estructura:",
           proveedores[0]
         );
       }
@@ -235,7 +235,7 @@ function llenarSelectProveedores(proveedores) {
   // Limpiar opciones existentes
   select.innerHTML = '<option value="">Seleccionar proveedor...</option>';
   console.log(
-    "ðŸ§¹ [ACTIVOS] Select limpiado, opciones actuales:",
+    "🧹 [ACTIVOS] Select limpiado, opciones actuales:",
     select.children.length
   );
 
@@ -254,14 +254,14 @@ function llenarSelectProveedores(proveedores) {
   // Filtrar proveedores activos únicamente
   const proveedoresActivos = proveedores.filter((proveedor) => {
     console.log(
-      `ðŸ” [ACTIVOS] Verificando proveedor: ${proveedor.nombre} - activo: ${
+      `🔍 [ACTIVOS] Verificando proveedor: ${proveedor.nombre} - activo: ${
         proveedor.activo
       } (tipo: ${typeof proveedor.activo})`
     );
     return proveedor.activo === true;
   });
   console.log(
-    "ðŸ“‹ [ACTIVOS] Proveedores activos encontrados:",
+    "📋 [ACTIVOS] Proveedores activos encontrados:",
     proveedoresActivos.length,
     "de",
     proveedores.length,
@@ -274,7 +274,7 @@ function llenarSelectProveedores(proveedores) {
     console.warn("⚠  [ACTIVOS] No se encontraron proveedores activos");
 
     // Mostrar todos los proveedores para debug
-    console.log("ðŸ› [ACTIVOS] Debug - Todos los proveedores recibidos:");
+    console.log("🛠️ [ACTIVOS] Debug - Todos los proveedores recibidos:");
     proveedores.forEach((p, index) => {
       console.log(
         `  ${index + 1}. ${p.nombre} - activo: ${p.activo} (${typeof p.activo})`
@@ -346,7 +346,7 @@ async function cargarActivos(page = 1, filtros = {}) {
     console.log("🌐 URL de petición:", url);
 
     const response = await fetch(url);
-    console.log("ðŸ“¥ Respuesta recibida - Status:", response.status);
+    console.log("🔥 Respuesta recibida - Status:", response.status);
 
     // Manejar redirección de autenticación
     if (response.status === 401 || response.status === 302) {
@@ -384,12 +384,12 @@ async function cargarActivos(page = 1, filtros = {}) {
 // Mostrar activos en la tabla
 function mostrarActivos(activosAMostrar) {
   console.log(
-    "ðŸ“‹ mostrarActivos() - Mostrando",
+    "�� mostrarActivos() - Mostrando",
     activosAMostrar.length,
     "activos"
   );
   if (activosAMostrar.length > 0) {
-    console.log("ðŸ“„ Primer activo:", activosAMostrar[0]);
+    console.log("📄 Primer activo:", activosAMostrar[0]);
   }
 
   const tbody = document.getElementById("tabla-activos");
@@ -807,27 +807,27 @@ async function crearActivo() {
 // Filtrar activos
 // Filtrar activos con búsqueda del lado del servidor
 function filtrarActivos() {
-  console.log("ðŸ” filtrarActivos() ejecutado");
+  console.log("🔍 filtrarActivos() ejecutado");
   const filtros = {};
 
   // Filtro de búsqueda
   const buscar = document.getElementById("filtro-buscar").value.trim();
   if (buscar) {
     filtros.q = buscar;
-    console.log("ðŸ“ Filtro de búsqueda:", buscar);
+    console.log("🔍 Filtro de búsqueda:", buscar);
   }
 
   // Filtros de selección
   const departamento = document.getElementById("filtro-departamento").value;
   if (departamento) {
     filtros.departamento = departamento;
-    console.log("ðŸ¢ Filtro de departamento:", departamento);
+    console.log("🟢 Filtro de departamento:", departamento);
   }
 
   const tipo = document.getElementById("filtro-tipo").value;
   if (tipo) {
     filtros.tipo = tipo;
-    console.log("ðŸ”§ Filtro de tipo:", tipo);
+    console.log("🔧 Filtro de tipo:", tipo);
   }
 
   const estado = document.getElementById("filtro-estado").value;
@@ -844,7 +844,7 @@ function filtrarActivos() {
 
   // Guardar filtros globalmente
   filtrosActivos = filtros;
-  console.log("ðŸ’¾ Filtros guardados:", filtros);
+  console.log("💾 Filtros guardados:", filtros);
 
   // Reiniciar a la primera página y cargar con filtros
   currentPage = 1;

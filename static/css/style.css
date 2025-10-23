@@ -2268,6 +2268,14 @@ body.login-bg .main-content {
     min-width: 40px;
     min-height: 40px;
   }
+
+  /* Contenedor de paginación responsive */
+  #paginacion-proveedores,
+  #paginacion-ordenes,
+  #paginacion-inventario {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* ========================================
@@ -3083,6 +3091,68 @@ textarea {
   .modal-header {
     padding: 10px 15px;
   }
+
+  /* ==========================================
+     PAGINACIÓN RESPONSIVE MÓVIL
+     ========================================== */
+  
+  /* Contenedor de paginación con scroll horizontal */
+  #paginacion-proveedores,
+  #paginacion-ordenes,
+  #paginacion-inventario,
+  .pagination-container,
+  div:has(> .pagination) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+  }
+
+  /* Paginación más compacta */
+  .pagination {
+    flex-wrap: nowrap !important;
+    gap: 3px !important;
+    margin-bottom: 0;
+  }
+
+  .pagination .page-link {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 32px;
+    min-height: 32px;
+    margin: 0;
+  }
+
+  /* Ocultar texto en botones anterior/siguiente, solo mostrar iconos */
+  .pagination .page-link .sr-only,
+  .pagination .page-link span:not(.bi) {
+    display: none;
+  }
+
+  /* Asegurar que los iconos se vean bien */
+  .pagination .page-link i {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  /* Info de paginación más compacta */
+  .pagination-info {
+    font-size: 0.7rem;
+    margin-bottom: 5px;
+  }
+
+  /* Wrapper de paginación con info */
+  .d-flex.justify-content-between.align-items-center:has(.pagination) {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  /* Selector de items por página más pequeño */
+  .form-select-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
 }
 
 /* Móviles pequeños */
@@ -3136,8 +3206,133 @@ textarea {
     font-size: 0.7rem;
     padding: 3px 6px;
   }
+
+  /* ==========================================
+     PAGINACIÓN EXTRA COMPACTA
+     ========================================== */
+  
+  .pagination .page-link {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  /* Ocultar números de página intermedios, solo mostrar actual y adyacentes */
+  .pagination .page-item:not(.active):not(:first-child):not(:last-child):not(:nth-child(2)):not(:nth-last-child(2)) {
+    display: none;
+  }
+
+  /* Tablas con scroll horizontal */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+  }
+
+  /* Botones de acción en tablas más compactos */
+  .table .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .table .btn-sm {
+    font-size: 0.7rem;
+    padding: 2px 6px !important;
+  }
+
+  /* Info de paginación */
+  .pagination-info,
+  .small.text-muted {
+    font-size: 0.65rem;
+  }
 }
 
 /* ============================================
    FIN DE ESTILOS RESPONSIVE GLOBALES
    ============================================ */
+
+/* ============================================
+   ESTILOS ESPECÍFICOS PARA MÓDULOS EN MÓVIL
+   ============================================ */
+
+/* Proveedores, Órdenes e Inventario - Responsive */
+@media (max-width: 768px) {
+  /* Wrapper de tabla responsive mejorado */
+  .table-responsive {
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    margin-bottom: 1rem;
+  }
+
+  /* Scroll horizontal suave */
+  .table-responsive::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+  }
+
+  /* Botones de acción en tabla más compactos */
+  .table .btn-group-sm > .btn {
+    padding: 0.125rem 0.25rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  /* Badges en tablas */
+  .table .badge {
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    white-space: nowrap;
+  }
+
+  /* Headers de secciones más compactos */
+  .d-flex.justify-content-between.align-items-center.mb-4 {
+    margin-bottom: 1rem !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  .d-flex.justify-content-between.align-items-center.mb-4 > div {
+    width: 100%;
+  }
+
+  /* Botones de header apilados en móvil */
+  .d-flex.gap-2 {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Móviles muy pequeños - ajustes adicionales */
+@media (max-width: 375px) {
+  /* Ocultar columnas menos importantes en tablas */
+  .table th:nth-child(n+5),
+  .table td:nth-child(n+5) {
+    display: none;
+  }
+
+  /* Mostrar solo 3-4 columnas principales */
+  .table {
+    min-width: 100%;
+  }
+
+  /* Botones de acción vertical */
+  .table .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .table .btn-group .btn {
+    width: 100%;
+    margin: 1px 0;
+  }
+}
