@@ -516,7 +516,8 @@ def exportar_solicitudes_csv():
 @login_required_ajax
 def filtrar_solicitudes_ajax():
     """Endpoint AJAX para filtrar solicitudes dinámicamente"""
-    if current_user.rol != "Administrador":
+    # Permitir acceso a Administrador, Supervisor y Técnico
+    if current_user.rol not in ["Administrador", "Supervisor", "Técnico"]:
         return jsonify({"error": "No tiene permisos para acceder a esta sección"}), 403
 
     # Verificar si es una petición AJAX
